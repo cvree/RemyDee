@@ -1,0 +1,54 @@
+name: Deploy game to GitHub Pages
+
+# Redeploys the site every time the game is pushed to main, so the live
+# website always reflects the latest repo state. Can also be run by hand
+# from the Actions tab (workflow_dispatch).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "RemyDee_TheLostLexicon.html"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; let a newer one supersede an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          # The single-file game becomes the site homepage.
+          cp RemyDee_TheLostLexicon.html _site/index.html
+          # Also keep it reachable under its own name.
+          cp RemyDee_TheLostLexicon.html _site/RemyDee_TheLostLexicon.html
+          # Skip Jekyll processing — this is a static file, not a Jekyll site.
+          touch _site/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
