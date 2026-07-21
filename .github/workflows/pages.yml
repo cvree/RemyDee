@@ -42,7 +42,11 @@ jobs:
           touch _site/.nojekyll
 
       - name: Configure Pages
+        # enablement:true lets this workflow turn Pages on by itself (public repo,
+        # pages:write token) so no manual Settings step is required.
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
