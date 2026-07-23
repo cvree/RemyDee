@@ -772,6 +772,48 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
    MISSION CARAVAN
    ============================================================ */
 #missionCanvas{display:block;width:100%;height:100%;background:#d7dcc9;cursor:crosshair;touch-action:none;}
+/* ---- Word Road HUD: momentum multiplier + live term builder ---- */
+.word-hud{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:6;display:flex;
+  flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:min(92%,560px);}
+.momentum{display:flex;align-items:center;gap:9px;padding:5px 12px;border-radius:999px;
+  background:rgba(20,16,10,.5);border:1px solid rgba(189,157,95,.5);box-shadow:0 4px 12px rgba(0,0,0,.4);
+  backdrop-filter:blur(3px);transition:box-shadow .3s,border-color .3s;}
+.momentum.hot{border-color:var(--gold);box-shadow:0 0 0 2px rgba(189,157,95,.4),0 6px 16px rgba(0,0,0,.5);}
+.momentum.surge{animation:moSurge .5s var(--ease-back);}
+@keyframes moSurge{0%{transform:scale(1);}45%{transform:scale(1.18);}100%{transform:scale(1);}}
+[data-motion="reduced"] .momentum.surge{animation:none;}
+.mo-x{font-family:var(--font-cal);font-weight:900;font-size:1.05rem;color:var(--gold-soft);min-width:44px;
+  text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.mo-track{width:120px;height:8px;border-radius:5px;background:rgba(243,236,216,.16);overflow:hidden;}
+.mo-track i{display:block;height:100%;width:0%;border-radius:5px;
+  background:linear-gradient(90deg,var(--jade-soft),var(--gold));transition:width .25s var(--ease);}
+.mo-lab{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,236,216,.7);}
+.combo-build{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;min-height:26px;}
+.combo-tok{display:inline-flex;align-items:center;padding:3px 9px;border-radius:7px;font-family:var(--font-read);
+  font-weight:700;font-size:.8rem;color:#f6f0dc;box-shadow:0 3px 8px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.25);
+  animation:tokPop .3s var(--ease-back);}
+@keyframes tokPop{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+[data-motion="reduced"] .combo-tok{animation:none;}
+.combo-tok.k-prefix{background:linear-gradient(180deg,#c8564e,#a3322b);}
+.combo-tok.k-root{background:linear-gradient(180deg,#4f7261,#33513f);}
+.combo-tok.k-suffix{background:linear-gradient(180deg,#c39a3f,#8a6a2b);}
+.combo-join{color:rgba(243,236,216,.55);font-weight:700;font-size:.8rem;}
+.combo-hint{font-size:.66rem;color:rgba(243,236,216,.6);font-style:italic;letter-spacing:.02em;}
+.gate-prompt{position:absolute;top:118px;left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;
+  display:none;padding:7px 16px;border-radius:10px;background:rgba(24,21,16,.72);border:1px solid var(--gold);
+  color:var(--rice);font-weight:700;font-size:.82rem;letter-spacing:.02em;text-align:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.5);max-width:min(90%,520px);}
+.gate-prompt.show{display:block;animation:gpIn .35s var(--ease-back);}
+@keyframes gpIn{0%{transform:translate(-50%,-8px);opacity:0;}100%{transform:translate(-50%,0);opacity:1;}}
+.gate-prompt b{color:var(--gold-soft);}
+/* forged-gear readout: what each tool you made actually does on THIS road */
+.forge-strip{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;pointer-events:none;}
+.forge-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;
+  background:rgba(243,236,216,.92);border:1px solid var(--ink-line);box-shadow:0 3px 8px rgba(0,0,0,.35);
+  font-family:var(--font-read);font-size:.66rem;color:var(--ink);font-weight:600;max-width:220px;}
+.forge-chip .fc-ic{font-size:.86rem;line-height:1;}
+.forge-chip .fc-desc{color:var(--jade-deep);}
+.forge-chip.spent-note{opacity:.55;}
 .mini-stakes{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.74rem;color:var(--cinnabar-deep);
   font-weight:700;letter-spacing:.03em;margin-bottom:12px;padding:6px 10px;border:1px dashed var(--cinnabar);
   border-radius:8px;background:rgba(181,50,43,.06);}
@@ -1309,6 +1351,16 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
         <span class="who" id="mission-who"></span>
         <div class="prep-bars" id="mission-prep"></div>
       </div>
+      <!-- Word Road HUD: momentum multiplier, the term you are assembling, and gate prompts -->
+      <div class="word-hud" id="word-hud">
+        <div class="momentum" id="momentum">
+          <span class="mo-x" id="mo-x">&times;1.0</span>
+          <div class="mo-track"><i id="mo-fill"></i></div>
+          <span class="mo-lab" id="mo-lab">momentum</span>
+        </div>
+        <div class="combo-build" id="combo-build" aria-live="polite"></div>
+      </div>
+      <div class="gate-prompt" id="gate-prompt"></div>
       <div class="mini-challenge" id="mini-challenge">
         <div class="mini-card">
           <div class="mini-stakes" id="mini-stakes"><span class="ms-dot"></span> The squad waits in the open — hesitation drains their strength.</div>
@@ -1317,8 +1369,9 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
         </div>
       </div>
       <div class="mission-hud">
+        <div class="forge-strip" id="forge-strip"></div>
         <div class="ability-bar" id="ability-bar"></div>
-        <div class="mission-hint" id="mission-hint">Tap the upper, middle, or lower part of the screen to send the squad onto that path</div>
+        <div class="mission-hint" id="mission-hint">Steer the squad up, middle or down to gather word-parts &mdash; chain them into real terms for speed and multipliers</div>
         <div class="mission-caption" id="mission-caption"></div>
       </div>
     </section>
@@ -5273,6 +5326,79 @@ function pickRoadPart(){
 
 function relaxMult(){ return S().settings.timerRelax ? 0.55 : 1; }
 
+/* ==================================================================
+   THE WORD ROAD — the interactive core of the walk.
+   Word-parts stream down the three lanes; steer to gather them and
+   chain them (prefix? → root(+) → suffix) into real medical terms.
+   Every completed term SURGES momentum — a live ×multiplier that makes
+   the squad walk faster, heal, and earn more. Forged gear feeds the
+   engine (a keen edge floors your momentum, a scholar's tool widens
+   the build window, climbing gear opens the fast high lane, and so on)
+   so the bench work is felt on every step.
+   ================================================================== */
+const MOMENTUM_MAX=5;
+/* real terms keyed by their exact build signature, so a hand-gathered chain
+   that matches a genuine term pays a bonus and is recorded as mastered */
+const TERM_BY_SIG=(function(){
+  const map={};
+  Object.keys(TERMS).forEach(id=>{ map[TERMS[id].build.join("+")]=id; });
+  return map;
+})();
+/* Is the current in-progress chain a grammatically valid term-so-far?
+   Rules: an optional single prefix, one or more roots, then optionally a
+   closing suffix. Returns "partial" (valid, still open), "complete"
+   (ends in a suffix — a finished term), or "broken". */
+function comboShape(ids){
+  let i=0, sawRoot=false, sawSuffix=false, sawPrefix=false;
+  for(;i<ids.length;i++){
+    const k=PARTS[ids[i]] && PARTS[ids[i]].kind;
+    if(!k) return "broken";
+    if(k==="prefix"){ if(sawPrefix||sawRoot||sawSuffix) return "broken"; sawPrefix=true; }
+    else if(k==="root"){ if(sawSuffix) return "broken"; sawRoot=true; }
+    else if(k==="suffix"){ if(sawSuffix) return "broken"; if(!sawRoot && !sawPrefix) return "broken"; sawSuffix=true; }
+  }
+  if(sawSuffix) return "complete";
+  return "partial";
+}
+/* derive what the player's forged tools DO on this specific road, as both
+   live game modifiers and a plain-language readout shown above the caption */
+function computeForgePassives(f){
+  const caps=(f.stats&&f.stats.caps)||{};
+  const tr=(f.stats&&f.stats.traits)||{};
+  const perks=new Set((f.stats&&f.stats.perks)||[]);
+  const forged=f.forged||[];
+  const P={
+    cutClear:!!(caps.cut||perks.has("keenedge")),   // shears snags/deadfall & floors momentum
+    climbFast:!!caps.climb,                          // opens the swift upper lane
+    surefoot:perks.has("surefoot"),                  // rides scree & mud
+    heal:!!caps.heal,                                // completed terms heal more
+    smoke:!!caps.smoke,                              // one free gate-save from a smoke charge
+    momentumFloor:1.0,
+    healMult:1,
+    gainMult:1,      // how fast momentum builds per completed term
+    valueMult:1,     // pickup / ink value
+    chips:[]
+  };
+  // a keen edge keeps the pace: momentum can't collapse below ×1.6
+  if(P.cutClear){ P.momentumFloor=1.6; P.chips.push({ic:"🗡",label:"Keen edge",desc:"clears snags · momentum never drops below ×1.6"}); }
+  if(P.climbFast) P.chips.push({ic:"🧗",label:"Climbing gear",desc:"opens the swift upper ledge"});
+  if(P.surefoot) P.chips.push({ic:"👣",label:"Sure-foot",desc:"scree & mud can't slow the squad"});
+  if(P.heal){ P.healMult=1.6; P.chips.push({ic:"✚",label:"Field kit",desc:"terms heal the squad far more"}); }
+  if(P.smoke) P.chips.push({ic:"☁",label:"Smoke shell",desc:"saves you from one wrong gate"});
+  // control/reach traits sharpen the scholar's eye — momentum builds faster
+  const focus=(tr.control||0)+(tr.reach||0);
+  if(focus>=2){ P.gainMult=1.35; P.chips.push({ic:"🔎",label:"Scholar's poise",desc:"terms build momentum 35% faster"}); }
+  else if(focus>=1){ P.gainMult=1.18; }
+  // power/protect traits turn found lore into more ink
+  const haul=(tr.power||0)+(tr.protect||0);
+  if(haul>=2){ P.valueMult=1.3; P.chips.push({ic:"🎒",label:"Strong packs",desc:"road finds are worth 30% more"}); }
+  // a well-stocked bench (many tools) lends steadier morale on the road
+  if(forged.length>=3) P.chips.push({ic:"⚒",label:"Full bench",desc:"a tool for every turn — steadier morale"});
+  if(!P.chips.length) P.chips.push({ic:"◦",label:"Bare-handed",desc:"nothing forged — the words alone must carry them"});
+  P.smokeSaves = P.smoke?1:0;
+  return P;
+}
+
 function runMission(){
   const f=E.getFlow(); const r=f.route;
   go("s-mission",{onShow:()=>{
@@ -5302,18 +5428,25 @@ function runMission(){
         fork:null, slowT:0, banditT:0, paceMult:1, paceT:0,
         abilities:computeAbilities(f), abilities0:computeAbilities(f), raid:null, threat:0, laneFlashT:0,
         collected:{}, matsFound:[], reagentsFound:[], cachesMarked:0, inkFound:0,
+        // ---- Word Road: momentum multiplier + live term builder ----
+        forge:computeForgePassives(f),
+        momentum:1.0, moT:0, surgeT:0, combo:[], comboBadT:0,
+        gate:null, termsBuilt:[], realTermsBuilt:0, bestMomentum:1.0,
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
         maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"" };
     M.laneY = LANES[1].y*cv.height;
+    M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
     $('#mission-who').textContent = `${f.chapter.name} — ${size} traveler${size>1?'s':''} bound for ${f.chapter.dest}`;
     renderPrepBars();
     renderAbilityBar();
-    const routeOpen = caps.climb ? "Climbing gear opens every path — tap high, middle, or low to choose."
-      : "Without climbing gear the upper ledges stay closed — tap the middle trail or the low river floor.";
-    caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. ${routeOpen}`);
-    const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 7000); }
+    renderForgeStrip();
+    updateWordHud();
+    const routeOpen = caps.climb ? "Climbing gear opens every path — high, middle or low."
+      : "Without climbing gear the upper ledges stay closed — keep to the trail or the river floor.";
+    caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. Gather word-parts and chain them into terms. ${routeOpen}`);
+    const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500); }
     $('#mini-challenge').classList.remove('show');
     Audio2.sfx.whoosh();
     seedParticles(M.weather);
@@ -5326,17 +5459,20 @@ function bindMissionPointer(cv){
   const localY=(e)=>{ const rc=rect(); const sy=cv.height/rc.height;
     const cy=(e.touches?e.touches[0].clientY:(e.changedTouches?e.changedTouches[0].clientY:e.clientY));
     return (cy-rc.top)*sy; };
-  // discrete commit: a tap on the upper / middle / lower third sends the squad to that lane
+  // steering IS the game now: a tap (or drag) on the upper / middle / lower third
+  // sends the squad onto that lane — to gather parts, dodge hazards, and line up
+  // with the right rune gate. No blocking menus.
   const commitFromY=(y)=>{
-    if(!M||M.done||M.paused||M.fork) return;
+    if(!M||M.done||M.paused) return;
     const H=M.cv.height; let lane = y < H*0.42 ? 0 : y < H*0.70 ? 1 : 2;
     setLane(lane);
   };
-  const tap=(e)=>{ if(!M||M.done) return; if(M.fork){ forkTap(localY(e)); return; } commitFromY(localY(e)); };
+  const tap=(e)=>{ if(!M||M.done) return; commitFromY(localY(e)); };
+  const drag=(e)=>{ if(!M||M.done||!(e.buttons&1)) return; commitFromY(localY(e)); };
   cv.addEventListener('pointerdown',tap);
+  cv.addEventListener('pointermove',drag);
   // keyboard: W/↑ climb a lane, S/↓ drop a lane (accessibility)
   const key=(e)=>{ if(!M||M.done||M.paused) return;
-    if(M.fork){ if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){ forkPick('up'); } else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){ forkPick('down'); } return; }
     if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){ e.preventDefault(); setLane(Math.max(0,M.lane-1)); }
     else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){ e.preventDefault(); setLane(Math.min(2,M.lane+1)); }
     // ability hotkeys: 1 strike, 2 vanish, 3 mend
@@ -5344,7 +5480,7 @@ function bindMissionPointer(cv){
     else if(e.key==='2'){ useAbility('vanish'); }
     else if(e.key==='3'){ useAbility('mend'); } };
   window.addEventListener('keydown',key);
-  M._unbind=()=>{ cv.removeEventListener('pointerdown',tap); window.removeEventListener('keydown',key); };
+  M._unbind=()=>{ cv.removeEventListener('pointerdown',tap); cv.removeEventListener('pointermove',drag); window.removeEventListener('keydown',key); };
 }
 function setLane(lane){
   if(lane===0 && LANES[0].need && !M.caps[LANES[0].need]){
@@ -5429,18 +5565,18 @@ function useAbility(kind){
   }
   M.raiders=[]; refreshAbilityReady();
 }
-/* the road ahead: two forks, three question stops, and two surprises drawn at random */
+/* the road ahead: four rune gates, and surprises drawn at random */
 function buildEvents(r,enemy,size){
   const pool=shuffle(["oasis","cache","scholar","storm","bandits"]);
   const ev=[
-    {at:0.13, type:"question"},
+    {at:0.13, type:"gate"},
     {at:0.25, type:pool[0]},
-    {at:0.37, type:"fork"},
-    {at:0.51, type:"question"},
+    {at:0.37, type:"gate"},
+    {at:0.51, type:"gate"},
     {at:0.62, type:pool[1]},
-    {at:0.74, type:"fork"},
+    {at:0.74, type:"gate"},
     {at:0.84, type: enemy? "bandits" : pool[2]},
-    {at:0.93, type:"question"}
+    {at:0.93, type:"gate"}
   ];
   // never two bandit raids back to back from the same draw
   if(enemy && pool[1]==="bandits") ev[4].type=pool[2]==="bandits"?pool[3]:pool[2];
@@ -5470,9 +5606,9 @@ function buildRoadPlan(f){
   const size=(f.members&&f.members.length)||2;
   const flavor=shuffle(EV_FLAVOR.slice());
   const n = 7 + (size>=3?1:0) + (Math.random()<0.5?1:0);   // 7–9 stops, varies per run
-  const types=["question","question","fork"];
+  const types=["gate","gate","gate"];
   if(enemy) types.push("bandits");
-  if(Math.random()<0.5) types.push("fork"); else types.push("question");
+  types.push("gate");
   while(types.length<n) types.push(flavor.length?flavor.shift():pick(EV_FLAVOR));
   shuffle(types);
   const span0=0.10, span1=0.94, step=(span1-span0)/(Math.max(2,n)-1);
@@ -5529,6 +5665,38 @@ function pop(x,y,txt,bad){
 function statGain(gains,x,y){
   Object.keys(gains||{}).forEach(k=>{ if(M.stats[k]!=null) M.stats[k]=clamp(M.stats[k]+gains[k],0,100); });
   updatePrepBars();
+}
+
+/* ---------- Word Road HUD ---------- */
+function pulseMomentum(){ const mo=$('#momentum'); if(mo && !FX.reduced()){ mo.classList.remove('surge'); void mo.offsetWidth; mo.classList.add('surge'); } }
+/* cheap per-frame meter refresh — no DOM churn */
+function updateMomentumMeter(){
+  const mx=$('#mo-x'), fill=$('#mo-fill'), lab=$('#mo-lab'), mo=$('#momentum');
+  const v=M.momentum.toFixed(1);
+  if(mx && mx.textContent!=="×"+v) mx.textContent="×"+v;
+  if(fill) fill.style.width=clamp((M.momentum-1)/(MOMENTUM_MAX-1)*100,0,100)+"%";
+  if(mo) mo.classList.toggle('hot', M.momentum>=2.5);
+  if(lab){ const w=M.momentum>=4?"unstoppable":M.momentum>=3?"flying":M.momentum>=2?"rolling":"momentum";
+    if(lab.textContent!==w) lab.textContent=w; }
+}
+/* rebuild the term-in-progress tokens — only when the combo actually changes */
+function updateComboHud(){
+  const cb=$('#combo-build'); if(!cb) return;
+  cb.innerHTML="";
+  if(!M.combo.length){ cb.appendChild(el("span","combo-hint","gather a root, then a suffix, to forge a term")); return; }
+  M.combo.forEach((id,i)=>{ if(i) cb.appendChild(el("span","combo-join","+"));
+    const p=PARTS[id]; cb.appendChild(el("span","combo-tok k-"+p.kind, p.text)); });
+  if(PARTS[M.combo[M.combo.length-1]].kind!=="suffix"){
+    cb.appendChild(el("span","combo-join","+")); cb.appendChild(el("span","combo-hint","suffix?")); }
+}
+function updateWordHud(){ updateMomentumMeter(); updateComboHud(); }
+function renderForgeStrip(){
+  const strip=$('#forge-strip'); if(!strip) return; strip.innerHTML="";
+  (M.forge.chips||[]).forEach(c=>{
+    const chip=el("div","forge-chip");
+    chip.innerHTML=`<span class="fc-ic">${c.ic}</span><span><b>${c.label}</b> &mdash; <span class="fc-desc">${c.desc}</span></span>`;
+    strip.appendChild(chip);
+  });
 }
 
 /* ---------- lanes & steering ---------- */
@@ -5597,8 +5765,6 @@ function tick(t){
   M.laneY += (targetY-M.laneY)*Math.min(1,dt*3.4);
   M.caravan.forEach((c,i)=>{ c.laneY += (M.laneY-c.laneY)*Math.min(1,dt*(3.2-i*0.5)); });
 
-  if(M.fork){ updateFork(dt); draw(t); return; }
-
   // an ambush is closing in — advance it (independent of the question box)
   if(M.raid && !M.raid.resolved && !M.paused){ updateRaid(dt); }
 
@@ -5606,26 +5772,34 @@ function tick(t){
     if(M.slowT>0) M.slowT=Math.max(0,M.slowT-dt);
     if(M.banditT>0) M.banditT=Math.max(0,M.banditT-dt);
     if(M.revealT>0) M.revealT=Math.max(0,M.revealT-dt);
+    if(M.surgeT>0) M.surgeT=Math.max(0,M.surgeT-dt);
+    if(M.comboBadT>0) M.comboBadT=Math.max(0,M.comboBadT-dt);
     if(M.paceT>0){ M.paceT=Math.max(0,M.paceT-dt); if(M.paceT<=0) M.paceMult=1; }
+    coolMomentum(dt);
     const weatherPenalty = (M.weather!=="clear") ? clamp(1-(M.weatherProt/140),0.4,1) : 1;
     const tired = M.stats.stamina<15 ? 0.55 : clamp(0.5+M.stats.stamina/140,0.5,1.1);
     const laneSpd = LANES[M.lane].spd;
     const slowPen = M.slowT>0?0.55:1;
     const forkPace = M.paceT>0 ? M.paceMult : 1;
+    // MOMENTUM drives the pace: a full chain of terms makes the squad fly (up to ~2.2×)
+    const momoFactor = 0.7 + M.momentum*0.3;
     // final stretch: a natural, cinematic slow-down as the flag comes into view
     const finalStretch = M.progress>0.9 ? clamp(1-(M.progress-0.9)*3.2, 0.5, 1) : 1;
     // slower base pace than before — the road gives real time to read hazards and decide
-    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * 1.7;
+    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * momoFactor * 1.55;
     M.progress = clamp(M.progress + dt*spd, 0, 1);
+    if(M.gate) updateGate(dt);
 
-    // passive drains — prep cushions, lanes shift the cost
+    // passive drains — prep cushions, lanes shift the cost; momentum eases them
     const cushion = clamp(M.f.stats.prepScore,0.2,1);
-    let stamDrain = 3.6-cushion*2.4 + (M.lane===0?1.1:0);
-    let safeDrain = 1.5-cushion*1.0 - (M.lane===2?0.7:0);
+    const momoEase = 0.8 + M.momentum*0.2;   // ×1 → 1.0, ×5 → 1.8 less drain
+    let stamDrain = (3.6-cushion*2.4 + (M.lane===0?1.1:0))/momoEase;
+    let safeDrain = (1.5-cushion*1.0 - (M.lane===2?0.7:0))/momoEase;
     M.stats.stamina = clamp(M.stats.stamina - dt*stamDrain,0,100);
-    if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5),0,100);
+    if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5)/momoEase,0,100);
     M.stats.safety = clamp(M.stats.safety - dt*Math.max(0.2,safeDrain),0,100);
     updatePrepBars();
+    updateMomentumMeter();
 
     // spawn drips — a touch calmer so a slower road doesn't feel crowded
     M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.1+Math.random()*1.0; spawnPickup(); }
@@ -5663,6 +5837,7 @@ function tick(t){
               else caption(counter? counter.txt : `They take ${hz.name} head-on — a wrong lane costs them.`);
               pop(sx,M.laneY-70, counter?"glancing hit":"hit!", !counter);
               Audio2.sfx.bad(); FX.buzz(counter?16:30); updatePrepBars();
+              if(!counter) knockMomentum();   // a clean hit breaks the chain and drops the multiplier
               // the noise draws the enemy: any active or pending ambush closes in faster
               M.threat += counter?0.6:1.2;
               if(M.raid && !M.raid.resolved){ M.raid.t=Math.max(0,M.raid.t-1.1); caption("The clatter carries — the ambush quickens toward them."); }
@@ -5711,13 +5886,13 @@ function collectPickup(pk,px,py){
   pk.got=true;
   if(pk.type==="lexeme"){
     const part=PARTS[pk.partId];
-    markPartSeen(pk.partId);
     M.collected.lexeme=(M.collected.lexeme||0)+1;
     M.termsFound=M.termsFound||[]; M.termsFound.push(pk.partId);
     const style=LEXEME_STYLE[part.kind];
-    statGain({[style.stat]:6});
-    pop(px,py, `${part.text} — ${part.mean}`, false);
-    Audio2.sfx.clink(); FX.buzz(10);
+    statGain({[style.stat]:4});
+    pop(px,py, part.text, false);
+    // the heart of it: the gathered part tries to extend the term you're forging
+    pushCombo(pk.partId);
   } else if(pk.type==="reagent"){
     M.collected.reagent=(M.collected.reagent||0)+1;
     grantReagent(pk.reagentId, px, py);
@@ -5725,7 +5900,7 @@ function collectPickup(pk,px,py){
     const def=PICKUP_DEFS[pk.type];
     M.collected[pk.type]=(M.collected[pk.type]||0)+1;
     if(def.gain) statGain(def.gain);
-    if(def.ink) M.inkFound+=def.ink;
+    if(def.ink) M.inkFound+=Math.round(def.ink*M.forge.valueMult);
     pop(px,py,def.pop, false);
     Audio2.sfx.clink(); FX.buzz(10);
     if(pk.type==="shard") caption("A lexicon shard glints in the dust — knowledge pays for the road.");
@@ -5743,14 +5918,10 @@ function grantReagent(id, px, py){
   Audio2.sfx.good(); FX.buzz(12);
 }
 
-/* ---------- forks: move your hand to choose the way ---------- */
+/* ---------- events: the road now speaks in word-parts, not menus ---------- */
 function fireEvent(evn){
   const type=evn.type;
-  if(type==="question"){
-    if(M.challengesDone<M.maxChallenges) startChallenge(false);
-    else caption("The travelers recall your teachings and press on.");
-  }
-  else if(type==="fork") openFork();
+  if(type==="gate"||type==="question"||type==="fork") openGate();
   else if(type==="bandits") banditRaid();
   else if(type==="oasis") oasisEvent();
   else if(type==="cache") cacheEvent();
@@ -5758,154 +5929,206 @@ function fireEvent(evn){
   else if(type==="storm") stormEvent();
   else if(type==="slide") slideEvent();
   else if(type==="traveler") travelerEvent();
-}
-/* generic tap-top/tap-bottom decision — the same interaction the fork already
-   taught the player. The caravan halts while the choice is open. */
-function openChoice(prompt, up, down){
-  M.fork={ prompt, up, down };
-  caption(prompt+" — tap the upper or lower choice.");
-  Audio2.sfx.page();
-}
-function openFork(){
-  const variants=[
-    { up:{label:"Rope ascent — faster, costs strength", fx:()=>{
-          const easy = M.caps.climb||M.caps.descend;
-          setPace(easy?1.55:1.35, 4.5);
-          M.stats.stamina=clamp(M.stats.stamina-(easy?6:12),0,100);
-          caption(easy?"Ropes and claws make short work of the rise — a quick, sure pace.":"They haul themselves up bare-handed — quicker, but it costs them dearly."); } },
-      down:{label:"Shaded gully — safe but slow", fx:()=>{ setPace(0.62,5.5); statGain({safety:7,morale:4});
-          caption("The gully swallows their footsteps; a slower pace, but no eyes find them."); } } },
-    { up:{label:"Old rope bridge — quick, it may not hold", fx:()=>{
-          const holds = (M.f.stats.traits && M.f.stats.traits.protect>=1) || Math.random()<0.5;
-          if(holds){ setPace(1.6,3.2); statGain({morale:5}); caption("The bridge groans — and holds. They cross at a run."); }
-          else { setPace(0.55,4.2); M.stats.stamina=clamp(M.stats.stamina-10,0,100); M.stats.safety=clamp(M.stats.safety-8,0,100); FX.buzz(28);
-            caption("A plank gives way! They scramble across, shaken and much slower."); Audio2.sfx.bad(); updatePrepBars(); } } },
-      down:{label:"Ford the shallows — cold but certain", fx:()=>{ setPace(0.75,4.5); M.stats.stamina=clamp(M.stats.stamina-5,0,100); statGain({safety:8});
-          caption("Cold water to the knee slows every step, but every foot lands sure."); } } }
-  ];
-  const v=pick(variants);
-  M.fork={ up:v.up, down:v.down };
-  caption("The path splits — tap the upper way or the lower way to choose.");
-  Audio2.sfx.page();
+  else openGate();
 }
 function setPace(mult, seconds){ M.paceMult=mult; M.paceT=seconds; }
-function forkTap(y){
-  if(!M.fork) return;
-  const H=M.cv.height;
-  forkPick(y < H*0.5 ? "up" : "down");
-}
-function forkPick(zone){
-  const F=M.fork; if(!F) return;
-  const choice=F[zone]; M.fork=null;
-  choice.fx(); updatePrepBars(); Audio2.sfx.chime(); FX.buzz(14);
-}
-function updateFork(dt){ /* fork now resolves on tap (forkTap) — nothing to poll */ }
 
-/* ---------- flavor events — each is now a small DECISION with branching
-   outcomes, resolved with the same tap-top/tap-bottom gesture as the fork.
-   Gear, traits and reagents change which branches are strong. ---------- */
+/* ==================================================================
+   MOMENTUM — the live ×multiplier at the heart of the walk
+   ================================================================== */
+function bumpMomentum(amt){
+  M.momentum=clamp(M.momentum+amt, M.forge.momentumFloor, MOMENTUM_MAX);
+  M.moT=4.5;                              // fresh decay grace after every gain
+  if(M.momentum>M.bestMomentum) M.bestMomentum=M.momentum;
+  pulseMomentum();
+}
+function coolMomentum(dt){
+  if(M.moT>0){ M.moT=Math.max(0,M.moT-dt); return; }
+  const floor=M.forge.momentumFloor;
+  if(M.momentum>floor) M.momentum=Math.max(floor, M.momentum-dt*0.30);
+}
+function knockMomentum(){                 // a hazard hit costs pace and breaks the chain
+  M.momentum=clamp(M.momentum*0.6, M.forge.momentumFloor, MOMENTUM_MAX);
+  if(M.combo.length){ M.combo=[]; M.comboBadT=0.4; }
+  updateWordHud();
+}
+
+/* ==================================================================
+   THE COMBO — gather parts in order (prefix? → root(+) → suffix) to
+   forge a term. Real terms pay a bonus; any valid word still surges.
+   ================================================================== */
+function pushCombo(partId){
+  const kind=PARTS[partId] && PARTS[partId].kind; if(!kind) return;
+  const trial=M.combo.concat(partId);
+  const shape=comboShape(trial);
+  if(shape==="broken"){
+    // the piece can't extend this word — start a fresh chain from it if it can lead one
+    M.combo = comboShape([partId])==="broken" ? [] : [partId];
+    M.comboBadT=0.5; Audio2.sfx.page&&Audio2.sfx.page(); updateWordHud();
+    return;
+  }
+  M.combo=trial; Audio2.sfx.clink(); FX.buzz(8);
+  if(shape==="complete") completeTerm();
+  else updateWordHud();
+}
+function completeTerm(){
+  const ids=M.combo.slice();
+  const realId=TERM_BY_SIG[ids.join("+")];
+  const n=ids.length;
+  if(window.__RD_QE) window.__RD_QE.record(ids, true);   // building = practice
+  ids.forEach(markPartSeen);
+  const gain=(0.5+n*0.26)*M.forge.gainMult*(realId?1.3:1);
+  bumpMomentum(gain);
+  M.surgeT=0.6; setPace(1.5+M.momentum*0.12, 3.2);
+  const heal=Math.round((5+n*4)*(0.7+M.momentum*0.12)*M.forge.healMult);
+  statGain({stamina:heal, morale:Math.round(heal*0.7), safety:Math.round(heal*0.5)});
+  const ink=Math.round((2+n)*M.momentum*M.forge.valueMult);
+  M.inkFound+=ink;
+  const label=realId? TERMS[realId].spell
+    : ids.map(id=>(PARTS[id].stem||PARTS[id].text).replace(/[-\/o]+$/,'').replace(/[-\/]/g,'')).join("");
+  M.termsBuilt.push(label);
+  if(realId){ M.realTermsBuilt++;
+    caption(`✦ ${TERMS[realId].spell} — ${TERMS[realId].def}. Momentum ×${M.momentum.toFixed(1)}!`);
+  } else {
+    caption(`Word forged: ${label} — momentum ×${M.momentum.toFixed(1)}!`);
+  }
+  pop(M.cv.width*0.30, M.laneY-88, `×${M.momentum.toFixed(1)}  +${ink} ink`);
+  Audio2.sfx.great(); FX.buzz(22);
+  M.combo=[]; updateWordHud();
+}
+
+/* ==================================================================
+   RUNE GATES — the interactive decision beat that replaced the old
+   top/bottom fork. Three lanes, each marked with a word-part; steer
+   into the one the prompt asks for BEFORE the squad reaches the gate.
+   ================================================================== */
+function openGate(){
+  if(M.gate) return;
+  const reach=[1,2]; if(M.caps.climb) reach.unshift(0);
+  const targetId=pickRoadPart();
+  const kind=PARTS[targetId].kind;
+  const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
+  const distract=shuffle(pool).slice(0,2);
+  const rest=shuffle(distract);
+  const laneIds=[null,null,null];
+  const ansLane=pick(reach);
+  laneIds[ansLane]=targetId;
+  [0,1,2].forEach(l=>{ if(laneIds[l]==null) laneIds[l]=rest.length?rest.shift():pick(pool); });
+  const askMeaning=Math.random()<0.6;    // 60%: prompt a meaning, lanes show parts
+  const kindWord=kind==="prefix"?"prefix":kind==="suffix"?"suffix":"root";
+  M.gate={
+    p: M.progress+0.075, laneIds, ansLane, targetId, kind, conceptId:targetId,
+    showMeaning:!askMeaning,             // when we ask for the part, lanes show meanings
+    prompt: askMeaning
+      ? `Rune gate — take the ${kindWord} meaning <b>${PARTS[targetId].mean}</b>`
+      : `Rune gate — which path reads <b>${PARTS[targetId].text}</b>?`,
+    resolved:false, flareT:0, flareLane:-1, flareOk:false
+  };
+  const gp=$('#gate-prompt'); if(gp){ gp.innerHTML=M.gate.prompt; gp.classList.add('show'); }
+  caption("A rune gate spans the road — line up with the right path before you reach it.");
+  Audio2.sfx.page();
+}
+function resolveGate(){
+  const G=M.gate; if(!G||G.resolved) return;
+  G.resolved=true; M.challengesDone++;
+  const ok=M.lane===G.ansLane;
+  const gp=$('#gate-prompt'); if(gp) gp.classList.remove('show');
+  if(window.__RD_QE) window.__RD_QE.record([G.conceptId], ok);
+  G.flareT=0.9; G.flareLane=M.lane; G.flareOk=ok;
+  if(ok){
+    M.challengesWon++; bumpMomentum(0.9*M.forge.gainMult); M.surgeT=0.5; setPace(1.6,3);
+    statGain({morale:8,safety:6,stamina:4});
+    caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
+    pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
+  } else if(M.forge.smokeSaves>0){
+    M.forge.smokeSaves--; renderForgeStrip();
+    caption(`Smoke covers a wrong read — no cost this once. The path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}).`);
+    pop(M.cv.width*0.30,M.laneY-88,"smoke saved!"); Audio2.sfx.clink();
+  } else {
+    M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
+    M.stats.morale=clamp(M.stats.morale-7,0,100); M.stats.stamina=clamp(M.stats.stamina-5,0,100);
+    caption(`Wrong gate — the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
+    pop(M.cv.width*0.30,M.laneY-88,"wrong gate",true); Audio2.sfx.bad(); FX.buzz(24);
+    M.reask=(M.reask||[]).concat(G.conceptId);
+  }
+  updatePrepBars(); updateWordHud();
+}
+function updateGate(dt){
+  const G=M.gate; if(!G) return;
+  if(!G.resolved){ if(screenX(G.p) < M.cv.width*0.30+8) resolveGate(); }
+  else { G.flareT=Math.max(0,G.flareT-dt); if(G.flareT<=0) M.gate=null; }
+}
+
+/* ---------- flavor events — auto-resolving beats (never a blind menu);
+   forged gear and perks decide how they land, and each one drops fresh
+   word-parts so the combo keeps flowing ---------- */
+function scatterParts(n){ for(let i=0;i<n;i++) spawnPickup(pick([0,1,2]),"lexeme",40+i*90); }
 function oasisEvent(){
-  openChoice("Green in the grey — a spring oasis",
-    { label:"Rest in the shade — a deep recovery, but the day slips", fx:()=>{
-        statGain({stamina:24,morale:14}); setPace(0.7,5);
-        caption("They drink long and lie back in the green — strength returns, the sun crawls on.");
-        Audio2.sfx.good();
-        spawnPickup(1,"lexeme",60); spawnPickup(2,"lexeme",160); } },
-    { label:"Fill the flasks and press on — bottle the spring itself", fx:()=>{
-        statGain({stamina:8,morale:4});
-        grantReagent("springwater", M.cv.width*0.30, M.laneY-80);
-        spawnPickup(1,"lexeme",80); } });
+  statGain({stamina:20,morale:12}); setPace(1.15,3);
+  caption("A spring oasis — they drink deep and press on refreshed, word-parts glinting in the reeds.");
+  Audio2.sfx.good(); scatterParts(3);
+  if(Math.random()<0.5) grantReagent("springwater", M.cv.width*0.30, M.laneY-80);
 }
 function cacheEvent(){
-  const tr=(M.f.stats&&M.f.stats.traits)||{};
-  const canPry = M.caps.cut || (tr.power||0)>=2;
-  openChoice("A strapped cache sits half-buried by the path",
-    { label: canPry? "Pry it open — your forged edge makes short work"
-                   : "Force it open — noisy work without the right tool", fx:()=>{
-        const FOUND=window.__RD_FOUND||{};
-        const unfound=Object.keys(FOUND).filter(id=>!(S().foundMats||[]).includes(id));
-        const sx=M.cv.width*0.30;
-        if(canPry){
-          if(unfound.length){
-            const id=pick(unfound); const mat=FOUND[id];
-            S().foundMats=S().foundMats||[]; S().foundMats.push(id); persist();
-            M.matsFound.push(mat.name);
-            caption(`The lid gives cleanly. Inside: ${mat.name} — the bench will know what to make of it.`);
-            pop(sx,M.laneY-80,`+ ${mat.name}`); Audio2.sfx.great(); FX.buzz(20);
-          } else {
-            M.inkFound+=6;
-            grantReagent(pick(Object.keys(window.__RD_REAGENTS||{springwater:1})), sx, M.laneY-80);
-          }
-        } else {
-          M.inkFound+=4; M.threat+=1.2;
-          caption("They crack it clumsily — some ink saved, but the clatter rolls far down the pass.");
-          pop(sx,M.laneY-80,"+4 ink · noise!",true); Audio2.sfx.bad(); FX.buzz(20);
-        } } },
-    { label:"Mark it for the Reed Guild — safe, and the Guild pays well", fx:()=>{
-        M.inkFound+=6; M.cachesMarked++;
-        caption("They chalk the reed-sign on the lid and move on — the Guild pays for honest maps.");
-        pop(M.cv.width*0.30,M.laneY-80,"+6 ink · guild mark"); Audio2.sfx.good(); } });
+  const sx=M.cv.width*0.30;
+  const FOUND=window.__RD_FOUND||{};
+  const unfound=Object.keys(FOUND).filter(id=>!(S().foundMats||[]).includes(id));
+  if(M.forge.cutClear){
+    if(unfound.length){
+      const id=pick(unfound); const mat=FOUND[id];
+      S().foundMats=S().foundMats||[]; S().foundMats.push(id); persist(); M.matsFound.push(mat.name);
+      caption(`Your forged edge pries the cache clean. Inside: ${mat.name} — the bench will know its use.`);
+      pop(sx,M.laneY-80,`+ ${mat.name}`); Audio2.sfx.great(); FX.buzz(20);
+    } else { M.inkFound+=Math.round(8*M.forge.valueMult); pop(sx,M.laneY-80,"+ink");
+      caption("Your forged edge pries the cache clean — ink and stores for the bench.");
+      grantReagent(pick(Object.keys(window.__RD_REAGENTS||{springwater:1})), sx, M.laneY-80); }
+  } else {
+    M.inkFound+=4; M.threat+=1.0;
+    caption("No edge to pry with — they crack the cache open by hand, saving some ink but making noise.");
+    pop(sx,M.laneY-80,"+4 ink · noise!",true); Audio2.sfx.bad(); FX.buzz(16);
+  }
+  scatterParts(2);
 }
 function scholarEvent(){
-  openChoice("A wandering scholar hails the squad from a milestone",
-    { label:"Trade riddles — answer well and be paid", fx:()=>{
-        caption("The scholar bars the way with a riddle of roots — answer well and be paid.");
-        startChallenge(false,"scholar"); } },
-    { label:"Ask for road-lore — the way ahead, laid plain", fx:()=>{
-        M.revealT=14;
-        const nxt=M.events[M.evIdx];
-        const hint=nxt? (EV_INTEL[nxt.type]||"a quiet stretch, by their telling") : "the waystation itself";
-        caption(`The scholar sketches the next li of road in the dust — every danger named before it strikes. Ahead: ${hint.toLowerCase()}`);
-        statGain({morale:5}); Audio2.sfx.page(); } });
+  M.revealT=14;
+  const nxt=M.events[M.evIdx];
+  const hint=nxt? (EV_INTEL[nxt.type]||"a quiet stretch, by their telling") : "the waystation itself";
+  bumpMomentum(0.4);
+  caption(`A wandering scholar sketches the road ahead — dangers named before they strike. Ahead: ${hint.toLowerCase()}`);
+  statGain({morale:5}); Audio2.sfx.page(); scatterParts(3);
 }
 function stormEvent(){
   const kind=pick(["rain","snow"]);
-  const turn=()=>{ M.weather=kind; seedParticles(M.weather); M.hazardDeck=null; };
-  openChoice(`Thunderheads mass ahead — a ${kind==="snow"?"snow squall":"downpour"} will catch them on the open stretch`,
-    { label:"Push through — hold the pace and take the weather", fx:()=>{
-        turn();
-        if(M.perks.has("stormproof")){
-          caption("The storm breaks over lacquered packs and rolls off — they walk through it untouched.");
-          pop(M.cv.width*0.30,M.laneY-80,"stormproof!"); Audio2.sfx.clink();
-        } else {
-          const prot=M.weatherProt>62;
-          caption(prot? "The storm sweeps the pass — cloaks and shelter hold the worst of it off."
-                      : "The storm catches them thin — they packed too little against it.");
-          if(!prot){ M.stats.morale=clamp(M.stats.morale-11,0,100); M.stats.stamina=clamp(M.stats.stamina-7,0,100);
-            FX.buzz(26); Audio2.sfx.bad(); }
-        }
-        updatePrepBars(); } },
-    { label:"Shelter beneath the ledge — lose time, stay dry", fx:()=>{
-        turn(); setPace(0.35,4.5); statGain({morale:3});
-        caption("They wedge in under the ledge as the sky opens — dry, if not swift.");
-        if(Math.random()<0.5){ spawnPickup(M.lane,"lexeme",60);
-          caption("Waiting out the storm, they find old word-parts scratched into the ledge stone."); }
-        Audio2.sfx.good(); } });
+  M.weather=kind; seedParticles(M.weather); M.hazardDeck=null;
+  if(M.perks.has("stormproof")){
+    caption("A storm breaks over lacquered packs and rolls off — they walk through untouched.");
+    pop(M.cv.width*0.30,M.laneY-80,"stormproof!"); Audio2.sfx.clink();
+  } else if(M.weatherProt>62){
+    caption(`A ${kind==="snow"?"snow squall":"downpour"} sweeps the pass — cloaks and shelter hold the worst off.`);
+    Audio2.sfx.page();
+  } else {
+    caption(`A ${kind==="snow"?"snow squall":"downpour"} catches them thin — they packed too little against it.`);
+    M.stats.morale=clamp(M.stats.morale-9,0,100); M.stats.stamina=clamp(M.stats.stamina-6,0,100);
+    knockMomentum(); FX.buzz(22); Audio2.sfx.bad();
+  }
+  updatePrepBars();
 }
 function slideEvent(){
-  const tr=(M.f.stats&&M.f.stats.traits)||{};
-  const canClear=M.caps.cut || (tr.power||0)>=2;
-  openChoice("A rockslide chokes the trail ahead",
-    { label: canClear? "Clear it — forged steel against loose stone"
-                     : "Heave it aside by hand — slow, bruising work", fx:()=>{
-        if(canClear){ M.stats.stamina=clamp(M.stats.stamina-4,0,100); statGain({morale:6});
-          caption("Bar and blade lever the slide apart — the squad files through the gap at pace."); Audio2.sfx.great(); }
-        else { M.stats.stamina=clamp(M.stats.stamina-14,0,100); M.slowT=3;
-          caption("They wrestle the stones aside bare-handed — through, but it costs them dearly."); Audio2.sfx.bad(); FX.buzz(22); }
-        updatePrepBars(); } },
-    { label:"Pick along the slide's edge — careful and slow", fx:()=>{
-        setPace(0.55,5); statGain({safety:5});
-        caption("Single file along the slide's lip — slow going, but nothing shifts under them."); } });
+  if(M.forge.cutClear||M.forge.surefoot){
+    statGain({morale:6}); setPace(1.2,2.5);
+    caption("A rockslide chokes the trail — forged gear levers it apart and the squad files through at pace.");
+    Audio2.sfx.great();
+  } else {
+    M.stats.stamina=clamp(M.stats.stamina-10,0,100); M.slowT=2.5; knockMomentum();
+    caption("A rockslide chokes the trail — they heave the stones aside by hand, through but slowed.");
+    Audio2.sfx.bad(); FX.buzz(18);
+  }
+  updatePrepBars(); scatterParts(2);
 }
 function travelerEvent(){
-  openChoice("A lost traveler waves from the roadside, footsore and turned around",
-    { label:"Walk them along — slower, but no one is left behind", fx:()=>{
-        setPace(0.85,5); statGain({morale:10}); M.inkFound+=4;
-        caption("They fall in beside the squad, and press ink into your hands at the next milestone.");
-        pop(M.cv.width*0.30,M.laneY-80,"+4 ink"); Audio2.sfx.good(); } },
-    { label:"Give directions in the old words — a test of your teaching", fx:()=>{
-        caption("You trace the route in the old tongue — if the words are right, they'll walk it true.");
-        startChallenge(false,"traveler"); } });
+  setPace(1.1,2.5); statGain({morale:10}); M.inkFound+=Math.round(4*M.forge.valueMult);
+  caption("A lost traveler falls in beside the squad, guided true by your old words — and pays in ink at the next milestone.");
+  pop(M.cv.width*0.30,M.laneY-80,"+ink"); Audio2.sfx.good(); scatterParts(2);
 }
 function banditRaid(){
   const enemy=M.enemy||{name:"masked raiders"};
@@ -5931,7 +6154,7 @@ function updateRaid(dt){
   if(R.t<=0){
     // no weapon used, no smoke: the vocab challenge IS the desperate defense
     R.resolved=true; M.raiders=[];
-    const fire=()=>{ if(!M||M.done) return; if(M.fork||M.paused){ setTimeout(fire,500); return; } startChallenge(true); };
+    const fire=()=>{ if(!M||M.done) return; if(M.paused){ setTimeout(fire,500); return; } startChallenge(true); };
     caption(`${R.name} crash in — recall the word to rally the squad!`);
     setTimeout(fire, 500);
   }
@@ -6140,10 +6363,10 @@ function draw(t){
     ctx.fillText(pp.txt, pp.x, pp.y - pp.age*34);
     ctx.restore();
   });
-  // fork overlay
-  if(M.fork) drawFork(ctx,W,H);
+  // rune gate spanning the road
+  if(M.gate) drawGate(ctx,W,H,t);
   // destination banner
-  if(M.progress>0.86 && !M.fork){ const a=(M.progress-0.86)/0.14;
+  if(M.progress>0.86 && !M.gate){ const a=(M.progress-0.86)/0.14;
     ctx.globalAlpha=clamp(a,0,1); ctx.fillStyle="#b5322b";
     const bx=W*0.88, by=LANES[1].y*H-90;
     ctx.fillRect(bx-4,by,8,70); ctx.fillRect(bx,by,54,34);
@@ -6151,29 +6374,43 @@ function draw(t){
     ctx.fillText("到",bx+26,by+18); ctx.globalAlpha=1; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
   }
 }
-function drawFork(ctx,W,H){
-  const F=M.fork;
+/* the rune gate: three labelled arches marching toward the squad; steer into
+   the one the prompt asks for. Correct/wrong lanes flare on resolution. */
+function drawGate(ctx,W,H,t){
+  const G=M.gate; const gx=screenX(G.p);
+  if(gx<-80||gx>W+120) return;
+  const sway=Math.sin(t*0.004)*3;
   ctx.save();
-  ctx.fillStyle="rgba(20,14,8,.42)"; ctx.fillRect(0,0,W,H);
-  const zones=[{k:"up",y0:0,y1:H*0.5,ly:H*0.26,label:F.up.label,arrow:"▲"},
-               {k:"down",y0:H*0.5,y1:H,ly:H*0.74,label:F.down.label,arrow:"▼"}];
-  zones.forEach(z=>{
-    const active=F.zone===z.k;
-    ctx.fillStyle=active?"rgba(189,157,95,.22)":"rgba(236,226,203,.08)";
-    ctx.fillRect(0,z.y0,W,z.y1-z.y0);
-    ctx.fillStyle=active?"#f3ecd8":"rgba(243,236,216,.85)";
-    ctx.font="700 15px 'Noto Sans',sans-serif"; ctx.textAlign="center";
-    ctx.fillText(`${z.arrow}  ${z.label}`, W/2, z.ly);
-    if(active){
-      ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=4;
-      ctx.beginPath(); ctx.arc(W/2, z.ly+34, 16, -1.57, -1.57+6.28*Math.min(1,F.hold/0.7)); ctx.stroke();
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  for(let lane=0;lane<3;lane++){
+    const y=LANES[lane].y*H;
+    const id=G.laneIds[lane]; if(!id) continue;
+    const part=PARTS[id];
+    const locked = LANES[lane].need && !M.caps[LANES[lane].need];
+    const isAns = lane===G.ansLane;
+    let glow="rgba(189,157,95,0.9)", face="rgba(24,21,16,0.82)";
+    if(G.resolved){
+      if(lane===G.flareLane) { glow=G.flareOk?"#5fae5f":"#d24a3a"; }
+      else if(isAns){ glow="#5fae5f"; }         // always reveal the true path
     }
-  });
-  ctx.strokeStyle="rgba(243,236,216,.4)"; ctx.setLineDash([10,8]); ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(0,H*0.5); ctx.lineTo(W,H*0.5); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle="rgba(243,236,216,.9)"; ctx.font="600 13px 'Noto Sans',sans-serif"; ctx.textAlign="center";
-  ctx.fillText(F.prompt ? F.prompt : "tap the upper or lower way to choose", W/2, H*0.5-10);
-  ctx.restore();
+    ctx.globalAlpha=locked?0.4:1;
+    // arch posts
+    ctx.strokeStyle=glow; ctx.lineWidth=5; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(gx-30,y+24); ctx.lineTo(gx-30,y-40+sway);
+    ctx.quadraticCurveTo(gx,y-58+sway,gx+30,y-40+sway); ctx.lineTo(gx+30,y+24); ctx.stroke();
+    // label plate
+    const label = G.showMeaning ? part.mean : part.text;
+    ctx.fillStyle=face; ctx.strokeStyle=glow; ctx.lineWidth=2;
+    const w=Math.max(58, label.length*7.2+16);
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(gx-w/2,y-20+sway,w,26,7); else ctx.rect(gx-w/2,y-20+sway,w,26);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle="#f6f0dc"; ctx.font="700 13px 'Noto Sans',sans-serif";
+    ctx.fillText(label, gx, y-6+sway);
+    if(locked){ ctx.fillStyle="rgba(243,236,216,.85)"; ctx.font="10px 'Noto Sans',sans-serif";
+      ctx.fillText("⨯ needs climbing gear", gx, y+16+sway); }
+  }
+  ctx.globalAlpha=1; ctx.restore();
 }
 function drawPickup(ctx,x,y,type,t,partId){
   const bob=Math.sin(t*0.004+x*0.05)*3;
@@ -6423,10 +6660,14 @@ function showResult(){
   const f=E.getFlow(); const st=f.stats; const chapter=f.chapter;
   const chFrac = M ? (M.challengesDone? M.challengesWon/M.challengesDone : 1) : 1;
   const arrivalHealth = M ? (M.stats.stamina+M.stats.morale+M.stats.safety)/300 : 0.6;
+  // how hard the squad ran the Word Road: the peak momentum they sustained
+  const moFrac = M ? clamp((M.bestMomentum-1)/(MOMENTUM_MAX-1),0,1) : 0;
+  const termsBuilt = M ? (M.termsBuilt?M.termsBuilt.length:0) : 0;
+  const realTerms = M ? (M.realTermsBuilt||0) : 0;
   // How you actually fared on the road now outweighs how well you prepped for it —
   // strong prep gives you a fighting chance, but it can no longer paper over a squad
-  // that arrives running on empty.
-  let overall = clamp(st.overall*0.34 + chFrac*0.24 + arrivalHealth*0.42, 0, 1);
+  // that arrives running on empty. Momentum (word-work on the road) is now a real factor.
+  let overall = clamp(st.overall*0.30 + chFrac*0.20 + arrivalHealth*0.36 + moFrac*0.14, 0, 1);
   let grade = overall>=0.85?"excellent" : overall>=0.66?"good" : overall>=0.45?"fair" : "poor";
   // hard floor: a squad that arrives with almost nothing left in the tank had a hard
   // road, full stop, no matter how clever the bench work was beforehand.
@@ -6436,7 +6677,7 @@ function showResult(){
     fair:{ch:"可",t:"They made it through"}, poor:{ch:"難",t:"A hard road"} };
   const size=f.members.length;
   const guildRep = M ? (M.cachesMarked||0)*2 : 0;   // the Reed Guild pays for marked caches
-  const repGain = Math.round((6+size*2)*overall) + (grade==="excellent"?4:0) + guildRep;
+  const repGain = Math.round((6+size*2)*overall) + (grade==="excellent"?4:0) + guildRep + realTerms;
   const coinGain = Math.round((8+size*3)*(0.5+overall*0.7)) + (M?M.inkFound||0:0);
   const alreadyDone = S().servedChapterIds.includes(chapter.id);
   const pageIdx = chapter.num;                       // page maps to chapter number (0..7)
@@ -6453,9 +6694,11 @@ function showResult(){
     const mk=(val,label,pfx)=>{ const d=el("div","reward"); d.innerHTML=`<div class="rv">${pfx||''}0</div><div class="rl">${label}</div>`; rg.appendChild(d); return d.querySelector('.rv'); };
     const repEl=mk(repGain,"Reputation","+");
     const coinEl=mk(coinGain,"Ink earned","+");
-    const chEl = M?mk(M.challengesWon,"Recalls right"):null;
+    const chEl = M?mk(termsBuilt,"Terms forged"):null;
+    // best momentum reached — a badge for how hard they ran the Word Road
+    if(M){ const moD=el("div","reward"); moD.innerHTML=`<div class="rv">×${M.bestMomentum.toFixed(1)}</div><div class="rl">Top momentum</div>`; rg.appendChild(moD); }
     setTimeout(()=>{ FX.countUp(repEl,repGain,{prefix:"+"}); FX.countUp(coinEl,coinGain,{prefix:"+"});
-      if(chEl) FX.countUp(chEl, M.challengesWon,{}); }, 300);
+      if(chEl) FX.countUp(chEl, termsBuilt,{}); }, 300);
     const cons=$('#consequences'); cons.innerHTML="";
     consequenceLines(f,grade,st).forEach(c=>{
       const row=el("div","consq"); row.innerHTML=`<span class="ic">${c.ic}</span><div>${c.txt}</div>`; cons.appendChild(row);
@@ -6515,6 +6758,12 @@ function consequenceLines(f,grade,st){
   // escorts who weren't term-builders still contributed
   const escorts=f.members.filter(id=>!f.builders.includes(id)).map(id=>TRAVELERS[id]).filter(Boolean);
   if(escorts.length) lines.push({ic:"⚔", txt:`Escorts ${escorts.slice(0,3).map(e=>e.name.split(' ')[0]).join(", ")}${escorts.length>3?" and others":""} kept the squad safe on the road.`});
+  // terms forged on the road by chaining parts — the heart of the Word Road
+  if(M && M.termsBuilt && M.termsBuilt.length){
+    const uniq=[...new Set(M.termsBuilt)];
+    const shown=uniq.slice(0,4).map(w=>`<b>${w}</b>`).join(", ");
+    lines.push({ic:"✦", txt:`On the march the squad forged <b>${M.termsBuilt.length} term${M.termsBuilt.length>1?"s":""}</b> from gathered word-parts${M.realTermsBuilt?` (${M.realTermsBuilt} a true medical term)`:""} — ${shown}${uniq.length>4?", and more":""} — driving momentum to <b>×${M.bestMomentum.toFixed(1)}</b>.`});
+  }
   // what sharp eyes gathered on the road
   if(M){
     const got=Object.keys(M.collected||{}).reduce((a,k)=>a+M.collected[k],0);
@@ -6599,11 +6848,16 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _state:()=>M,
   _forceRaid:()=>{ if(M && !M.done && (!M.raid||M.raid.resolved)) banditRaid(); return M&&M.raid; },
   _use:(k)=>useAbility(k),
-  _forceFork:()=>{ if(M && !M.done && !M.fork) openFork(); return M&&M.fork; },
-  _forkPick:(z)=>forkPick(z),
-  /* test/debug hooks for the redesigned road */
-  _forceEvent:(type)=>{ if(M && !M.done) fireEvent({type}); return M&&(M.fork||M.raid||M.questionOpen)||null; },
-  _choice:()=>M&&M.fork,
+  /* test/debug hooks for the Word Road */
+  _forceGate:()=>{ if(M && !M.done && !M.gate) openGate(); return M&&M.gate; },
+  _gate:()=>M&&M.gate,
+  _setLane:(l)=>{ if(M&&!M.done) setLane(l); return M&&M.lane; },
+  _resolveGate:()=>{ if(M&&M.gate&&!M.gate.resolved) resolveGate(); return M&&M.gate; },
+  _pushCombo:(id)=>{ if(M&&!M.done) pushCombo(id); return M&&M.combo.slice(); },
+  _combo:()=>M&&M.combo.slice(),
+  _momentum:()=>M&&M.momentum,
+  _forge:()=>M&&M.forge,
+  _forceEvent:(type)=>{ if(M && !M.done) fireEvent({type}); return M&&(M.gate||M.raid||M.questionOpen)||null; },
   _hazardDeck:()=>{ if(M && (!M.hazardDeck||!M.hazardDeck.length)) M.hazardDeck=buildHazardDeck(); return M&&M.hazardDeck; },
   _grantReagent:(id)=>grantReagent(id) };
 
