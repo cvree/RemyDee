@@ -128,6 +128,17 @@ Game+ that carries bench mastery forward — the systems below in §Replayabilit
 ## 7. The villain's thesis (why the game is about anything)
 
 Lord Jian believes knowledge is dangerous in untrained hands, so it should be locked
-away. Remy Dee believes knowledge is dangerous *only* in untrained hands, so hands
-should be trained. The final boss must dramatise that argument mechanically — not
-just narratively. See `GAME_PLAN.md` §7 for the Great Archive encounter.
+away. At the Great Archive he sheds that name and stands revealed as **Jian
+Radicida, the Root-Slayer** — *radix* ("root") + *-cida* ("slayer"): the one who
+kills the roots, believing a word stripped of its root can never mean anything
+again. His final transformation, **Verbum Ultimum** ("the final word"), is the
+purest form of the thesis: that one master alone should hold the authority to
+define truth.
+
+Remy Dee believes knowledge is dangerous *only* in untrained hands, so hands should
+be trained — and that meaning survives only when it is shared, never when it is
+owned by one voice. The final boss dramatises that argument mechanically, not just
+narratively: Radicida attacks roots, the very thing recognition training builds;
+Verbum Ultimum tries to assemble one word alone and is answered by a whole caravan
+of travelers, each holding one piece of the same understanding. See `GAME_PLAN.md`
+§8 for the full Great Archive encounter.

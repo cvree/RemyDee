@@ -1,11 +1,14 @@
-/* test9.js — THE FINAL BOSS: "The Erasure at the Great Archive" (Chapter Seven).
-   Three phases, each a knowledge check wearing an action costume:
-     Phase I   The Stripping        — gates force suffix-only recognition,
-                                       an erosion meter rises and falls.
+/* test9.js — THE FINAL BOSS: Jian Radicida, the Root-Slayer, at "The Erasure
+   at the Great Archive" (Chapter Seven). Three phases, each a knowledge check
+   wearing an action costume:
+     Phase I   The Stripping        — true to his title, gates force ROOT-only
+                                       recognition; an erosion meter rises and
+                                       falls with the fight.
      Phase II  The Blank Page       — hover-to-study seals its definition;
                                        Lexicon Affinity levels are the mercy.
-     Phase III The Caravan Chorus   — a final assembly puzzle, easier the
-                                       more of the campaign you actually played. */
+     Phase III The Caravan Chorus   — his final form, Verbum Ultimum: a final
+                                       assembly puzzle, easier the more of the
+                                       campaign you actually played. */
 const { boot, sleep, until, assert, summary } = require('./testlib');
 
 (async () => {
@@ -58,11 +61,11 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   M = MI._state();
   assert(M.boss.phase === 1, 'crossing into the road enters Phase I: The Stripping');
 
-  // gates in Phase I are forced to suffix-kind recognition
+  // gates in Phase I are forced to root-kind recognition — the Root-Slayer's namesake
   for (let i = 0; i < 5; i++) {
     MI._state().gate = null;
     const g = MI._forceGate();
-    assert(g && D.PARTS[g.targetId].kind === 'suffix', 'every Phase I gate asks for a suffix — nothing else');
+    assert(g && D.PARTS[g.targetId].kind === 'root', 'every Phase I gate asks for a root — nothing else');
     MI._resolveGate();
   }
 
@@ -71,13 +74,13 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   for (let i = 0; i < 20; i++) MI._updateBossPhase(0.1);
   assert(MI._state().boss.erosion > 0, 'the Stripping applies steady pressure — erosion rises over time');
 
-  // ...and falls when a suffix gate is answered correctly
+  // ...and falls when a root gate is answered correctly
   MI._state().gate = null;
   const g1 = MI._forceGate();
   MI._setLane(g1.ansLane);
   const erosionBefore = MI._state().boss.erosion;
   MI._resolveGate();
-  assert(MI._state().boss.erosion < erosionBefore, 'naming a suffix correctly pushes the erasure back');
+  assert(MI._state().boss.erosion < erosionBefore, 'naming a root correctly pushes the erasure back');
 
   // a full collapse costs the squad but never ends the run
   MI._state().boss.erosion = 0.999;

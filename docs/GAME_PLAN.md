@@ -107,6 +107,34 @@ North Star at a glance:
 - **Next unlock:** the exact thing the next mission grants
 - Lexicon affinity level and what the current level gives you
 
+### 2.5 The campaign map ✅
+
+A visual spot-to-spot trail sits above the chapter list on the hub: all eight
+chapters, prologue to finale, laid along a winding path (`renderCampaignMap`).
+Unlike the chapter list — which only ever shows what's currently reachable — the
+map shows the **whole road up front**:
+
+- Every node is always present, even chapters far in the future — nothing is
+  hidden, only *locked*. A locked node shows a plain 🔒 in place of its number,
+  dimmed but still there, with its terrain-trait glyph faintly visible underneath
+  (locks gate access, not information).
+- Each node hints its **value and traits** at a glance: a small icon derived from
+  the chapter's terrain (🧗 mountain → reach & climb, 💨 road → stealth, 🪢 river →
+  protect & descend, and so on — one terrain per chapter, so the mapping is exact,
+  not approximated), plus a native tooltip on hover with the full risk tier and
+  trait description.
+- Completed nodes carry a jade seal and checkmark; the current node glows gold
+  with a pulsing ring; a solid trail connects what's been walked, a plain one
+  marks what's ahead.
+- Clicking the current node opens that chapter exactly like the existing "Prepare
+  the expedition" button; clicking a locked node explains why, rather than doing
+  nothing or silently failing.
+
+Covered by `test10.js` (23 assertions): every chapter has a spot, exactly one is
+"now," locked nodes stay locked but still hint their traits, clicking a locked
+node is a no-op with a clear reason, and the map advances correctly as chapters
+complete.
+
 ---
 
 ## 3. Crafting with teeth ✅
@@ -252,21 +280,27 @@ it while it is happening rather than being surprised at the results screen.
 
 ## 8. The final boss — *The Erasure at the Great Archive* ✅
 
-The finale dramatises the argument: Jian believes words are safest locked away;
-Remy believes words are safest *understood*. So Jian does not fight with a weapon.
-**He unmakes vocabulary in real time**, and the only counter is having actually
-learned it. Built on Chapter Seven's existing road — no new screen, so the whole
-bench-and-road toolkit (momentum, gates, hover-study, abilities) carries into it.
+**Lord Jian sheds that name here.** He is revealed as **Jian Radicida, the
+Root-Slayer** — Latin *radix* ("root") + *-cida* ("slayer, killer"): the one who
+kills the roots. His forces don't just confiscate books — they corrupt terminology
+itself (swapped prefixes, misleading suffixes, erased combining vowels, rewritten
+definitions), and he believes that cutting a word's root out kills its meaning for
+good. His final transformation is **Verbum Ultimum** — "the final word" — the belief
+that one master alone should hold the authority to define truth. The player defeats
+him by doing the opposite of everything he does: rebuilding words, recovering their
+origins, and sharing their meanings. Built on Chapter Seven's existing road — no new
+screen, so the whole bench-and-road toolkit (momentum, gates, hover-study, abilities)
+carries into it.
 
 ### Phase I — *The Stripping* (recognition under decay) — shipped
-Every rune gate from the road's start until progress 0.34 is forced to a **suffix**
-target (`openGate`'s `forceKind`) — Jian is erasing endings, so every gate asks you
-to prove you still know one. An **erosion meter** ("Jian erases the road") rises
-steadily; naming a suffix gate correctly pushes it back 0.3, and completing a real,
-whole term (suffix and all) pushes it back 0.45 — proof a complete word survived the
-Stripping. If erosion maxes out, a collapse knocks momentum and stats hard but is
-always recoverable — never a hard fail, per the "no reflex-only phase, no unfair
-wall" design rules.
+Every rune gate from the road's start until progress 0.34 is forced to a **root**
+target (`openGate`'s `forceKind`) — true to his title, he is slaying roots, so every
+gate asks you to prove you still know one. An **erosion meter** ("Radicida strikes
+at the root") rises steadily; naming a root gate correctly pushes it back 0.3, and
+completing a real, whole term (root and all) pushes it back 0.45 — proof a complete
+word survived the Stripping. If erosion maxes out, a collapse knocks momentum and
+stats hard but is always recoverable — never a hard fail, per the "no reflex-only
+phase, no unfair wall" design rules.
 
 ### Phase II — *The Blank Page* (recall without support) — shipped
 From progress 0.34 onward, hover-to-study's definition card seals shut
@@ -279,24 +313,29 @@ a player at zero affinity gets the raw parts and nothing else — recall without
 support, exactly as designed.
 
 ### Phase III — *The Caravan Chorus* (the argument, resolved) — shipped
-At progress 0.90 the road holds and a full-screen assembly puzzle opens: assemble
-**electrocardiogram** (electr/o + cardi/o + -gram — a real, verified term, and
-notably Bai's own clue term from Chapter Three, so the finale literally reprises a
-word the player already built once). The number of chapters actually finished
-(`servedChapterIds.length`) decides how many parts the traveling company "offers"
-pre-placed — 0 chapters served leaves all three slots to the player, 3+ pre-fills
-one, 6+ pre-fills two. The remaining slot(s) are filled from a tray of the correct
-part plus same-kind distractors; a wrong placement explains which position missed
-and lets the player swap and retry, never punished, never unsolvable. On success,
-momentum surges, the squad is restored, the term is recorded as completed and
-counted as a real term built, and the road resumes to a normal arrival.
+At progress 0.90 the road holds and Radicida makes his last transformation —
+**Verbum Ultimum**, the final word — and a full-screen assembly puzzle opens:
+assemble **electrocardiogram** (electr/o + cardi/o + -gram — a real, verified
+term, and notably Bai's own clue term from Chapter Three, so the finale literally
+reprises a word the player already built once). The number of chapters actually
+finished (`servedChapterIds.length`) decides how many parts the traveling company
+"offers" pre-placed — 0 chapters served leaves all three slots to the player, 3+
+pre-fills one, 6+ pre-fills two. The remaining slot(s) are filled from a tray of
+the correct part plus same-kind distractors; a wrong placement explains which
+position missed and lets the player swap and retry, never punished, never
+unsolvable. On success, momentum surges, the squad is restored, the term is
+recorded as completed and counted as a real term built, and the road resumes to a
+normal arrival.
 
-Jian is not defeated. **He runs out of argument.** The pages scatter.
+Radicida is not defeated in a fight. **He runs out of roots to slay.** The pages
+scatter.
 
-Covered by `test9.js` (48 assertions): forced-suffix gates, erosion rise/relief/
-collapse-without-failure, sealed-vs-scaffolded definitions at exact affinity
-thresholds, and the Chorus's pre-fill scaling, wrong-placement feedback, and
-successful resolution.
+Covered by `test9.js` (48 assertions) and `test10.js` (23 assertions, title
+progression): forced-root gates, erosion rise/relief/collapse-without-failure,
+sealed-vs-scaffolded definitions at exact affinity thresholds, the Chorus's
+pre-fill scaling, wrong-placement feedback and successful resolution, and the
+Lord Jian → Jian Radicida → Verbum Ultimum reveal sequence landing at the right
+narrative beats.
 
 ### Boss design rules
 - No reflex-only phase. Every phase is a knowledge check wearing an action costume.

@@ -359,6 +359,31 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
    ============================================================ */
 .hub-grid{display:grid;grid-template-columns:1.18fr .82fr;gap:18px;max-width:1180px;margin:0 auto;}
 @media (max-width:860px){.hub-grid{grid-template-columns:1fr;}}
+/* ---- THE CAMPAIGN MAP — spot-to-spot, values/traits hinted, locks visible ---- */
+.campaign-map-card{margin-bottom:16px;padding:16px 14px 6px;}
+.campaign-map{width:100%;overflow-x:auto;}
+.map-svg{width:100%;min-width:560px;height:auto;display:block;}
+.map-trail-under{fill:none;stroke:var(--rice-3,#d8cfb4);stroke-width:3;stroke-linecap:round;}
+.map-trail-walked{fill:none;stroke:var(--jade-deep,#33513f);stroke-width:3;stroke-linecap:round;
+  stroke-dasharray:1000; stroke-dashoffset:calc(1000 - var(--dash,0)*1px);}
+.map-node{cursor:pointer;outline:none;}
+.map-node.locked{cursor:not-allowed;}
+.map-node .mn-circ{fill:var(--parch,#f3ecd8);stroke:var(--rice-3,#d8cfb4);stroke-width:2;
+  transition:stroke .15s,transform .15s;}
+.map-node.now .mn-circ{stroke:var(--risk,var(--gold));stroke-width:3;fill:#fff8e6;}
+.map-node.done .mn-circ{stroke:var(--jade-deep,#33513f);fill:rgba(51,81,63,.14);}
+.map-node.locked .mn-circ{fill:rgba(60,50,40,.06);stroke:var(--rice-3,#d8cfb4);}
+.map-node:hover .mn-circ,.map-node:focus .mn-circ{transform:scale(1.08);transform-origin:center;}
+.map-node.locked:hover .mn-circ{transform:none;}
+.map-node .mn-ring{fill:none;stroke:var(--risk,var(--gold));stroke-width:1.4;opacity:.55;
+  stroke-dasharray:3 4;animation:mnRing 5s linear infinite;}
+@keyframes mnRing{to{stroke-dashoffset:-40;}}
+.map-node .mn-glyph{font-size:15px;font-family:var(--font-cal);font-weight:700;fill:var(--ink);}
+.map-node.locked .mn-glyph{fill:var(--ink-soft,#8a7a5f);opacity:.7;}
+.map-node.done .mn-glyph{fill:var(--jade-deep,#33513f);}
+.map-node .mn-label{font-size:10px;fill:var(--ink-soft,#8a7a5f);letter-spacing:.02em;}
+.map-node .mn-traits{font-size:12px;}
+.map-node.locked .mn-traits{opacity:.32;}
 .order-list{display:flex;flex-direction:column;gap:16px;}
 .party-card{padding:16px;cursor:pointer;transition:transform .16s var(--ease),box-shadow .16s;}
 .party-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px var(--shadow);}
@@ -956,6 +981,8 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .chorus-card{background:var(--parch);border-radius:16px;padding:26px 28px;max-width:640px;width:92%;
   text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6);border:2px solid var(--gold);}
 .chorus-lede{font-size:.92rem;line-height:1.5;margin:6px 0 14px;color:var(--ink-soft,#8a7a5f);}
+.chorus-verbum{display:block;font-family:var(--font-cal);font-weight:700;font-size:1.02rem;
+  color:var(--cinnabar-deep);margin-bottom:4px;letter-spacing:.02em;}
 .chorus-offered{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;min-height:1px;}
 .chorus-offered .co-chip{display:inline-flex;flex-direction:column;align-items:center;gap:2px;
   padding:6px 12px;border-radius:10px;background:rgba(51,81,63,.12);border:1px solid var(--jade-deep,#33513f);}
@@ -1264,6 +1291,12 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
         </div>
         <div class="hub-grid">
           <div>
+            <!-- THE CAMPAIGN MAP — every chapter spot to spot, values and traits
+                 shown at a glance, locked steps visibly locked rather than hidden -->
+            <div class="panel campaign-map-card spotlight" data-spot>
+              <span class="eyebrow">The road so far</span>
+              <div class="campaign-map" id="campaign-map"></div>
+            </div>
             <div class="order-list" id="order-list"></div>
           </div>
           <aside>
@@ -1485,7 +1518,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       <div class="gate-prompt" id="gate-prompt"></div>
       <!-- THE ARCHIVE'S PRESSURE — final boss, Phase I (The Stripping) only -->
       <div class="boss-erosion" id="boss-erosion">
-        <span class="be-lab">Jian erases the road</span>
+        <span class="be-lab">Radicida strikes at the root</span>
         <div class="be-track"><i id="be-fill"></i></div>
       </div>
       <div class="mini-challenge" id="mini-challenge">
@@ -2277,7 +2310,8 @@ const ENEMIES = {
   warden:   { name:"Cinnabar Wardens",note:"armored officers guarding strongholds", pressure:3 },
   binder:   { name:"Pagebinders",     note:"scholars who alter definitions", pressure:2 },
   scribe:   { name:"Hollow Scribes",  note:"elite agents who conceal routes", pressure:3 },
-  eraser:   { name:"Lord Jian, the Eraser", note:"leader of the Silent Archive", pressure:4 }
+  eraser:   { name:"Jian Radicida", raidName:"Radicida's wardens",
+    note:"the Root-Slayer, leader of the Silent Archive — he believes a word stripped of its root can never mean anything again", pressure:4 }
 };
 
 /* ==================================================================
@@ -2331,7 +2365,7 @@ const CHAPTERS = [
   { id:"ch7", num:7, name:"Chapter Seven — The Great Caravan", house:"The Great Archive",
     dest:"the Great Archive", risk:"Legendary", enemy:"eraser", terrain:"valley", season:"clear",
     intro:"Every ally and surviving traveler joins the final caravan — nearly thirty strong, drawn from every House of Understanding you have walked through. It crosses rivers, forests, snow and Archive patrols to the empty circular library where Lord Jian waits.",
-    story:"The Lexicon will not answer one person who tries to own it. Only when the whole caravan offers its shared knowledge do the pages blaze to life. Lord Jian watches the light spread across faces he once called too ignorant to trust — the diver, the smith, the midwife, the veteran who used to guard his gates — each holding a piece of the same understanding. He does not surrender so much as run out of reasons. Remy scatters the pages across the realm — knowledge for everyone, held by no one.",
+    story:"He called himself Jian Radicida at the gate — the Root-Slayer, believing that a word with its root cut out could never mean anything again. He called his final working Verbum Ultimum, the last word, meant to prove that one master alone could hold all knowledge. The Lexicon answers no one who tries to own it that way. Only when the whole caravan offers its shared knowledge do the pages blaze to life. Radicida watches the light spread across faces he once called too ignorant to trust — the diver, the smith, the midwife, the veteran who used to guard his gates — each holding a piece of the same understanding. He does not surrender so much as run out of roots to slay. Remy scatters the pages across the realm — knowledge for everyone, held by no one.",
     builders:["mei","anshi","bai","yun"],
     members:["mei","anshi","bai","yun","jun","ren","gwei","hua","fen","luo","bo","cai","duan","ai","kuang","han","shen","ru","rongshu","linfeng","xuemei","eldwei","xiulan","changpu","suyin","yingzhao","biyu","yewen","zhu","banshi","daowen","xiaomei","jinhai","feng2","zan","fei","song","lai","ting","meiying","beicook","kang","reed1","reed4"] }
 ];
@@ -2435,7 +2469,7 @@ const PAGES = [
 const INTRO = [
   "Centuries ago, scholars, healers, explorers and martial teachers wrote the <b>Great Lexicon</b> &mdash; the roots of human knowledge, gathered in one living book.",
   "It taught readers to break hard ideas into meaningful pieces: prefixes, roots, combining forms, suffixes; the names of the body and its systems.",
-  "A hidden faction, the <b>Silent Archive</b>, feared common people would misuse such knowledge. Its leader, <b>Lord Jian, the Eraser</b>, moved to seize the Lexicon.",
+  "A hidden faction, the <b>Silent Archive</b>, feared common people would misuse such knowledge. Its leader, <b>Lord Jian</b>, moved to seize the Lexicon.",
   "To stop him, the Keepers tore the book apart and scattered its pages across the realm &mdash; the <b>Night of Torn Pages</b>. The world slowly forgot how the knowledge fit together.",
   "You are <b>Remy Dee</b>, new master of the <b>Hidden Reed School</b>. Master Vale has vanished, leaving you one blank page, an unfinished map, and <b>Radix</b> &mdash; a red panda who senses hidden root-seals.",
   "Build a medical term rightly, and glowing characters reveal the road to a lost fragment. Train companies, prepare them well, and recover the Lexicon &mdash; before the Archive locks all learning away.",
@@ -3704,6 +3738,7 @@ function showHub(){
     refreshTopbars();
     $('#radix-hub').innerHTML=radixSVG();
     $('#hub-heading').textContent = "The Hidden Reed School";
+    renderCampaignMap();
     renderChapters();
     renderPath();
     renderLedger();
@@ -3757,6 +3792,81 @@ function renderPath(){
     row("Lexicon affinity", `${aff.name}`,
         nx ? `${studied} / ${nx.need} parts read — next: ${nx.name}` : (aff.grant||"every level earned"))+
     (aff.grant? `<div class="path-grant">✦ ${aff.grant}</div>` : "");
+}
+/* ==================================================================
+   THE CAMPAIGN MAP — a spot-to-spot trail through all eight chapters.
+   Unlike the chapter list below (which only ever shows what's reachable),
+   the map shows the WHOLE road up front: every stop, its risk, a hint of
+   the traits its terrain demands, and a plain lock on anything not yet
+   reached. Nothing is hidden — the player always knows what's coming and
+   roughly what it will ask of them.
+   ================================================================== */
+const TERRAIN_TRAITS = {
+  hills:   [{ic:"🌾",label:"steady pace"}],
+  lowland: [{ic:"🩹",label:"recovery"}],
+  mountain:[{ic:"🧗",label:"reach & climb"}],
+  road:    [{ic:"💨",label:"stealth"}],
+  river:   [{ic:"🪢",label:"protect & descend"}],
+  forest:  [{ic:"🐾",label:"sure footing"}],
+  ruins:   [{ic:"🏹",label:"power at range"}],
+  valley:  [{ic:"📜",label:"everything, together"}]
+};
+const RISK_COLOR = { Low:"#5f9a7d", Moderate:"#bd9d5f", High:"#c06a3a",
+  Extreme:"#b5322b", Legendary:"#8a3ab5" };
+function renderCampaignMap(){
+  const host=$('#campaign-map'); if(!host) return;
+  const cur=clamp(S().chapter,0,CHAPTERS.length-1);
+  const done=new Set(S().servedChapterIds);
+  const finished=S().finished;
+  const n=CHAPTERS.length;
+  const W=760,H=190;
+  const pts=CHAPTERS.map((c,i)=>({
+    x: 44 + i*((W-88)/(n-1)),
+    y: 95 + Math.sin(i*1.15+0.3)*62,
+    c, i
+  }));
+  const pathD=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+" "+p.y.toFixed(1)).join(" ");
+  let svg=`<svg viewBox="0 0 ${W} ${H+56}" class="map-svg" role="list" aria-label="Campaign map">`;
+  // the trail itself: a solid line behind what's walked, a dashed line ahead
+  svg+=`<path d="${pathD}" class="map-trail-under"/>`;
+  const walkedIdx=Math.max(0, done.size?CHAPTERS.findIndex(c=>c.id===[...done].slice(-1)[0])+1:0);
+  svg+=`<path d="${pathD}" class="map-trail-walked" style="--dash:${Math.round((walkedIdx/(n-1))*1000)}"/>`;
+  pts.forEach(p=>{
+    const c=p.c, i=p.i;
+    const isDone=done.has(c.id);
+    const isNow=(i===cur && !isDone && !finished);
+    const isLocked=(i>cur) || (i===cur && finished);
+    const state=isDone?"done":isNow?"now":"locked";
+    const traits=TERRAIN_TRAITS[c.terrain]||[];
+    const riskColor=RISK_COLOR[c.risk]||"var(--gold)";
+    const label = i===0?"Prologue":"Ch. "+i;
+    const glyph = isLocked? "🔒" : isDone? "✓" : (i===0?"P":i);
+    const titleBits = [c.name, c.risk+" risk", traits.map(t=>t.label).join(", ")];
+    if(isLocked) titleBits.push("locked — finish the current road first");
+    else if(isDone) titleBits.push("recovered");
+    svg+=`<g class="map-node ${state}" data-idx="${i}" tabindex="0" role="listitem"
+        transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})"
+        style="${isLocked?"":`--risk:${riskColor}`}">
+      <title>${titleBits.filter(Boolean).join(" — ")}</title>
+      <circle r="18" class="mn-circ"/>
+      ${isNow?'<circle r="24" class="mn-ring"/>':""}
+      <text class="mn-glyph" y="6" text-anchor="middle">${glyph}</text>
+      <text class="mn-label" y="35" text-anchor="middle">${label}</text>
+      <text class="mn-traits" y="49" text-anchor="middle">${traits.map(t=>t.ic).join(" ")}</text>
+    </g>`;
+  });
+  svg+=`</svg>`;
+  host.innerHTML=svg;
+  $$(".map-node",host).forEach(g=>{
+    const idx=+g.dataset.idx; const c=CHAPTERS[idx];
+    const activate=()=>{
+      if(idx>cur || (idx===cur && S().finished)){ toast("Locked — finish the current road first."); return; }
+      if(done.has(c.id)){ toast(`${c.name} — already recovered, its page safe in the Lexicon.`); return; }
+      Audio2.sfx.brush(); FX.buzz(16); openChapter(c);
+    };
+    g.addEventListener("click",activate);
+    g.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); activate(); } });
+  });
 }
 function renderChapters(){
   const wrap=$('#order-list'); wrap.innerHTML="";
@@ -3825,7 +3935,8 @@ function openChapter(chapter){
     $('#case-title').textContent=chapter.name;
     const enemy=chapter.enemy?ENEMIES[chapter.enemy]:null;
     $('#case-eyebrow').textContent=`Bound for ${chapter.dest}`+(enemy?` · ${enemy.name} abroad`:"");
-    $('#case-intro').innerHTML=chapter.intro + (enemy?`<div class="small muted" style="margin-top:8px">The road is watched by the <b>${enemy.name}</b> — ${enemy.note}.</div>`:"");
+    const enemyIsNamed = chapter.enemy==="eraser";   // a named person reads oddly with "the" in front
+    $('#case-intro').innerHTML=chapter.intro + (enemy?`<div class="small muted" style="margin-top:8px">The road is watched by ${enemyIsNamed?"":"the "}<b>${enemy.name}</b> — ${enemy.note}.</div>`:"");
     const grid=$('#traveler-grid'); grid.innerHTML="";
     const cards=[];
     flow.members.forEach(id=>{
@@ -5912,19 +6023,28 @@ function computeForgePassives(f){
 
 /* ==================================================================
    THE FINAL BOSS — The Erasure at the Great Archive (Chapter Seven).
-   Lord Jian does not fight with a weapon: he unmakes vocabulary in real
-   time, and the only counter is having actually learned it. Three phases,
-   each a knowledge check wearing an action costume, each with a mercy
-   mechanic tied to something the player chose to invest in earlier.
-     Phase I   The Stripping        — gates ask ONLY for suffixes, and an
+   Lord Jian sheds that name here and stands revealed as JIAN RADICIDA,
+   THE ROOT-SLAYER — radix ("root") + -cida ("slayer, killer"): the one
+   who kills the roots. He does not fight with a weapon; he unmakes
+   vocabulary in real time, and the only counter is having actually
+   learned it. Three phases, each a knowledge check wearing an action
+   costume, each with a mercy mechanic tied to something the player chose
+   to invest in earlier.
+     Phase I   The Stripping        — true to his title, gates ask ONLY
+                                       for ROOTS (the part that carries a
+                                       term's actual meaning), and an
                                        erosion meter rises until a real
                                        naming pushes it back.
      Phase II  The Blank Page       — hover-to-study seals its definition;
                                        Lexicon Affinity levels are the only
                                        scaffolding left.
-     Phase III The Caravan Chorus   — a final assembly puzzle. Travelers
-                                       you served across the campaign step
-                                       forward and offer their part first.
+     Phase III The Caravan Chorus   — his final transformation, VERBUM
+                                       ULTIMUM ("the final word"): he tries
+                                       to assemble one word alone, to prove
+                                       a single master can define truth.
+                                       Travelers you served across the
+                                       campaign step forward and offer
+                                       their part first.
    ================================================================== */
 const BOSS_TERM_ID="electrocardiogram";       // electr/o + cardi/o + -gram — a record that cannot be argued with
 const BOSS_P1_END=0.34, BOSS_CHORUS_AT=0.90;
@@ -5937,7 +6057,7 @@ function updateBossPhase(dt){
   B.phase = M.progress<0.04 ? 0 : (M.progress<BOSS_P1_END ? 1 : 2);
   if(B.phase!==wasPhase){
     if(B.phase===1){
-      caption("<b>The Stripping.</b> Jian erases suffixes as fast as they're spoken — every gate ahead asks for one. Name them true, and the erasure falls back.");
+      caption("<b>The Stripping.</b> Radicida tears at the roots of every word — no meaning holds without one. Every gate ahead asks for a root. Name it true, and the erasure falls back.");
       Audio2.sfx.page && Audio2.sfx.page();
     } else if(B.phase===2){
       caption("<b>The Blank Page.</b> The glossary falls silent — hovering a word no longer explains it. Only what your Lexicon Affinity has earned still lights the way.");
@@ -5992,16 +6112,16 @@ function openChorus(){
   renderChorus();
   const box=$('#boss-chorus'); if(box) box.classList.add('show');
   const seal=$('#chorus-seal'); if(seal) seal.onclick=checkChorus;
-  caption("Lord Jian gathers a final word to prove one master can hold all knowledge alone.");
+  caption(`"No more roots to slay," Radicida says. "Only the last word — <b>Verbum Ultimum</b>." He gathers one final term to prove a single master can hold all knowledge alone.`);
   Audio2.sfx.chime && Audio2.sfx.chime();
 }
 function renderChorus(){
   const Cs=M.chorus; if(!Cs) return;
   const lede=$('#chorus-lede');
   if(lede){
-    lede.innerHTML = Cs.preCount>0
+    lede.innerHTML = `<span class="chorus-verbum">Verbum Ultimum — the final word.</span> ` + (Cs.preCount>0
       ? `He falters. <b>${Cs.preCount}</b> traveler${Cs.preCount>1?"s":""} you named a term for step${Cs.preCount>1?"":"s"} forward and offer${Cs.preCount>1?"":"s"} their part. The rest is yours to finish.`
-      : `He falters — but no traveler steps forward this time. Every part of this word is yours alone to place.`;
+      : `He falters — but no traveler steps forward this time. Every part of this word is yours alone to place.`);
   }
   const offered=$('#chorus-offered'); if(offered){
     offered.innerHTML = Cs.locked.map((lk,i)=> !lk?"":
@@ -6069,7 +6189,7 @@ function resolveChorus(){
   setTimeout(()=>{
     const box=$('#boss-chorus'); if(box) box.classList.remove('show');
     M.paused=false;
-    caption(`✦ ${term.spell} — ${term.def}. Lord Jian does not surrender so much as run out of reasons.`);
+    caption(`✦ ${term.spell} — ${term.def}. Radicida does not surrender so much as run out of roots to slay.`);
   }, 1700);
 }
 
@@ -6129,7 +6249,11 @@ function runMission(){
     updateWordHud();
     const routeOpen = caps.climb ? "Climbing gear opens the whole slope — the upper ledges included."
       : "Without climbing gear the upper ledges stay closed — the trail and the river floor are yours.";
-    caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. <b>Move freely</b> — the mouse leads them, or hold W/S. <b>Hover a word-part</b> to read what it means. ${routeOpen}`);
+    if(isBossRoad(f)){
+      caption(`He steps from the archive's shadow. "Lord Jian is a name for a man who still believed in doors," he says. "Radix — the root. Caedere — to slay. I am <b>Jian Radicida, the Root-Slayer</b>." <b>Move freely</b> — the mouse leads them, or hold W/S.`);
+    } else {
+      caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. <b>Move freely</b> — the mouse leads them, or hold W/S. <b>Hover a word-part</b> to read what it means. ${routeOpen}`);
+    }
     const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500); }
     $('#mini-challenge').classList.remove('show');
     Audio2.sfx.whoosh();
@@ -6849,8 +6973,8 @@ function completeTerm(){
   } else {
     caption(`Word forged: ${label} — momentum ×${M.momentum.toFixed(1)}!`);
   }
-  // Phase I (The Stripping): a real, complete word — suffix and all — is proof
-  // the Archive hasn't won. It pushes the erasure back harder than a gate does.
+  // Phase I (The Stripping): a real, complete word — root and all — is proof
+  // Radicida hasn't won. It pushes the erasure back harder than a gate does.
   if(M.boss && M.boss.phase===1 && realId) M.boss.erosion=clamp(M.boss.erosion-0.45,0,1);
   pop(M.cv.width*0.30, M.laneY-88, `×${M.momentum.toFixed(1)}  +${ink} ink`);
   Audio2.sfx.great(); FX.buzz(22);
@@ -6886,9 +7010,10 @@ function sweepGateCorridor(){
 function openGate(){
   if(M.gate) return;
   const reach=[1,2]; if(M.caps.climb) reach.unshift(0);
-  // Phase I of the final boss (The Stripping) erases suffixes — every gate here
-  // asks you to prove you still know one, under real pressure (see updateBossPhase)
-  const forceKind = (M.boss && M.boss.phase===1) ? "suffix" : null;
+  // Phase I of the final boss (The Stripping) — Radicida slays ROOTS, the part
+  // that carries a term's actual meaning. Every gate here asks you to prove you
+  // still know one, under real pressure (see updateBossPhase).
+  const forceKind = (M.boss && M.boss.phase===1) ? "root" : null;
   const targetId=pickRoadPart(forceKind);
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
@@ -6930,7 +7055,7 @@ function resolveGate(){
     statGain({morale:8,safety:6,stamina:4});
     caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
     pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
-    // Phase I (The Stripping): naming a suffix correctly pushes the erasure back
+    // Phase I (The Stripping): naming a root correctly pushes the erasure back
     if(M.boss && M.boss.phase===1) M.boss.erosion=clamp(M.boss.erosion-0.3,0,1);
   } else if(M.forge.smokeSaves>0){
     M.forge.smokeSaves--; renderForgeStrip();
@@ -7024,13 +7149,14 @@ function travelerEvent(){
 }
 function banditRaid(){
   const enemy=M.enemy||{name:"masked raiders"};
+  const raidName=enemy.raidName||enemy.name;   // a named leader's ENFORCERS raid, not the leader alone
   M.encounters++;
   // raiders now APPROACH over a few seconds — you have time to act
   const base = 5.2 - Math.min(2.2, M.threat*0.35);   // hits earlier in the run make them faster
-  M.raid={ name:enemy.name, t:Math.max(2.2,base), max:Math.max(2.2,base), resolved:false, warned:false };
+  M.raid={ name:raidName, t:Math.max(2.2,base), max:Math.max(2.2,base), resolved:false, warned:false };
   M.raiders=[{off:70,phase:0},{off:110,phase:2},{off:150,phase:4}];
   const canFight=M.abilities.strike>0, canHide=M.abilities.vanish>0;
-  let line=`${enemy.name} break from cover ahead — they're closing fast.`;
+  let line=`${raidName} break from cover ahead — they're closing fast.`;
   if(canFight && canHide) line+=" Strike them down, or vanish in smoke — your call.";
   else if(canFight) line+=" Ready your forged weapon and strike before they land.";
   else if(canHide) line+=" A smoke shell could slip the ambush entirely.";
@@ -7783,7 +7909,7 @@ function showEnding(){
     const titles={ master:"Keeper of the Shared Lexicon", keeper:"The Lexicon Restored", apprentice:"A Beginning, Not an End" };
     $('#end-title').textContent=titles[tier];
     $('#end-body').innerHTML = tier==="master"
-      ? `Every page has returned, and the Lexicon blazed to life only when the whole caravan offered its shared knowledge — never for one owner. ${vale?"Master Vale stands at your side. ":""}Lord Jian's argument falls: the answer to misused knowledge is not to lock it away, but to teach it well. Remy scatters the pages across the realm, and the Great Archive fills with thousands of community books.`
+      ? `Every page has returned, and the Lexicon blazed to life only when the whole caravan offered its shared knowledge — never for one owner. ${vale?"Master Vale stands at your side. ":""}Jian Radicida's argument falls with his last word unsealed: the answer to misused knowledge was never to slay its roots, but to teach them well. Remy scatters the pages across the realm, and the Great Archive fills with thousands of community books.`
       : tier==="keeper"
       ? `The Lexicon is whole enough to light the realm again. ${vale?"Master Vale is free, ":""}the Silent Archive is broken, and the recovered pages are shared, not hoarded. Some fragments still ride the wind — but knowledge belongs to everyone now.`
       : `A beginning more than an ending: some pages still scatter on the wind, and some terms still trip the tongue. But every company trusted you with their road, and you proved that learning is meant to be shared — that is its own recovered page.`;
