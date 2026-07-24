@@ -250,35 +250,53 @@ it while it is happening rather than being surprised at the results screen.
 
 ---
 
-## 8. The final boss — *The Erasure at the Great Archive* 🔜
+## 8. The final boss — *The Erasure at the Great Archive* ✅
 
-The finale must dramatise the argument: Jian believes words are safest locked away;
+The finale dramatises the argument: Jian believes words are safest locked away;
 Remy believes words are safest *understood*. So Jian does not fight with a weapon.
 **He unmakes vocabulary in real time**, and the only counter is having actually
-learned it.
+learned it. Built on Chapter Seven's existing road — no new screen, so the whole
+bench-and-road toolkit (momentum, gates, hover-study, abilities) carries into it.
 
-### Phase I — *The Stripping* (recognition under decay)
-Jian erases **suffixes** from the world. Word-parts on the road lose their endings;
-rune gates show only stems. The player must complete terms from partial information.
-Every real term completed forces the Archive's light back a step. Momentum is the
-health bar of the room.
+### Phase I — *The Stripping* (recognition under decay) — shipped
+Every rune gate from the road's start until progress 0.34 is forced to a **suffix**
+target (`openGate`'s `forceKind`) — Jian is erasing endings, so every gate asks you
+to prove you still know one. An **erosion meter** ("Jian erases the road") rises
+steadily; naming a suffix gate correctly pushes it back 0.3, and completing a real,
+whole term (suffix and all) pushes it back 0.45 — proof a complete word survived the
+Stripping. If erosion maxes out, a collapse knocks momentum and stats hard but is
+always recoverable — never a hard fail, per the "no reflex-only phase, no unfair
+wall" design rules.
 
-### Phase II — *The Blank Page* (recall without support)
-The glossary is sealed. Definitions no longer appear on hover; the HUD shows only
-raw parts. The player walks a stretch of road on memory alone. **Lexicon Affinity is
-the mercy mechanic** — each affinity level restores one piece of scaffolding, so the
-player who spent the campaign reading definitions walks in with the lights on. This
-is the payoff for §6 and the moment the game's thesis lands as a mechanic.
+### Phase II — *The Blank Page* (recall without support) — shipped
+From progress 0.34 onward, hover-to-study's definition card seals shut
+(`showStudyCard`) — a new part shows its text but not its meaning. **Lexicon
+Affinity is the mercy mechanic**: each affinity level earned across the whole
+campaign (§6) is one scaffold charge, spent the first time a new part is reached
+during this phase, permanently unsealing that one part's meaning. A player who
+invested in reading definitions the whole campaign walks in with real light left;
+a player at zero affinity gets the raw parts and nothing else — recall without
+support, exactly as designed.
 
-### Phase III — *The Caravan Chorus* (the argument, resolved)
-Jian assembles one enormous compound term to prove that a single master can hold all
-knowledge — and stalls, because no one person has all the parts. Every traveler the
-player built a term for across the campaign steps forward and **offers their part**,
-one at a time, in a final assembly puzzle. The more travelers served across eight
-chapters, the more parts are offered and the more forgiving the puzzle is. A player
-who rushed past their travelers faces it nearly alone.
+### Phase III — *The Caravan Chorus* (the argument, resolved) — shipped
+At progress 0.90 the road holds and a full-screen assembly puzzle opens: assemble
+**electrocardiogram** (electr/o + cardi/o + -gram — a real, verified term, and
+notably Bai's own clue term from Chapter Three, so the finale literally reprises a
+word the player already built once). The number of chapters actually finished
+(`servedChapterIds.length`) decides how many parts the traveling company "offers"
+pre-placed — 0 chapters served leaves all three slots to the player, 3+ pre-fills
+one, 6+ pre-fills two. The remaining slot(s) are filled from a tray of the correct
+part plus same-kind distractors; a wrong placement explains which position missed
+and lets the player swap and retry, never punished, never unsolvable. On success,
+momentum surges, the squad is restored, the term is recorded as completed and
+counted as a real term built, and the road resumes to a normal arrival.
 
 Jian is not defeated. **He runs out of argument.** The pages scatter.
+
+Covered by `test9.js` (48 assertions): forced-suffix gates, erosion rise/relief/
+collapse-without-failure, sealed-vs-scaffolded definitions at exact affinity
+thresholds, and the Chorus's pre-fill scaling, wrong-placement feedback, and
+successful resolution.
 
 ### Boss design rules
 - No reflex-only phase. Every phase is a knowledge check wearing an action costume.
@@ -340,7 +358,7 @@ player has previously gotten wrong, and the party ladder starts one step higher.
 | **4** | Hover-to-study · affinity track & levels | ✅ |
 | **5** | Term-builder failure costs · naming-record chip | ✅ |
 | **6** | Progression panel · unlock cards on the result screen | ✅ |
-| **7** | Final boss encounter (3 phases) | 🔜 |
+| **7** | Final boss encounter (3 phases) | ✅ |
 | **8** | Endless Road · seeded contracts | 🧭 |
 | **9** | Lexicon Trials · New Game+ | 🧭 |
 

@@ -869,6 +869,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .study-card .sc-kind.k-suffix{background:rgba(138,106,43,.6);}
 .study-card .sc-text{display:block;font-family:var(--font-cal);font-size:1.05rem;color:var(--gold-soft);margin:3px 0 1px;}
 .study-card .sc-mean{display:block;font-size:.8rem;color:var(--rice);line-height:1.35;}
+.study-card .sc-mean.sc-sealed{color:#e2a08a;font-style:italic;font-size:.72rem;}
 .study-card .sc-note{display:block;margin-top:4px;font-size:.62rem;letter-spacing:.04em;
   color:rgba(243,236,216,.6);font-style:italic;}
 .study-card .sc-bar{display:block;height:3px;margin-top:6px;border-radius:2px;background:var(--gold);
@@ -938,6 +939,43 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .mini-opts .btn{width:100%;}
 .timer-bar{height:8px;border-radius:5px;background:var(--rice-3);overflow:hidden;margin-bottom:14px;}
 .timer-bar > i{display:block;height:100%;background:var(--cinnabar);width:100%;}
+/* ---- THE ARCHIVE'S PRESSURE (final boss, Phase I) ---- */
+.boss-erosion{position:absolute;top:166px;left:50%;transform:translateX(-50%);z-index:6;
+  display:none;flex-direction:column;align-items:center;gap:3px;pointer-events:none;
+  background:rgba(20,14,8,.55);border:1px solid var(--cinnabar);border-radius:9px;padding:6px 14px;
+  min-width:220px;}
+.boss-erosion.show{display:flex;}
+.be-lab{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:#e2a08a;}
+.be-track{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden;}
+.be-track > i{display:block;height:100%;width:0%;border-radius:4px;background:linear-gradient(90deg,#8c2f22,#e0503a);
+  transition:width .3s linear;}
+/* ---- THE CARAVAN CHORUS (final boss, Phase III) ---- */
+.boss-chorus{position:absolute;inset:0;z-index:9;display:none;align-items:center;justify-content:center;
+  background:rgba(14,10,6,.78);backdrop-filter:blur(3px);}
+.boss-chorus.show{display:flex;animation:screenIn .4s;}
+.chorus-card{background:var(--parch);border-radius:16px;padding:26px 28px;max-width:640px;width:92%;
+  text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6);border:2px solid var(--gold);}
+.chorus-lede{font-size:.92rem;line-height:1.5;margin:6px 0 14px;color:var(--ink-soft,#8a7a5f);}
+.chorus-offered{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;min-height:1px;}
+.chorus-offered .co-chip{display:inline-flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 12px;border-radius:10px;background:rgba(51,81,63,.12);border:1px solid var(--jade-deep,#33513f);}
+.chorus-offered .co-chip b{font-family:var(--font-cal);color:var(--jade-deep,#33513f);}
+.chorus-offered .co-chip span{font-size:.66rem;color:var(--ink-soft,#8a7a5f);}
+.chorus-slots{display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
+.chorus-slots .cs-slot{min-width:78px;min-height:44px;border-radius:10px;border:2px dashed var(--rice-3,#d8cfb4);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-cal);font-weight:700;
+  padding:6px 10px;cursor:pointer;transition:border-color .15s,background .15s;}
+.chorus-slots .cs-slot.locked{border-style:solid;border-color:var(--jade-deep,#33513f);background:rgba(51,81,63,.12);cursor:default;}
+.chorus-slots .cs-slot.filled{border-style:solid;border-color:var(--gold);background:rgba(189,157,95,.14);}
+.chorus-slots .cs-slot:empty::before{content:"?";opacity:.35;}
+.chorus-tray{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;}
+.chorus-tray .ct-tile{padding:7px 14px;border-radius:9px;background:var(--rice,#f3ecd8);
+  border:1.5px solid var(--ink-line);font-family:var(--font-cal);font-weight:700;cursor:pointer;
+  transition:transform .12s,border-color .12s;}
+.chorus-tray .ct-tile:hover{transform:translateY(-2px);border-color:var(--gold);}
+.chorus-tray .ct-tile.used{opacity:.3;pointer-events:none;}
+.chorus-feedback{min-height:1.4em;font-size:.85rem;margin-bottom:10px;color:var(--cinnabar-deep);}
+.chorus-feedback.good{color:var(--jade-deep,#33513f);font-weight:700;}
 
 /* ============================================================
    RESULT
@@ -1445,11 +1483,29 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       <!-- hover a drifting word-part to read its meaning and study it -->
       <div class="study-card" id="study-card"></div>
       <div class="gate-prompt" id="gate-prompt"></div>
+      <!-- THE ARCHIVE'S PRESSURE — final boss, Phase I (The Stripping) only -->
+      <div class="boss-erosion" id="boss-erosion">
+        <span class="be-lab">Jian erases the road</span>
+        <div class="be-track"><i id="be-fill"></i></div>
+      </div>
       <div class="mini-challenge" id="mini-challenge">
         <div class="mini-card">
           <div class="mini-stakes" id="mini-stakes"><span class="ms-dot"></span> The squad waits in the open — hesitation drains their strength.</div>
           <div class="clue" id="mini-clue"></div>
           <div class="mini-opts" id="mini-opts"></div>
+        </div>
+      </div>
+      <!-- THE CARAVAN CHORUS — final boss, Phase III: every traveler you named
+           a term for offers their part back, then the last few are yours alone -->
+      <div class="boss-chorus" id="boss-chorus">
+        <div class="chorus-card">
+          <span class="eyebrow">The Caravan Chorus</span>
+          <div class="chorus-lede" id="chorus-lede"></div>
+          <div class="chorus-offered" id="chorus-offered"></div>
+          <div class="chorus-slots" id="chorus-slots"></div>
+          <div class="chorus-tray" id="chorus-tray"></div>
+          <div class="chorus-feedback" id="chorus-feedback"></div>
+          <button class="btn jade" id="chorus-seal">Press the seal</button>
         </div>
       </div>
       <div class="mission-hud">
@@ -5763,10 +5819,14 @@ const LEXEME_STYLE={
   root:  {stat:"stamina", color:"#33513f", light:"#7d9a8a"},
   suffix:{stat:"safety",  color:"#8a6a2b", light:"#d8b45f"}
 };
-/* pick a word-part to place on the road, biased toward parts the player hasn't mastered yet */
-function pickRoadPart(){
+/* pick a word-part to place on the road, biased toward parts the player hasn't mastered yet.
+   An optional kindFilter restricts the pool — used by the final boss's Stripping phase,
+   which asks only after suffixes. */
+function pickRoadPart(kindFilter){
   const weak=new Set(weakParts()); const seen=new Set(seenParts());
-  const ids=Object.keys(PARTS);
+  let ids=Object.keys(PARTS);
+  if(kindFilter) ids=ids.filter(id=>PARTS[id].kind===kindFilter);
+  if(!ids.length) ids=Object.keys(PARTS);
   const sorted=ids.slice().sort((a,b)=>{
     const sa=(weak.has(a)?2:0)+(seen.has(a)?0:1);
     const sb=(weak.has(b)?2:0)+(seen.has(b)?0:1);
@@ -5850,8 +5910,174 @@ function computeForgePassives(f){
   return P;
 }
 
+/* ==================================================================
+   THE FINAL BOSS — The Erasure at the Great Archive (Chapter Seven).
+   Lord Jian does not fight with a weapon: he unmakes vocabulary in real
+   time, and the only counter is having actually learned it. Three phases,
+   each a knowledge check wearing an action costume, each with a mercy
+   mechanic tied to something the player chose to invest in earlier.
+     Phase I   The Stripping        — gates ask ONLY for suffixes, and an
+                                       erosion meter rises until a real
+                                       naming pushes it back.
+     Phase II  The Blank Page       — hover-to-study seals its definition;
+                                       Lexicon Affinity levels are the only
+                                       scaffolding left.
+     Phase III The Caravan Chorus   — a final assembly puzzle. Travelers
+                                       you served across the campaign step
+                                       forward and offer their part first.
+   ================================================================== */
+const BOSS_TERM_ID="electrocardiogram";       // electr/o + cardi/o + -gram — a record that cannot be argued with
+const BOSS_P1_END=0.34, BOSS_CHORUS_AT=0.90;
+function isBossRoad(f){ return !!(f && f.chapter && f.chapter.id==="ch7"); }
+/* per-frame boss state — phase transitions, the Stripping's erosion pressure,
+   and the trigger for the Chorus. Called once a tick whenever M.boss exists. */
+function updateBossPhase(dt){
+  const B=M.boss; if(!B) return;
+  const wasPhase=B.phase;
+  B.phase = M.progress<0.04 ? 0 : (M.progress<BOSS_P1_END ? 1 : 2);
+  if(B.phase!==wasPhase){
+    if(B.phase===1){
+      caption("<b>The Stripping.</b> Jian erases suffixes as fast as they're spoken — every gate ahead asks for one. Name them true, and the erasure falls back.");
+      Audio2.sfx.page && Audio2.sfx.page();
+    } else if(B.phase===2){
+      caption("<b>The Blank Page.</b> The glossary falls silent — hovering a word no longer explains it. Only what your Lexicon Affinity has earned still lights the way.");
+      Audio2.sfx.page && Audio2.sfx.page();
+    }
+  }
+  const be=$('#boss-erosion');
+  if(B.phase===1){
+    B.erosion=clamp(B.erosion+dt*0.026,0,1);
+    if(be){ be.classList.add('show'); const f=$('#be-fill'); if(f) f.style.width=(B.erosion*100)+"%"; }
+    if(B.erosion>=1){
+      // a collapse costs the squad dearly but is always recoverable — never a hard fail
+      B.erosion=0.4;
+      M.momentum=clamp(M.momentum*0.4, M.forge.momentumFloor, MOMENTUM_MAX);
+      statGain({stamina:-14, safety:-10});
+      caption("A half-built word unravels mid-step — the Stripping catches them. The squad staggers, but holds.");
+      Audio2.sfx.bad(); FX.buzz(34); pulseMomentum();
+    }
+  } else if(be){ be.classList.remove('show'); }
+  if(!B.chorusShown && M.progress>=BOSS_CHORUS_AT){
+    B.chorusShown=true;
+    openChorus();
+  }
+}
+
+/* ---------- PHASE III: THE CARAVAN CHORUS ----------
+   Jian assembles one final word to prove a single master can hold all
+   knowledge — and falters, because no one person has every part. Every
+   traveler the player named a term for across the campaign steps forward
+   and offers a piece first; the rest is the player's alone to finish. A
+   player who rushed the campaign faces more of it unaided — never all of
+   it, and never unsolvably. */
+function bossTermParts(){ return (TERMS[BOSS_TERM_ID] && TERMS[BOSS_TERM_ID].build) || []; }
+function openChorus(){
+  M.paused=true;
+  const build=bossTermParts();
+  const served=(S().servedChapterIds||[]).length;   // chapters actually finished before the Archive
+  const preCount = served>=6?2 : served>=3?1 : 0;
+  const locked=build.map((id,i)=>i<preCount);
+  const need=build.filter((id,i)=>!locked[i]);
+  const QE=window.__RD_QE;
+  const usedIds=new Set(build);
+  let distractors=[];
+  need.forEach(id=>{
+    const extra=(QE&&QE.distractParts)? QE.distractParts(id,2) : [];
+    extra.forEach(d=>{ if(!usedIds.has(d) && !distractors.includes(d)) distractors.push(d); });
+  });
+  distractors=shuffle(distractors).slice(0, Math.max(3, need.length*2));
+  const trayIds=shuffle(need.concat(distractors));
+  M.chorus={ build, locked, placed:build.map((id,i)=>locked[i]?id:null),
+    tray:trayIds.map(id=>({id,used:false})), preCount, served };
+  renderChorus();
+  const box=$('#boss-chorus'); if(box) box.classList.add('show');
+  const seal=$('#chorus-seal'); if(seal) seal.onclick=checkChorus;
+  caption("Lord Jian gathers a final word to prove one master can hold all knowledge alone.");
+  Audio2.sfx.chime && Audio2.sfx.chime();
+}
+function renderChorus(){
+  const Cs=M.chorus; if(!Cs) return;
+  const lede=$('#chorus-lede');
+  if(lede){
+    lede.innerHTML = Cs.preCount>0
+      ? `He falters. <b>${Cs.preCount}</b> traveler${Cs.preCount>1?"s":""} you named a term for step${Cs.preCount>1?"":"s"} forward and offer${Cs.preCount>1?"":"s"} their part. The rest is yours to finish.`
+      : `He falters — but no traveler steps forward this time. Every part of this word is yours alone to place.`;
+  }
+  const offered=$('#chorus-offered'); if(offered){
+    offered.innerHTML = Cs.locked.map((lk,i)=> !lk?"":
+      `<span class="co-chip"><b>${PARTS[Cs.build[i]].text}</b><span>${PARTS[Cs.build[i]].mean}</span></span>`).join("");
+  }
+  const slots=$('#chorus-slots'); if(slots){
+    slots.innerHTML="";
+    Cs.placed.forEach((id,i)=>{
+      const s=el("div","cs-slot"+(Cs.locked[i]?" locked":(id?" filled":"")));
+      if(id) s.textContent=PARTS[id].text;
+      if(!Cs.locked[i] && id){
+        s.onclick=()=>{ const t=Cs.tray.find(x=>x.id===id); if(t) t.used=false;
+          Cs.placed[i]=null; renderChorus(); };
+      }
+      slots.appendChild(s);
+    });
+  }
+  const tray=$('#chorus-tray'); if(tray){
+    tray.innerHTML="";
+    Cs.tray.forEach(t=>{
+      const b=el("button","ct-tile"+(t.used?" used":"")); b.type="button";
+      b.textContent=PARTS[t.id]?PARTS[t.id].text:t.id;
+      b.onclick=()=>{
+        if(t.used) return;
+        const emptyIdx=Cs.placed.findIndex((v,i)=>!Cs.locked[i] && v==null);
+        if(emptyIdx<0) return;
+        Cs.placed[emptyIdx]=t.id; t.used=true; Audio2.sfx.clink && Audio2.sfx.clink();
+        renderChorus();
+      };
+      tray.appendChild(b);
+    });
+  }
+  const seal=$('#chorus-seal'); if(seal) seal.disabled=!Cs.placed.every(v=>v!=null);
+}
+function checkChorus(){
+  const Cs=M.chorus; if(!Cs || !Cs.placed.every(v=>v!=null)) return;
+  const fb=$('#chorus-feedback');
+  const ok = Cs.placed.join('|')===Cs.build.join('|');
+  if(ok){ resolveChorus(); return; }
+  if(fb){
+    let msg="Not quite.";
+    for(let i=0;i<Cs.build.length;i++){
+      if(Cs.locked[i] || Cs.placed[i]===Cs.build[i]) continue;
+      msg = i===0 ? "The opening piece isn't right yet." : i===Cs.build.length-1 ? "The closing piece isn't right yet." : "The middle piece isn't right yet.";
+      break;
+    }
+    fb.className="chorus-feedback"; fb.textContent=msg+" Tap a placed piece to swap it, then try again.";
+  }
+  Audio2.sfx.bad && Audio2.sfx.bad(); FX.buzz(24);
+}
+function resolveChorus(){
+  const Cs=M.chorus; const term=TERMS[BOSS_TERM_ID];
+  const fb=$('#chorus-feedback');
+  if(fb){ fb.className="chorus-feedback good"; fb.textContent=`${term.spell} — ${term.def}. The pages blaze to life.`; }
+  Audio2.sfx.great && Audio2.sfx.great(); FX.buzz(40);
+  M.boss.chorusDone=true;
+  statGain({stamina:20, morale:24, safety:20});
+  M.momentum=clamp(M.momentum+1.2, M.forge.momentumFloor, MOMENTUM_MAX);
+  M.realTermsBuilt=(M.realTermsBuilt||0)+1;
+  M.termsBuilt=M.termsBuilt||[]; M.termsBuilt.push(term.spell);
+  if(!S().completedTerms.includes(BOSS_TERM_ID)) S().completedTerms.push(BOSS_TERM_ID);
+  const tm=S().mastery.terms[BOSS_TERM_ID];
+  if(tm){ tm.recognition=true; tm.construction=true; tm.definition=true; tm.application=true; }
+  persist(); updateWordHud();
+  setTimeout(()=>{
+    const box=$('#boss-chorus'); if(box) box.classList.remove('show');
+    M.paused=false;
+    caption(`✦ ${term.spell} — ${term.def}. Lord Jian does not surrender so much as run out of reasons.`);
+  }, 1700);
+}
+
 function runMission(){
   const f=E.getFlow(); const r=f.route;
+  M=null;   // clear any previous mission's state immediately — the transition
+            // animates before onShow rebuilds it, and nothing should read the
+            // outgoing mission's state as if it were the new one
   go("s-mission",{onShow:()=>{
     const cv=$('#missionCanvas'); const ctx=cv.getContext('2d');
     const size=f.members.length;
@@ -5890,6 +6116,12 @@ function runMission(){
     M.laneY = LANES[1].y*cv.height; M.targetY = M.laneY;
     M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
+    if(isBossRoad(f)){
+      M.boss={ active:true, phase:0, erosion:0,
+        scaffold:E.affinity().n, scaffoldUsed:0,      // Lexicon Affinity levels = mercy charges for Phase II
+        chorusShown:false, chorusDone:false };
+      const be=$('#boss-erosion'); if(be) be.classList.remove('show');
+    } else { M.boss=null; }
     $('#mission-who').textContent = `${f.chapter.name} — ${size} traveler${size>1?'s':''} bound for ${f.chapter.dest}`;
     renderPrepBars();
     renderAbilityBar();
@@ -6316,7 +6548,10 @@ function tick(t){
     const finalStretch = M.progress>0.9 ? clamp(1-(M.progress-0.9)*3.2, 0.5, 1) : 1;
     // slower base pace than before — the road gives real time to read hazards and decide
     const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * momoFactor * 1.55;
-    M.progress = clamp(M.progress + dt*spd, 0, 1);
+    // the final boss holds the road at the Archive's threshold until the Chorus is sung
+    const progressCap = (M.boss && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1;
+    M.progress = clamp(M.progress + dt*spd, 0, progressCap);
+    if(M.boss) updateBossPhase(dt);
     if(M.gate) updateGate(dt);
 
     // passive drains — prep cushions, lanes shift the cost; momentum eases them
@@ -6451,7 +6686,10 @@ function studyPart(pk, px, py){
   bumpMomentum(0.22*M.forge.gainMult);
   markPartSeen(pk.partId);
   const res=E.markStudied(pk.partId);
-  pop(px, py-18, "read: "+part.mean, false);
+  // Phase II (The Blank Page): if this part's meaning was never unsealed by a
+  // scaffold charge, the floating confirmation stays as quiet as the glossary
+  const sealedHere = M.boss && M.boss.phase>=2 && !pk.sealRevealed;
+  pop(px, py-18, sealedHere ? "read (sealed)" : "read: "+part.mean, false);
   Audio2.sfx.page && Audio2.sfx.page();
   if(res && res.name){    // a new affinity level opened
     caption(`Lexicon Affinity — <b>${res.name}</b>. ${res.grant}`);
@@ -6467,10 +6705,29 @@ function showStudyCard(pk){
   const part=PARTS[pk.partId]; if(!part){ card.classList.remove('show'); return; }
   const already=(S().studied||[]).includes(pk.partId);
   const pct=Math.min(1,(pk.hover||0)/0.35);
+  // PHASE II — THE BLANK PAGE: the final boss seals the glossary. Lexicon
+  // Affinity levels earned across the whole campaign are the only scaffolding
+  // left — each spends once, on the first new part you reach for this phase.
+  const B=M.boss;
+  let sealed=false;
+  if(B && B.phase>=2){
+    if(!pk.sealRevealed){
+      if(B.scaffoldUsed<B.scaffold){
+        pk.sealRevealed=true; B.scaffoldUsed++;
+        const left=B.scaffold-B.scaffoldUsed;
+        caption(left>0
+          ? `Lexicon Affinity holds this meaning open against the silence — ${left} scaffold${left===1?"":"s"} left.`
+          : `Lexicon Affinity holds this meaning open — that was the last one. The page falls silent now.`);
+      } else { sealed=true; }
+    }
+  }
+  const meanHtml = sealed
+    ? `<span class="sc-mean sc-sealed">sealed — the Archive has taken its meaning</span>`
+    : `<span class="sc-mean">${part.mean}</span>`;
   card.innerHTML=`<span class="sc-kind k-${part.kind}">${part.kind}</span>
     <b class="sc-text">${part.text}</b>
-    <span class="sc-mean">${part.mean}</span>
-    <span class="sc-note">${pk.read ? (already?"already in your Lexicon":"studied ✓") : "hold to study"}</span>
+    ${meanHtml}
+    <span class="sc-note">${pk.read ? (already?"already in your Lexicon":"studied ✓") : (sealed?"the word alone must carry them":"hold to study")}</span>
     <i class="sc-bar" style="width:${Math.round(pct*100)}%"></i>`;
   // place it beside the part, in canvas-relative screen space
   const rc=M.cv.getBoundingClientRect(), host=card.parentElement.getBoundingClientRect();
@@ -6592,6 +6849,9 @@ function completeTerm(){
   } else {
     caption(`Word forged: ${label} — momentum ×${M.momentum.toFixed(1)}!`);
   }
+  // Phase I (The Stripping): a real, complete word — suffix and all — is proof
+  // the Archive hasn't won. It pushes the erasure back harder than a gate does.
+  if(M.boss && M.boss.phase===1 && realId) M.boss.erosion=clamp(M.boss.erosion-0.45,0,1);
   pop(M.cv.width*0.30, M.laneY-88, `×${M.momentum.toFixed(1)}  +${ink} ink`);
   Audio2.sfx.great(); FX.buzz(22);
   M.combo=[]; updateWordHud();
@@ -6626,7 +6886,10 @@ function sweepGateCorridor(){
 function openGate(){
   if(M.gate) return;
   const reach=[1,2]; if(M.caps.climb) reach.unshift(0);
-  const targetId=pickRoadPart();
+  // Phase I of the final boss (The Stripping) erases suffixes — every gate here
+  // asks you to prove you still know one, under real pressure (see updateBossPhase)
+  const forceKind = (M.boss && M.boss.phase===1) ? "suffix" : null;
+  const targetId=pickRoadPart(forceKind);
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
   const distract=shuffle(pool).slice(0,2);
@@ -6667,6 +6930,8 @@ function resolveGate(){
     statGain({morale:8,safety:6,stamina:4});
     caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
     pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
+    // Phase I (The Stripping): naming a suffix correctly pushes the erasure back
+    if(M.boss && M.boss.phase===1) M.boss.erosion=clamp(M.boss.erosion-0.3,0,1);
   } else if(M.forge.smokeSaves>0){
     M.forge.smokeSaves--; renderForgeStrip();
     caption(`Smoke covers a wrong read — no cost this once. The path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}).`);
@@ -7562,7 +7827,23 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     const pk={p:M.progress+0.1, lane:1, y:LANES[1].y, type:"lexeme", partId, hover:0.4, got:false, read:true};
     M.pickups.push(pk); studyPart(pk, 100, 100); return {studied:E.studiedCount(), affinity:E.affinity()}; },
   _useAbility:(k)=>{ useAbility(k); return M&&{abilities:Object.assign({},M.abilities), phaseT:M.phaseT, hazards:M.hazards.filter(h=>!h.hit).length}; },
-  _hazardsAhead:()=>hazardsAhead() };
+  _hazardsAhead:()=>hazardsAhead(),
+  /* --- final boss hooks (headless tests) --- */
+  isBossRoad, BOSS_TERM_ID, BOSS_P1_END, BOSS_CHORUS_AT,
+  _boss:()=>M&&M.boss,
+  _setProgress:(p)=>{ if(M) M.progress=p; },
+  _updateBossPhase:(dt)=>{ if(M&&M.boss) updateBossPhase(dt||0.03); return M.boss; },
+  _openChorus:()=>{ if(M) openChorus(); return M&&M.chorus; },
+  _chorus:()=>M&&M.chorus,
+  _chorusPlaceTray:(idx)=>{ if(!M||!M.chorus) return null; const t=M.chorus.tray[idx]; if(!t||t.used) return null;
+    const emptyIdx=M.chorus.placed.findIndex((v,i)=>!M.chorus.locked[i]&&v==null); if(emptyIdx<0) return null;
+    M.chorus.placed[emptyIdx]=t.id; t.used=true; renderChorus(); return M.chorus.placed.slice(); },
+  _chorusCheck:()=>{ checkChorus(); return M&&M.chorus; },
+  _peekCard:(partId)=>{ if(!M) return null;
+    const pk={p:M.progress, lane:1, y:LANES[1].y, type:"lexeme", partId, hover:0.4, got:false, read:false};
+    showStudyCard(pk);
+    const card=$('#study-card');
+    return { sealed: card ? /sc-sealed/.test(card.innerHTML) : null, sealRevealed:pk.sealRevealed }; } };
 
 /* ================= BOOT ================= */
 function boot(){
