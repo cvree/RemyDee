@@ -485,6 +485,12 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .build-feedback.show{display:block;animation:screenIn .3s;}
 .build-feedback.good{background:#dfeadd;border:1px solid var(--jade);color:var(--jade-deep);}
 .build-feedback.bad{background:#f3e0dc;border:1px solid var(--cinnabar);color:var(--cinnabar-deep);}
+/* what a wrong naming actually costs — said while it happens, not at the results table */
+.build-cost{display:inline-block;margin-top:4px;font-weight:700;color:var(--cinnabar-deep);
+  background:rgba(181,50,43,.1);border-radius:6px;padding:1px 7px;}
+.build-record{display:none;margin-top:8px;font-size:.76rem;color:var(--ink-soft,#8a7a5f);
+  letter-spacing:.02em;text-align:center;}
+.build-record.show{display:block;}
 .support-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
 .support-btn{padding:6px 12px;border-radius:8px;background:var(--rice-2);font-size:.78rem;font-weight:700;
   border:1px solid var(--gold-soft);display:flex;gap:6px;align-items:center;transition:.12s;}
@@ -545,6 +551,34 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .ember-label{font-size:.66rem;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-soft,#8a7a5f);margin-right:6px;}
 .ember{color:var(--gold);font-size:1rem;margin-right:2px;text-shadow:0 0 6px rgba(216,150,60,.55);}
 .ember.spent{color:var(--rice-3,#d8cfb4);opacity:.45;text-shadow:none;}
+/* ---- progression panel (hub) ---- */
+.path-card{border-color:var(--gold);}
+.path-spine{display:flex;align-items:center;gap:0;margin:8px 0 12px;}
+.ps-node{width:11px;height:11px;border-radius:50%;background:var(--rice-3,#d8cfb4);flex:none;
+  border:1.5px solid var(--ink-line);transition:background .3s;}
+.ps-node.done{background:var(--jade-deep,#33513f);border-color:var(--jade-deep,#33513f);}
+.ps-node.now{background:var(--gold);border-color:var(--gold);box-shadow:0 0 0 3px rgba(189,157,95,.28);}
+.ps-link{flex:1;height:2px;background:var(--rice-3,#d8cfb4);}
+.path-now{margin-bottom:10px;line-height:1.45;}
+.path-now .pn-k{font-size:.62rem;text-transform:uppercase;letter-spacing:.11em;color:var(--ink-soft,#8a7a5f);
+  margin-right:6px;}
+.path-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;padding:5px 0;
+  border-top:1px dashed var(--rice-3,#d8cfb4);font-size:.8rem;}
+.path-row .pr-k{color:var(--ink-soft,#8a7a5f);min-width:104px;}
+.path-row .pr-v{font-weight:700;}
+.path-row .pr-v.pr-gold,.path-row .pr-gold{color:var(--gold);}
+.path-row .pr-sub{flex-basis:100%;font-size:.72rem;color:var(--ink-soft,#8a7a5f);line-height:1.35;}
+.path-grant{margin-top:8px;padding:6px 9px;border-radius:8px;font-size:.74rem;line-height:1.4;
+  background:rgba(51,81,63,.1);border:1px solid rgba(51,81,63,.25);color:var(--jade-deep,#33513f);}
+/* ---- the unlock card on the result screen ---- */
+.unlock-card{padding:16px;margin-top:14px;text-align:left;border-color:var(--gold);
+  background:linear-gradient(180deg,rgba(189,157,95,.14),rgba(243,236,216,.6));}
+.unlock-card.uc-in{animation:ucIn .6s var(--ease-back);}
+@keyframes ucIn{0%{opacity:0;transform:translateY(14px) scale(.97);}100%{opacity:1;transform:none;}}
+.unlock-card .uc-row{display:flex;align-items:center;gap:14px;margin-top:6px;}
+.unlock-card .uc-ico svg{width:52px;height:52px;}
+.unlock-card h3{margin:0 0 2px;font-size:1.1rem;color:var(--gold);}
+.unlock-card .uc-why{margin-top:4px;line-height:1.4;}
 /* ---- commission board ---- */
 .road-report{background:rgba(189,157,95,.12);border:1px dashed var(--gold);border-radius:10px;
   padding:8px 12px;margin-bottom:10px;font-size:.86rem;}
@@ -563,6 +597,18 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .comm-grants{line-height:1.35;}
 .comm-again{color:var(--jade-deep,#33513f);margin-top:4px;}
 .comm-variants{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;}
+/* the recommendation reads as THE choice; the rest of the board is a footnote */
+.rec-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:6px;}
+.rec-grid .comm-card{padding:14px 16px;border-width:2px;}
+.rec-grid .comm-card .mc-ico svg{width:46px;height:46px;}
+.rec-grid .comm-card h4{font-size:1.05rem;}
+.comm-why{color:var(--jade-deep,#33513f);font-style:italic;margin-top:5px;line-height:1.35;}
+.comm-more{margin:14px 0 8px;font-size:.78rem;padding:6px 12px;}
+.comm-rest{opacity:.86;}
+.comm-rest .comm-card{padding:8px 10px;}
+.comm-rest .comm-card .mc-ico svg{width:28px;height:28px;}
+/* travelers waiting their turn at the school */
+.waiting-note{padding:12px 14px;border-style:dashed;opacity:.9;align-self:start;}
 .variant-btn{display:inline-block;background:rgba(181,50,43,.1);border:1px solid var(--cinnabar,#b5322b);
   color:var(--cinnabar,#b5322b);border-radius:999px;padding:2px 10px;font-size:.72rem;cursor:pointer;}
 .variant-btn:hover,.variant-btn:focus-visible{background:var(--cinnabar,#b5322b);color:#f3ecd8;outline:none;}
@@ -686,7 +732,16 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .craft-quality .cq-label{font-size:.72rem;color:var(--gold-soft);font-weight:700;letter-spacing:.05em;white-space:nowrap;}
 .craft-quality .cq-bar{flex:1;height:10px;border-radius:6px;background:var(--rice-3);overflow:hidden;}
 .craft-quality .cq-bar > i{display:block;height:100%;width:0%;border-radius:6px;
-  background:linear-gradient(90deg,var(--gold),var(--jade-soft));transition:width .2s;}
+  background:linear-gradient(90deg,var(--gold),var(--jade-soft));transition:width .2s, background .25s;}
+/* the bar now READS as a grade while you work — careless hands are visibly in the red */
+.craft-quality .cq-bar > i.q-ruin{background:linear-gradient(90deg,#8c2f22,#c04a30);}
+.craft-quality .cq-bar > i.q-poor{background:linear-gradient(90deg,#c06a2a,#e0a05a);}
+.craft-quality .cq-bar > i.q-ok{background:linear-gradient(90deg,var(--gold),#d8bd84);}
+.craft-quality .cq-bar > i.q-fine{background:linear-gradient(90deg,var(--jade-soft),#bfe0c8);}
+.craft-stakes{width:100%;max-width:520px;margin-top:6px;font-size:.7rem;letter-spacing:.02em;
+  color:rgba(243,236,216,.8);text-align:center;line-height:1.5;}
+.craft-stakes b{color:var(--gold-soft);}
+.craft-stakes .cs-ruin{color:#e08a72;}
 .craft-quality .cq-pct{font-family:var(--font-cal);font-weight:700;font-size:.9rem;color:var(--rice);min-width:2.6em;text-align:right;}
 
 /* step 4 — test result splash */
@@ -701,6 +756,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .test-verdict .tv-grade.fine{color:var(--jade-soft);}
 .test-verdict .tv-grade.ok{color:var(--gold-soft);}
 .test-verdict .tv-grade.flawed{color:#e08a5a;}
+.test-verdict .tv-grade.ruined{color:#e04a34;text-shadow:0 0 12px rgba(224,74,52,.4);}
 
 /* --- assign step: warriors receiving gear --- */
 .assign-wrap{max-width:1080px;margin:0 auto;}
@@ -799,6 +855,24 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .combo-tok.k-suffix{background:linear-gradient(180deg,#c39a3f,#8a6a2b);}
 .combo-join{color:rgba(243,236,216,.55);font-weight:700;font-size:.8rem;}
 .combo-hint{font-size:.66rem;color:rgba(243,236,216,.6);font-style:italic;letter-spacing:.02em;}
+/* HOVER TO STUDY — the definition card that follows the cursor on the road */
+.study-card{position:absolute;z-index:8;pointer-events:none;display:none;
+  transform:translate(-50%,-118%);min-width:120px;max-width:230px;padding:8px 11px 10px;
+  border-radius:10px;background:rgba(22,19,15,.94);border:1px solid var(--gold);
+  box-shadow:0 8px 22px rgba(0,0,0,.55);text-align:center;}
+.study-card.show{display:block;animation:scIn .16s var(--ease-back);}
+@keyframes scIn{0%{opacity:0;transform:translate(-50%,-104%);}100%{opacity:1;transform:translate(-50%,-118%);}}
+.study-card .sc-kind{display:inline-block;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;
+  padding:1px 7px;border-radius:999px;background:rgba(243,236,216,.16);color:var(--rice);}
+.study-card .sc-kind.k-prefix{background:rgba(181,50,43,.55);}
+.study-card .sc-kind.k-root{background:rgba(51,81,63,.6);}
+.study-card .sc-kind.k-suffix{background:rgba(138,106,43,.6);}
+.study-card .sc-text{display:block;font-family:var(--font-cal);font-size:1.05rem;color:var(--gold-soft);margin:3px 0 1px;}
+.study-card .sc-mean{display:block;font-size:.8rem;color:var(--rice);line-height:1.35;}
+.study-card .sc-note{display:block;margin-top:4px;font-size:.62rem;letter-spacing:.04em;
+  color:rgba(243,236,216,.6);font-style:italic;}
+.study-card .sc-bar{display:block;height:3px;margin-top:6px;border-radius:2px;background:var(--gold);
+  transition:width .08s linear;}
 .gate-prompt{position:absolute;top:118px;left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;
   display:none;padding:7px 16px;border-radius:10px;background:rgba(24,21,16,.72);border:1px solid var(--gold);
   color:var(--rice);font-weight:700;font-size:.82rem;letter-spacing:.02em;text-align:center;
@@ -1155,6 +1229,13 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
             <div class="order-list" id="order-list"></div>
           </div>
           <aside>
+            <!-- THE PROGRESSION PANEL: what you're doing, what it earns, what's next -->
+            <div class="panel aside-card path-card spotlight" data-spot id="path-card">
+              <h3>The Path of the Reed</h3>
+              <div class="path-spine" id="path-spine"></div>
+              <div class="path-now" id="path-now"></div>
+              <div class="path-rows" id="path-rows"></div>
+            </div>
             <div class="panel aside-card spotlight" data-spot>
               <h3>Remy&rsquo;s ledger</h3>
               <p class="small muted" id="ledger-note">Serve travelers well and recover the lost pages of the Great Medical Lexicon.</p>
@@ -1247,6 +1328,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           </div>
 
           <div class="build-feedback" id="build-feedback"></div>
+          <div class="build-record" id="build-record"></div>
         </div>
       </div>
       <div class="reveal" id="reveal">
@@ -1360,6 +1442,8 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
         </div>
         <div class="combo-build" id="combo-build" aria-live="polite"></div>
       </div>
+      <!-- hover a drifting word-part to read its meaning and study it -->
+      <div class="study-card" id="study-card"></div>
       <div class="gate-prompt" id="gate-prompt"></div>
       <div class="mini-challenge" id="mini-challenge">
         <div class="mini-card">
@@ -1371,7 +1455,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       <div class="mission-hud">
         <div class="forge-strip" id="forge-strip"></div>
         <div class="ability-bar" id="ability-bar"></div>
-        <div class="mission-hint" id="mission-hint">Steer the squad up, middle or down to gather word-parts &mdash; chain them into real terms for speed and multipliers</div>
+        <div class="mission-hint" id="mission-hint">Move freely with the <b>mouse</b>, <b>W/S</b> or the <b>arrow keys</b> &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning and study it.</div>
         <div class="mission-caption" id="mission-caption"></div>
       </div>
     </section>
@@ -1393,6 +1477,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
             <span class="eyebrow">What your work set in motion</span>
             <div class="consequences" id="consequences"></div>
           </div>
+          <div class="panel unlock-card" id="unlock-card" style="display:none;"></div>
           <div class="panel" id="page-reward" style="padding:16px;margin-top:14px;display:none;">
             <span class="eyebrow">Recovered</span>
             <h3 id="page-title" style="margin:4px 0;"></h3>
@@ -2304,9 +2389,68 @@ const INTRO = [
 /* Educational safety note shown on the title and briefs */
 const SAFETY_NOTE = "A learning game. Every medical term here is real and verified. Clues are vocabulary puzzles &mdash; naming a term is not diagnosing a person. The story's schools, remedies, missions and equipment are fictional and are not medical advice.";
 
+/* ==================================================================
+   PROGRESSION LADDER
+   One dial for how fast the game opens up. Three ramps run in step:
+   how many terms a mission asks you to build, how many pieces the bench
+   can hold, and which commission patterns you know at all.
+   ================================================================== */
+
+/* How many travelers NEED a term built in each chapter. The prologue is a
+   single traveler; the ramp after it is gentle on purpose (1 → 3 → 4 …).
+   Travelers a capped party can't fit are queued and picked up next chapter,
+   so no authored traveler, clue or term is ever skipped. */
+const PARTY_LADDER = [1, 3, 4, 4, 5, 5, 6, 4];
+/* Escorts ride along on top of the builders — the caravan keeps visibly
+   growing even while the number of term-builds stays controlled. */
+const ESCORT_LADDER = [0, 1, 1, 2, 2, 3, 3, 99];   // 99 = the finale takes everyone
+/* Room on the bench, per chapter. Early missions are ONE meaningful choice. */
+const BENCH_LADDER  = [1, 2, 2, 2, 3, 3, 3, 3];
+
+function ladderAt(arr, chapterNum){ return arr[clamp(chapterNum,0,arr.length-1)]; }
+
+/* The commission ladder: finishing a chapter opens the pattern the NEXT road
+   wants. `null` means the player starts with it. */
+const BP_UNLOCK = {
+  prologue:"blade",   // ch1 lowlands — deadfall and snagging roots
+  ch1:"hook",         // ch2 Windbell Pass — the high ledges
+  ch2:"smoke",        // ch3 Pavilion city — torch patrols
+  ch3:"rope",         // ch4 flooded lowlands — descents and river work
+  ch4:"claws",        // ch5 Whisper Forest — shifting, treacherous footing
+  ch5:"bow",          // ch6 the stronghold — strike at range
+  ch6:"seal"          // ch7 the Great Archive — the finale pattern
+};
+const BP_STARTING = ["kit"];
+/* Which patterns a save has earned, derived from the chapters it has finished.
+   Used to migrate older saves that predate the ladder. */
+function blueprintsEarnedBy(servedChapterIds){
+  const out = BP_STARTING.slice();
+  (servedChapterIds||[]).forEach(id=>{ const bp=BP_UNLOCK[id]; if(bp && !out.includes(bp)) out.push(bp); });
+  return out;
+}
+
+/* Lexicon Affinity — the persistent reward for READING definitions on the road
+   (hover-to-study). Reaching for knowledge is the strongest thing you can do. */
+const AFFINITY_LEVELS = [
+  { n:0, need:0,  name:"Unlettered",     grant:"" },
+  { n:1, need:8,  name:"Reader",         grant:"Every road starts at a higher momentum floor." },
+  { n:2, need:20, name:"Scribe",         grant:"The forge holds one more ember, every mission." },
+  { n:3, need:40, name:"Keeper",         grant:"Studied parts lift the squad's morale as well." },
+  { n:4, need:70, name:"Lexicographer",  grant:"Rune gates dim one false door before you commit." }
+];
+function affinityLevel(count){
+  let lv=AFFINITY_LEVELS[0];
+  AFFINITY_LEVELS.forEach(l=>{ if(count>=l.need) lv=l; });
+  return lv;
+}
+function affinityNext(count){ return AFFINITY_LEVELS.find(l=>count<l.need)||null; }
+
 /* expose */
 window.__RD_DATA = { PARTS, DIRECTIONS, TERMS, TERM_PRON, ROLES, TRAVELERS, SUPPLIES, SUPPLY_ICONS,
   WEAPON_GLYPH, ENEMIES, CHAPTERS, ROUTES, REGIONS, PAGES, INTRO, SAFETY_NOTE,
+  PARTY_LADDER, ESCORT_LADDER, BENCH_LADDER, ladderAt,
+  BP_UNLOCK, BP_STARTING, blueprintsEarnedBy,
+  AFFINITY_LEVELS, affinityLevel, affinityNext,
   $, $$, el, clamp, shuffle, pick, toast };
 })();
 </script>
@@ -2705,7 +2849,10 @@ window.FX = {
 (function(){
 "use strict";
 const D = window.__RD_DATA;
-const { $, $$, el, clamp, pick, TERMS, PARTS, CHAPTERS, TRAVELERS, ROLES, WEAPON_GLYPH } = D;
+const { $, $$, el, clamp, pick, TERMS, PARTS, CHAPTERS, TRAVELERS, ROLES, WEAPON_GLYPH,
+        PARTY_LADDER, ESCORT_LADDER, BENCH_LADDER, ladderAt,
+        BP_UNLOCK, BP_STARTING, blueprintsEarnedBy,
+        AFFINITY_LEVELS, affinityLevel, affinityNext } = D;
 const FX = window.FX;
 
 /* ================= AUDIO ================= */
@@ -2819,7 +2966,7 @@ const Save = {
 /* Bring any older save up to the v3 schema (chapter-based). Safe, non-destructive. */
 function migrate(st){
   if(!st || typeof st!=="object") return null;
-  if(st.ver===3 || st.ver===4 || st.ver===5){
+  if(st.ver===3 || st.ver===4 || st.ver===5 || st.ver===6){
     if(!Array.isArray(st.foundMats)) st.foundMats=[];
     if(!st.arcade) st.arcade={ slice:{best:0,plays:0}, match:{best:0,plays:0} };  // v3 → v4 backfill
     // v4 → v5 backfill: bench progression + road economy
@@ -2828,7 +2975,15 @@ function migrate(st){
     if(!st.reagents || typeof st.reagents!=="object") st.reagents={};
     if(st.heirloom===undefined) st.heirloom=null;
     if(typeof st.cachesMarked!=="number") st.cachesMarked=0;
-    st.ver=5;
+    // v5 → v6 backfill: the progression ladder (staged parties, blueprint unlocks, affinity)
+    if(!Array.isArray(st.pending)) st.pending=[];
+    if(!Array.isArray(st.studied)) st.studied=[];
+    if(typeof st.emberDebt!=="number") st.emberDebt=0;
+    if(!Array.isArray(st.unlockedBps) || !st.unlockedBps.length){
+      // a returning player keeps everything their finished chapters have earned
+      st.unlockedBps = blueprintsEarnedBy(st.servedChapterIds||[]);
+    }
+    st.ver=6;
     // backfill mastery entries for any PARTS/TERMS added since this save was written,
     // so returning players' weak/seen tracking covers the newly learnable content
     if(st.mastery){
@@ -2862,7 +3017,7 @@ function freshMastery(){
 }
 function newGame(){
   return {
-    ver:5,
+    ver:6,
     chapter:0,                 // index into CHAPTERS
     rep:0, coin:0, pages:0,
     servedChapterIds:[],       // chapter ids completed
@@ -2876,6 +3031,10 @@ function newGame(){
     },
     support:{hint:3, consult:2, recall:3},
     foundMats:[],              // rare materials discovered on the road (unlock at the bench)
+    pending:[],                // travelers a capped party couldn't fit — they wait for the next chapter
+    unlockedBps:["kit"],       // commission patterns known; one more opens after every chapter
+    studied:[],                // word-parts read on the road (hover-to-study) — feeds affinity
+    emberDebt:0,               // embers forfeited this mission by shaky naming (cleared each trip)
     techniques:[],             // bench techniques learned (tempering / twinstoke / reagentcraft)
     benchMastery:{},           // per-blueprint craft record: {bpId:{forged,fine}} — unlocks variants
     reagents:{},               // road-found reagents by id → count (consumed at the bench)
@@ -3090,6 +3249,72 @@ function chapterForToday(){
   return null;
 }
 
+/* ---------- THE PARTY LADDER ----------
+   A chapter no longer marches its whole authored roster out at once. It fills a
+   capped party from a waiting list (travelers earlier chapters couldn't fit,
+   oldest first) and then from its own roster. Whoever doesn't fit goes back on
+   the list, so every authored traveler still gets their term built — just at a
+   pace the player can actually absorb. */
+function partyFor(chapter){
+  const num = chapter.num!=null ? chapter.num : CHAPTERS.findIndex(c=>c.id===chapter.id);
+  const cap     = ladderAt(PARTY_LADDER, num);
+  const escCap  = ladderAt(ESCORT_LADDER, num);
+  const waiting = (S.pending||[]).filter(id=>TRAVELERS[id]);
+  const roster  = chapter.builders.filter(id=>TRAVELERS[id]);
+
+  // builders: the waiting list drains first, then this chapter's own roster
+  const builders=[];
+  const take=(id)=>{ if(builders.length<cap && !builders.includes(id)) builders.push(id); };
+  waiting.forEach(take);
+  roster.forEach(take);
+
+  // anyone from this chapter who didn't make the cut waits for the next one
+  const leftover = waiting.concat(roster).filter(id=>!builders.includes(id));
+  const nextPending=[]; leftover.forEach(id=>{ if(!nextPending.includes(id)) nextPending.push(id); });
+
+  // escorts: chapter members who aren't building, up to the escort cap
+  const escortPool = chapter.members.filter(id=>TRAVELERS[id] && !builders.includes(id) && !nextPending.includes(id));
+  const escorts = escCap>=99 ? escortPool : escortPool.slice(0, escCap);
+
+  return { builders, escorts, members: builders.concat(escorts), pending: nextPending };
+}
+/* Called once the chapter is actually completed — the waiting list only shifts
+   when the journey is finished, so backing out of a chapter changes nothing. */
+function commitParty(party){
+  S.pending = (party && party.pending) ? party.pending.slice() : [];
+  persist();
+}
+function benchCapacityFor(chapter){
+  const num = chapter && chapter.num!=null ? chapter.num : 0;
+  return ladderAt(BENCH_LADDER, num);
+}
+
+/* ---------- BLUEPRINT + AFFINITY PROGRESSION ---------- */
+function unlockedBps(){
+  const u=S.unlockedBps;
+  return (Array.isArray(u) && u.length) ? u.slice() : BP_STARTING.slice();
+}
+function bpUnlockedBy(chapterId){ return BP_UNLOCK[chapterId]||null; }
+/* Returns the blueprint id if this call actually opened something new. */
+function unlockBp(id){
+  if(!id) return null;
+  if(!Array.isArray(S.unlockedBps)) S.unlockedBps=BP_STARTING.slice();
+  if(S.unlockedBps.includes(id)) return null;
+  S.unlockedBps.push(id); persist();
+  return id;
+}
+function studiedCount(){ return (S.studied||[]).length; }
+function markStudied(partId){
+  if(!partId) return false;
+  if(!Array.isArray(S.studied)) S.studied=[];
+  if(S.studied.includes(partId)) return false;   // affinity counts DISTINCT parts read
+  const before=affinityLevel(S.studied.length).n;
+  S.studied.push(partId); persist();
+  const after=affinityLevel(S.studied.length).n;
+  return after>before ? affinityLevel(S.studied.length) : true;
+}
+function affinity(){ return affinityLevel(studiedCount()); }
+
 window.__RD_ENG = {
   Audio2, Save, S:()=>S, setS:(v)=>{S=v;}, newGame, freshMastery,
   applySettings, persist, go, refreshTopbars,
@@ -3097,6 +3322,9 @@ window.__RD_ENG = {
   portraitSVG, remySVG, radixSVG, walkerSVG, buildBackdrop,
   travNeed, travWeapon, travRoleName,
   current:()=>current, chapterForToday,
+  partyFor, commitParty, benchCapacityFor,
+  unlockedBps, unlockBp, bpUnlockedBy,
+  studiedCount, markStudied, affinity,
   getFlow:()=>flow, setFlow:(f)=>{flow=f;}
 };
 })();
@@ -3421,6 +3649,7 @@ function showHub(){
     $('#radix-hub').innerHTML=radixSVG();
     $('#hub-heading').textContent = "The Hidden Reed School";
     renderChapters();
+    renderPath();
     renderLedger();
     renderRegions();
     $('#hub-gloss').onclick=openGloss;
@@ -3438,6 +3667,41 @@ function showHub(){
       : "Radix dozes by the tea kettle, the roads all walked.";
   }});
 }
+/* The progression panel. It answers, without a menu: where am I, what does the
+   next road give me, and what is the next thing that opens up? */
+function renderPath(){
+  const spine=$('#path-spine'); const now=$('#path-now'); const rows=$('#path-rows');
+  if(!spine||!now||!rows) return;
+  const cur=clamp(S().chapter,0,CHAPTERS.length-1);
+  const done=S().servedChapterIds.length;
+  spine.innerHTML=CHAPTERS.map((c,i)=>
+    `<span class="ps-node${i<done?" done":i===cur?" now":""}" title="${c.name}"></span>`).join('<i class="ps-link"></i>');
+
+  const ch=E.chapterForToday();
+  const BP=(window.__RD_PREP && window.__RD_PREP._blueprints) ? window.__RD_PREP._blueprints() : {};
+  const known=E.unlockedBps();
+  const nextBpId=ch? E.bpUnlockedBy(ch.id):null;
+  const nextBp=(nextBpId && !known.includes(nextBpId))?BP[nextBpId]:null;
+  const aff=E.affinity(); const studied=E.studiedCount();
+  const nx=D.affinityNext(studied);
+
+  now.innerHTML = ch
+    ? `<span class="pn-k">Now</span> <b>${ch.name.replace(/^.*?—\s*/,"")}</b>
+       <div class="small muted">${E.partyFor(ch).builders.length} term${E.partyFor(ch).builders.length>1?"s":""} to name ·
+       room for ${E.benchCapacityFor(ch)} piece${E.benchCapacityFor(ch)>1?"s":""} at the bench</div>`
+    : `<span class="pn-k">Now</span> <b>Every road walked.</b>`;
+
+  const row=(k,v,sub)=>`<div class="path-row"><span class="pr-k">${k}</span>
+    <span class="pr-v">${v}</span>${sub?`<span class="pr-sub">${sub}</span>`:""}</div>`;
+
+  rows.innerHTML =
+    row("Chapter", `${Math.min(done+1,CHAPTERS.length)} of ${CHAPTERS.length}`, `${done} completed`) +
+    row("Patterns known", `${known.length} of 8`, known.map(id=>BP[id]?BP[id].name:id).join(", ")) +
+    (nextBp ? row("Next unlock", `<b class="pr-gold">${nextBp.name}</b>`, "finish this road and the bench learns it") : "") +
+    row("Lexicon affinity", `${aff.name}`,
+        nx ? `${studied} / ${nx.need} parts read — next: ${nx.name}` : (aff.grant||"every level earned"))+
+    (aff.grant? `<div class="path-grant">✦ ${aff.grant}</div>` : "");
+}
 function renderChapters(){
   const wrap=$('#order-list'); wrap.innerHTML="";
   const cur=S().chapter;
@@ -3447,11 +3711,13 @@ function renderChapters(){
     const locked = i>cur;
     if(locked && i>cur+0) { if(i>cur) return; } // only show up to current
     const card=el("div","panel party-card"+(done?" done":""));
-    const members=c.members.map(id=>TRAVELERS[id]).filter(Boolean).slice(0,6);
+    // show the party the LADDER will actually field, not the raw authored roster
+    const party=E.partyFor(c);
+    const members=party.members.map(id=>TRAVELERS[id]).filter(Boolean).slice(0,6);
     const portraits=members.map(m=>`<div class="pp">${portraitSVG(m.color,m.name.length)}</div>`).join("");
     const enemy = c.enemy? ENEMIES[c.enemy] : null;
-    const chips=`<span class="tag tier">${c.members.length} traveler${c.members.length>1?'s':''}</span>`+
-      `<span class="tag tier t2">${c.builders.length} term${c.builders.length>1?'s':''}</span>`+
+    const chips=`<span class="tag tier">${party.members.length} traveler${party.members.length>1?'s':''}</span>`+
+      `<span class="tag tier t2">${party.builders.length} term${party.builders.length>1?'s':''}</span>`+
       (enemy?`<span class="tag risk r3">${enemy.name}</span>`:`<span class="tag tier">no known threat</span>`);
     card.innerHTML=`
       ${done?'<div class="party-seal-done">印</div>':''}
@@ -3489,7 +3755,10 @@ function renderRegions(){
 
 /* ================= CHAPTER BRIEF ================= */
 function openChapter(chapter){
-  const flow={ chapter, builders:chapter.builders.slice(), members:chapter.members.slice(),
+  // the party ladder decides who actually walks this chapter — the rest wait their turn
+  S().emberDebt=0; persist();     // naming debt is owed per-road, not forever
+  const party=E.partyFor(chapter);
+  const flow={ chapter, party, builders:party.builders.slice(), members:party.members.slice(),
     idx:0, results:{}, forged:[], route:null, stats:{} };
   E.setFlow(flow);
   go("s-case",{onShow:()=>{
@@ -3503,9 +3772,9 @@ function openChapter(chapter){
     $('#case-intro').innerHTML=chapter.intro + (enemy?`<div class="small muted" style="margin-top:8px">The road is watched by the <b>${enemy.name}</b> — ${enemy.note}.</div>`:"");
     const grid=$('#traveler-grid'); grid.innerHTML="";
     const cards=[];
-    chapter.members.forEach(id=>{
+    flow.members.forEach(id=>{
       const t=TRAVELERS[id]; if(!t) return;
-      const isBuilder=chapter.builders.includes(id);
+      const isBuilder=flow.builders.includes(id);
       const card=el("div","panel traveler-card");
       const paceTxt = t.pace<0.9?'slow':t.pace>1.1?'quick':'steady';
       card.innerHTML=`
@@ -3523,6 +3792,16 @@ function openChapter(chapter){
         </div>`;
       grid.appendChild(card); cards.push(card);
     });
+    // the waiting list, said plainly — the player should never wonder where a traveler went
+    if(party.pending.length){
+      const wait=el("div","panel waiting-note");
+      const names=party.pending.map(id=>TRAVELERS[id]&&TRAVELERS[id].name).filter(Boolean);
+      wait.innerHTML=`<span class="eyebrow">Waiting at the school</span>
+        <div class="small">${names.slice(0,6).join(", ")}${names.length>6?` and ${names.length-6} more`:""}
+        ${names.length===1?"is":"are"} still waiting for a name. They'll join the next company —
+        this road only has room for ${party.builders.length}.</div>`;
+      grid.appendChild(wait); cards.push(wait);
+    }
     FX.stagger(cards,{stagger:90,y:22});
     FX.spotlightAll($('#s-case'));
     $('#case-back').onclick=()=>{ Audio2.sfx.paper(); showHub(); };
@@ -3581,6 +3860,7 @@ function openBuilder(){
     }
     renderTray(); renderSlots(); renderBuildSupport();
     const fb=$('#build-feedback'); fb.className="build-feedback"; fb.innerHTML="";
+    const rec=$('#build-record'); if(rec){ rec.className="build-record"; rec.innerHTML=""; }
     $('#assembly').className="assembly";
     $('#build-back').onclick=()=>{ Audio2.sfx.paper(); if(f.idx>0){ f.idx--; openBuilder(); } else openChapter(f.chapter); };
     $('#build-clear').onclick=()=>{ if(builderState.solved)return; builderState.placed=[]; syncBuilder(); Audio2.sfx.paper(); };
@@ -3698,7 +3978,40 @@ function checkBuild(){
     }
     if(!diagnosed) msg="Close — the pieces are right but the order isn't. Think about how the word reads left to right.";
   }
-  const fb=$('#build-feedback'); fb.className="build-feedback bad show"; fb.innerHTML=msg+" <b>Try again.</b>";
+  // THE COST OF A WRONG NAMING — escalating, named, and never a dead end.
+  // The answer is always still reachable; what you can't do is reach it for free.
+  let costLine="";
+  if(placed.length){
+    if(bAttempts===2){
+      const lost=4; S().coin=Math.max(0,S().coin-lost); persist();
+      costLine=` <span class="build-cost">&minus;${lost} ink &mdash; a sheet spoiled in the rewriting.</span>`;
+    } else if(bAttempts>=3){
+      const s=S();
+      if((s.emberDebt||0) < 2){
+        s.emberDebt=(s.emberDebt||0)+1; persist();
+        costLine=` <span class="build-cost">The delay costs the bench an ember &mdash; one less craft on this road.</span>`;
+      } else {
+        const lost=4; s.coin=Math.max(0,s.coin-lost); persist();
+        costLine=` <span class="build-cost">&minus;${lost} ink.</span>`;
+      }
+    } else {
+      costLine=` <span class="build-cost">Their confidence dips.</span>`;
+    }
+    renderNamingRecord();
+  }
+  const fb=$('#build-feedback'); fb.className="build-feedback bad show"; fb.innerHTML=msg+" <b>Try again.</b>"+costLine;
+}
+/* a running tally on the builder screen, so the cost is felt while it happens
+   rather than being a surprise at the results table */
+function renderNamingRecord(){
+  const host=$('#build-record'); if(!host) return;
+  const wrong=Math.max(0,bAttempts-1);
+  if(!wrong && !bSupportUsed){ host.innerHTML=""; host.classList.remove("show"); return; }
+  const debt=S().emberDebt||0;
+  host.classList.add("show");
+  host.innerHTML=`<b>Naming record</b> · ${wrong} wrong ${wrong===1?"attempt":"attempts"}`
+    + (bSupportUsed?` · ${bSupportUsed} support used`:"")
+    + (debt?` · <span class="build-cost">${debt} ember${debt>1?"s":""} owed to the bench</span>`:"");
 }
 function onBuildSuccess(){
   builderState.solved=true;
@@ -3711,7 +4024,7 @@ function onBuildSuccess(){
   $$('#slotted .connector').forEach((c,i)=> setTimeout(()=>c.classList.add("drawn"),120+i*220));
   Audio2.sfx.stamp(); FX.buzz(40);
   FX.inkBloom($('#assembly'));
-  let acc=1-(bAttempts-1)*0.18-bSupportUsed*0.12;
+  let acc=1-(bAttempts-1)*0.22-bSupportUsed*0.12;
   const accuracy=clamp(acc,0.35,1);
   f.results[tid]={accuracy, attempts:bAttempts, supportUsed:bSupportUsed, viewedDef:bViewedDef, solved:true, term:builderState.term};
   const M=S().mastery.terms[builderState.term];
@@ -3904,7 +4217,7 @@ window.__RD_SCREENS = { showTitle, startIntro, showHub, openChapter, openBuilder
 "use strict";
 const D = window.__RD_DATA;
 const { $, $$, el, clamp, shuffle, pick, toast,
-        TRAVELERS, ROLES, PARTS, TERMS, ENEMIES } = D;
+        TRAVELERS, ROLES, PARTS, TERMS, ENEMIES, CHAPTERS } = D;
 const E = window.__RD_ENG;
 const FX = window.FX;
 const { Audio2, persist, go, buildBackdrop, portraitSVG, radixSVG,
@@ -4046,6 +4359,24 @@ const BLUEPRINTS = {
         story:"Light and quick — for one at a time.",
         traits:{reach:2,speed:1,protect:-1}, quality:"quick", flavor:"fast lines, less margin"}
     ]
+  },
+  /* The finale pattern — opens only after the stronghold. It is the caravan's
+     answer to an Archive that unmakes words: a seal that holds a term together. */
+  seal: {
+    id:"seal", name:"Lexicon seal", icon:"kit", gear:"kit",
+    eyebrow:"Decode the request", concept:"control",
+    request:"The Great Archive unmakes words as fast as they are spoken. A seal — pressed over a written term — holds it whole. Read the part the Keepers cut into the die.",
+    craft:"trace", test:"protect",
+    grants:["cut","heal"],
+    base:{control:2,protect:1,recover:1},
+    materials:[
+      {id:"reedwax", name:"Reed-wax die", icon:"kit",
+        story:"Soft, forgiving, quick to press — it will not hold forever.",
+        traits:{recover:2,control:1,protect:-1}, quality:"forgiving", flavor:"mends readily, wears through"},
+      {id:"jadedie", name:"Carved jade die", icon:"kit",
+        story:"Unyielding. What it seals stays sealed.",
+        traits:{control:2,protect:2,speed:-1}, quality:"unyielding", flavor:"holds a term against anything, slow to press"}
+    ]
   }
 };
 
@@ -4076,7 +4407,8 @@ const BP_VARIANTS = {
   blade: [{id:"ridgeback", name:"Ridge-back blade", req:1, traits:{protect:1}, perk:"keenedge",    flavor:"clears snags and deadfalls without breaking stride"}],
   claws: [{id:"silent",    name:"Silent claws",     req:1, traits:{stealth:1}, perk:"surefoot",    flavor:"felt-wrapped — scree and mud hold no fear"}],
   kit:   [{id:"travelers", name:"Traveler's kit",   req:1, traits:{speed:1},   bonus:{mend:1},     flavor:"packed for the march — carries an extra mend"}],
-  rope:  [{id:"guideline", name:"Guide-line rig",   req:1, traits:{protect:1}, perk:"surefoot",    flavor:"a strung line steadies every footfall"}]
+  rope:  [{id:"guideline", name:"Guide-line rig",   req:1, traits:{protect:1}, perk:"surefoot",    flavor:"a strung line steadies every footfall"}],
+  seal:  [{id:"chorus",    name:"Chorus seal",      req:1, traits:{recover:1}, bonus:{mend:1},     flavor:"cut for many hands — carries an extra mend"}]
 };
 
 /* Road-found REAGENTS — consumable at the bench for a third trait + a road perk.
@@ -4114,10 +4446,37 @@ function bpMastery(bpId){ const bm=S().benchMastery||{}; return bm[bpId]||{forge
 function totalFine(){ const bm=S().benchMastery||{}; return Object.keys(bm).reduce((a,k)=>a+(bm[k].fine||0),0); }
 function unlockedVariants(bpId){ return (BP_VARIANTS[bpId]||[]).filter(v=>bpMastery(bpId).fine>=v.req); }
 
-/* which blueprints are offered for a given chapter (the whole board is open —
-   the PLAYER chooses what to forge; the road intel makes the choice strategic) */
+/* Which blueprints the player actually KNOWS. The board opens with one pattern
+   and gains exactly one more after every chapter (see BP_UNLOCK) — so the choice
+   in front of the player is always small enough to be a real decision. */
+const BP_ORDER=["kit","blade","hook","smoke","rope","claws","bow","seal"];
 function blueprintPoolFor(chapter){
-  return ["hook","smoke","bow","blade","claws","kit","rope"];
+  const known=new Set(E.unlockedBps());
+  return BP_ORDER.filter(id=>known.has(id) && BLUEPRINTS[id]);
+}
+/* The RECOMMENDED patterns for this road: what the scout's intel calls for, the
+   newest pattern the player has just unlocked, and — if neither fires — whatever
+   the chapter's threat suggests. Capped at two, because two is a decision and
+   seven is a wall. */
+function recommendedFor(f, pool){
+  const hints=new Set((f.roadPlan && f.roadPlan.hints) || []);
+  const out=[];
+  const add=(id,why)=>{ if(id && pool.includes(id) && !out.some(o=>o.id===id) && out.length<2) out.push({id,why}); };
+
+  // 1. the pattern this chapter just unlocked — it was chosen FOR this road
+  const prev=CHAPTERS[clamp((f.chapter.num||0)-1,0,CHAPTERS.length-1)];
+  if(f.chapter.num>0 && prev) add(E.bpUnlockedBy(prev.id), "newly learned — cut for exactly this road");
+
+  // 2. whatever the scout's report asks for
+  BP_ORDER.forEach(id=>{ if(hints.has(id)) add(id, "the scout's report calls for it"); });
+
+  // 3. a fallback so the board is never empty of guidance
+  if(!out.length){
+    if(f.chapter.enemy) add("smoke","the road ahead is watched");
+    add(pool[pool.length-1], "the newest pattern on the board");
+    add("kit","a first road is survived, not won");
+  }
+  return out;
 }
 
 /* ---------- decode question engine (adaptive, non-repeating) ---------- */
@@ -4139,9 +4498,10 @@ function decodeQuestion(concept){
 let W=null; // workshop state
 
 function emberBudget(f){
-  const size=f.members.length;
-  const maxItems = size>=3 ? 3 : 2;
-  return maxItems + 1 + (hasTech("twinstoke")?1:0);   // one spare ember absorbs one flawed craft
+  const maxItems = E.benchCapacityFor(f.chapter);
+  const affinityEmber = E.affinity().n>=2 ? 1 : 0;    // Scribe and above stoke the forge hotter
+  const debt = Math.min(2, S().emberDebt||0);         // shaky naming at the builder costs the bench
+  return Math.max(1, maxItems + 1 + (hasTech("twinstoke")?1:0) + affinityEmber - debt);
 }
 /* the heirloom carried from the last mission returns to the bench, one tier more worn */
 function depositHeirloom(f){
@@ -4161,9 +4521,8 @@ function depositHeirloom(f){
 }
 function openForge(){
   const f=E.getFlow();
-  const size=f.members.length;
   const pool=blueprintPoolFor(f.chapter);
-  const maxItems = size>=3 ? 3 : 2;
+  const maxItems = E.benchCapacityFor(f.chapter);
   f.forged = f.forged || [];
   depositHeirloom(f);
   // the road ahead is scouted BEFORE forging — bench choices answer real intel
@@ -4182,7 +4541,7 @@ function openForge(){
     renderTray();
     renderStepDots();
     renderEmbers();
-    $('#forge-help').onclick=()=>toast("Choose a commission from the board — the scout's road report tells you what the journey will demand. Decode to earn quality, pick materials, build by hand, test. Every craft burns an ember; flawed work burns two. You can't make everything — choose what the road needs.");
+    $('#forge-help').onclick=()=>toast("Choose a commission — the scout's report says what the road will demand, and the recommended cards answer it. Decode to earn fine materials, pick your tradeoff, build by hand, test. Every craft burns an ember; flawed work burns two; a ruined build leaves the bench with nothing. Careful hands matter here.");
     $('#forge-back').onclick=()=>{ Audio2.sfx.paper();
       const f=E.getFlow();
       if(f.builders && f.builders.length){ f.idx=f.builders.length-1; window.__RD_SCREENS.openBuilder(); }
@@ -4292,8 +4651,8 @@ function openCommission(){
   $('#forge-skip').style.display = f.forged.length>=1 ? "inline-flex" : "none";
   $('#forge-blueprint').innerHTML="";
   $('#forge-eyebrow').textContent="Choose the commission";
-  $('#forge-title').textContent="The board is yours";
-  $('#forge-sub').textContent=`Room for ${benchRoomLeft(f)} more piece${benchRoomLeft(f)>1?'s':''} · ${W.embers} ember${W.embers>1?'s':''} in the forge. A flawed craft burns two.`;
+  $('#forge-title').textContent = benchRoomLeft(f)===W.maxItems ? "What does this road need?" : "One more piece?";
+  $('#forge-sub').textContent=`Room for ${benchRoomLeft(f)} more piece${benchRoomLeft(f)>1?'s':''} · ${W.embers} ember${W.embers>1?'s':''} in the forge. A flawed craft burns two; a ruined one leaves you nothing.`;
   Audio2.sfx.paper(); radixReact();
   const body=$('#forge-body'); body.innerHTML="";
   // scout's road report — real intel from THIS run's generated road
@@ -4303,21 +4662,25 @@ function openCommission(){
     rep.innerHTML=`<b>Scout's report:</b> `+plan.intel.join(" ");
     body.appendChild(rep);
   }
-  const hints=new Set((plan&&plan.hints)||[]);
-  const grid=el("div","commission-grid"); body.appendChild(grid);
-  W.pool.forEach(bpId=>{
+
+  const recs=recommendedFor(f, W.pool);
+  const recIds=new Set(recs.map(r=>r.id));
+  const rest=W.pool.filter(id=>!recIds.has(id));
+
+  const cardFor=(bpId, why)=>{
     const bp=BLUEPRINTS[bpId];
     const bm=bpMastery(bpId);
     const madeThisTrip=f.forged.filter(it=>it.bpId===bpId).length;
     const variants=unlockedVariants(bpId);
-    const card=el("button","comm-card"+(hints.has(bpId)?" suits":""));
+    const card=el("button","comm-card"+(why?" suits":""));
     card.type="button";
     const pips = bm.fine>0 ? `<span class="comm-pips" title="fine crafts">${"★".repeat(Math.min(3,bm.fine))}</span>` : "";
     card.innerHTML=`
-      ${hints.has(bpId)?'<span class="comm-badge">✦ suits the road</span>':''}
+      ${why?`<span class="comm-badge">✦ recommended</span>`:''}
       <div class="mc-ico">${GEAR_ICON[bp.icon]||""}</div>
       <h4>${bp.name} ${pips}</h4>
       <div class="small muted comm-grants">${bp.grants.map(g=>({climb:"opens the high routes",smoke:"slips patrols & ambushes",shoot:"strikes at range",cut:"cuts snags & barricades",heal:"mends the squad",descend:"opens rope descents"}[g]||g)).join(" · ")}</div>
+      ${why?`<div class="small comm-why">${why}</div>`:""}
       ${madeThisTrip?`<div class="small comm-again">already on the bench ×${madeThisTrip} — forging another adds a charge</div>`:""}
       ${variants.length?`<div class="comm-variants">${variants.map(v=>`<span class="variant-btn" data-var="${v.id}" role="button" tabindex="0">${bm.forged<=v.req+1?'✨ ':''}${v.name}</span>`).join("")}</div>`:""}`;
     card.onclick=(e)=>{
@@ -4329,10 +4692,33 @@ function openCommission(){
       const vb=e.target.closest && e.target.closest('.variant-btn');
       if(vb && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); e.stopPropagation(); nextBlueprint(bpId, vb.dataset.var); }
     });
-    grid.appendChild(card);
-  });
+    return card;
+  };
+
+  // THE RECOMMENDATION — one or two patterns, large, with the reason stated
+  const recGrid=el("div","commission-grid rec-grid"); body.appendChild(recGrid);
+  recs.forEach(r=>recGrid.appendChild(cardFor(r.id, r.why)));
+
+  // everything else the player owns stays available, just out of the way
+  if(rest.length){
+    const toggle=el("button","btn ghost comm-more");
+    toggle.type="button";
+    toggle.textContent=`The rest of the board (${rest.length}) ▾`;
+    const restGrid=el("div","commission-grid comm-rest");
+    restGrid.style.display="none";
+    rest.forEach(id=>restGrid.appendChild(cardFor(id, null)));
+    toggle.onclick=()=>{ const open=restGrid.style.display!=="none";
+      restGrid.style.display=open?"none":"";
+      toggle.textContent=`The rest of the board (${rest.length}) ${open?"▾":"▴"}`;
+      Audio2.sfx.paper(); };
+    body.appendChild(toggle); body.appendChild(restGrid);
+  }
+
   const note=el("div","small muted comm-note");
-  note.textContent="Tap a card to forge the standard pattern — or tap an unlocked variant name to forge that instead.";
+  const nextUp=E.bpUnlockedBy(f.chapter.id);
+  const showsNext = nextUp && BLUEPRINTS[nextUp] && !W.pool.includes(nextUp);
+  note.innerHTML="Tap a card to forge the standard pattern — or tap an unlocked variant name to forge that instead."
+    + (showsNext ? `<br><b>Finish this road</b> and the bench learns the <b>${BLUEPRINTS[nextUp].name}</b>.` : "");
   body.appendChild(note);
 }
 
@@ -4378,8 +4764,8 @@ function stepDecode(){
         // reveal the correct one
         $$(".decode-opt",opts).forEach(x=>{ q.opts.forEach(qo=>{ if(qo.ok && x.innerHTML===qo.label){ x.classList.remove("dim"); x.classList.add("right"); } }); });
         Audio2.sfx.bad(); FX.buzz(30);
-        W.cur.quality=0.55; gainPop(ev.clientX,ev.clientY,"basic stock",true);
-        fb.innerHTML=`Not quite — ${q.teach} You'll still craft with <b>basic stock</b>.`;
+        W.cur.quality=0.42; gainPop(ev.clientX,ev.clientY,"basic stock",true);
+        fb.innerHTML=`Not quite — ${q.teach} The fine stock stays in the crate; you'll craft with <b>basic stock</b>, and a shaky build on basic stock can ruin the piece.`;
       }
       persist();
       setTimeout(stepMaterial, 1050);
@@ -4476,9 +4862,16 @@ function stepBuild(){
   stage.appendChild(holder);
   const q=el("div","craft-quality");
   q.innerHTML=`<span class="cq-label">Quality</span>
-    <div class="cq-bar"><i id="cq-fill" style="width:0%"></i></div>
+    <div class="cq-bar"><i id="cq-fill" class="q-ruin" style="width:0%"></i></div>
     <span class="cq-pct" id="cq-pct">0%</span>`;
   stage.appendChild(q);
+  // THE STAKES, stated before a hand touches the piece — punishing is only fair
+  // when the player can see exactly what they are working against.
+  const stakes=el("div","craft-stakes");
+  stakes.innerHTML = S().settings.timerRelax
+    ? `<b>fine</b> 82% &middot; <b>serviceable</b> 58% &middot; below that it ships flawed. <i>Relax mode: nothing here can be ruined.</i>`
+    : `<b>fine</b> 82% &middot; <b>serviceable</b> 58% &middot; <b>flawed</b> 34% &middot; <span class="cs-ruin">below 34% the piece is ruined and the embers are spent</span>`;
+  stage.appendChild(stakes);
   body.appendChild(stage);
 
   const type=bp.craft;
@@ -4504,11 +4897,25 @@ function stepBuild(){
   else if(type==="weave") craftWeave(cv,ctx);
   else finishBuild(0.7);
 }
+/* THE CRAFT CURVE.
+   Every mini-game used to end with clamp(score, 0.3, 1) — a floor that guaranteed
+   a usable piece no matter how carelessly you worked, which is exactly why the
+   bench felt like it didn't matter. Craft scores now run the full range and the
+   curve punishes sloppiness: careless work RUINS the piece.
+     raw 0.30 → 0.21 ruined   raw 0.55 → 0.51 flawed
+     raw 0.70 → 0.69 ok       raw 0.90 → 0.92 fine
+   Relax mode softens the curve back toward the old, forgiving behaviour. */
+function craftScore(raw){
+  const p=clamp(raw,0,1);
+  if(S().settings.timerRelax) return clamp(0.42+p*0.58,0,1);
+  return clamp(p*1.18-0.14,0,1);
+}
 function setCraftQ(v){
   W.cur.buildQ=clamp(v,0,1);
   const fill=$('#cq-fill'); const pct=$('#cq-pct');
   if(fill) fill.style.width=(W.cur.buildQ*100)+"%";
   if(pct) pct.textContent=Math.round(W.cur.buildQ*100)+"%";
+  if(fill) fill.className = W.cur.buildQ>=0.82?"q-fine" : W.cur.buildQ>=0.58?"q-ok" : W.cur.buildQ>=0.34?"q-poor" : "q-ruin";
 }
 function finishBuild(q){
   setCraftQ(q);
@@ -4567,7 +4974,7 @@ function craftTrace(cv,ctx){
   const hit=new Array(guide.length).fill(false);
   let drawing=false, done=false, errSum=0, errN=0, lastPt=null;
   const finalQ=()=>{ const cov=hit.filter(Boolean).length/hit.length; const avgErr=errN?errSum/errN:20;
-    const precision=clamp(1-avgErr/16,0,1); return clamp(0.32+cov*0.4+precision*0.28,0.3,1); };
+    const precision=clamp(1-avgErr/16,0,1); return craftScore(cov*0.55+precision*0.45); };
   const draw=()=>{
     craftBg(ctx,W,H);
     // guide channel
@@ -4591,7 +4998,7 @@ function craftTrace(cv,ctx){
     const cov=hit.filter(Boolean).length/hit.length;
     if(!done && cov>=0.92){ done=true; craftHit(sp,x,y,"#dfe6ea"); finishBuild(finalQ()); } };
   bindPointer(cv,{down:(x,y)=>{drawing=true;lastPt={x,y};mark(x,y);}, move:(x,y)=>{if(drawing)mark(x,y);},
-    up:()=>{drawing=false; if(!done){ const cov=hit.filter(Boolean).length/hit.length; if(cov>0.5){done=true; finishBuild(clamp(finalQ()*0.94,0.3,1));} }}});
+    up:()=>{drawing=false; if(!done){ const cov=hit.filter(Boolean).length/hit.length; if(cov>0.5){done=true; finishBuild(finalQ());} }}});
 }
 
 /* --- align: slide the two halves together, then SET the join (forgiving) --- */
@@ -4620,12 +5027,12 @@ function craftAlign(cv,ctx){
   draw();
   bindPointer(cv,{
     down:(x,y)=>{ if(btn && btn.hit(x,y)){ if(!done){ done=true;
-        const acc=clamp(1-Math.abs(gap()-targetGap)/40,0,1); const q=clamp(0.4+acc*0.6,0.3,1);
+        const acc=clamp(1-Math.abs(gap()-targetGap)/40,0,1); const q=craftScore(acc);
         craftHit(sp,W/2,midY,"#7d9a8a"); setCraftQ(q); finishBuild(q); } return; }
       dragging = Math.abs(x-leftX)<Math.abs(x-rightX)?"L":"R"; },
     move:(x)=>{ if(!dragging) return;
       if(dragging==="L") leftX=clamp(x,W*0.10,W/2-12); else rightX=clamp(x,W/2+12,W*0.90);
-      setCraftQ(clamp(0.4+(aligned()?0.4:0.1),0.3,0.85)); },
+      setCraftQ(craftScore(aligned()?0.8:0.25)); },
     up:()=>{ dragging=null; }
   });
 }
@@ -4667,7 +5074,7 @@ function craftTension(cv,ctx){
         sd=Math.sqrt(recent.reduce((a,b)=>a+(b-mean)*(b-mean),0)/recent.length); }
       const steadiness=clamp(1-sd*9,0,1);
       const acc=clamp(1-Math.abs(pull-target)/0.4,0,1);
-      const q=clamp(0.34+acc*(0.45+0.2*steadiness)+steadiness*0.2,0.3,1);
+      const q=craftScore(acc*0.62+steadiness*0.38);
       craftHit(sp,cx+pull*span,midY, acc>0.6?"#7d9a8a":"#d5643a"); setCraftQ(q); finishBuild(q); } }
   });
 }
@@ -4705,9 +5112,9 @@ function craftFold(cv,ctx){
           drawn[i]=true; craftHit(sp,(t.x1+t.x2)/2,(t.y1+t.y2)/2,"#bd9d5f");
           let dSum=0; stroke.forEach(p=>dSum+=distToLine(p.x,p.y,t));
           lineQs.push(clamp(1-(dSum/Math.max(1,stroke.length))/22,0.4,1)); } });
-      const n=drawn.filter(Boolean).length; setCraftQ(0.4+n*0.3);
+      const n=drawn.filter(Boolean).length; setCraftQ(craftScore(n*0.5));
       start=null; curPt=null; stroke=[];
-      if(!done && n>=2){ done=true; const avg=lineQs.reduce((a,b)=>a+b,0)/lineQs.length; finishBuild(clamp(0.36+avg*0.64,0.3,1)); } }
+      if(!done && n>=2){ done=true; const avg=lineQs.reduce((a,b)=>a+b,0)/lineQs.length; finishBuild(craftScore(avg)); } }
   });
 }
 
@@ -4737,8 +5144,8 @@ function craftFit(cv,ctx){
     up:(x,y)=>{ if(drag>=0){ const s=slots[drag]; const d=Math.hypot(s.x-x,s.y-y);
       if(d<34){ s.filled=true; fitQs.push(clamp(1-d/34*0.5,0.5,1)); craftHit(sp,s.x,s.y,"#7d9a8a"); }
       else { claws[drag].x=claws[drag].home; claws[drag].y=ty; Audio2.sfx.snap(); }
-      drag=-1; const n=slots.filter(s=>s.filled).length; setCraftQ(0.4+n/3*0.6);
-      if(!done && n>=3){ done=true; const avg=fitQs.reduce((a,b)=>a+b,0)/fitQs.length; finishBuild(clamp(0.4+avg*0.6,0.3,1)); } } }
+      drag=-1; const n=slots.filter(s=>s.filled).length; setCraftQ(craftScore(n/3));
+      if(!done && n>=3){ done=true; const avg=fitQs.reduce((a,b)=>a+b,0)/fitQs.length; finishBuild(craftScore(avg)); } } }
   });
 }
 
@@ -4766,12 +5173,12 @@ function craftPack(cv,ctx){
       if(btn && btn.hit(x,y)){ if(!done){ done=true;
         const neat=neatN?clamp(1-(neatSum/neatN)/(cw/cols),0.3,1):0.5;
         const base= packed>cols?0.45 : packed>=3?0.6+(Math.min(packed,cols)/cols)*0.2 : 0.45;
-        craftHit(sp,W/2,cy+ch/2,"#bd9d5f"); finishBuild(clamp(base*(0.7+0.3*neat),0.3,1)); } return; }
+        craftHit(sp,W/2,cy+ch/2,"#bd9d5f"); finishBuild(craftScore(base*(0.66+0.34*neat))); } return; }
       if(x>cx&&x<cx+cw&&y>cy&&y<cy+ch){ const slot=Math.floor((x-cx)/(cw/cols));
         packed++; const over=packed>cols; const colCx=cx+slot*cw/cols+cw/cols/2; neatSum+=Math.abs(x-colCx); neatN++;
         const stackN=tools.filter(t=>Math.floor((t.x-cx)/(cw/cols))===slot).length;
         tools.push({x:cx+slot*cw/cols+7, y:cy+ch-28-stackN*28, over});
-        craftHit(sp,x,y,over?"#b5322b":"#c9d2d8"); setCraftQ(packed>cols?0.5:clamp(0.4+packed/want*0.5,0.4,1)); }
+        craftHit(sp,x,y,over?"#b5322b":"#c9d2d8"); setCraftQ(craftScore(packed>cols?0.35:clamp(packed/want,0,1))); }
     }, move:()=>{}, up:()=>{}
   });
 }
@@ -4803,10 +5210,10 @@ function craftWeave(cv,ctx){
   const mark=(x,y)=>{ lastPt={x,y};
     frays.forEach(fr=>{ if(!fr.sealed && Math.hypot(fr.x-x,fr.y-y)<22){ fr.heat++;
       if(fr.heat>=16){ fr.sealed=true; craftHit(sp,fr.x,fr.y,"#7d9a8a"); } } });
-    const n=frays.filter(f=>f.sealed).length; setCraftQ(0.4+n/5*0.6);
+    const n=frays.filter(f=>f.sealed).length; setCraftQ(craftScore(n/5));
     if(!done && n>=5){ done=true; finishBuild(1); } };
   bindPointer(cv,{ down:(x,y)=>{drawing=true;mark(x,y);}, move:(x,y)=>{if(drawing)mark(x,y);},
-    up:()=>{ drawing=false; if(!done){ const n=frays.filter(f=>f.sealed).length; if(n>=3){ done=true; finishBuild(clamp(0.4+n/5*0.5,0.3,1)); } } } });
+    up:()=>{ drawing=false; if(!done){ const n=frays.filter(f=>f.sealed).length; if(n>=3){ done=true; finishBuild(craftScore(n/5)); } } } });
 }
 
 /* pointer helper: normalizes mouse/touch to canvas coords */
@@ -4836,16 +5243,21 @@ function stepTest(){
   $('#forge-eyebrow').textContent="4 · Test the item";
   $('#forge-sub').textContent="Prove it before it goes to the squad.";
   radixReact();
-  // final quality = decode quality * build quality (both matter)
-  const q = clamp(W.cur.quality*0.45 + W.cur.buildQ*0.55, 0.2, 1);
+  // final quality = decode quality * build quality (both matter, no floor)
+  const q = clamp(W.cur.quality*0.45 + W.cur.buildQ*0.55, 0, 1);
   W.cur.finalQ=q;
-  const qtier = q>=0.82?"fine": q>=0.55?"ok":"flawed";
+  // FOUR tiers now. A careless build can be RUINED — it never leaves the bench.
+  // Relax mode keeps the old three-tier behaviour for players who need it.
+  const relax=S().settings.timerRelax;
+  const qtier = q>=0.82?"fine" : q>=0.58?"ok" : (q>=0.34||relax)?"flawed" : "ruined";
   W.cur.qtier=qtier;
-  // scale traits by quality: flawed items lose their positive edge
+  // quality reaches all the way through to the road: fine work is genuinely
+  // stronger, flawed work is genuinely worse — the grade is not cosmetic
+  const QMULT={fine:1.25, ok:1.0, flawed:0.55, ruined:0};
   const traits={}; AXES.forEach(a=>traits[a]=0);
   Object.keys(W.cur.traits).forEach(k=>{ if(traits[k]==null) traits[k]=0;
     let v=W.cur.traits[k];
-    if(v>0) v=v*(0.5+q*0.5);       // positives scale with quality
+    if(v>0) v=v*QMULT[qtier];      // positives scale hard with the grade
     traits[k]=(traits[k]||0)+v; });
   W.cur.scaledTraits=traits;
 
@@ -4859,20 +5271,22 @@ function stepTest(){
 
   const ctx=cv.getContext('2d');
   runTestAnim(bp.test, ctx, cv, q, ()=>{
-    const gradeLabel = qtier==="fine"?"Fine work.":qtier==="ok"?"It'll serve.":"Flawed — but usable.";
-    const gradeCls = qtier==="fine"?"fine":qtier==="ok"?"ok":"flawed";
+    const gradeLabel = qtier==="fine"?"Fine work." : qtier==="ok"?"It'll serve."
+                     : qtier==="flawed"?"Flawed — but usable." : "Ruined.";
+    const gradeCls = qtier==="ruined"?"ruined":qtier;
     const why = testWhy(bp, qtier, W.cur.material);
     verdict.innerHTML=`<span class="tv-grade ${gradeCls}">${gradeLabel}</span>${why}`;
-    (qtier==="flawed"?Audio2.sfx.bad():Audio2.sfx.great()); FX.buzz(qtier==="flawed"?24:18);
-    // Tempering technique: one flawed build per visit may be re-worked before it ships
-    const canTemper = qtier==="flawed" && hasTech("tempering") && !W.temperUsed;
+    const bad = (qtier==="flawed"||qtier==="ruined");
+    (bad?Audio2.sfx.bad():Audio2.sfx.great()); FX.buzz(qtier==="ruined"?36:bad?24:18);
+    // Tempering technique: one bad build per visit may be re-worked before it ships
+    const canTemper = bad && hasTech("tempering") && !W.temperUsed;
     if(canTemper){
       const row=el("div","temper-row");
       const again=el("button","btn"); again.textContent="Re-temper it (technique) ↺";
       again.onclick=()=>{ W.temperUsed=true; Audio2.sfx.hammer(); FX.buzz(18);
         toast("Back into the coals — steady hands this time.");
         stepBuild(); };
-      const keep=el("button","btn ghost"); keep.textContent="Ship it flawed →";
+      const keep=el("button","btn ghost"); keep.textContent = qtier==="ruined" ? "Sweep it up →" : "Ship it flawed →";
       keep.onclick=()=>{ finishTest(qtier, verdict, stage); row.remove(); };
       row.appendChild(again); row.appendChild(keep);
       stage.appendChild(row);
@@ -4882,15 +5296,22 @@ function stepTest(){
   });
 }
 function finishTest(qtier, verdict, stage){
-  // commit forged item + burn embers (flawed work eats the spare — relaxed mode forgives)
-  commitItem();
-  const relax=S().settings.timerRelax;
-  const cost = (qtier==="flawed" && !relax) ? 2 : 1;
-  spendEmbers(cost);
-  if(cost>1) toast("The flawed work ate deep into the coals — an extra ember lost.");
+  // A RUINED piece never reaches the tray — the ember is spent, the bench is empty.
+  // This is the teeth: careless work at the forge now genuinely costs you a slot.
+  if(qtier==="ruined"){
+    spendEmbers(2);
+    toast("The piece cracks on the bench. Two embers gone, and nothing to show for them.");
+    Audio2.sfx.bad(); FX.buzz(40);
+  } else {
+    commitItem();
+    const relax=S().settings.timerRelax;
+    const cost = (qtier==="flawed" && !relax) ? 2 : 1;
+    spendEmbers(cost);
+    if(cost>1) toast("The flawed work ate deep into the coals — an extra ember lost.");
+  }
   const f=E.getFlow();
   const willEnd = (benchRoomLeft(f)<=0 || W.embers<=0);
-  const cont=el("button","btn "+(qtier==="flawed"?"":"jade")); cont.style.marginTop="12px";
+  const cont=el("button","btn "+((qtier==="flawed"||qtier==="ruined")?"":"jade")); cont.style.marginTop="12px";
   cont.textContent = willEnd? "Arm the squad →" : "Back to the board →";
   let contUsed=false;
   cont.onclick=()=>{ if(contUsed) return; contUsed=true; cont.disabled=true;
@@ -4902,7 +5323,8 @@ function testWhy(bp, qtier, mat){
   const m = mat? mat.flavor : "basic stock";
   if(qtier==="fine") return `The <b>${bp.name.toLowerCase()}</b> is ${m}. In the cavern it will perform at its best — and may reveal something hidden.`;
   if(qtier==="ok")   return `The <b>${bp.name.toLowerCase()}</b> is ${m}. It will do the job the mission asks of it.`;
-  return `The <b>${bp.name.toLowerCase()}</b> is ${m}, but the rough build shows: it may slip, break, or fade sooner in the cavern. Still, it works.`;
+  if(qtier==="flawed") return `The <b>${bp.name.toLowerCase()}</b> is ${m}, but the rough build shows: it carries barely half the edge it should, and it may slip or fade on the road. Still, it works.`;
+  return `The <b>${bp.name.toLowerCase()}</b> came apart under the test. The join never took. There is nothing here to hand a traveler — only a lesson about hurrying.`;
 }
 function commitItem(){
   const f=E.getFlow(); const c=W.cur;
@@ -4923,6 +5345,9 @@ function commitItem(){
   const bm=s.benchMastery[c.bp.id]=s.benchMastery[c.bp.id]||{forged:0,fine:0};
   bm.forged++;
   if(c.qtier==="fine"){
+    // fine work carries an extra use of whatever it grants — visible on the road
+    const extra = grants.includes("smoke")?{vanish:1} : (grants.includes("heal")?{mend:1} : {strike:1});
+    item.bonus = Object.assign({}, item.bonus||{}, extra);
     const before=bm.fine; bm.fine++;
     const nowOpen=(BP_VARIANTS[c.bp.id]||[]).filter(v=>before<v.req && bm.fine>=v.req);
     nowOpen.forEach(v=>toast(`Blueprint variant unlocked — ${v.name}: ${v.flavor}.`));
@@ -5249,6 +5674,8 @@ window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, has
   _setReagent:(id)=>{ if(W&&W.cur) W.cur.reagent = id? REAGENTS[id]||null : null; },
   _depart:()=>depart(),
   _variants:(bpId)=>unlockedVariants(bpId),
+  _blueprints:()=>BLUEPRINTS,
+  _gearIcon:(k)=>GEAR_ICON[k]||"",
   _reagents:()=>REAGENTS };
 window.__RD_PLAN = { openPlan: openAssign };  // legacy alias — plan step folded into assign
 })();
@@ -5301,6 +5728,30 @@ const HAZARDS={
   wasps: {lanes:[1],   name:"a paper-wasp nest",dmg:{morale:8, stamina:4}},
   branch:{lanes:[0,1], name:"a low deadfall",   dmg:{safety:6}}
 };
+/* FREE MOVEMENT.
+   The three ways above are TERRAIN BANDS, not rails. The squad moves continuously
+   through the band between ROAD_TOP and ROAD_BOT — mouse, W/S, arrows or drag —
+   and whichever band they are nearest decides the footing they're walking on.
+   Everything on the road resolves by vertical distance, so half-committing to a
+   lane is a real, expressive choice rather than an impossible one. */
+const ROAD_TOP=0.355, ROAD_BOT=0.865;
+const HIT_R=44;          // vertical hit/collect radius in canvas px
+const MOVE_SPD=560;      // keyboard travel, canvas px per second
+function bandAt(y){
+  const H=M.cv.height; let best=1, bd=1e9;
+  LANES.forEach((L,i)=>{ const d=Math.abs(L.y*H-y); if(d<bd){ bd=d; best=i; } });
+  return best;
+}
+/* the upper ledges stay shut without climbing gear — as a ceiling, not a snap-back */
+function roadMinY(){
+  const H=M.cv.height;
+  return (M.caps && M.caps.climb) ? ROAD_TOP*H : (LANES[1].y-0.055)*H;
+}
+function roadMaxY(){ return ROAD_BOT*M.cv.height; }
+/* every hazard and pickup carries a real Y; distance decides whether it lands */
+function objY(o){ return (o.y!=null ? o.y : LANES[o.lane].y) * M.cv.height; }
+function nearRow(o, extra){ return Math.abs(objY(o)-M.laneY) < (HIT_R+(extra||0)); }
+
 const PICKUP_DEFS={
   ink:     {name:"ink vial",       ink:3,             pop:"+3 ink"},
   shard:   {name:"lexicon shard",  ink:5, gain:{morale:6}, pop:"lexicon shard!"},
@@ -5417,7 +5868,8 @@ function runMission(){
         stats:{ stamina:clampStat(tot.stamina), morale:clampStat(tot.morale), safety:clampStat(tot.safety) },
         weatherProt: clampStat(tot.weather), speedStat: clampStat(tot.speed),
         weather:r.weather,
-        lane:1, laneY:0.615, warnedHigh:false,
+        lane:1, laneY:0.615, targetY:null, keyUp:false, keyDn:false, steering:false, warnedHigh:false,
+        phaseT:0, sweepT:0, gateSweepT:0, studiedRun:0,
         pointer:{x:0,y:0,over:false},
         pickups:[], hazards:[], pops:[], raiders:[],
         spawnPickT:0.7, spawnHazT:1.4,
@@ -5435,7 +5887,7 @@ function runMission(){
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
         maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"" };
-    M.laneY = LANES[1].y*cv.height;
+    M.laneY = LANES[1].y*cv.height; M.targetY = M.laneY;
     M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
     $('#mission-who').textContent = `${f.chapter.name} — ${size} traveler${size>1?'s':''} bound for ${f.chapter.dest}`;
@@ -5443,9 +5895,9 @@ function runMission(){
     renderAbilityBar();
     renderForgeStrip();
     updateWordHud();
-    const routeOpen = caps.climb ? "Climbing gear opens every path — high, middle or low."
-      : "Without climbing gear the upper ledges stay closed — keep to the trail or the river floor.";
-    caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. Gather word-parts and chain them into terms. ${routeOpen}`);
+    const routeOpen = caps.climb ? "Climbing gear opens the whole slope — the upper ledges included."
+      : "Without climbing gear the upper ledges stay closed — the trail and the river floor are yours.";
+    caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. <b>Move freely</b> — the mouse leads them, or hold W/S. <b>Hover a word-part</b> to read what it means. ${routeOpen}`);
     const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500); }
     $('#mini-challenge').classList.remove('show');
     Audio2.sfx.whoosh();
@@ -5456,39 +5908,79 @@ function runMission(){
 }
 function bindMissionPointer(cv){
   const rect=()=>cv.getBoundingClientRect();
-  const localY=(e)=>{ const rc=rect(); const sy=cv.height/rc.height;
+  const local=(e)=>{ const rc=rect(); const sx=cv.width/rc.width, sy=cv.height/rc.height;
+    const cx=(e.touches?e.touches[0].clientX:(e.changedTouches?e.changedTouches[0].clientX:e.clientX));
     const cy=(e.touches?e.touches[0].clientY:(e.changedTouches?e.changedTouches[0].clientY:e.clientY));
-    return (cy-rc.top)*sy; };
-  // steering IS the game now: a tap (or drag) on the upper / middle / lower third
-  // sends the squad onto that lane — to gather parts, dodge hazards, and line up
-  // with the right rune gate. No blocking menus.
-  const commitFromY=(y)=>{
+    return { x:(cx-rc.left)*sx, y:(cy-rc.top)*sy }; };
+
+  // MOVEMENT IS FREE. The mouse leads the squad directly by height; W/S and the
+  // arrow keys travel continuously while held; a drag does the same on touch.
+  // No snapping, no three fixed rails.
+  const steerTo=(y)=>{
     if(!M||M.done||M.paused) return;
-    const H=M.cv.height; let lane = y < H*0.42 ? 0 : y < H*0.70 ? 1 : 2;
-    setLane(lane);
+    const minY=roadMinY();
+    if(y < minY-6 && LANES[0].need && !M.caps[LANES[0].need] && !M.warnedHigh){
+      M.warnedHigh=true; caption("The upper ledges refuse them — no climbing gear on any back."); FX.buzz(16);
+    }
+    M.targetY = clamp(y, minY, roadMaxY());
+    M.steering = true;
   };
-  const tap=(e)=>{ if(!M||M.done) return; commitFromY(localY(e)); };
-  const drag=(e)=>{ if(!M||M.done||!(e.buttons&1)) return; commitFromY(localY(e)); };
-  cv.addEventListener('pointerdown',tap);
-  cv.addEventListener('pointermove',drag);
-  // keyboard: W/↑ climb a lane, S/↓ drop a lane (accessibility)
+  const move=(e)=>{
+    if(!M||M.done) return;
+    const p=local(e);
+    M.pointer.x=p.x; M.pointer.y=p.y; M.pointer.over=true;
+    // a mouse leads; a finger only leads while it's down
+    if(e.pointerType==="touch" && !(e.buttons&1)) return;
+    steerTo(p.y);
+  };
+  const down=(e)=>{ if(!M||M.done) return; const p=local(e);
+    M.pointer.x=p.x; M.pointer.y=p.y; M.pointer.over=true; steerTo(p.y); };
+  const leave=()=>{ if(M) M.pointer.over=false; };
+  cv.addEventListener('pointerdown',down);
+  cv.addEventListener('pointermove',move);
+  cv.addEventListener('pointerleave',leave);
+
+  const isUp   = k => k==='ArrowUp'   || k==='w' || k==='W';
+  const isDown = k => k==='ArrowDown' || k==='s' || k==='S';
   const key=(e)=>{ if(!M||M.done||M.paused) return;
-    if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){ e.preventDefault(); setLane(Math.max(0,M.lane-1)); }
-    else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){ e.preventDefault(); setLane(Math.min(2,M.lane+1)); }
+    if(isUp(e.key)){ e.preventDefault(); M.keyUp=true; M.steering=true; }
+    else if(isDown(e.key)){ e.preventDefault(); M.keyDn=true; M.steering=true; }
     // ability hotkeys: 1 strike, 2 vanish, 3 mend
     else if(e.key==='1'){ useAbility('strike'); }
     else if(e.key==='2'){ useAbility('vanish'); }
     else if(e.key==='3'){ useAbility('mend'); } };
+  const keyUp=(e)=>{ if(!M) return;
+    if(isUp(e.key)) M.keyUp=false; else if(isDown(e.key)) M.keyDn=false; };
   window.addEventListener('keydown',key);
-  M._unbind=()=>{ cv.removeEventListener('pointerdown',tap); cv.removeEventListener('pointermove',drag); window.removeEventListener('keydown',key); };
+  window.addEventListener('keyup',keyUp);
+  M._unbind=()=>{ cv.removeEventListener('pointerdown',down); cv.removeEventListener('pointermove',move);
+    cv.removeEventListener('pointerleave',leave);
+    window.removeEventListener('keydown',key); window.removeEventListener('keyup',keyUp); };
 }
-function setLane(lane){
-  if(lane===0 && LANES[0].need && !M.caps[LANES[0].need]){
-    if(!M.warnedHigh){ M.warnedHigh=true; caption("The upper ledges refuse them — no climbing gear on any back."); FX.buzz(16); }
-    lane=1;
+/* continuous steering, run once per frame */
+function stepMovement(dt){
+  if(M.targetY==null) M.targetY=M.laneY;
+  if(M.keyUp || M.keyDn){
+    const dir=(M.keyUp?-1:0)+(M.keyDn?1:0);
+    M.targetY += dir*MOVE_SPD*dt;
+    if(dir<0 && M.targetY < roadMinY()-4 && LANES[0].need && !M.caps[LANES[0].need] && !M.warnedHigh){
+      M.warnedHigh=true; caption("The upper ledges refuse them — no climbing gear on any back."); FX.buzz(16);
+    }
   }
-  if(lane===M.lane) return;
-  M.lane=lane; M.laneFlashT=0.5; Audio2.sfx.step&&Audio2.sfx.step(); FX.buzz(8);
+  M.targetY = clamp(M.targetY, roadMinY(), roadMaxY());
+  const before=M.lane;
+  M.laneY += (M.targetY-M.laneY)*Math.min(1, dt*13);
+  M.lane = bandAt(M.laneY);
+  if(M.lane!==before){ M.laneFlashT=0.35; Audio2.sfx.step&&Audio2.sfx.step(); FX.buzz(6); }
+}
+/* An immediate placement onto a band — used by the debug hook and by events that
+   put the squad somewhere specific. Ordinary steering never calls this; it moves
+   the target and lets the glide do the work. */
+function setLane(lane){
+  lane=clamp(lane,0,2);
+  if(lane===0 && LANES[0].need && !M.caps[LANES[0].need]) lane=1;
+  const y = clamp(LANES[lane].y*M.cv.height, roadMinY(), roadMaxY());
+  M.targetY=y; M.laneY=y; M.lane=lane; M.laneFlashT=0.5;
 }
 
 /* ---------- abilities: charges = how many of each item you crafted ---------- */
@@ -5504,11 +5996,20 @@ function computeAbilities(f){
   forged.forEach(it=>{ if(it.bonus) Object.keys(it.bonus).forEach(k=>{ if(out[k]!=null) out[k]+=it.bonus[k]; }); });
   return out;
 }
+/* EVERY BUTTON HAS A JOB, ALWAYS.
+   Strike and Vanish used to be dead weight outside a rare ambush. Each now has a
+   raid use AND a road use, and the button label says which one it will do right
+   now — so the hint is never a lie. */
 const ABILITY_META={
-  strike:{name:"Strike", glyph:"⚔", hint:"defeat raiders"},
-  vanish:{name:"Vanish", glyph:"☁", hint:"slip an ambush"},
-  mend:  {name:"Mend",   glyph:"✚", hint:"restore the squad"}
+  strike:{name:"Strike", glyph:"⚔", hint:"clear the road ahead", raidHint:"cut down the ambush"},
+  vanish:{name:"Vanish", glyph:"☁", hint:"phase & draw in parts", raidHint:"slip the ambush"},
+  mend:  {name:"Mend",   glyph:"✚", hint:"restore the squad",    raidHint:"restore the squad"}
 };
+function abilityHint(kind){
+  const meta=ABILITY_META[kind];
+  const raiding = M && M.raid && !M.raid.resolved;
+  return (raiding && meta.raidHint) ? meta.raidHint : meta.hint;
+}
 function renderAbilityBar(){
   const bar=$('#ability-bar'); if(!bar) return; bar.innerHTML="";
   Object.keys(ABILITY_META).forEach(kind=>{
@@ -5519,7 +6020,7 @@ function renderAbilityBar(){
     const btn=el("button","ability-btn"+(left<=0?" spent":""));
     btn.innerHTML=`<span class="ab-charge">${left}</span>
       <span class="ab-name">${meta.glyph} ${meta.name}</span>
-      <span class="ab-hint">${meta.hint}</span>`;
+      <span class="ab-hint">${abilityHint(kind)}</span>`;
     btn.onclick=()=>useAbility(kind);
     bar.appendChild(btn);
   });
@@ -5534,10 +6035,22 @@ function refreshAbilityReady(){
     const left=M.abilities[kind]||0;
     b.classList.toggle("spent", left<=0);
     b.querySelector(".ab-charge").textContent=left;
-    // Strike/Vanish glow while a raid is closing in
-    const usableNow = M.raid && !M.raid.resolved && (kind==="strike"||kind==="vanish") && left>0;
+    const hint=b.querySelector(".ab-hint"); if(hint) hint.textContent=abilityHint(kind);
+    // glow when the button is not merely usable but WANTED: a raid closing in, or
+    // (for Strike) a cluster of hazards actually stacked up on the road ahead
+    const raiding = M.raid && !M.raid.resolved;
+    let usableNow = left>0 && (raiding && (kind==="strike"||kind==="vanish"));
+    if(!usableNow && left>0 && kind==="strike") usableNow = hazardsAhead()>=2;
+    if(!usableNow && left>0 && kind==="mend")   usableNow = M.stats.stamina<32;
     b.classList.toggle("ready", !!usableNow);
   });
+}
+/* how many unresolved hazards are stacked in the corridor Strike would clear */
+function hazardsAhead(){
+  if(!M) return 0;
+  const sx=M.cv.width*0.30;
+  return M.hazards.filter(h=>{ if(h.hit||h.passed) return false;
+    const hx=screenX(h.p); return hx>sx && hx<sx+M.cv.width*0.62; }).length;
 }
 function useAbility(kind){
   if(!M||M.done) return;
@@ -5547,10 +6060,26 @@ function useAbility(kind){
     caption("A field kit opens — bindings, warm broth, a steadier breath. The squad recovers."); 
     pop(M.cv.width*0.30,M.laneY-70,"mended"); Audio2.sfx.good(); FX.buzz(16); refreshAbilityReady(); return;
   }
-  // strike / vanish only matter against a raid
+  // OUTSIDE a raid, Strike and Vanish still do real work on the road
   if(!M.raid || M.raid.resolved){
-    caption(kind==="strike"?"Blades stay sheathed — nothing to strike yet.":"The smoke would be wasted — no ambush to slip.");
-    return;
+    const sx=M.cv.width*0.30;
+    if(kind==="strike"){
+      const cleared=hazardsAhead();
+      if(!cleared){ caption("Nothing on the road worth drawing steel for — save the charge."); Audio2.sfx.bad(); return; }
+      M.abilities.strike--;
+      M.hazards.forEach(h=>{ if(h.hit||h.passed) return;
+        const hx=screenX(h.p); if(hx>sx && hx<sx+M.cv.width*0.62){ h.hit=true; h.passed=true; } });
+      bumpMomentum(0.35*M.forge.gainMult); statGain({morale:6,safety:4});
+      caption(`Forged steel goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road before the squad reaches ${cleared>1?"them":"it"}.`);
+      pop(sx+120, M.laneY-70, "road cleared!"); Audio2.sfx.great(); FX.buzz(24);
+      M.sweepT=0.6; refreshAbilityReady(); return;
+    }
+    // vanish: a phase window — hazards pass through them, and loose parts are drawn in
+    M.abilities.vanish--; M.phaseT=5.0;
+    statGain({safety:6});
+    caption("A smoke shell blooms early — for a few strides nothing can touch them, and stray word-parts drift into reaching hands.");
+    pop(sx, M.laneY-70, "phased!"); Audio2.sfx.clink(); FX.buzz(18);
+    refreshAbilityReady(); return;
   }
   if(kind==="strike"){
     M.abilities.strike--; M.raid.resolved=true; M.defeated++;
@@ -5643,7 +6172,7 @@ function seedParticles(weather){
 function caption(txt){
   if(txt===M.lastCap) return; M.lastCap=txt;
   const c=$('#mission-caption'); if(!c) return;
-  c.textContent=txt;
+  c.innerHTML=txt;      // captions carry markup: control names, term spellings
   if(!FX.reduced()){ c.style.opacity=0; c.style.transform="translateY(8px)";
     FX.to(c,{opacity:1,y:0,duration:0.5}); }
 }
@@ -5700,12 +6229,6 @@ function renderForgeStrip(){
 }
 
 /* ---------- lanes & steering ---------- */
-function laneFromPointer(){
-  const H=M.cv.height, y=M.pointer.y;
-  if(y < H*0.51) return 0;
-  if(y < H*0.72) return 1;
-  return 2;
-}
 function screenX(p){ return M.cv.width*0.30 + (p - M.progress)*VIS; }
 function spawnAheadP(extra){ return M.progress + (M.cv.width*0.78 + (extra||0))/VIS; }
 
@@ -5716,7 +6239,8 @@ function spawnPickup(forceLane, forceType, extra){
   if(!type){ const roll=Math.random(); type = roll<0.04?"shard" : roll<0.08?"reagent" : roll<0.19?"ink" : "lexeme"; }
   const partId = (type==="lexeme") ? pickRoadPart() : null;
   const reagentId = (type==="reagent") ? pick(Object.keys(window.__RD_REAGENTS||{ink:1})) : null;
-  M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, type, partId, reagentId, hover:0, got:false});
+  const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.055, ROAD_TOP+0.01, ROAD_BOT-0.01);
+  M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, y, type, partId, reagentId, hover:0, got:false, read:false});
 }
 /* weighted, weather-aware hazard deck — refilled when empty, rebuilt when weather turns */
 function buildHazardDeck(){
@@ -5733,7 +6257,12 @@ function spawnHazard(){
   const def=HAZARDS[k]; if(!def) return;
   if(def.needEnemy && !M.enemy) return;
   const lane=def.lanes[Math.floor(Math.random()*def.lanes.length)];
-  M.hazards.push({p:spawnAheadP(Math.random()*120), lane, kind:k, hit:false, passed:false});
+  const p=spawnAheadP(Math.random()*120);
+  // NOTHING blocks the approach to a rune gate — a gate asks the player to think,
+  // and stacking a reflex dodge on top of that is what made gates feel terrible.
+  if(inGateCorridor(p)) return;
+  const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.05, ROAD_TOP+0.02, ROAD_BOT-0.02);
+  M.hazards.push({p, lane, y, kind:k, hit:false, passed:false});
 }
 /* what the bench answers on the road: gear/perks counter specific hazards */
 function hazardCounter(kind){
@@ -5759,11 +6288,11 @@ function tick(t){
   if(!M||M.done) return;
   const dt=Math.min(0.05,(t-(M._lt||t))/1000); M._lt=t;
   const rel=relaxMult();
-  // lane is chosen by discrete taps (setLane); here we just glide toward it
+  // free vertical movement: mouse leads, W/S and arrows travel, touch drags
   if(M.laneFlashT>0) M.laneFlashT=Math.max(0,M.laneFlashT-dt);
-  const targetY=LANES[M.lane].y*M.cv.height;
-  M.laneY += (targetY-M.laneY)*Math.min(1,dt*3.4);
-  M.caravan.forEach((c,i)=>{ c.laneY += (M.laneY-c.laneY)*Math.min(1,dt*(3.2-i*0.5)); });
+  if(M.phaseT>0) M.phaseT=Math.max(0,M.phaseT-dt);
+  if(!M.paused) stepMovement(dt);
+  M.caravan.forEach((c,i)=>{ c.laneY += (M.laneY-c.laneY)*Math.min(1,dt*(6.0-i*0.7)); });
 
   // an ambush is closing in — advance it (independent of the question box)
   if(M.raid && !M.raid.resolved && !M.paused){ updateRaid(dt); }
@@ -5811,8 +6340,12 @@ function tick(t){
       const hx=screenX(h.p);
       if(!h.passed && hx < sx+16){
         h.passed=true;
-        if(h.lane===M.lane && !h.hit){
+        if(nearRow(h) && !h.hit){
           h.hit=true;
+          if(M.phaseT>0){
+            caption("Smoke still hangs about them — the danger passes through empty air.");
+            pop(sx,M.laneY-70,"phased"); Audio2.sfx.clink(); return;
+          }
           const hz=HAZARDS[h.kind];
           if(h.kind==="patrol" && M.perks.has("muffled") && !M.perkUsed.muffled){
             M.perkUsed.muffled=true;
@@ -5832,8 +6365,8 @@ function tick(t){
               const mult = (counter && counter.half) ? 0.5 : 1;
               Object.keys(hz.dmg).forEach(k=>{ M.stats[k]=clamp(M.stats[k]-hz.dmg[k]*rel*soft*mult,0,100); });
               if(hz.slow) M.slowT=hz.slow*mult;
-              if(hz.dropLane && M.lane<2){ M.lane=M.lane+1; M.laneFlashT=0.5;
-                caption("The scree carries them bodily down to the lower path!"); }
+              if(hz.dropLane){ M.targetY=clamp(M.targetY+M.cv.height*0.13, roadMinY(), roadMaxY()); M.laneFlashT=0.5;
+                caption("The scree carries them bodily down the slope!"); }
               else caption(counter? counter.txt : `They take ${hz.name} head-on — a wrong lane costs them.`);
               pop(sx,M.laneY-70, counter?"glancing hit":"hit!", !counter);
               Audio2.sfx.bad(); FX.buzz(counter?16:30); updatePrepBars();
@@ -5865,13 +6398,32 @@ function tick(t){
   }
   if(M.arriving) updateArrival(dt);
 
-  // auto-collect: a find in the squad's current lane is picked up as they pass through it
   if(!M.paused){
     const sx=M.cv.width*0.30;
+    // HOVER TO STUDY — hold the cursor over a drifting word-part to read its
+    // meaning. A part you READ is worth more than one you merely walk through,
+    // and it feeds the Lexicon Affinity track. Curiosity is the strongest build.
+    const canHover = M.pointer.over && !FX.isTouch;
+    let hovered=null;
+    M.pickups.forEach(pk=>{
+      if(pk.got) return;
+      const px=screenX(pk.p), py=(pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26;
+      const near = canHover && pk.type==="lexeme" &&
+        Math.hypot(M.pointer.x-px, M.pointer.y-py) < 54;
+      if(near){
+        hovered=pk;
+        pk.hover=(pk.hover||0)+dt;
+        if(pk.hover>=0.35 && !pk.read){ pk.read=true; studyPart(pk, px, py); }
+      } else if(pk.hover>0){ pk.hover=Math.max(0,pk.hover-dt*1.6); }
+    });
+    showStudyCard(hovered);
+    // walk-through collection: reach is a radius now, and Vanish widens it
     M.pickups.forEach(pk=>{
       if(pk.got) return;
       const px=screenX(pk.p);
-      if(pk.lane===M.lane && px < sx+30 && px > sx-40){ collectPickup(pk,px,LANES[pk.lane].y*M.cv.height-26); }
+      if(nearRow(pk, M.phaseT>0?90:0) && px < sx+30+ (M.phaseT>0?60:0) && px > sx-40){
+        collectPickup(pk, px, (pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26);
+      }
     });
   }
   M.pickups=M.pickups.filter(pk=>!pk.got && screenX(pk.p)>-60);
@@ -5882,6 +6434,53 @@ function tick(t){
 
   draw(t);
 }
+/* ---------- HOVER TO STUDY ----------
+   Reading a word-part on the road is the single most educationally valuable thing
+   the player can do, so it is also the strongest. A studied part pays a bigger
+   stat return, nudges momentum, and feeds Lexicon Affinity — a persistent,
+   campaign-long track whose levels reach back into the bench and the road. */
+function studyPart(pk, px, py){
+  const part=PARTS[pk.partId]; if(!part) return;
+  pk.studied=true;
+  const lvl=E.affinity();
+  const style=LEXEME_STYLE[part.kind];
+  // the read itself pays: a bigger restore than walking through, plus momentum
+  const gains={[style.stat]:9};
+  if(lvl.n>=3) gains.morale=(gains.morale||0)+5;      // Keeper: reading lifts spirits too
+  statGain(gains);
+  bumpMomentum(0.22*M.forge.gainMult);
+  markPartSeen(pk.partId);
+  const res=E.markStudied(pk.partId);
+  pop(px, py-18, "read: "+part.mean, false);
+  Audio2.sfx.page && Audio2.sfx.page();
+  if(res && res.name){    // a new affinity level opened
+    caption(`Lexicon Affinity — <b>${res.name}</b>. ${res.grant}`);
+    toast(`Lexicon Affinity ${res.name} — ${res.grant}`);
+    Audio2.sfx.great && Audio2.sfx.great();
+    if(res.n>=1) M.forge.momentumFloor=Math.max(M.forge.momentumFloor, 1.0+res.n*0.12);
+  }
+}
+/* the definition card that follows the cursor while a part is hovered */
+function showStudyCard(pk){
+  const card=$('#study-card'); if(!card) return;
+  if(!pk){ card.classList.remove('show'); return; }
+  const part=PARTS[pk.partId]; if(!part){ card.classList.remove('show'); return; }
+  const already=(S().studied||[]).includes(pk.partId);
+  const pct=Math.min(1,(pk.hover||0)/0.35);
+  card.innerHTML=`<span class="sc-kind k-${part.kind}">${part.kind}</span>
+    <b class="sc-text">${part.text}</b>
+    <span class="sc-mean">${part.mean}</span>
+    <span class="sc-note">${pk.read ? (already?"already in your Lexicon":"studied ✓") : "hold to study"}</span>
+    <i class="sc-bar" style="width:${Math.round(pct*100)}%"></i>`;
+  // place it beside the part, in canvas-relative screen space
+  const rc=M.cv.getBoundingClientRect(), host=card.parentElement.getBoundingClientRect();
+  const sx=rc.width/M.cv.width, sy=rc.height/M.cv.height;
+  const px=screenX(pk.p)*sx + (rc.left-host.left);
+  const py=((pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26)*sy + (rc.top-host.top);
+  card.style.left=Math.round(px)+"px";
+  card.style.top =Math.round(py)+"px";
+  card.classList.add('show');
+}
 function collectPickup(pk,px,py){
   pk.got=true;
   if(pk.type==="lexeme"){
@@ -5889,7 +6488,8 @@ function collectPickup(pk,px,py){
     M.collected.lexeme=(M.collected.lexeme||0)+1;
     M.termsFound=M.termsFound||[]; M.termsFound.push(pk.partId);
     const style=LEXEME_STYLE[part.kind];
-    statGain({[style.stat]:4});
+    if(pk.studied) M.studiedRun=(M.studiedRun||0)+1;   // already paid at the read
+    else statGain({[style.stat]:4});
     pop(px,py, part.text, false);
     // the heart of it: the gathered part tries to extend the term you're forging
     pushCombo(pk.partId);
@@ -6002,6 +6602,27 @@ function completeTerm(){
    top/bottom fork. Three lanes, each marked with a word-part; steer
    into the one the prompt asks for BEFORE the squad reaches the gate.
    ================================================================== */
+/* THE GATE CORRIDOR.
+   A rune gate is a thinking beat. The stretch of road the player spends reading it
+   is kept clear of hazards — nothing spawns inside it, and anything already there
+   is burned off by the gate's rune-light when it opens. */
+const GATE_CLEAR_BEFORE=0.085, GATE_CLEAR_AFTER=0.030;
+function inGateCorridor(p){
+  if(!M || !M.gate || M.gate.resolved) return false;
+  return p > M.gate.p-GATE_CLEAR_BEFORE && p < M.gate.p+GATE_CLEAR_AFTER;
+}
+function sweepGateCorridor(){
+  let swept=0;
+  M.hazards=M.hazards.filter(h=>{
+    if(h.hit||h.passed) return true;
+    if(inGateCorridor(h.p)){ swept++; return false; }
+    return true;
+  });
+  if(swept){
+    M.gateSweepT=0.8;
+    caption("The gate's rune-light burns the road clear ahead — nothing stands between them and the choice.");
+  }
+}
 function openGate(){
   if(M.gate) return;
   const reach=[1,2]; if(M.caps.climb) reach.unshift(0);
@@ -6024,17 +6645,23 @@ function openGate(){
       : `Rune gate — which path reads <b>${PARTS[targetId].text}</b>?`,
     resolved:false, flareT:0, flareLane:-1, flareOk:false
   };
+  // Lexicographer affinity dims one false door before the player commits
+  if(E.affinity().n>=4){
+    const wrongs=[0,1,2].filter(l=>l!==ansLane && M.gate.laneIds[l]);
+    if(wrongs.length) M.gate.dimmed=pick(wrongs);
+  }
+  sweepGateCorridor();
   const gp=$('#gate-prompt'); if(gp){ gp.innerHTML=M.gate.prompt; gp.classList.add('show'); }
-  caption("A rune gate spans the road — line up with the right path before you reach it.");
+  caption("A rune gate spans the road — move to the right path before you reach it. The road ahead is clear; only the choice matters.");
   Audio2.sfx.page();
 }
 function resolveGate(){
   const G=M.gate; if(!G||G.resolved) return;
   G.resolved=true; M.challengesDone++;
-  const ok=M.lane===G.ansLane;
+  const ok=bandAt(M.laneY)===G.ansLane;
   const gp=$('#gate-prompt'); if(gp) gp.classList.remove('show');
   if(window.__RD_QE) window.__RD_QE.record([G.conceptId], ok);
-  G.flareT=0.9; G.flareLane=M.lane; G.flareOk=ok;
+  G.flareT=0.9; G.flareLane=bandAt(M.laneY); G.flareOk=ok;
   if(ok){
     M.challengesWon++; bumpMomentum(0.9*M.forge.gainMult); M.surgeT=0.5; setPace(1.6,3);
     statGain({morale:8,safety:6,stamina:4});
@@ -6264,9 +6891,9 @@ function draw(t){
       ctx.fillStyle="rgba(90,100,90,.5)";
       for(let x=((-scroll*0.9)%160+160)%160; x<W; x+=160){ ctx.beginPath(); ctx.arc(x,y+12,5,0,6.28); ctx.fill(); }
     }
-    // lane marker on the active lane
-    if(i===M.lane && M.pointer.over){
-      ctx.strokeStyle="rgba(189,157,95,.65)"; ctx.setLineDash([8,8]); ctx.lineWidth=2;
+    // the band the squad is currently walking — free movement means this changes smoothly
+    if(i===M.lane){
+      ctx.strokeStyle="rgba(189,157,95,.5)"; ctx.setLineDash([8,8]); ctx.lineWidth=2;
       ctx.beginPath(); ctx.moveTo(0,y-34); ctx.lineTo(W,y-34); ctx.stroke(); ctx.setLineDash([]);
     }
     if(locked){
@@ -6278,7 +6905,7 @@ function draw(t){
   // pickups
   M.pickups.forEach(pk=>{
     if(pk.got) return;
-    const x=screenX(pk.p), y=LANES[pk.lane].y*H - 26;
+    const x=screenX(pk.p), y=(pk.y!=null?pk.y:LANES[pk.lane].y)*H - 26;
     if(x<-40||x>W+40) return;
     drawPickup(ctx,x,y,pk.type,t,pk.partId);
     if(pk.hover>0){
@@ -6292,7 +6919,7 @@ function draw(t){
   // co-located with the squad the instant progress reaches 1 (they truly reach it)
   drawFinishGate(ctx, screenX(1), M.laneY, H, t, M.progress>0.95);
   M.hazards.forEach(h=>{
-    const x=screenX(h.p), y=LANES[h.lane].y*H;
+    const x=screenX(h.p), y=(h.y!=null?h.y:LANES[h.lane].y)*H;
     if(x<-60||x>W+60||h.hit) return;
     drawHazard(ctx,x,y,h.kind,t,M.revealT>0);
   });
@@ -6300,7 +6927,7 @@ function draw(t){
   // pulses a warning ring around the walkers themselves — a last, unmistakable cue to steer away
   let incoming=false;
   M.hazards.forEach(h=>{
-    if(h.hit||h.passed||h.lane!==M.lane) return;
+    if(h.hit||h.passed||!nearRow(h,14)) return;
     const hx=screenX(h.p);
     if(hx>sx && hx<sx+180) incoming=true;
   });
@@ -6316,11 +6943,36 @@ function draw(t){
     const low = M.stats.stamina<34;
     drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4, c.color, wob, low, c.weapon, c.gearKind);
   });
-  // lane-choice flash — confirms the tap landed
+  // crossing into a new band — a soft confirmation around the squad's actual height
   if(M.laneFlashT>0){
-    const ly=LANES[M.lane].y*H;
-    ctx.save(); ctx.globalAlpha=clamp(M.laneFlashT*1.6,0,0.5);
-    ctx.fillStyle="rgba(216,189,132,0.5)"; ctx.fillRect(0, ly-H*0.09, W, H*0.18);
+    ctx.save(); ctx.globalAlpha=clamp(M.laneFlashT*1.4,0,0.34);
+    ctx.fillStyle="rgba(216,189,132,0.5)"; ctx.fillRect(0, M.laneY-H*0.07, W, H*0.14);
+    ctx.restore();
+  }
+  // a phase window (Vanish on the open road): the squad reads as smoke
+  if(M.phaseT>0){
+    ctx.save();
+    ctx.globalAlpha=clamp(M.phaseT/5,0,1)*0.5;
+    ctx.strokeStyle="rgba(214,222,228,.9)"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(sx-20, M.laneY-16, 110+Math.sin(t*0.006)*8, 52, 0, 0, 6.28); ctx.stroke();
+    ctx.restore();
+  }
+  // Strike's sweep — a bright cut across the road it just cleared
+  if(M.sweepT>0){
+    M.sweepT=Math.max(0,M.sweepT-0.016);
+    ctx.save(); ctx.globalAlpha=clamp(M.sweepT*1.6,0,0.6);
+    const gsw=ctx.createLinearGradient(sx,0,sx+W*0.62,0);
+    gsw.addColorStop(0,"rgba(243,236,216,0)"); gsw.addColorStop(0.5,"rgba(243,236,216,.9)"); gsw.addColorStop(1,"rgba(243,236,216,0)");
+    ctx.strokeStyle=gsw; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(sx, M.laneY-30); ctx.lineTo(sx+W*0.62, M.laneY-50); ctx.stroke();
+    ctx.restore();
+  }
+  // the gate corridor burning clear
+  if(M.gateSweepT>0){
+    M.gateSweepT=Math.max(0,M.gateSweepT-0.016);
+    ctx.save(); ctx.globalAlpha=clamp(M.gateSweepT,0,0.35);
+    ctx.fillStyle="rgba(216,189,132,.55)";
+    ctx.fillRect(sx, H*ROAD_TOP-20, W-sx, H*(ROAD_BOT-ROAD_TOP)+50);
     ctx.restore();
   }
   // raiders during an ambush — they visibly CLOSE IN as the timer runs down
@@ -6388,12 +7040,19 @@ function drawGate(ctx,W,H,t){
     const part=PARTS[id];
     const locked = LANES[lane].need && !M.caps[LANES[lane].need];
     const isAns = lane===G.ansLane;
+    const dimmed = (!G.resolved && G.dimmed===lane);   // Lexicographer affinity
     let glow="rgba(189,157,95,0.9)", face="rgba(24,21,16,0.82)";
     if(G.resolved){
       if(lane===G.flareLane) { glow=G.flareOk?"#5fae5f":"#d24a3a"; }
       else if(isAns){ glow="#5fae5f"; }         // always reveal the true path
+    } else if(dimmed){ glow="rgba(120,110,96,0.55)"; }
+    ctx.globalAlpha=locked?0.4:(dimmed?0.45:1);
+    // the door the squad is currently lined up with gets a clear standing highlight
+    if(!G.resolved && bandAt(M.laneY)===lane && !locked){
+      ctx.save(); ctx.globalAlpha=0.22; ctx.fillStyle="#f3ecd8";
+      ctx.fillRect(gx-40, y-62+sway, 80, 92); ctx.restore();
+      ctx.globalAlpha=locked?0.4:1;
     }
-    ctx.globalAlpha=locked?0.4:1;
     // arch posts
     ctx.strokeStyle=glow; ctx.lineWidth=5; ctx.lineCap="round";
     ctx.beginPath(); ctx.moveTo(gx-30,y+24); ctx.lineTo(gx-30,y-40+sway);
@@ -6699,6 +7358,7 @@ function showResult(){
     if(M){ const moD=el("div","reward"); moD.innerHTML=`<div class="rv">×${M.bestMomentum.toFixed(1)}</div><div class="rl">Top momentum</div>`; rg.appendChild(moD); }
     setTimeout(()=>{ FX.countUp(repEl,repGain,{prefix:"+"}); FX.countUp(coinEl,coinGain,{prefix:"+"});
       if(chEl) FX.countUp(chEl, termsBuilt,{}); }, 300);
+    const uc=$('#unlock-card'); if(uc){ uc.style.display="none"; uc.innerHTML=""; }
     const cons=$('#consequences'); cons.innerHTML="";
     consequenceLines(f,grade,st).forEach(c=>{
       const row=el("div","consq"); row.innerHTML=`<span class="ic">${c.ic}</span><div>${c.txt}</div>`; cons.appendChild(row);
@@ -6710,7 +7370,15 @@ function showResult(){
       window.__RD_PREP.unlockTech("twinstoke");
     // commit rewards + progress
     S().rep+=repGain; S().coin+=coinGain;
-    if(!alreadyDone) S().servedChapterIds.push(chapter.id);
+    if(!alreadyDone){
+      S().servedChapterIds.push(chapter.id);
+      // the party ladder only advances on a FINISHED road — travelers who waited
+      // this time are first in line for the next company
+      E.commitParty(f.party);
+      // ONE new thing per mission: the pattern the next road was designed around
+      const newBp = E.unlockBp(E.bpUnlockedBy(chapter.id));
+      if(newBp) renderUnlockCard(newBp, CHAPTERS[CHAPTERS.findIndex(c=>c.id===chapter.id)+1]);
+    }
     if(chapter.id==="ch6" && grade!=="poor") S().valeRescued=true;
     // page + story revelation
     const pr=$('#page-reward');
@@ -6733,6 +7401,26 @@ function showResult(){
     $('#result-continue').onclick=()=>{ Audio2.sfx.paper();
       if(isFinal){ showEnding(); } else window.__RD_SCREENS.showHub(); };
   }});
+}
+/* THE UNLOCK CARD — progression the player cannot miss. One new pattern per
+   mission, announced full-width, with the reason it was chosen for them. */
+function renderUnlockCard(bpId, nextChapter){
+  const BP=(window.__RD_PREP && window.__RD_PREP._blueprints) ? window.__RD_PREP._blueprints() : null;
+  const bp=BP && BP[bpId];
+  const host=$('#unlock-card'); if(!host) return;
+  const nextCh=nextChapter||CHAPTERS[clamp(S().chapter,0,CHAPTERS.length-1)];
+  host.style.display="block";
+  host.innerHTML=`<span class="eyebrow">The bench learns a new pattern</span>
+    <div class="uc-row">
+      <div class="uc-ico">${bp&&bp.icon&&window.__RD_PREP&&window.__RD_PREP._gearIcon?window.__RD_PREP._gearIcon(bp.icon):"✦"}</div>
+      <div>
+        <h3>${bp?bp.name:bpId}</h3>
+        <div class="small">${bp?bp.grants.map(g=>({climb:"opens the high routes",smoke:"slips patrols & ambushes",shoot:"strikes at range",cut:"cuts snags & barricades",heal:"mends the squad",descend:"opens rope descents"}[g]||g)).join(" · "):""}</div>
+        ${nextCh?`<div class="small muted uc-why">Cut for what waits at <b>${nextCh.dest}</b>. It will be on the board when you next open the forge.</div>`:""}
+      </div>
+    </div>`;
+  host.classList.remove("uc-in"); void host.offsetWidth; host.classList.add("uc-in");
+  setTimeout(()=>{ Audio2.sfx.great && Audio2.sfx.great(); }, 500);
 }
 function summaryLine(f,grade,st){
   const dest=f.chapter.dest;
@@ -6859,7 +7547,22 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _forge:()=>M&&M.forge,
   _forceEvent:(type)=>{ if(M && !M.done) fireEvent({type}); return M&&(M.gate||M.raid||M.questionOpen)||null; },
   _hazardDeck:()=>{ if(M && (!M.hazardDeck||!M.hazardDeck.length)) M.hazardDeck=buildHazardDeck(); return M&&M.hazardDeck; },
-  _grantReagent:(id)=>grantReagent(id) };
+  _grantReagent:(id)=>grantReagent(id),
+  /* --- free movement / study / corridor hooks (headless tests) --- */
+  _steer:(y)=>{ if(!M||M.done) return null; M.targetY=clamp(y, roadMinY(), roadMaxY()); return M.targetY; },
+  _stepMove:(dt)=>{ if(!M||M.done) return null; stepMovement(dt||0.05); return {y:M.laneY, lane:M.lane}; },
+  _bounds:()=>M?{min:roadMinY(), max:roadMaxY(), h:M.cv.height}:null,
+  _bandAt:(y)=>M?bandAt(y):null,
+  _inGateCorridor:(p)=>inGateCorridor(p),
+  _spawnHazardAt:(p,lane,kind)=>{ if(!M) return null;
+    if(inGateCorridor(p)) return null;
+    M.hazards.push({p, lane, y:LANES[lane].y, kind, hit:false, passed:false}); return M.hazards.length; },
+  _hazards:()=>M&&M.hazards,
+  _study:(partId)=>{ if(!M) return null;
+    const pk={p:M.progress+0.1, lane:1, y:LANES[1].y, type:"lexeme", partId, hover:0.4, got:false, read:true};
+    M.pickups.push(pk); studyPart(pk, 100, 100); return {studied:E.studiedCount(), affinity:E.affinity()}; },
+  _useAbility:(k)=>{ useAbility(k); return M&&{abilities:Object.assign({},M.abilities), phaseT:M.phaseT, hazards:M.hazards.filter(h=>!h.hit).length}; },
+  _hazardsAhead:()=>hazardsAhead() };
 
 /* ================= BOOT ================= */
 function boot(){

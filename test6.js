@@ -1,5 +1,6 @@
-/* test6.js — BENCH redesign: save v5 migration, commission board with road intel,
-   embers, variants, reagent craft, flawed ember cost, heirloom deposit. */
+/* test6.js — BENCH: save v6 migration, the blueprint unlock ladder, the
+   recommended commission board, embers, variants, reagent craft, the RUINED
+   craft tier, flawed ember cost, heirloom deposit. */
 const { boot, sleep, until, assert, summary } = require('./testlib');
 
 (async () => {
@@ -15,17 +16,39 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
     support: { hint: 3, consult: 2, recall: 3 }, finished: false
   }));
   const migrated = E.Save.read();
-  assert(migrated && migrated.ver === 5, 'v3 save migrates to ver 5');
+  assert(migrated && migrated.ver === 6, 'v3 save migrates to ver 6');
   assert(Array.isArray(migrated.techniques) && typeof migrated.benchMastery === 'object'
     && typeof migrated.reagents === 'object' && migrated.heirloom === null
     && typeof migrated.cachesMarked === 'number', 'v5 fields backfilled');
+  assert(Array.isArray(migrated.pending) && Array.isArray(migrated.studied)
+    && Array.isArray(migrated.unlockedBps) && migrated.unlockedBps.length >= 1
+    && typeof migrated.emberDebt === 'number', 'v6 progression fields backfilled');
   assert(migrated.rep === 12 && migrated.chapter === 1, 'old progress preserved');
 
   /* ---- fresh state + synthetic flow ---- */
   const S = E.newGame();
-  assert(S.ver === 5, 'newGame is ver 5');
+  assert(S.ver === 6, 'newGame is ver 6');
+  assert(S.unlockedBps.length === 1 && S.unlockedBps[0] === 'kit',
+    'a new game opens with exactly ONE pattern on the board');
   E.setS(S); E.applySettings();
-  const ch = D.CHAPTERS[1];   // 3+ members → maxItems 3, ember budget 4
+
+  /* ---- the blueprint unlock ladder: one new pattern per finished chapter ---- */
+  assert(D.blueprintsEarnedBy([]).length === 1, 'ladder: nothing finished → one pattern');
+  assert(D.blueprintsEarnedBy(['prologue']).includes('blade'), 'ladder: prologue opens the blade');
+  assert(D.blueprintsEarnedBy(['prologue', 'ch1']).includes('hook'), 'ladder: chapter one opens the hook');
+  assert(D.blueprintsEarnedBy(D.CHAPTERS.map(c => c.id)).length === 8, 'ladder: a full campaign opens all eight');
+
+  /* ---- the party ladder: the prologue fields ONE, chapter one THREE ---- */
+  const p0 = E.partyFor(D.CHAPTERS[0]), p1 = E.partyFor(D.CHAPTERS[1]);
+  assert(p0.builders.length === 1, 'prologue fields one builder');
+  assert(p1.builders.length === 3, 'chapter one fields three builders, not six');
+  assert(p1.pending.length >= 1, 'travelers who do not fit go on the waiting list');
+  assert(E.benchCapacityFor(D.CHAPTERS[0]) === 1, 'the prologue bench holds one piece');
+  assert(E.benchCapacityFor(D.CHAPTERS[1]) === 2, 'chapter one holds two');
+
+  // open the whole board for the rest of the bench tests
+  E.S().unlockedBps = ['kit', 'blade', 'hook', 'smoke', 'rope', 'claws', 'bow'];
+  const ch = D.CHAPTERS[1];
   const flow = { chapter: ch, builders: [], members: ch.members.slice(0, 3), idx: 0, results: {}, forged: [], route: null, stats: {} };
   E.setFlow(flow);
 
@@ -34,14 +57,19 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   await until(() => P._commission().step === 'commission', 6000, 'commission board');
   const c1 = P._commission();
   assert(c1.step === 'commission', 'forge opens on the commission board');
-  assert(c1.pool.length === 7, 'all 7 blueprints offered (player chooses)');
+  assert(c1.pool.length === 7, 'the board offers exactly the patterns the player knows');
   assert(c1.embers === c1.maxItems + 1, 'ember budget = room + 1 spare');
   assert(flow.roadPlan && flow.roadPlan.events.length >= 7 && flow.roadPlan.events.length <= 9, 'road plan generated at forge time (7–9 stops)');
   const evTypes = flow.roadPlan.events.map(e => e.type);
   assert(evTypes.filter(t => t === 'gate').length >= 3, 'plan guarantees rune gates');
   assert(evTypes.includes('gate'), 'plan guarantees a rune gate');
   const doc = window.document;
-  assert(doc.querySelectorAll('.comm-card').length === 7, 'board renders 7 cards');
+  assert(doc.querySelectorAll('.rec-grid .comm-card').length <= 2
+    && doc.querySelectorAll('.rec-grid .comm-card').length >= 1,
+    'the board recommends one or two patterns, never a wall of seven');
+  assert(!!doc.querySelector('.comm-more'), 'the rest of the board stays available behind a toggle');
+  assert(doc.querySelectorAll('.comm-card').length === 7, 'every known pattern is still reachable');
+  assert(!!doc.querySelector('.comm-why'), 'the recommendation says WHY');
   assert(!!doc.querySelector('.road-report') === (flow.roadPlan.intel.length > 0), 'scout report shown when intel exists');
 
   /* ---- forge a FINE smoke shell ---- */
@@ -59,29 +87,48 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   P._openCommission();
   assert(P._variants('smoke').length === 1, 'Long-burn shell variant unlocked by fine craft');
   assert(doc.querySelector('.variant-btn'), 'variant offered on the board');
-  P._pickBlueprint('smoke', 'longburn');
+
+  /* ---- RUINED: a careless build now genuinely costs you the slot ---- */
+  P._pickBlueprint('bow');
   P._forceDecode(false);
   assert(!P._pickMaterial(0), 'stronger material locked after missed decode');
   assert(P._pickMaterial(1), 'basic material still available (flawed path, never blocked)');
   P._finishBuild(0.1);
+  await until(() => flow.embersUsed === 3, 8000, 'ruined craft burns two embers');
+  assert(flow.forged.length === 1, 'a RUINED piece never reaches the tray');
+  assert(flow.embersUsed === 3, 'the ruined craft still burned two embers');
+
+  /* ---- flawed: usable, never blocked, but visibly weaker ---- */
+  // the ruined craft ate the last ember — restoke the forge for the next test
+  flow.embersUsed = 0;
+  P.openForge();
+  await until(() => P._commission().step === 'commission', 6000, 'restoked commission board');
+  P._pickBlueprint('smoke', 'longburn');
+  P._forceDecode(false);
+  P._pickMaterial(1);
+  P._finishBuild(0.45);
   await until(() => flow.forged.length === 2, 8000, 'second commit');
   const it2 = flow.forged[1];
   assert(it2 && it2.qtier === 'flawed' && it2.name === 'Long-burn shell', 'flawed variant committed (usable, not blocked)');
   assert(it2.bonus && it2.bonus.vanish === 1, 'variant carries bonus charge');
-  assert(flow.embersUsed === 3, 'flawed craft burned two embers');
+  assert(it2.traits.stealth < flow.forged[0].traits.stealth,
+    'flawed work is genuinely weaker than fine work — the grade is not cosmetic');
+  assert(flow.embersUsed === 2, 'flawed craft burned two embers');
 
-  /* ---- reagent craft ---- */
+  /* ---- reagent craft (fresh bench: the last one is out of embers) ---- */
   E.S().reagents = { mistresin: 2 };
   P.unlockTech('reagentcraft');
-  P._openCommission();
+  flow.embersUsed = 0; flow.forged.length = 0;
+  P.openForge();
+  await until(() => P._commission().step === 'commission', 6000, 'reagent commission board');
   P._pickBlueprint('claws');
   P._forceDecode(true);
   assert(doc.querySelector('.reagent-chip'), 'reagent chips offered at material step');
   P._setReagent('mistresin');
   P._pickMaterial(0);
   P._finishBuild(0.95);
-  await until(() => flow.forged.length === 3, 8000, 'third commit');
-  const it3 = flow.forged[2];
+  await until(() => flow.forged.length === 1, 8000, 'third commit');
+  const it3 = flow.forged[0];
   assert(it3 && it3.name === 'Climbing claws', 'third craft is the chosen claws blueprint');
   assert(it3 && it3.perks.includes('surefoot'), 'reagent perk applied to the item');
   assert(E.S().reagents.mistresin === 1, 'reagent consumed');
@@ -92,7 +139,10 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   await until(() => !!MI._state(), 6000, 'mission state');
   assert(flow.stats.perks && flow.stats.perks.includes('surefoot'), 'perks flow into mission stats');
   const M = MI._state();
-  assert(M && M.abilities.vanish === 3, 'vanish charges = two smoke shells + variant bonus (duplicates stack)');
+  assert(M && typeof M.abilities.vanish === 'number', 'ability charges computed from the bench');
+  /* free movement: the squad is no longer clamped to three lane positions */
+  assert(typeof M.targetY === 'number' && typeof M.laneY === 'number', 'the road tracks a continuous height');
+  assert(M.phaseT === 0 && typeof M.keyUp === 'boolean', 'free-movement state initialised');
   assert(M.events.length === flow.roadPlan.events.length, 'mission consumes the pre-scouted road plan');
 
   /* ---- heirloom deposit wears a tier ---- */
@@ -107,6 +157,7 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(E.S().heirloom === null, 'heirloom slot cleared after deposit');
   const c2 = P._commission();
   assert(c2.roomLeft === c2.maxItems, 'heirloom does not eat bench room');
+  assert(c2.maxItems === E.benchCapacityFor(ch), 'bench room comes from the chapter ladder, not party size');
 
   summary(errors);
 })().catch((e) => { console.error('HARNESS ERROR', e); process.exit(1); });
