@@ -400,6 +400,35 @@ player has previously gotten wrong, and the party ladder starts one step higher.
 | **7** | Final boss encounter (3 phases) | ✅ |
 | **8** | Endless Road · seeded contracts | 🧭 |
 | **9** | Lexicon Trials · New Game+ | 🧭 |
+| **10** | Pause menu · rune gate lead-distance fix (player-reported) | ✅ |
+
+---
+
+## 10.1 Player-reported fixes ✅
+
+Two issues came in from actual play, both fixed the same day:
+
+**Pause menu.** Escape (or a new on-screen pause button, for touch players with
+no keyboard) freezes the road and opens a real menu: Resume, Settings, Lexicon,
+or turn back to the school. It reuses the exact same `M.paused` flag every other
+pause state already relies on (a gate resolving, a raid, the boss Chorus), so it
+can never stack or conflict with them — it only opens when nothing else already
+has the road's attention. Settings and Lexicon layer normally on top (Escape
+closes the top modal first, same as anywhere else in the game, before a second
+Escape resumes the road). Turning back requires an explicit confirmation and
+warns that the current road's progress is lost, but the bench stays exactly as
+forged.
+
+**Rune gate lead distance.** Gates were spawning only 0.075 progress ahead of
+the squad — at typical road speed, roughly a second and a half between a gate
+appearing and needing to already be steered into the right lane. Nowhere near
+enough time to read a prompt like "take the suffix meaning discharge, flow" and
+react. `GATE_LEAD` is now 0.18 (2.4x farther out), giving roughly 4+ seconds of
+real reading time at a normal pace, and the gate corridor (the hazard-free
+approach — see §5) scales up to match so the whole longer runway stays clear,
+not just the last stretch.
+
+Covered by `test11.js` (30 assertions).
 
 ---
 

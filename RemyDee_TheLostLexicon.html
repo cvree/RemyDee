@@ -949,6 +949,9 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   justify-content:space-between;align-items:center;color:var(--rice);gap:10px;flex-wrap:wrap;
   background:linear-gradient(180deg,rgba(20,14,8,.72),transparent);}
 .mission-top .who{font-family:var(--font-cal);font-weight:700;font-size:.98rem;}
+.mission-pause-btn{flex:none;font-size:.7rem;letter-spacing:.02em;background:rgba(255,255,255,.1);
+  color:var(--rice);border-color:rgba(255,255,255,.2);}
+.mission-pause-btn:hover{background:rgba(255,255,255,.18);}
 .prep-bars{display:flex;gap:12px;font-size:.72rem;flex-wrap:wrap;}
 .prep-bars .pb{display:flex;flex-direction:column;gap:3px;min-width:64px;}
 .prep-bars .pb .lab{color:var(--gold-soft);letter-spacing:.05em;}
@@ -1003,6 +1006,18 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .chorus-tray .ct-tile.used{opacity:.3;pointer-events:none;}
 .chorus-feedback{min-height:1.4em;font-size:.85rem;margin-bottom:10px;color:var(--cinnabar-deep);}
 .chorus-feedback.good{color:var(--jade-deep,#33513f);font-weight:700;}
+/* ---- THE PAUSE MENU ---- */
+.pause-menu{position:absolute;inset:0;z-index:11;display:none;align-items:center;justify-content:center;
+  background:rgba(14,10,6,.72);backdrop-filter:blur(3px);}
+.pause-menu.show{display:flex;animation:screenIn .25s;}
+.pause-card{background:var(--parch);border-radius:16px;padding:24px 28px;max-width:400px;width:90%;
+  text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.55);border:2px solid var(--gold);}
+.pause-card h3{margin:4px 0 16px;font-family:var(--font-cal);font-size:1.25rem;}
+.pause-actions{display:flex;flex-direction:column;gap:9px;}
+.pause-actions .btn{width:100%;}
+.pause-quit-confirm{display:none;margin-top:14px;padding-top:14px;border-top:1px dashed var(--rice-3,#d8cfb4);}
+.pause-quit-confirm.show{display:block;animation:screenIn .2s;}
+.pause-quit-confirm p{margin:0 0 10px;line-height:1.45;}
 
 /* ============================================================
    RESULT
@@ -1503,6 +1518,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       <div class="mission-top">
         <span class="who" id="mission-who"></span>
         <div class="prep-bars" id="mission-prep"></div>
+        <button class="icon-btn mission-pause-btn" id="mission-pause-btn" aria-label="Pause" title="Pause (Esc)">&#10074;&#10074;</button>
       </div>
       <!-- Word Road HUD: momentum multiplier, the term you are assembling, and gate prompts -->
       <div class="word-hud" id="word-hud">
@@ -1539,6 +1555,27 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           <div class="chorus-tray" id="chorus-tray"></div>
           <div class="chorus-feedback" id="chorus-feedback"></div>
           <button class="btn jade" id="chorus-seal">Press the seal</button>
+        </div>
+      </div>
+      <!-- THE PAUSE MENU — Escape (or the pause button) freezes the road and
+           surfaces options without losing the run in progress -->
+      <div class="pause-menu" id="pause-menu">
+        <div class="pause-card">
+          <span class="eyebrow">Paused</span>
+          <h3>The road waits</h3>
+          <div class="pause-actions">
+            <button class="btn jade" id="pause-resume">Resume</button>
+            <button class="btn ghost" id="pause-settings">Settings</button>
+            <button class="btn ghost" id="pause-gloss">Lexicon</button>
+            <button class="btn ghost" id="pause-quit">Turn back to the school</button>
+          </div>
+          <div class="pause-quit-confirm" id="pause-quit-confirm">
+            <p class="small">Turning back now loses this road's progress — the bench you forged stays as it is, but nothing found or built on this walk is kept. Turn back?</p>
+            <div class="pause-actions">
+              <button class="btn cinnabar-btn" id="pause-quit-yes">Yes, turn back</button>
+              <button class="btn ghost" id="pause-quit-no">Stay on the road</button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="mission-hud">
@@ -6256,6 +6293,8 @@ function runMission(){
     }
     const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500); }
     $('#mini-challenge').classList.remove('show');
+    $('#pause-menu').classList.remove('show');
+    $('#pause-quit-confirm').classList.remove('show');
     Audio2.sfx.whoosh();
     seedParticles(M.weather);
     bindMissionPointer(cv);
@@ -6989,8 +7028,15 @@ function completeTerm(){
 /* THE GATE CORRIDOR.
    A rune gate is a thinking beat. The stretch of road the player spends reading it
    is kept clear of hazards — nothing spawns inside it, and anything already there
-   is burned off by the gate's rune-light when it opens. */
-const GATE_CLEAR_BEFORE=0.085, GATE_CLEAR_AFTER=0.030;
+   is burned off by the gate's rune-light when it opens.
+   GATE_LEAD is how far ahead of the squad a gate appears the moment it opens — it
+   used to be 0.075, which at typical road speed gave barely a second and a half to
+   read a prompt and steer. It's now roughly 2.4x farther out (~4-5s of real reading
+   time at normal pace, more if the squad isn't surging), and the corridor widths
+   below scale with it so the whole approach — not just the last stretch — stays
+   clear of hazards while the player is deciding. */
+const GATE_LEAD=0.18;
+const GATE_CLEAR_BEFORE=0.17, GATE_CLEAR_AFTER=0.04;
 function inGateCorridor(p){
   if(!M || !M.gate || M.gate.resolved) return false;
   return p > M.gate.p-GATE_CLEAR_BEFORE && p < M.gate.p+GATE_CLEAR_AFTER;
@@ -7026,7 +7072,7 @@ function openGate(){
   const askMeaning=Math.random()<0.6;    // 60%: prompt a meaning, lanes show parts
   const kindWord=kind==="prefix"?"prefix":kind==="suffix"?"suffix":"root";
   M.gate={
-    p: M.progress+0.075, laneIds, ansLane, targetId, kind, conceptId:targetId,
+    p: M.progress+GATE_LEAD, laneIds, ansLane, targetId, kind, conceptId:targetId,
     showMeaning:!askMeaning,             // when we ask for the part, lanes show meanings
     prompt: askMeaning
       ? `Rune gate — take the ${kindWord} meaning <b>${PARTS[targetId].mean}</b>`
@@ -7969,20 +8015,72 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     const pk={p:M.progress, lane:1, y:LANES[1].y, type:"lexeme", partId, hover:0.4, got:false, read:false};
     showStudyCard(pk);
     const card=$('#study-card');
-    return { sealed: card ? /sc-sealed/.test(card.innerHTML) : null, sealRevealed:pk.sealRevealed }; } };
+    return { sealed: card ? /sc-sealed/.test(card.innerHTML) : null, sealRevealed:pk.sealRevealed }; },
+  /* --- pause menu hooks (headless tests) --- */
+  GATE_LEAD:()=>GATE_LEAD,
+  _openPause:()=>{ openPauseMenu(); return M&&{paused:M.paused, pausedByMenu:M.pausedByMenu}; },
+  _closePause:()=>{ closePauseMenu(); return M&&{paused:M.paused, pausedByMenu:M.pausedByMenu}; },
+  _abandon:()=>abandonMission(),
+  _escKey:()=>{ window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'})); } };
 
 /* ================= BOOT ================= */
+/* ==================================================================
+   THE PAUSE MENU — Escape (or the on-screen pause button) freezes the
+   road exactly like every other pause state already in the engine
+   (a rune gate resolving, a raid, the boss Chorus) and surfaces real
+   options instead of just... nothing happening. The run in progress is
+   never lost by opening it — only by explicitly choosing to turn back.
+   ================================================================== */
+function openPauseMenu(){
+  if(!M || M.done || M.paused) return;   // never stack on an existing pause state
+  M.pausedByMenu=true; M.paused=true;
+  const box=$('#pause-menu'); if(box) box.classList.add('show');
+  const qc=$('#pause-quit-confirm'); if(qc) qc.classList.remove('show');
+  Audio2.sfx.paper && Audio2.sfx.paper();
+}
+function closePauseMenu(){
+  if(!M || !M.pausedByMenu) return;
+  M.pausedByMenu=false; M.paused=false;
+  const box=$('#pause-menu'); if(box) box.classList.remove('show');
+  Audio2.sfx.paper && Audio2.sfx.paper();
+}
+function abandonMission(){
+  if(!M) return;
+  if(M._unbind){ M._unbind(); M._unbind=null; }
+  M.done=true;
+  const box=$('#pause-menu'); if(box) box.classList.remove('show');
+  toast("You turn back — the road can be walked again another day.");
+  window.__RD_SCREENS.showHub();
+}
+function bindPauseMenu(){
+  const resume=$('#pause-resume'); if(resume) resume.onclick=closePauseMenu;
+  const settings=$('#pause-settings'); if(settings) settings.onclick=()=>window.__RD_SCREENS.openSettings();
+  const gloss=$('#pause-gloss'); if(gloss) gloss.onclick=()=>window.__RD_SCREENS.openGloss();
+  const quit=$('#pause-quit'); if(quit) quit.onclick=()=>{ const qc=$('#pause-quit-confirm'); if(qc) qc.classList.add('show'); };
+  const quitYes=$('#pause-quit-yes'); if(quitYes) quitYes.onclick=abandonMission;
+  const quitNo=$('#pause-quit-no'); if(quitNo) quitNo.onclick=()=>{ const qc=$('#pause-quit-confirm'); if(qc) qc.classList.remove('show'); };
+  const pauseBtn=$('#mission-pause-btn'); if(pauseBtn) pauseBtn.onclick=()=>{ if(M && M.pausedByMenu) closePauseMenu(); else openPauseMenu(); };
+}
 function boot(){
   const S0=E.S();
   E.applySettings();
   FX.bindClickSpark();
+  bindPauseMenu();
   // hide loader
   const loader=$('#loader'); if(loader){ setTimeout(()=>{ loader.classList.add("hide");
     setTimeout(()=>loader.remove(),600); }, 380); }
   window.__RD_SCREENS.showTitle();
-  // keyboard: Esc closes modals
+  // keyboard: Esc closes any open modal first; on the road with nothing else
+  // already claiming the pause (a gate, a raid, the boss Chorus), it toggles
+  // the pause menu instead of doing nothing.
   window.addEventListener("keydown",(e)=>{
-    if(e.key==="Escape"){ $$('.modal.show').forEach(m=>m.classList.remove('show')); }
+    if(e.key!=="Escape") return;
+    const openModals=$$('.modal.show');
+    if(openModals.length){ openModals.forEach(m=>m.classList.remove('show')); return; }
+    if(E.current()==="s-mission" && M && !M.done){
+      if(M.pausedByMenu) closePauseMenu();
+      else if(!M.paused) openPauseMenu();
+    }
   });
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);

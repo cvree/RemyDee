@@ -133,8 +133,10 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   // a hazard already standing in the corridor is swept away when the gate opens
   MI._resolveGate();
   MI._state().gate = null;
-  const g2p = MI._state().progress + 0.075;
-  MI._spawnHazardAt(g2p - 0.03, 1, 'rock');
+  // a small offset ahead of the current position — well inside whatever
+  // corridor the next gate opens with, whatever its exact spawn distance is
+  const hazSpot = MI._state().progress + 0.05;
+  MI._spawnHazardAt(hazSpot, 1, 'rock');
   const stacked = MI._hazards().filter(h => !h.hit && !h.passed).length;
   MI._forceGate();
   assert(MI._hazards().filter(h => !h.hit && !h.passed).length < stacked,
