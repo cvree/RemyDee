@@ -4,7 +4,61 @@ A design plan for making the bench genuinely interesting, the road worth walking
 twice, and forged gear visibly *present* during play. Companion to
 `NORTH_STAR.md` (the constitution) and `GAME_PLAN.md` (what has shipped).
 
-**Status key:** 🔜 next · 🧭 later · 💭 exploratory
+**Status key:** ✅ shipped · 🔜 next · 🧭 later · 💭 exploratory
+
+---
+
+## 0.0 Status after the depth pass ✅
+
+Everything marked 🔜 throughout this document — passes A through F in §6 — is now
+**implemented and covered by headless tests** (`test12.js`–`test15.js`, 113 new
+assertions on top of the existing 247). In order:
+
+- **Item visibility (§4.1–4.3):** every forged item gets a generated name
+  (`genItemName`), a live usage tally, and a trigger-flash caption that names the
+  *exact* item doing something on the road — `computeForgePassives`'s `itemFor`
+  map credits the specific piece, not a generic passive.
+- **Heat (§2.1):** a shared push-your-luck gauge (drifting sweet band, cools on
+  pause, cracks under sustained overheat) wired into all seven crafts via
+  `heatInit`/`heatTick`/`heatMult`.
+- **All seven craft redesigns (§2.2):** Blade folds-and-quenches, Hook probes a
+  hidden balance point, Bow spends three draws across power/speed/accuracy,
+  Smoke is a pleat-count + memory sequence, Claws is a bite-angle + consistency
+  check, Kit is a real shaped-piece packing puzzle, Rope is a tempo + rhythm
+  braid with positional weak spots. Seal (craft type `trace`) inherits Blade's
+  fold/quench redesign for free, since they share a dispatch key.
+- **Maker's Marks (§2.3):** a post-test step stamps one seen/weighted word-part
+  into the item; a semantic match (`AXIS_PARTS`) grants a real trait bonus, a
+  mismatch stays cosmetic with a short explanation.
+- **Band identity, Pace, difficulty curve (§3.1–3.3):** the three bands now
+  differ in *content* (upper skews shard/reagent, lower skews ink + gives a
+  real passive recovery, middle stays the steady default), announced once in
+  fiction the first time the squad actually reaches each one. Hold Space (or
+  the on-screen Surge button) to spend stamina for real speed + collection
+  radius. Hazard density and damage scale continuously with `difficultyAt(progress)`.
+- **Chain risk (§3.4):** the combo HUD shows a live "bank ≈ N ink · ×M — a hit
+  now loses it" readout for any in-progress chain.
+- **Quality visibility (§4.4):** ability activations (Strike/Vanish/Mend) scale
+  their real effect — not just their label — by the credited item's tier; a
+  flawed tool visibly flickers on its carrier instead of glowing clean.
+- **The gear debrief (§4.5):** the result screen itemizes what each forged item
+  actually did — name, tier, Maker's Mark, real usage tally, and a verdict.
+- **Seeded Contracts (§5.1):** `buildRoadPlan(f, seed)` is deterministic (event
+  order/types, gate distractor structure, live hazard deck) via a small
+  mulberry32 PRNG swapped into `Math.random` only for the duration of each
+  generating call — never left globally patched. A shareable code round-trips
+  through the hub.
+- **The Endless Road (§5.2):** one road, no destination, a 200+ event stream
+  with tightening spacing, ends the instant stamina breaks, bare-handed by
+  design, remembers a best score.
+
+**Not done in this pass**, deliberately deferred as the plan's own §6 table
+marks them lower-priority than the above: Terrain forks (§3.5), Lexicon
+Trials, New Game+, weather-as-a-verb, ghost caravans, and traveler bonds
+(§5.3–5.6). The Seal blueprint's *Counter-Stamp* fiction (assembling the die
+from word-parts directly, rather than inheriting Blade's fold mechanic) is
+also still open — it currently plays as a fold/quench craft, which is
+functionally sound but not the bespoke word-assembly version described below.
 
 ---
 
