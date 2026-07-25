@@ -1378,6 +1378,12 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
               <div class="path-row path-seed-row" id="path-seed-row"></div>
             </div>
             <div class="panel aside-card spotlight" data-spot>
+              <h3>The Endless Road</h3>
+              <p class="small muted">One road, no destination. Density and danger rise the farther you walk; it ends when stamina breaks. Bare-handed — pure fluency.</p>
+              <p class="small muted" id="endless-best"></p>
+              <button class="btn" id="endless-start" type="button">Walk the Endless Road &rarr;</button>
+            </div>
+            <div class="panel aside-card spotlight" data-spot>
               <h3>Remy&rsquo;s ledger</h3>
               <p class="small muted" id="ledger-note">Serve travelers well and recover the lost pages of the Great Medical Lexicon.</p>
               <div class="meter-row"><span>Lexicon mastery</span><span id="mastery-pct">0%</span></div>
@@ -1630,6 +1636,17 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
               <button class="btn cinnabar-btn" id="pause-quit-yes">Yes, turn back</button>
               <button class="btn ghost" id="pause-quit-no">Stay on the road</button>
             </div>
+          </div>
+        </div>
+      </div>
+      <!-- ENDLESS ROAD — no destination, stamina is the only clock -->
+      <div class="pause-menu" id="endless-result">
+        <div class="pause-card">
+          <span class="eyebrow">The Endless Road</span>
+          <h3>Stamina broke — <span id="er-dist"></span></h3>
+          <div class="small" id="er-body"></div>
+          <div class="pause-actions">
+            <button class="btn jade" id="er-continue">Return to the school</button>
           </div>
         </div>
       </div>
@@ -3879,6 +3896,11 @@ function showHub(){
     $('#radix-note').textContent = ch
       ? "Radix sniffs the air — a root-seal calls from "+ch.dest+"."
       : "Radix dozes by the tea kettle, the roads all walked.";
+    const eb=$('#endless-best');
+    if(eb) eb.textContent = S().endlessBest ? `Best distance: ${(S().endlessBest).toFixed(1)} · ${S().endlessTerms||0} terms` : "No runs yet.";
+    const es=$('#endless-start');
+    if(es) es.onclick=()=>{ Audio2.sfx.brush(); FX.buzz(16);
+      if(window.__RD_MISSION && window.__RD_MISSION.startEndlessRoad) window.__RD_MISSION.startEndlessRoad(); };
   }});
 }
 /* The progression panel. It answers, without a menu: where am I, what does the
@@ -6488,6 +6510,7 @@ function reviewChallenge(){
 
 /* ---------- mission state ---------- */
 let M=null;
+let pendingEndless=false;   // ENDLESS ROAD — set true just before runMission() to flag the coming mission
 const VIS=2600;               // px of world per 1.0 progress (visual scroll scale)
 const LANES=[
   {id:"high", y:0.40, label:"Upper ledges — swift, loose rock", need:"climb", spd:1.18, col:"#8fa08f"},
@@ -6908,7 +6931,9 @@ function runMission(){
         gate:null, termsBuilt:[], realTermsBuilt:0, bestMomentum:1.0,
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
-        maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"" };
+        maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"",
+        endless:pendingEndless };
+    pendingEndless=false;
     M.laneY = LANES[1].y*cv.height; M.targetY = M.laneY;
     M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
@@ -7258,6 +7283,57 @@ function buildRoadPlan(f, seedIn){
     Math.random = origRandom;
   }
 }
+/* ==================================================================
+   THE ENDLESS ROAD — one road, no destination. Density and gate
+   difficulty escalate the farther the squad walks (fed by the same
+   difficultyAt() curve as a normal mission); it ends the instant stamina
+   breaks. Bare-handed by design — the pure-fluency mode, testing word
+   recognition and movement skill with nothing else to lean on.
+   ================================================================== */
+function buildEndlessEvents(){
+  const evs=[]; const flavor=["oasis","cache","scholar","storm","slide","traveler"];
+  let at=0.14;
+  while(at<40){
+    const roll=Math.random();
+    const type = roll<0.55 ? "gate" : pick(flavor);
+    evs.push({at:+at.toFixed(3), type});
+    // spacing tightens slowly with distance — the road really does get denser
+    const tightness = clamp(0.16 - Math.min(0.06, at*0.0016), 0.10, 0.16);
+    at += tightness + Math.random()*0.05;
+  }
+  return evs;
+}
+function startEndlessRoad(){
+  const servedN=(S().servedChapterIds||[]).length;
+  const src = CHAPTERS[clamp(servedN, 0, CHAPTERS.length-1)] || CHAPTERS[0];
+  const chapter = Object.assign({}, src, { name:"The Endless Road", dest:"nowhere — the road just continues", enemy:null });
+  const members = (src.members||[]).slice(0, Math.min(3, (src.members||[]).length || 1));
+  const route={ id:"endless", name:"the endless road", weather:"clear" };
+  const flow = { chapter, builders:[], members, idx:0, results:{}, forged:[], route,
+    stats:{ tot:{stamina:5,morale:5,safety:5,weather:4,speed:4,health:4}, prepScore:0.42,
+      caps:{}, traits:{}, perks:[], route, overall:0.5 } };
+  E.setFlow(flow);
+  flow.roadPlan={ events:buildEndlessEvents(), intel:[], hints:[] };
+  pendingEndless=true;
+  runMission();
+}
+function endEndlessRoad(){
+  if(M.done) return; M.done=true; M.paused=true;
+  if(M._unbind){ M._unbind(); M._unbind=null; }
+  const distance=+M.progress.toFixed(2), terms=M.realTermsBuilt||0, best=+M.bestMomentum.toFixed(1);
+  const scoreVal = distance*10 + terms*4;
+  const s=S();
+  const isNewBest = scoreVal > (s.endlessScore||0);
+  if(isNewBest){ s.endlessScore=scoreVal; s.endlessBest=distance; s.endlessTerms=terms; }
+  persist();
+  Audio2.sfx.bad(); FX.buzz(30);
+  const dEl=$('#er-dist'), bEl=$('#er-body'), panel=$('#endless-result');
+  if(dEl) dEl.textContent=`${distance} distance walked`;
+  if(bEl) bEl.innerHTML = `<b>${terms}</b> term${terms===1?"":"s"} built · top momentum <b>&times;${best}</b>`
+    + (isNewBest ? `<br><span style="color:var(--gold)">New best run.</span>` : `<br>Best so far: ${s.endlessBest||0} distance · ${s.endlessTerms||0} terms.`);
+  if(panel){ panel.classList.add('show');
+    const cont=$('#er-continue'); if(cont) cont.onclick=()=>{ panel.classList.remove('show'); window.__RD_SCREENS.showHub(); }; }
+}
 function seedParticles(weather){
   M.particles=[];
   if(FX.reduced()) return;
@@ -7441,15 +7517,19 @@ function tick(t){
     // MOMENTUM drives the pace: a full chain of terms makes the squad fly (up to ~2.2×)
     const momoFactor = 0.7 + M.momentum*0.3;
     // final stretch: a natural, cinematic slow-down as the flag comes into view
-    const finalStretch = M.progress>0.9 ? clamp(1-(M.progress-0.9)*3.2, 0.5, 1) : 1;
-    // a difficulty curve — the last third of any road runs visibly hotter than the first
-    const diffCurve = difficultyAt(M.progress);
+    // (the Endless Road has no flag to slow down for)
+    const finalStretch = (!M.endless && M.progress>0.9) ? clamp(1-(M.progress-0.9)*3.2, 0.5, 1) : 1;
+    // a difficulty curve — the last third of any road runs visibly hotter than the first.
+    // ENDLESS ROAD: there is no "last third", so intensity ramps over the first ~2 laps
+    // worth of distance and then holds at its hardest, rather than capping at progress 1.
+    const diffCurve = difficultyAt(M.endless ? Math.min(1, M.progress/2.2) : M.progress);
     // surging is a genuine burst — but it also means less time to react to what's ahead
     const surgeBoost = M.surging ? 1.5 : 1;
     // slower base pace than before — the road gives real time to read hazards and decide
     const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * momoFactor * surgeBoost * 1.55;
-    // the final boss holds the road at the Archive's threshold until the Chorus is sung
-    const progressCap = (M.boss && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1;
+    // the final boss holds the road at the Archive's threshold until the Chorus is sung;
+    // the Endless Road has no destination at all, so progress simply never caps
+    const progressCap = M.endless ? Infinity : ((M.boss && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1);
     M.progress = clamp(M.progress + dt*spd, 0, progressCap);
     if(M.boss) updateBossPhase(dt);
     if(M.gate) updateGate(dt);
@@ -7465,6 +7545,8 @@ function tick(t){
     M.stats.safety = clamp(M.stats.safety - dt*Math.max(0.2,safeDrain),0,100);
     updatePrepBars();
     updateMomentumMeter();
+    // ENDLESS ROAD ends the instant stamina breaks — no destination, only the walk itself
+    if(M.endless && M.stats.stamina<=0 && !M.done){ endEndlessRoad(); }
 
     // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
     // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
@@ -7528,7 +7610,7 @@ function tick(t){
     if(evn && M.progress>=evn.at && !(M.raid && !M.raid.resolved)){ M.evIdx++; fireEvent(evn); }
 
     if(t-lastStep>420){ lastStep=t; if(!FX.reduced()) Audio2.sfx.step&&Audio2.sfx.step(); }
-    if(M.progress>=1 && !M.arriving){ arrive(); }
+    if(!M.endless && M.progress>=1 && !M.arriving){ arrive(); }
   } else if(M.questionOpen){
     // the cost of hesitation — no timer, but the open road drains them
     M.stats.stamina=clamp(M.stats.stamina - dt*2.6*rel,0,100);
@@ -8807,6 +8889,7 @@ function showEnding(){
 }
 
 window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChallenge, buildRoadPlan, _dbg:()=>M,
+  startEndlessRoad, endEndlessRoad, buildEndlessEvents,
   _state:()=>M,
   _forceRaid:()=>{ if(M && !M.done && (!M.raid||M.raid.resolved)) banditRaid(); return M&&M.raid; },
   _use:(k)=>useAbility(k),
