@@ -960,6 +960,19 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .ability-btn.ready{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);animation:abReady 1s ease-in-out infinite;}
 @keyframes abReady{0%,100%{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 4px var(--gold-soft),0 8px 18px rgba(0,0,0,.5);}}
 [data-motion="reduced"] .ability-btn.ready{animation:none;}
+.pace-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:2px;}
+.pace-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;
+  min-width:88px;padding:8px 14px 6px;border-radius:12px;cursor:pointer;border:1px solid var(--gold-deep,#8a6a2b);
+  background:linear-gradient(180deg,rgba(216,189,132,.30),rgba(90,63,28,.55));color:var(--rice);
+  box-shadow:0 4px 10px rgba(0,0,0,.4);transition:transform .1s var(--ease-back),box-shadow .15s,background .15s;
+  font-family:var(--font-read);user-select:none;touch-action:none;}
+.pace-btn .pb-glyph{font-size:1.1rem;line-height:1;}
+.pace-btn .pb-name{font-weight:700;font-size:.82rem;letter-spacing:.03em;}
+.pace-btn .pb-hint{font-size:.6rem;color:rgba(243,236,216,.75);}
+.pace-btn:hover{transform:translateY(-2px);}
+.pace-btn.active{background:linear-gradient(180deg,rgba(216,189,132,.9),rgba(181,50,43,.55));
+  box-shadow:0 0 0 3px rgba(216,189,132,.5),0 6px 16px rgba(0,0,0,.5);transform:translateY(-1px) scale(1.03);}
+.pace-btn.starved{opacity:.45;cursor:not-allowed;}
 .lane-flash{position:absolute;left:0;right:0;z-index:5;pointer-events:none;height:33.3%;
   background:rgba(216,189,132,.18);opacity:0;transition:opacity .35s;}
 .mission-hud{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:14px;
@@ -1601,8 +1614,13 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       </div>
       <div class="mission-hud">
         <div class="forge-strip" id="forge-strip"></div>
-        <div class="ability-bar" id="ability-bar"></div>
-        <div class="mission-hint" id="mission-hint">Move freely with the <b>mouse</b>, <b>W/S</b> or the <b>arrow keys</b> &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning and study it.</div>
+        <div class="pace-row">
+          <div class="ability-bar" id="ability-bar"></div>
+          <button class="pace-btn" id="pace-btn" type="button" title="Hold to surge (Space)">
+            <span class="pb-glyph">&#9889;</span><span class="pb-name">Surge</span><span class="pb-hint">burn stamina for speed &amp; reach</span>
+          </button>
+        </div>
+        <div class="mission-hint" id="mission-hint">Move freely with the <b>mouse</b>, <b>W/S</b> or the <b>arrow keys</b> &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning and study it. Hold <b>Space</b> to <b>Surge</b>.</div>
         <div class="mission-caption" id="mission-caption"></div>
       </div>
     </section>
@@ -6464,6 +6482,21 @@ function pickRoadPart(kindFilter){
 function relaxMult(){ return S().settings.timerRelax ? 0.55 : 1; }
 
 /* ==================================================================
+   THE DIFFICULTY CURVE — the road's last third should visibly, felt-ly
+   outpace its first (DEPTH_PLAN §3.3). Spacious and simple early; denser,
+   harder-hitting, and faster-paced late. Relax mode flattens the curve
+   without removing it entirely.
+   ================================================================== */
+function difficultyAt(progress){
+  const p=clamp(progress,0,1);
+  const flatten = S().settings.timerRelax ? 0.5 : 1;
+  return {
+    density: 1 + p*p*0.85*flatten,   // hazard spawn rate: ~1.0 early → ~1.85 late
+    dmg:     1 + p*p*0.42*flatten    // hazard bite: ~1.0 early → ~1.42 late
+  };
+}
+
+/* ==================================================================
    THE WORD ROAD — the interactive core of the walk.
    Word-parts stream down the three lanes; steer to gather them and
    chain them (prefix? → root(+) → suffix) into real medical terms.
@@ -6785,6 +6818,7 @@ function runMission(){
         perks:new Set((f.stats&&f.stats.perks)||[]), perkUsed:{},
         hazardDeck:null, revealT:0,
         fork:null, slowT:0, banditT:0, paceMult:1, paceT:0,
+        surgeHeld:false, surging:false, bandSeen:{0:false,1:false,2:false},
         abilities:computeAbilities(f), abilities0:computeAbilities(f), raid:null, threat:0, laneFlashT:0,
         collected:{}, matsFound:[], reagentsFound:[], cachesMarked:0, inkFound:0,
         // ---- Word Road: momentum multiplier + live term builder ----
@@ -6864,17 +6898,32 @@ function bindMissionPointer(cv){
   const key=(e)=>{ if(!M||M.done||M.paused) return;
     if(isUp(e.key)){ e.preventDefault(); M.keyUp=true; M.steering=true; }
     else if(isDown(e.key)){ e.preventDefault(); M.keyDn=true; M.steering=true; }
+    else if(e.key===' ' || e.code==='Space'){ e.preventDefault(); setSurgeHeld(true); }
     // ability hotkeys: 1 strike, 2 vanish, 3 mend
     else if(e.key==='1'){ useAbility('strike'); }
     else if(e.key==='2'){ useAbility('vanish'); }
     else if(e.key==='3'){ useAbility('mend'); } };
   const keyUp=(e)=>{ if(!M) return;
-    if(isUp(e.key)) M.keyUp=false; else if(isDown(e.key)) M.keyDn=false; };
+    if(isUp(e.key)) M.keyUp=false; else if(isDown(e.key)) M.keyDn=false;
+    else if(e.key===' ' || e.code==='Space') setSurgeHeld(false); };
   window.addEventListener('keydown',key);
   window.addEventListener('keyup',keyUp);
+  // PACE — hold to surge: burn stamina for a burst of speed and a wider collection
+  // radius. Works from the keyboard (Space, above) and this touch-friendly button.
+  const paceBtn=$('#pace-btn');
+  const pdOn=(e)=>{ e.preventDefault&&e.preventDefault(); setSurgeHeld(true); };
+  const pdOff=()=>setSurgeHeld(false);
+  if(paceBtn){
+    paceBtn.addEventListener('pointerdown',pdOn);
+    paceBtn.addEventListener('pointerup',pdOff);
+    paceBtn.addEventListener('pointerleave',pdOff);
+    paceBtn.addEventListener('pointercancel',pdOff);
+  }
   M._unbind=()=>{ cv.removeEventListener('pointerdown',down); cv.removeEventListener('pointermove',move);
     cv.removeEventListener('pointerleave',leave);
-    window.removeEventListener('keydown',key); window.removeEventListener('keyup',keyUp); };
+    window.removeEventListener('keydown',key); window.removeEventListener('keyup',keyUp);
+    if(paceBtn){ paceBtn.removeEventListener('pointerdown',pdOn); paceBtn.removeEventListener('pointerup',pdOff);
+      paceBtn.removeEventListener('pointerleave',pdOff); paceBtn.removeEventListener('pointercancel',pdOff); } };
 }
 /* continuous steering, run once per frame */
 function stepMovement(dt){
@@ -6890,7 +6939,22 @@ function stepMovement(dt){
   const before=M.lane;
   M.laneY += (M.targetY-M.laneY)*Math.min(1, dt*13);
   M.lane = bandAt(M.laneY);
-  if(M.lane!==before){ M.laneFlashT=0.35; Audio2.sfx.step&&Audio2.sfx.step(); FX.buzz(6); }
+  if(M.lane!==before){
+    M.laneFlashT=0.35; Audio2.sfx.step&&Audio2.sfx.step(); FX.buzz(6);
+    announceBand(M.lane);
+  }
+}
+/* BAND IDENTITY, said once each — the first time the squad actually commits to a
+   band, name what it's for so the choice reads as a strategy, not a speed pick. */
+const BAND_INTRO=[
+  "The upper ledge — rare finds and worse falls. Loose rock and steeper hazards, but the road's richest reagents and lexicon shards live up here.",
+  "The mountain trail — the steady way. Most of the road's answers are found here; a complete route on its own.",
+  "The river floor — slow, but forgiving. Ink runs thick and the squad recovers here; the tactical lane when stamina is failing."
+];
+function announceBand(lane){
+  if(!M || M.bandSeen==null || M.bandSeen[lane]) return;
+  M.bandSeen[lane]=true;
+  caption(BAND_INTRO[lane]);
 }
 /* An immediate placement onto a band — used by the debug hook and by events that
    put the squad somewhere specific. Ordinary steering never calls this; it moves
@@ -7163,7 +7227,16 @@ function spawnAheadP(extra){ return M.progress + (M.cv.width*0.78 + (extra||0))/
 function spawnPickup(forceLane, forceType, extra){
   const lane=forceLane!=null?forceLane:(Math.floor(Math.random()*3));
   let type=forceType;
-  if(!type){ const roll=Math.random(); type = roll<0.04?"shard" : roll<0.08?"reagent" : roll<0.19?"ink" : "lexeme"; }
+  if(!type){
+    const roll=Math.random();
+    // BAND IDENTITY: what you find depends on where you're walking (DEPTH_PLAN §3.1).
+    // Upper ledge — risk & reward: rare shards and reagents, and the worst hazards.
+    // Middle trail — tempo: mostly word-parts, the complete default route.
+    // River floor — recovery: ink runs thick, few premium finds.
+    if(lane===0)      type = roll<0.13?"shard" : roll<0.24?"reagent" : roll<0.32?"ink" : "lexeme";
+    else if(lane===2) type = roll<0.02?"shard" : roll<0.04?"reagent" : roll<0.30?"ink" : "lexeme";
+    else               type = roll<0.03?"shard" : roll<0.06?"reagent" : roll<0.16?"ink" : "lexeme";
+  }
   const partId = (type==="lexeme") ? pickRoadPart() : null;
   const reagentId = (type==="reagent") ? pick(Object.keys(window.__RD_REAGENTS||{ink:1})) : null;
   const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.055, ROAD_TOP+0.01, ROAD_BOT-0.01);
@@ -7232,6 +7305,7 @@ function tick(t){
     if(M.comboBadT>0) M.comboBadT=Math.max(0,M.comboBadT-dt);
     if(M.actFlash && M.actFlash.t>0) M.actFlash.t=Math.max(0,M.actFlash.t-dt);
     if(M.paceT>0){ M.paceT=Math.max(0,M.paceT-dt); if(M.paceT<=0) M.paceMult=1; }
+    updateSurge(dt);
     coolMomentum(dt);
     const weatherPenalty = (M.weather!=="clear") ? clamp(1-(M.weatherProt/140),0.4,1) : 1;
     const tired = M.stats.stamina<15 ? 0.55 : clamp(0.5+M.stats.stamina/140,0.5,1.1);
@@ -7242,8 +7316,12 @@ function tick(t){
     const momoFactor = 0.7 + M.momentum*0.3;
     // final stretch: a natural, cinematic slow-down as the flag comes into view
     const finalStretch = M.progress>0.9 ? clamp(1-(M.progress-0.9)*3.2, 0.5, 1) : 1;
+    // a difficulty curve — the last third of any road runs visibly hotter than the first
+    const diffCurve = difficultyAt(M.progress);
+    // surging is a genuine burst — but it also means less time to react to what's ahead
+    const surgeBoost = M.surging ? 1.5 : 1;
     // slower base pace than before — the road gives real time to read hazards and decide
-    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * momoFactor * 1.55;
+    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * momoFactor * surgeBoost * 1.55;
     // the final boss holds the road at the Archive's threshold until the Chorus is sung
     const progressCap = (M.boss && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1;
     M.progress = clamp(M.progress + dt*spd, 0, progressCap);
@@ -7253,7 +7331,8 @@ function tick(t){
     // passive drains — prep cushions, lanes shift the cost; momentum eases them
     const cushion = clamp(M.f.stats.prepScore,0.2,1);
     const momoEase = 0.8 + M.momentum*0.2;   // ×1 → 1.0, ×5 → 1.8 less drain
-    let stamDrain = (3.6-cushion*2.4 + (M.lane===0?1.1:0))/momoEase;
+    // the river floor is the tactical recovery lane — walking it actually mends the squad
+    let stamDrain = (3.6-cushion*2.4 + (M.lane===0?1.1:0) - (M.lane===2?1.9:0))/momoEase;
     let safeDrain = (1.5-cushion*1.0 - (M.lane===2?0.7:0))/momoEase;
     M.stats.stamina = clamp(M.stats.stamina - dt*stamDrain,0,100);
     if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5)/momoEase,0,100);
@@ -7261,9 +7340,10 @@ function tick(t){
     updatePrepBars();
     updateMomentumMeter();
 
-    // spawn drips — a touch calmer so a slower road doesn't feel crowded
+    // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
+    // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
     M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.1+Math.random()*1.0; spawnPickup(); }
-    M.spawnHazT-=dt;  if(M.spawnHazT<=0){ M.spawnHazT=1.9+Math.random()*1.4; spawnHazard(); }
+    M.spawnHazT-=dt;  if(M.spawnHazT<=0){ M.spawnHazT=(1.9+Math.random()*1.4)/diffCurve.density; spawnHazard(); }
 
     // hazards crossing the squad
     const sx=M.cv.width*0.30;
@@ -7297,7 +7377,7 @@ function tick(t){
             } else {
               const soft = M.stats.safety<15 ? 1.35 : 1;
               const mult = (counter && counter.half) ? 0.5 : 1;
-              Object.keys(hz.dmg).forEach(k=>{ M.stats[k]=clamp(M.stats[k]-hz.dmg[k]*rel*soft*mult,0,100); });
+              Object.keys(hz.dmg).forEach(k=>{ M.stats[k]=clamp(M.stats[k]-hz.dmg[k]*rel*soft*mult*diffCurve.dmg,0,100); });
               if(hz.slow) M.slowT=hz.slow*mult;
               if(hz.dropLane){ M.targetY=clamp(M.targetY+M.cv.height*0.13, roadMinY(), roadMaxY()); M.laneFlashT=0.5;
                 caption("The scree carries them bodily down the slope!"); }
@@ -7351,11 +7431,12 @@ function tick(t){
       } else if(pk.hover>0){ pk.hover=Math.max(0,pk.hover-dt*1.6); }
     });
     showStudyCard(hovered);
-    // walk-through collection: reach is a radius now, and Vanish widens it
+    // walk-through collection: reach is a radius now, Vanish widens it, and so does a Surge
+    const reachBonus = (M.phaseT>0?90:0) + (M.surging?55:0);
     M.pickups.forEach(pk=>{
       if(pk.got) return;
       const px=screenX(pk.p);
-      if(nearRow(pk, M.phaseT>0?90:0) && px < sx+30+ (M.phaseT>0?60:0) && px > sx-40){
+      if(nearRow(pk, reachBonus) && px < sx+30+ reachBonus && px > sx-40){
         collectPickup(pk, px, (pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26);
       }
     });
@@ -7488,6 +7569,27 @@ function fireEvent(evn){
   else openGate();
 }
 function setPace(mult, seconds){ M.paceMult=mult; M.paceT=seconds; }
+
+/* ==================================================================
+   PACE — an active verb between the gates and hazards. Hold to surge:
+   burn stamina for a burst of speed and a wider collection radius. Good
+   for diving through a pickup cluster or outrunning a closing threat;
+   careless into a hazard you can no longer brake for, it is genuinely bad.
+   ================================================================== */
+const SURGE_STAMINA_FLOOR=6, SURGE_DRAIN=13;
+function setSurgeHeld(v){
+  if(!M||M.done) return;
+  M.surgeHeld=!!v;
+  const btn=$('#pace-btn'); if(btn) btn.classList.toggle('active', !!v && M.surging);
+}
+function updateSurge(dt){
+  const btn=$('#pace-btn');
+  const canSurge = M.surgeHeld && !M.paused && M.stats.stamina>SURGE_STAMINA_FLOOR*0.4;
+  if(canSurge && !M.surging){ M.surging=true; Audio2.sfx.whoosh&&Audio2.sfx.whoosh(); }
+  else if(!canSurge && M.surging){ M.surging=false; }
+  if(btn){ btn.classList.toggle('active', M.surging); btn.classList.toggle('starved', M.stats.stamina<=SURGE_STAMINA_FLOOR); }
+  if(M.surging){ M.stats.stamina=clamp(M.stats.stamina-dt*SURGE_DRAIN,0,100); updatePrepBars(); }
+}
 
 /* ==================================================================
    MOMENTUM — the live ×multiplier at the heart of the walk
@@ -7910,6 +8012,20 @@ function draw(t){
     const pulse=0.5+Math.sin(t*0.02)*0.5;
     ctx.strokeStyle=`rgba(226,60,40,${0.5+pulse*0.4})`; ctx.lineWidth=3;
     ctx.beginPath(); ctx.arc(sx, M.laneY, 30+pulse*6, 0, 6.28); ctx.stroke();
+  }
+  // PACE — surging reads as forward pressure: speed streaks trailing the squad,
+  // never obscuring the road ahead where questions and hazards need to be read
+  if(M.surging && !FX.reduced()){
+    ctx.save(); ctx.globalAlpha=0.34;
+    for(let i=0;i<6;i++){
+      const yy = M.laneY - 46 + i*17 + Math.sin(t*0.02+i)*3;
+      const len = 40+Math.random()*46;
+      const g2=ctx.createLinearGradient(sx-70-len,0,sx-70,0);
+      g2.addColorStop(0,"rgba(216,189,132,0)"); g2.addColorStop(1,"rgba(216,189,132,.85)");
+      ctx.strokeStyle=g2; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(sx-70-len,yy); ctx.lineTo(sx-70,yy); ctx.stroke();
+    }
+    ctx.restore();
   }
   M.caravan.forEach((c,i)=>{
     const wob=Math.sin(t*0.008*c.pace + c.phase);
@@ -8516,6 +8632,10 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _state:()=>M,
   _forceRaid:()=>{ if(M && !M.done && (!M.raid||M.raid.resolved)) banditRaid(); return M&&M.raid; },
   _use:(k)=>useAbility(k),
+  _setSurge:(v)=>{ setSurgeHeld(v); return M&&M.surgeHeld; },
+  _surging:()=>M&&M.surging,
+  _difficultyAt:(p)=>difficultyAt(p),
+  _bandSeen:()=>M&&Object.assign({},M.bandSeen),
   /* test/debug hooks for the Word Road */
   _forceGate:()=>{ if(M && !M.done && !M.gate) openGate(); return M&&M.gate; },
   _gate:()=>M&&M.gate,
