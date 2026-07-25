@@ -913,7 +913,13 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   font-family:var(--font-read);font-size:.66rem;color:var(--ink);font-weight:600;max-width:220px;}
 .forge-chip .fc-ic{font-size:.86rem;line-height:1;}
 .forge-chip .fc-desc{color:var(--jade-deep);}
+.forge-chip .fc-tally{color:var(--gold-deep,#8a6a2b);font-weight:700;}
 .forge-chip.spent-note{opacity:.55;}
+.forge-chip.flash{animation:fcFlash .85s var(--ease-back);}
+@keyframes fcFlash{0%{transform:scale(1);box-shadow:0 3px 8px rgba(0,0,0,.35);}
+  30%{transform:scale(1.16);background:rgba(216,189,132,.98);box-shadow:0 0 0 4px rgba(216,189,132,.35),0 3px 10px rgba(0,0,0,.4);}
+  100%{transform:scale(1);box-shadow:0 3px 8px rgba(0,0,0,.35);}}
+.reduced-motion .forge-chip.flash{animation:none;}
 .mini-stakes{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.74rem;color:var(--cinnabar-deep);
   font-weight:700;letter-spacing:.03em;margin-bottom:12px;padding:6px 10px;border:1px dashed var(--cinnabar);
   border-radius:8px;background:rgba(181,50,43,.06);}
@@ -4445,6 +4451,32 @@ const GEAR_ICON = {
    also grants concrete "capabilities" that unlock mission actions.  */
 const AXES = ["reach","stealth","power","speed","control","protect","recover"];
 
+/* ---------- item identity: two players forging the same blueprint should walk
+   away with a visibly, nameably different tool. Name is generated from the
+   trait axis the build actually leaned into, so it reads as earned, not random
+   flavor text. ---------- */
+const NAME_NOUN = {hook:"Hook", smoke:"Shell", bow:"Bow", blade:"Blade", claws:"Claws", kit:"Case", rope:"Rope", seal:"Seal"};
+const NAME_ADJ = {
+  reach:  ["Long-Reach","Far-Cast","Wide-Arc"],
+  stealth:["Whisper","Long-Mist","Hushed"],
+  power:  ["Heavy-Strike","Ironbound","Deep-Cut"],
+  speed:  ["Swift","Quick-Draw","Fleet-Step"],
+  control:["Steady","True-Line","Sure-Hand"],
+  protect:["Ridge-Back","Guarded","Braced"],
+  recover:["Scholar's","Healer's","Warm-Hearth"]
+};
+function genItemName(bp, traits, qtier){
+  traits=traits||{};
+  let bestAxis=null, bestV=0;
+  AXES.forEach(a=>{ const v=traits[a]||0; if(v>bestV){ bestV=v; bestAxis=a; } });
+  const noun = NAME_NOUN[bp.gear]||bp.name;
+  const adjPool = (bestAxis && NAME_ADJ[bestAxis]) || ["Traveler's"];
+  let adj = pick(adjPool);
+  if(qtier==="ruined") return "Cracked "+noun;
+  if(qtier==="flawed") adj = "Uneven "+adj;
+  return `${adj} ${noun}`;
+}
+
 /* ---------- BLUEPRINT POOL ----------
    concept: which word-part / rule the decode question probes
    materials: 2-3 tradeoff options, each with trait deltas & a story
@@ -5091,6 +5123,7 @@ function stepBuild(){
   instruct.innerHTML=instructs[type]||"Work the piece by hand.";
 
   const ctx=cv.getContext('2d');
+  heatInit();
   // dispatch to the right mini-interaction; each calls finishBuild(q) when done
   if(type==="trace") craftTrace(cv,ctx);
   else if(type==="align") craftAlign(cv,ctx);
@@ -5171,253 +5204,609 @@ function craftBtn(ctx,W,H,label,active){ // a "commit" strip at the very bottom
   return {x,y,w,h, hit:(px,py)=>px>x&&px<x+w&&py>y&&py<y+h};
 }
 
+/* ==================================================================
+   UNIVERSAL HEAT — one push-your-luck layer shared by every craft
+   (DEPTH_PLAN §2.1). Rises while the player actively works, cools while
+   they pause. A drifting "sweet band" rewards steady work with faster,
+   better results; staying too hot risks cracking the piece outright.
+   Pausing to let it cool is a real, legitimate strategic choice.
+   ================================================================== */
+let craftHeat=null, craftHeatLastT=null;
+function heatInit(){
+  const relax = S().settings.timerRelax;
+  craftHeat = { v:0.30, band:[0.42,0.62], driftT:0, cracked:false, relax };
+  craftHeatLastT=null;
+}
+function heatTick(active){
+  const H=craftHeat; if(!H) return;
+  const now=performance.now();
+  const dt = craftHeatLastT!=null ? Math.min(0.08,(now-craftHeatLastT)/1000) : 0.016;
+  craftHeatLastT=now;
+  const rise = H.relax?0.09:0.16, fall = H.relax?0.24:0.15;
+  H.v = clamp(H.v + (active? rise : -fall)*dt, 0, 1);
+  H.driftT += dt;
+  const width = H.relax?0.34:0.20;
+  const center = 0.5 + Math.sin(H.driftT*0.3)*0.15;
+  H.band = [clamp(center-width/2,0.04,0.96-width), clamp(center+width/2,0.04+width,0.96)];
+  if(!H.relax && H.v>=0.94 && !H.cracked){ H.cracked=true; Audio2.sfx.bad&&Audio2.sfx.bad(); FX.buzz(28); }
+}
+function heatInBand(){ return craftHeat && craftHeat.v>=craftHeat.band[0] && craftHeat.v<=craftHeat.band[1]; }
+function heatDanger(){ return craftHeat && !craftHeat.relax && craftHeat.v>=0.80; }
+/* the instantaneous quality multiplier this heat state grants — hot & in-band
+   is the reward for skillful pacing, cold is safe-but-slow, cracked is the
+   permanent cost of ignoring the danger line */
+function heatMult(){
+  const H=craftHeat; if(!H) return 1;
+  if(H.cracked) return 0.5;
+  if(heatInBand()) return 1.3;
+  if(heatDanger()) return 1.08;
+  if(H.v < H.band[0]*0.55) return 0.72;
+  return 0.95;
+}
+function drawHeat(ctx,cw,ch,y){
+  const H=craftHeat; if(!H) return;
+  const x=cw*0.14, w=cw*0.72, h=9;
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(x-2,y-2,w+4,h+4);
+  ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+  const g=ctx.createLinearGradient(x,0,x+w,0);
+  g.addColorStop(0,"#3f6a8a"); g.addColorStop(0.5,"#d8b45f"); g.addColorStop(0.82,"#d5643a"); g.addColorStop(1,"#b5322b");
+  ctx.fillStyle=g; ctx.fillRect(x,y,w,h); ctx.restore();
+  ctx.fillStyle="rgba(255,255,255,.30)"; ctx.fillRect(x+H.band[0]*w, y-1, (H.band[1]-H.band[0])*w, h+2);
+  ctx.strokeStyle="rgba(255,255,255,.75)"; ctx.lineWidth=1; ctx.strokeRect(x+H.band[0]*w, y-1, (H.band[1]-H.band[0])*w, h+2);
+  const nx=x+H.v*w;
+  ctx.strokeStyle="#1b1712"; ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(nx,y-4); ctx.lineTo(nx,y+h+4); ctx.stroke();
+  const label = H.cracked?"CRACKING — ease off!" : heatInBand()?"hot & workable" : heatDanger()?"too hot — pause to cool" : (H.v<H.band[0]*0.55?"cold — slow going":"warming");
+  ctx.fillStyle= H.cracked?"#e2716a": heatInBand()?"#f3ecd8": heatDanger()?"#e2a15a":"rgba(236,226,203,.7)";
+  ctx.font='700 11px "Noto Sans",sans-serif'; ctx.textAlign="center";
+  ctx.fillText("HEAT · "+label, x+w/2, y-8);
+  ctx.restore();
+}
+/* helpers a nested craft closure can call without colliding with its own
+   local `W`/`H` (canvas width/height) shadowing the outer wizard state */
+function craftAddTrait(axis, amt){ if(!amt) return; W.cur.traits=W.cur.traits||{}; W.cur.traits[axis]=(W.cur.traits[axis]||0)+amt; }
+function craftSetMeta(meta){ W.cur.craftMeta=Object.assign({}, W.cur.craftMeta||{}, meta); }
+/* a small two-button decision prompt drawn over the bottom of the canvas —
+   used by every "stop here, or push for more" moment */
+function craftChoice(ctx,cw,ch,leftLabel,rightLabel,rightDisabled){
+  const bw=cw*0.34, y=ch*0.82, h=36;
+  const lb={x:cw*0.5-bw-8,y,w:bw,h}, rb={x:cw*0.5+8,y,w:bw,h};
+  ctx.fillStyle="rgba(20,14,8,.55)"; ctx.fillRect(0,ch*0.665,cw,ch*0.335);
+  ctx.fillStyle="#33513f"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(lb.x,lb.y,lb.w,lb.h,8):ctx.rect(lb.x,lb.y,lb.w,lb.h)); ctx.fill();
+  ctx.fillStyle= rightDisabled?"rgba(90,63,28,.4)":"#b5322b";
+  ctx.beginPath(); (ctx.roundRect?ctx.roundRect(rb.x,rb.y,rb.w,rb.h,8):ctx.rect(rb.x,rb.y,rb.w,rb.h)); ctx.fill();
+  ctx.fillStyle="#f3ecd8"; ctx.font='700 13px "Noto Sans",sans-serif'; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(leftLabel, lb.x+lb.w/2, lb.y+lb.h/2);
+  ctx.fillText(rightLabel, rb.x+rb.w/2, rb.y+rb.h/2);
+  ctx.textBaseline="alphabetic";
+  return { left:{...lb, hit:(px,py)=>px>lb.x&&px<lb.x+lb.w&&py>lb.y&&py<lb.y+lb.h},
+           right:{...rb, hit:(px,py)=>!rightDisabled&&px>rb.x&&px<rb.x+rb.w&&py>rb.y&&py<rb.y+rb.h, disabled:rightDisabled} };
+}
+
 /* --- trace: run the blade edge along the guide (bigger, forgiving, sparks) --- */
+/* BLADE — The Folding Edge (push your luck). Each pass over the edge adds
+   sharpness, but the channel narrows every time — fold 1 is generous, fold 5
+   is a razor line. After every pass the player decides: quench now and bank
+   what they have, or fold again for more sharpness at real risk (heat keeps
+   climbing, the channel keeps narrowing, a sloppy late pass can chip the
+   whole edge). This is literally how folded steel is made. */
 function craftTrace(cv,ctx){
   const W=cv.width,H=cv.height, sp=[];
-  const guide=[]; for(let i=0;i<=48;i++){ const t=i/48; guide.push({x:W*0.12+t*W*0.76, y:H*0.60-Math.sin(t*Math.PI)*H*0.42}); }
-  const hit=new Array(guide.length).fill(false);
-  let drawing=false, done=false, errSum=0, errN=0, lastPt=null;
-  const finalQ=()=>{ const cov=hit.filter(Boolean).length/hit.length; const avgErr=errN?errSum/errN:20;
-    const precision=clamp(1-avgErr/16,0,1); return craftScore(cov*0.55+precision*0.45); };
+  const maxFold=5;
+  let fold=0, guide, hit, chanW, phase="trace", drawing=false, working=false, done=false;
+  let errSum=0, errN=0; const passQs=[]; let choice=null;
+  const newPass=()=>{
+    chanW = Math.max(9, 25 - fold*3.2);
+    guide=[]; for(let i=0;i<=48;i++){ const t=i/48; guide.push({x:W*0.12+t*W*0.76, y:H*0.52-Math.sin(t*Math.PI)*H*0.30}); }
+    hit=new Array(guide.length).fill(false); errSum=0; errN=0;
+  };
+  newPass();
+  const passQuality=()=>{ const cov=hit.filter(Boolean).length/hit.length; const avgErr=errN?errSum/errN:20;
+    const precision=clamp(1-avgErr/(chanW*1.6),0,1); return cov*0.5+precision*0.5; };
+  const bankNow=()=>clamp((passQs.reduce((a,b)=>a+b,0)/Math.max(1,passQs.length))*heatMult(),0,1);
   const draw=()=>{
     craftBg(ctx,W,H);
-    // guide channel
-    ctx.strokeStyle="rgba(216,189,132,.22)"; ctx.lineWidth=18; ctx.lineCap="round";
+    heatTick(phase==="trace" && working);
+    drawHeat(ctx,W,H,H*0.115);
+    ctx.strokeStyle="rgba(216,189,132,.22)"; ctx.lineWidth=chanW*2; ctx.lineCap="round";
     ctx.beginPath(); guide.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.stroke();
-    // forged edge (traced)
-    ctx.strokeStyle="#dfe6ea"; ctx.lineWidth=8; ctx.beginPath(); let started=false;
+    ctx.strokeStyle=heatInBand()?"#f3ecd8":"#dfe6ea"; ctx.lineWidth=6+fold*0.6; let started=false;
+    ctx.beginPath();
     guide.forEach((p,i)=>{ if(hit[i]){ if(!started){ctx.moveTo(p.x,p.y);started=true;} else ctx.lineTo(p.x,p.y);} else started=false; });
     ctx.stroke();
-    // moving glint at the leading edge
     const lead=hit.lastIndexOf(true); if(lead>0){ const p=guide[lead]; craftSpark(sp,p.x,p.y,"#dfe6ea",1); }
     stepSparks(sp); drawSparks(ctx,sp);
-    craftLabel(ctx,W,H,"Run the edge along the glowing channel","stay on the line — a steady pass keeps it keen");
+    if(phase==="trace"){
+      craftLabel(ctx,W,H,`Fold ${fold+1} of up to ${maxFold} — run the edge along the narrowing channel`,
+        "a steady pass keeps it keen; each fold sharpens the blade but leaves less room for error");
+    } else {
+      craftLabel(ctx,W,H,`${fold+1} fold${fold?"s":""} done — quench now, or fold again?`,
+        `banking now ≈ ${Math.round(bankNow()*100)}% quality · another fold narrows the channel further`);
+      choice = craftChoice(ctx,W,H,"Quench now",fold+1>=maxFold?"channel too thin":"Fold again", fold+1>=maxFold);
+    }
     craftAnim=requestAnimationFrame(draw);
   };
   draw();
   const mark=(x,y)=>{ let best=1e9;
-    guide.forEach((p,i)=>{ const d=Math.hypot(p.x-x,p.y-y); if(d<best)best=d; if(d<26) hit[i]=true; });
-    if(best<60){ errSum+=best; errN++; }
-    setCraftQ(finalQ());
-    const cov=hit.filter(Boolean).length/hit.length;
-    if(!done && cov>=0.92){ done=true; craftHit(sp,x,y,"#dfe6ea"); finishBuild(finalQ()); } };
-  bindPointer(cv,{down:(x,y)=>{drawing=true;lastPt={x,y};mark(x,y);}, move:(x,y)=>{if(drawing)mark(x,y);},
-    up:()=>{drawing=false; if(!done){ const cov=hit.filter(Boolean).length/hit.length; if(cov>0.5){done=true; finishBuild(finalQ());} }}});
+    guide.forEach((p,i)=>{ const d=Math.hypot(p.x-x,p.y-y); if(d<best)best=d; if(d<chanW+8) hit[i]=true; });
+    if(best<chanW*3) { errSum+=best; errN++; }
+    setCraftQ(clamp(passQuality()*heatMult(),0,1));
+  };
+  const finalizeQuench=()=>{
+    if(done) return; done=true;
+    const q=craftScore(bankNow());
+    craftSetMeta({folds:fold+1, heatCracked:craftHeat.cracked});
+    craftAddTrait("power", Math.min(3,Math.round(fold*0.7)));
+    if(fold>=2) craftAddTrait("control", 1);
+    setCraftQ(q); finishBuild(q);
+  };
+  bindPointer(cv,{
+    down:(x,y)=>{
+      if(phase==="decide"){
+        if(!choice) return;
+        if(choice.left.hit(x,y)){ finalizeQuench(); return; }
+        if(choice.right.hit(x,y) && !choice.right.disabled){ fold++; newPass(); phase="trace"; Audio2.sfx.hammer(); }
+        return;
+      }
+      drawing=true; working=true; mark(x,y);
+    },
+    move:(x,y)=>{ if(phase==="trace" && drawing) mark(x,y); },
+    up:()=>{ drawing=false; working=false; if(phase!=="trace") return;
+      const cov=hit.filter(Boolean).length/hit.length;
+      if(cov>=0.6){ passQs.push(passQuality()); craftHit(sp,W*0.5,H*0.4,"#dfe6ea"); phase="decide"; }
+    }
+  });
 }
 
-/* --- align: slide the two halves together, then SET the join (forgiving) --- */
+/* HOOK — The Balance Point (hidden optimum, deduction). The join's true
+   center of gravity is hidden; sliding it gives hot/cold feedback (a wobble
+   ring, a pitch, and no visible target). The player decides: commit on a
+   decent read now, or spend more heat probing for a cleaner one? Which side
+   of the slider you lean toward also sets the hook's actual build — reach
+   (light, far-throwing) versus stability (heavy, sure-holding). */
 function craftAlign(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const midY=H*0.42, targetGap=16;
-  let leftX=W*0.16, rightX=W*0.80, dragging=null, done=false, btn=null;
-  const gap=()=>(rightX-34)-(leftX+34);
-  const aligned=()=>Math.abs(gap()-targetGap)<20;
+  const W=cv.width,H=cv.height, sp=[]; const midY=H*0.40;
+  const target = 0.28 + Math.random()*0.44;   // hidden true balance, re-rolled every craft
+  let pos=0.5, dragging=false, working=false, done=false;
+  const dist=()=>Math.abs(pos-target);
+  const warmth=()=>clamp(1-dist()/0.5,0,1);   // 1 = dead-on, 0 = far off
   const draw=()=>{
     craftBg(ctx,W,H);
-    ctx.strokeStyle="rgba(255,255,255,.12)"; ctx.setLineDash([4,6]); ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(W/2,H*0.16); ctx.lineTo(W/2,H*0.66); ctx.stroke(); ctx.setLineDash([]);
-    const glow=aligned();
-    ctx.strokeStyle=glow?"#7d9a8a":"#c9d2d8"; ctx.lineWidth=12; ctx.lineCap="round";
-    ctx.save(); ctx.translate(leftX,midY); ctx.beginPath(); ctx.moveTo(-70,0); ctx.lineTo(34,0); ctx.stroke(); ctx.restore();
-    ctx.save(); ctx.translate(rightX,midY); ctx.lineWidth=10;
-    ctx.beginPath(); ctx.moveTo(-34,0); ctx.lineTo(0,-34); ctx.moveTo(-34,0); ctx.lineTo(0,34); ctx.moveTo(-34,0); ctx.lineTo(24,0); ctx.stroke(); ctx.restore();
-    if(glow){ craftSpark(sp,(leftX+rightX)/2,midY,"#7d9a8a",1); }
+    heatTick(working); drawHeat(ctx,W,H,H*0.10);
+    // the beam, pivoting around the slider position — visibly tips toward whichever side is heavier
+    const tip = (pos-0.5)*44;
+    ctx.save(); ctx.translate(W/2,midY); ctx.rotate(tip*0.01);
+    ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=8; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-W*0.30,0); ctx.lineTo(W*0.30,0); ctx.stroke();
+    ctx.fillStyle="#bd9d5f"; ctx.beginPath(); ctx.arc(0,0,8,0,6.28); ctx.fill();
+    ctx.restore();
+    // slider handle
+    const hx=W*0.20+pos*W*0.60;
+    ctx.strokeStyle="rgba(255,255,255,.18)"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(W*0.20,H*0.62); ctx.lineTo(W*0.80,H*0.62); ctx.stroke();
+    const w=warmth();
+    // wobble ring: tighter and calmer the closer you are to the hidden balance
+    const wob = (1-w)*10+2;
+    ctx.strokeStyle = w>0.86 ? "#7d9a8a" : w>0.6 ? "#d8b45f" : "#d5643a";
+    ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(hx,H*0.62, 14+Math.sin(performance.now()*0.01*(1.2+(1-w)*3))*wob, 0,6.28); ctx.stroke();
+    ctx.fillStyle="#c9d2d8"; ctx.beginPath(); ctx.arc(hx,H*0.62,9,0,6.28); ctx.fill();
+    if(w>0.86){ craftSpark(sp,hx,H*0.62,"#7d9a8a",1); }
     stepSparks(sp); drawSparks(ctx,sp);
-    // gap indicator
-    ctx.fillStyle=glow?"#7d9a8a":"rgba(216,189,132,.8)"; ctx.textAlign="center"; ctx.font='700 14px "Noto Sans",sans-serif';
-    ctx.fillText(glow?"aligned — set the join":"slide the halves until they line up", W/2, H*0.80);
-    btn=craftBtn(ctx,W,H,"Set the join", glow);
+    const feel = w>0.9?"dead calm — this is it" : w>0.72?"warmer, barely wobbling" : w>0.45?"a slow, steady wobble" : "shaking hard — cold";
+    ctx.fillStyle="rgba(236,226,203,.85)"; ctx.textAlign="center"; ctx.font='700 13px "Noto Sans",sans-serif';
+    ctx.fillText(feel, W/2, H*0.72);
+    ctx.font='600 11px "Noto Sans",sans-serif'; ctx.fillStyle="rgba(236,226,203,.55)";
+    ctx.fillText("‹ reach & speed          stability & grip ›", W/2, H*0.78);
+    stepSparks(sp);
+    const btn=craftBtn(ctx,W,H,"Commit the join", true);
+    stashBtn=btn;
     craftAnim=requestAnimationFrame(draw);
   };
-  draw();
-  bindPointer(cv,{
-    down:(x,y)=>{ if(btn && btn.hit(x,y)){ if(!done){ done=true;
-        const acc=clamp(1-Math.abs(gap()-targetGap)/40,0,1); const q=craftScore(acc);
-        craftHit(sp,W/2,midY,"#7d9a8a"); setCraftQ(q); finishBuild(q); } return; }
-      dragging = Math.abs(x-leftX)<Math.abs(x-rightX)?"L":"R"; },
-    move:(x)=>{ if(!dragging) return;
-      if(dragging==="L") leftX=clamp(x,W*0.10,W/2-12); else rightX=clamp(x,W/2+12,W*0.90);
-      setCraftQ(craftScore(aligned()?0.8:0.25)); },
-    up:()=>{ dragging=null; }
-  });
-}
-
-/* --- tension: draw the bow to the weight-band, hold steady, release --- */
-function craftTension(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const cx=W*0.20, top=H*0.16, bot=H*0.66, midY=(top+bot)/2;
-  const span=W*0.52, target=0.66, band=0.14;
-  let pull=0, dragging=false, done=false; const samples=[];
-  const draw=()=>{
-    craftBg(ctx,W,H);
-    // weight band (forgiving zone)
-    const bx=cx+(target-band/2)*span, bw=band*span;
-    ctx.fillStyle="rgba(125,154,138,.22)"; ctx.fillRect(bx,top,bw,bot-top);
-    ctx.strokeStyle="rgba(125,154,138,.7)"; ctx.setLineDash([5,5]); ctx.strokeRect(bx,top,bw,bot-top); ctx.setLineDash([]);
-    // limb
-    ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=10; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(cx,top); ctx.quadraticCurveTo(cx-52,midY,cx,bot); ctx.stroke();
-    // string
-    const px=cx+pull*span; const inZone=Math.abs(pull-target)<band/2;
-    ctx.strokeStyle=inZone?"#7d9a8a":"#e2d5b8"; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(cx,top); ctx.lineTo(px,midY); ctx.lineTo(cx,bot); ctx.stroke();
-    // nock + steadiness ring
-    ctx.fillStyle=inZone?"#7d9a8a":"#bd9d5f"; ctx.beginPath(); ctx.arc(px,midY,9,0,6.28); ctx.fill();
-    if(inZone){ craftSpark(sp,px,midY,"#7d9a8a",1); }
-    if(dragging) samples.push(pull);
-    stepSparks(sp); drawSparks(ctx,sp);
-    craftLabel(ctx,W,H, inZone?"held in the weight-band — release when steady":"draw to the green band and hold",
-      "a shaking draw loosens the whole limb");
-    craftAnim=requestAnimationFrame(draw);
-  };
-  draw();
-  bindPointer(cv,{
-    down:(x)=>{ dragging=true; pull=clamp((x-cx)/span,0,1); },
-    move:(x)=>{ if(dragging) pull=clamp((x-cx)/span,0,1); },
-    up:()=>{ dragging=false; if(!done){ done=true;
-      const recent=samples.slice(-30); let sd=0.06;
-      if(recent.length>4){ const mean=recent.reduce((a,b)=>a+b,0)/recent.length;
-        sd=Math.sqrt(recent.reduce((a,b)=>a+(b-mean)*(b-mean),0)/recent.length); }
-      const steadiness=clamp(1-sd*9,0,1);
-      const acc=clamp(1-Math.abs(pull-target)/0.4,0,1);
-      const q=craftScore(acc*0.62+steadiness*0.38);
-      craftHit(sp,cx+pull*span,midY, acc>0.6?"#7d9a8a":"#d5643a"); setCraftQ(q); finishBuild(q); } }
-  });
-}
-
-/* --- fold: crease the shell corner-to-corner (bigger, sparks per fold) --- */
-function craftFold(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[];
-  const rx=W*0.20, ry=H*0.18, rw=W*0.60, rh=H*0.42;
-  const targets=[{x1:rx,y1:ry,x2:rx+rw,y2:ry+rh},{x1:rx+rw,y1:ry,x2:rx,y2:ry+rh}];
-  const drawn=[false,false]; let start=null, curPt=null, done=false, stroke=[]; const lineQs=[];
-  const near=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by)<40;
-  const distToLine=(px,py,t)=>{ const dx=t.x2-t.x1,dy=t.y2-t.y1,len=Math.hypot(dx,dy);
-    return Math.abs((py-t.y1)*dx-(px-t.x1)*dy)/len; };
-  const draw=()=>{
-    craftBg(ctx,W,H);
-    ctx.fillStyle="rgba(120,130,90,.32)"; ctx.strokeStyle="#6f7a4e"; ctx.lineWidth=3;
-    ctx.beginPath(); (ctx.roundRect?ctx.roundRect(rx,ry,rw,rh,18):ctx.rect(rx,ry,rw,rh)); ctx.fill(); ctx.stroke();
-    targets.forEach((t,i)=>{ ctx.strokeStyle=drawn[i]?"#bd9d5f":"rgba(255,255,255,.28)";
-      ctx.setLineDash(drawn[i]?[]:[8,8]); ctx.lineWidth=drawn[i]?5:2;
-      ctx.beginPath(); ctx.moveTo(t.x1,t.y1); ctx.lineTo(t.x2,t.y2); ctx.stroke(); });
-    ctx.setLineDash([]);
-    if(start&&curPt){ ctx.strokeStyle="rgba(236,226,203,.7)"; ctx.lineWidth=4;
-      ctx.beginPath(); ctx.moveTo(start.x,start.y); ctx.lineTo(curPt.x,curPt.y); ctx.stroke(); }
-    stepSparks(sp); drawSparks(ctx,sp);
-    craftLabel(ctx,W,H,`Crease corner to corner  ·  ${drawn.filter(Boolean).length}/2`,"drag from one corner to the opposite");
-    craftAnim=requestAnimationFrame(draw);
-  };
-  draw();
-  bindPointer(cv,{
-    down:(x,y)=>{ start={x,y}; curPt={x,y}; stroke=[{x,y}]; },
-    move:(x,y)=>{ curPt={x,y}; if(start) stroke.push({x,y}); },
-    up:(x,y)=>{ if(!start) return; stroke.push({x,y});
-      targets.forEach((t,i)=>{ if(drawn[i]) return;
-        if((near(start.x,start.y,t.x1,t.y1)&&near(x,y,t.x2,t.y2))||(near(start.x,start.y,t.x2,t.y2)&&near(x,y,t.x1,t.y1))){
-          drawn[i]=true; craftHit(sp,(t.x1+t.x2)/2,(t.y1+t.y2)/2,"#bd9d5f");
-          let dSum=0; stroke.forEach(p=>dSum+=distToLine(p.x,p.y,t));
-          lineQs.push(clamp(1-(dSum/Math.max(1,stroke.length))/22,0.4,1)); } });
-      const n=drawn.filter(Boolean).length; setCraftQ(craftScore(n*0.5));
-      start=null; curPt=null; stroke=[];
-      if(!done && n>=2){ done=true; const avg=lineQs.reduce((a,b)=>a+b,0)/lineQs.length; finishBuild(craftScore(avg)); } }
-  });
-}
-
-/* --- fit: seat the claws into their sockets (bigger targets, snappy) --- */
-function craftFit(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[];
-  const sy=H*0.62, ty=H*0.16, xs=[W*0.26,W*0.5,W*0.74];
-  const slots=xs.map(x=>({x,y:sy,filled:false})); const claws=xs.map(x=>({x,y:ty,home:x}));
-  let drag=-1, done=false; const fitQs=[];
-  const clawGlyph=(x,y)=>{ ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=5; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(x-12,y-12); ctx.lineTo(x,y+14); ctx.moveTo(x,y-14); ctx.lineTo(x,y+14); ctx.moveTo(x+12,y-12); ctx.lineTo(x,y+14); ctx.stroke(); };
-  const draw=()=>{
-    craftBg(ctx,W,H);
-    ctx.fillStyle="#5a3f1c"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(W*0.14,sy-22,W*0.72,44,10):ctx.rect(W*0.14,sy-22,W*0.72,44)); ctx.fill();
-    slots.forEach(s=>{ ctx.strokeStyle=s.filled?"#7d9a8a":"rgba(255,255,255,.35)"; ctx.lineWidth=3;
-      ctx.setLineDash(s.filled?[]:[5,5]); ctx.beginPath(); ctx.arc(s.x,s.y,26,0,6.28); ctx.stroke(); ctx.setLineDash([]);
-      if(s.filled) clawGlyph(s.x,s.y); });
-    claws.forEach((c,i)=>{ if(!slots[i].filled) clawGlyph(c.x,c.y); });
-    stepSparks(sp); drawSparks(ctx,sp);
-    craftLabel(ctx,W,H,`Seat each claw in its socket  ·  ${slots.filter(s=>s.filled).length}/3`,"drag a claw down into the dashed ring");
-    craftAnim=requestAnimationFrame(draw);
-  };
-  draw();
-  bindPointer(cv,{
-    down:(x,y)=>{ drag=claws.findIndex((c,i)=>!slots[i].filled && Math.hypot(c.x-x,c.y-y)<34); },
-    move:(x,y)=>{ if(drag>=0){ claws[drag].x=x; claws[drag].y=y; } },
-    up:(x,y)=>{ if(drag>=0){ const s=slots[drag]; const d=Math.hypot(s.x-x,s.y-y);
-      if(d<34){ s.filled=true; fitQs.push(clamp(1-d/34*0.5,0.5,1)); craftHit(sp,s.x,s.y,"#7d9a8a"); }
-      else { claws[drag].x=claws[drag].home; claws[drag].y=ty; Audio2.sfx.snap(); }
-      drag=-1; const n=slots.filter(s=>s.filled).length; setCraftQ(craftScore(n/3));
-      if(!done && n>=3){ done=true; const avg=fitQs.reduce((a,b)=>a+b,0)/fitQs.length; finishBuild(craftScore(avg)); } } }
-  });
-}
-
-/* --- pack: tap tools into the case, then close it (juicy, clear target) --- */
-function craftPack(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const cols=5, want=4;
-  const cx=W*0.18, cy=H*0.16, cw=W*0.64, ch=H*0.42;
-  let packed=0, done=false; const tools=[]; let neatSum=0, neatN=0; let btn=null;
-  const draw=()=>{
-    craftBg(ctx,W,H);
-    ctx.fillStyle="#8a6a3a"; ctx.strokeStyle="#5a3f1c"; ctx.lineWidth=3;
-    ctx.beginPath(); (ctx.roundRect?ctx.roundRect(cx,cy,cw,ch,12):ctx.rect(cx,cy,cw,ch)); ctx.fill(); ctx.stroke();
-    for(let i=1;i<cols;i++){ ctx.strokeStyle="rgba(0,0,0,.22)"; ctx.beginPath(); ctx.moveTo(cx+i*cw/cols,cy); ctx.lineTo(cx+i*cw/cols,cy+ch); ctx.stroke(); }
-    tools.forEach(t=>{ ctx.fillStyle=t.over?"#b5322b":"#c9d2d8";
-      ctx.beginPath(); (ctx.roundRect?ctx.roundRect(t.x,t.y,cw/cols-14,24,5):ctx.rect(t.x,t.y,cw/cols-14,24)); ctx.fill(); });
-    stepSparks(sp); drawSparks(ctx,sp);
-    ctx.fillStyle= packed>cols?"#e2716a":"rgba(216,189,132,.85)"; ctx.textAlign="center"; ctx.font='700 14px "Noto Sans",sans-serif';
-    ctx.fillText(packed>cols?"overpacked — it rattles":`packed ${packed}  ·  a full, tidy case (about ${want}) holds best`, W/2, cy+ch+22);
-    btn=craftBtn(ctx,W,H,"Close the case", packed>=1);
-    craftAnim=requestAnimationFrame(draw);
-  };
+  let stashBtn=null;
   draw();
   bindPointer(cv,{
     down:(x,y)=>{
-      if(btn && btn.hit(x,y)){ if(!done){ done=true;
-        const neat=neatN?clamp(1-(neatSum/neatN)/(cw/cols),0.3,1):0.5;
-        const base= packed>cols?0.45 : packed>=3?0.6+(Math.min(packed,cols)/cols)*0.2 : 0.45;
-        craftHit(sp,W/2,cy+ch/2,"#bd9d5f"); finishBuild(craftScore(base*(0.66+0.34*neat))); } return; }
-      if(x>cx&&x<cx+cw&&y>cy&&y<cy+ch){ const slot=Math.floor((x-cx)/(cw/cols));
-        packed++; const over=packed>cols; const colCx=cx+slot*cw/cols+cw/cols/2; neatSum+=Math.abs(x-colCx); neatN++;
-        const stackN=tools.filter(t=>Math.floor((t.x-cx)/(cw/cols))===slot).length;
-        tools.push({x:cx+slot*cw/cols+7, y:cy+ch-28-stackN*28, over});
-        craftHit(sp,x,y,over?"#b5322b":"#c9d2d8"); setCraftQ(craftScore(packed>cols?0.35:clamp(packed/want,0,1))); }
+      if(stashBtn && stashBtn.hit(x,y)){ if(!done){ done=true;
+        const w=warmth();
+        const q=craftScore(clamp(w*heatMult(),0,1));
+        craftAddTrait("reach", Math.round((1-pos)*2));
+        craftAddTrait("protect", Math.round(pos*2));
+        craftSetMeta({balanceLean: pos<0.5?"reach":"stability", balanceRead:Math.round(w*100)});
+        craftHit(sp,W/2,midY,"#7d9a8a"); setCraftQ(q); finishBuild(q); }
+        return; }
+      dragging=true; working=true; pos=clamp((x-W*0.20)/(W*0.60),0,1);
+      setCraftQ(clamp(warmth()*heatMult(),0,1));
+    },
+    move:(x)=>{ if(!dragging) return; pos=clamp((x-W*0.20)/(W*0.60),0,1);
+      setCraftQ(clamp(warmth()*heatMult(),0,1)); },
+    up:()=>{ dragging=false; working=false; }
+  });
+}
+
+/* BOW — The Three Draws (spend a limited budget). Three draws, three traits —
+   Power, Accuracy, Speed. Before each draw the player picks WHICH trait this
+   draw will set; heat keeps climbing across all three (it never resets
+   between draws), so the round is progressively hotter and shakier. The
+   real decision is which trait gets your steadiest hand: draw first while
+   it's calm, or gamble a late, hot draw for a heat bonus? A bow can never
+   max all three. */
+function craftTension(cv,ctx){
+  const W=cv.width,H=cv.height, sp=[]; const cx=W*0.20, top=H*0.16, bot=H*0.62, midY=(top+bot)/2;
+  const span=W*0.52, band=0.14;
+  const AX=[{k:"power",label:"Power",target:0.72,color:"#d5643a"},
+            {k:"speed",label:"Speed",target:0.42,color:"#7d9a8a"},
+            {k:"control",label:"Accuracy",target:0.58,color:"#bd9d5f"}];
+  let remaining=AX.slice(), results=[], cur=null, pull=0, dragging=false, working=false, phase="pick", done=false;
+  const samples=[];
+  const draw=()=>{
+    craftBg(ctx,W,H);
+    heatTick(working); drawHeat(ctx,W,H,H*0.09);
+    ctx.textAlign="left"; ctx.font='700 12px "Noto Sans",sans-serif';
+    let ry=H*0.16;
+    results.forEach(r=>{ ctx.fillStyle=r.color; ctx.fillText(`${r.label}: ${"●".repeat(Math.max(1,Math.round(r.q*5)))}`, W*0.62, ry); ry+=18; });
+    if(phase==="pick"){
+      craftLabel(ctx,W,H,`Draw ${results.length+1} of 3 — which trait gets this draw?`,
+        "heat keeps rising across all three draws — a late draw is hotter and shakier, but rewards a steady hand");
+      const bw=W*0.24, bh=32, gap=10; const totalW=remaining.length*bw+(remaining.length-1)*gap;
+      let bx=W/2-totalW/2;
+      pickBtns = remaining.map(ax=>{
+        const b={x:bx,y:H*0.74,w:bw,h:bh,ax};
+        ctx.fillStyle=ax.color; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,b.h,8):ctx.rect(b.x,b.y,b.w,b.h)); ctx.fill();
+        ctx.fillStyle="#1b1712"; ctx.textAlign="center"; ctx.font='700 13px "Noto Sans",sans-serif'; ctx.textBaseline="middle";
+        ctx.fillText(ax.label, b.x+b.w/2, b.y+b.h/2); ctx.textBaseline="alphabetic"; ctx.textAlign="left";
+        bx += bw+gap;
+        return {...b, hit:(px,py)=>px>b.x&&px<b.x+b.w&&py>b.y&&py<b.y+b.h};
+      });
+    } else {
+      const bx=cx+(cur.target-band/2)*span, bwid=band*span;
+      ctx.fillStyle="rgba(125,154,138,.22)"; ctx.fillRect(bx,top,bwid,bot-top);
+      ctx.strokeStyle="rgba(125,154,138,.7)"; ctx.setLineDash([5,5]); ctx.strokeRect(bx,top,bwid,bot-top); ctx.setLineDash([]);
+      ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=10; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(cx,top); ctx.quadraticCurveTo(cx-52,midY,cx,bot); ctx.stroke();
+      const px=cx+pull*span; const inZone=Math.abs(pull-cur.target)<band/2;
+      ctx.strokeStyle=inZone?cur.color:"#e2d5b8"; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(cx,top); ctx.lineTo(px,midY); ctx.lineTo(cx,bot); ctx.stroke();
+      ctx.fillStyle=inZone?cur.color:"#bd9d5f"; ctx.beginPath(); ctx.arc(px,midY,9,0,6.28); ctx.fill();
+      if(inZone) craftSpark(sp,px,midY,cur.color,1);
+      if(dragging) samples.push(pull);
+      craftLabel(ctx,W,H, `Drawing for ${cur.label} — ${inZone?"in the band, release when steady":"draw to the band and hold"}`,
+        "a shaking draw loosens the whole limb");
+    }
+    stepSparks(sp); drawSparks(ctx,sp);
+    craftAnim=requestAnimationFrame(draw);
+  };
+  let pickBtns=[];
+  draw();
+  const finishDraw=()=>{
+    const recent=samples.slice(-30); let sd=0.07;
+    if(recent.length>4){ const mean=recent.reduce((a,b)=>a+b,0)/recent.length;
+      sd=Math.sqrt(recent.reduce((a,b)=>a+(b-mean)*(b-mean),0)/recent.length); }
+    const steadiness=clamp(1-sd*9,0,1);
+    const acc=clamp(1-Math.abs(pull-cur.target)/0.4,0,1);
+    const q=clamp((acc*0.62+steadiness*0.38)*heatMult(),0,1);
+    results.push({k:cur.k, label:cur.label, color:cur.color, q});
+    craftAddTrait(cur.k, Math.round(q*4));
+    craftHit(sp,cx+pull*span,midY, acc>0.6?cur.color:"#d5643a");
+    samples.length=0; dragging=false; working=false;
+    if(results.length>=3){
+      craftSetMeta({draws:results.map(r=>({axis:r.k,q:Math.round(r.q*100)})), heatCracked:craftHeat.cracked});
+      const q3=craftScore(clamp(results.reduce((a,b)=>a+b.q,0)/3*heatMult(),0,1));
+      done=true; setCraftQ(q3); finishBuild(q3);
+    } else {
+      phase="pick"; cur=null;
+    }
+  };
+  bindPointer(cv,{
+    down:(x,y)=>{
+      if(done) return;
+      if(phase==="pick"){
+        const b=pickBtns.find(b=>b.hit(x,y)); if(!b) return;
+        cur=b.ax; remaining=remaining.filter(a=>a.k!==cur.k); phase="draw"; pull=0; Audio2.sfx.tick&&Audio2.sfx.tick();
+        return;
+      }
+      dragging=true; working=true; pull=clamp((x-cx)/span,0,1);
+    },
+    move:(x)=>{ if(dragging) pull=clamp((x-cx)/span,0,1); },
+    up:()=>{ if(phase==="draw" && dragging){ finishDraw(); } dragging=false; working=false; }
+  });
+}
+
+/* SMOKE — The Pleat Pattern (memory + duration trade). The player first
+   chooses how many pleats to attempt — more pleats hold denser, longer-lasting
+   smoke but weigh the carrier down and are harder to remember. A fold order
+   flashes briefly around the shell, then hides; the player reproduces it from
+   memory. A missed pleat is a "leak" — logged, not fatal — so a shaky memory
+   still ships a usable, if patchy, shell. */
+function craftFold(cv,ctx){
+  const W=cv.width,H=cv.height, sp=[];
+  const CHOICES=[{n:3,label:"3 pleats — quick, light"},{n:4,label:"4 pleats — balanced"},
+    {n:5,label:"5 pleats — dense, heavy"},{n:6,label:"6 pleats — thickest, slowest"}];
+  let phase="choose", pleats=null, seq=[], showIdx=-1, input=[], points=[], done=false, chooseBtns=[], showTimer=null;
+  const layout=(n)=>{ points=[]; const cx=W*0.5, cy=H*0.44, r=Math.min(W,H)*0.28;
+    for(let i=0;i<n;i++){ const a=-Math.PI/2 + i*(Math.PI*2/n); points.push({x:cx+Math.cos(a)*r, y:cy+Math.sin(a)*r, i}); } };
+  const startSequence=()=>{ layout(pleats.n); seq=shuffle(points.map(p=>p.i)); input=[]; showIdx=-1; phase="show"; };
+  const draw=()=>{
+    craftBg(ctx,W,H);
+    heatTick(phase==="input"); drawHeat(ctx,W,H,H*0.09);
+    if(phase==="choose"){
+      craftLabel(ctx,W,H,"Choose how many pleats to fold","more pleats hold smoke longer but weigh the carrier down — and are harder to remember");
+      const bw=W*0.44,bh=32; let by=H*0.28;
+      chooseBtns = CHOICES.map(c=>{ const b={x:W*0.5-bw/2,y:by,w:bw,h:bh,c};
+        ctx.fillStyle="#5f6f52"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,b.h,8):ctx.rect(b.x,b.y,b.w,b.h)); ctx.fill();
+        ctx.fillStyle="#f3ecd8"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font='700 13px "Noto Sans",sans-serif';
+        ctx.fillText(c.label, b.x+b.w/2, b.y+b.h/2); ctx.textBaseline="alphabetic";
+        by+=bh+9; return {...b, hit:(px,py)=>px>b.x&&px<b.x+b.w&&py>b.y&&py<b.y+b.h}; });
+    } else {
+      ctx.strokeStyle="#6f7a4e"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(W*0.5,H*0.44,Math.min(W,H)*0.34,0,6.28); ctx.stroke();
+      points.forEach(p=>{
+        const wasHit = input.includes(p.i);
+        const isShowing = phase==="show" && seq[showIdx]===p.i;
+        ctx.fillStyle = isShowing?"#f3ecd8" : wasHit?"#7d9a8a" : "rgba(120,130,90,.5)";
+        ctx.beginPath(); ctx.arc(p.x,p.y,isShowing?14:10,0,6.28); ctx.fill();
+        ctx.strokeStyle="#2b241c"; ctx.lineWidth=1.4; ctx.stroke();
+      });
+      stepSparks(sp); drawSparks(ctx,sp);
+      craftLabel(ctx,W,H,
+        phase==="show" ? `Watch the fold order  ·  ${Math.max(0,showIdx+1)}/${seq.length}` : `Reproduce the fold order  ·  ${input.length}/${seq.length}`,
+        phase==="show" ? "then reproduce it from memory" : "tap the pleats in the order they flashed");
+    }
+    craftAnim=requestAnimationFrame(draw);
+  };
+  draw();
+  const advanceShow=()=>{ showIdx++;
+    if(showIdx>=seq.length){ phase="input"; return; }
+    Audio2.sfx.tick&&Audio2.sfx.tick(); showTimer=setTimeout(advanceShow, 620); };
+  bindPointer(cv,{
+    down:(x,y)=>{
+      if(phase==="choose"){ const b=chooseBtns.find(b=>b.hit(x,y)); if(!b) return;
+        pleats=b.c; Audio2.sfx.clink(); startSequence(); showTimer=setTimeout(advanceShow,500); return; }
+      if(phase!=="input" || done) return;
+      const p=points.find(p=>Math.hypot(p.x-x,p.y-y)<22); if(!p) return;
+      const expect=seq[input.length];
+      if(p.i===expect){ input.push(p.i); craftHit(sp,p.x,p.y,"#7d9a8a"); }
+      else { craftSpark(sp,p.x,p.y,"#d5643a",8); Audio2.sfx.bad(); FX.buzz(14); input.push(-1); }
+      if(input.length>=seq.length){
+        const correct=input.filter((v,idx)=>v===seq[idx]).length;
+        const acc=correct/seq.length;
+        const q=craftScore(clamp(acc*heatMult(),0,1));
+        craftAddTrait("stealth", Math.min(3, Math.round(pleats.n*0.5)));
+        craftAddTrait("speed", -Math.max(0,pleats.n-3));
+        craftSetMeta({pleats:pleats.n, remembered:correct, of:seq.length, heatCracked:craftHeat.cracked});
+        done=true; setCraftQ(q); finishBuild(q);
+      }
     }, move:()=>{}, up:()=>{}
   });
 }
 
-/* --- weave: work each fray until it seals (heat-ring feedback) --- */
-function craftWeave(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const ry=H*0.42;
-  const frays=[]; for(let i=0;i<5;i++) frays.push({x:W*0.16+i*W*0.68/4, y:ry, heat:0, sealed:false});
-  let drawing=false, done=false, lastPt=null;
+/* CLAWS — The Bite Angle (consistency under choice). The player first
+   chooses an angle — steep for grip & reach, shallow for speed, balanced for
+   control — then must reproduce that exact angle across all three claws.
+   Individual precision matters, but so does matching yourself: a mismatched
+   set is unstable, not just imprecise. */
+function craftFit(cv,ctx){
+  const W=cv.width,H=cv.height, sp=[];
+  const PRESETS=[{k:"steep",label:"Steep — grip & reach",target:0.80,axes:["protect","reach"]},
+                 {k:"shallow",label:"Shallow — speed",target:0.22,axes:["speed"]},
+                 {k:"balanced",label:"Balanced — control",target:0.50,axes:["control"]}];
+  let phase="choose", preset=null, chooseBtns=[];
+  const xs=[W*0.26,W*0.5,W*0.74], top=H*0.20, bot=H*0.62;
+  const claws=xs.map(x=>({x, norm:0.5, set:false}));
+  let dragIdx=-1, working=false, done=false;
+  const clawGlyph=(x,y,norm)=>{ ctx.save(); ctx.translate(x,y); ctx.rotate((norm-0.5)*1.1);
+    ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=5; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-12,-12); ctx.lineTo(0,14); ctx.moveTo(0,-14); ctx.lineTo(0,14); ctx.moveTo(12,-12); ctx.lineTo(0,14); ctx.stroke();
+    ctx.restore(); };
   const draw=()=>{
     craftBg(ctx,W,H);
-    ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=20; ctx.lineCap="round";
-    ctx.beginPath(); ctx.moveTo(W*0.08,ry); ctx.lineTo(W*0.92,ry); ctx.stroke();
-    ctx.strokeStyle="rgba(0,0,0,.2)"; ctx.lineWidth=2;
-    for(let x=W*0.08;x<W*0.92;x+=16){ ctx.beginPath(); ctx.moveTo(x,ry-9); ctx.lineTo(x+9,ry+9); ctx.stroke(); }
-    frays.forEach(fr=>{
-      if(fr.sealed){ ctx.fillStyle="#7d9a8a"; ctx.beginPath(); ctx.arc(fr.x,fr.y,9,0,6.28); ctx.fill(); }
-      else { ctx.strokeStyle="#b5322b"; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.moveTo(fr.x-8,fr.y-20); ctx.lineTo(fr.x+8,fr.y-28); ctx.moveTo(fr.x-8,fr.y+20); ctx.lineTo(fr.x+8,fr.y+28); ctx.stroke();
-        // heat ring
-        ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=4; ctx.beginPath();
-        ctx.arc(fr.x,fr.y,20,-1.57,-1.57+6.28*clamp(fr.heat/16,0,1)); ctx.stroke(); }
-    });
-    stepSparks(sp); drawSparks(ctx,sp);
-    craftLabel(ctx,W,H,`Work each fray until it seals  ·  ${frays.filter(f=>f.sealed).length}/5`,"rub back and forth over a red fray to bind it");
+    heatTick(phase==="set" && working); drawHeat(ctx,W,H,H*0.09);
+    if(phase==="choose"){
+      craftLabel(ctx,W,H,"Choose the bite angle","every claw in the set will need to match it — a mismatch throws the whole climb off");
+      const bw=W*0.5,bh=32; let by=H*0.30;
+      chooseBtns = PRESETS.map(p=>{ const b={x:W*0.5-bw/2,y:by,w:bw,h:bh,p};
+        ctx.fillStyle="#6a4a2a"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,b.h,8):ctx.rect(b.x,b.y,b.w,b.h)); ctx.fill();
+        ctx.fillStyle="#f3ecd8"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font='700 13px "Noto Sans",sans-serif';
+        ctx.fillText(p.label, b.x+b.w/2, b.y+b.h/2); ctx.textBaseline="alphabetic";
+        by+=bh+12; return {...b, hit:(px,py)=>px>b.x&&px<b.x+b.w&&py>b.y&&py<b.y+b.h}; });
+    } else {
+      ctx.fillStyle="#5a3f1c"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(W*0.14,top-14,W*0.72,bot-top+28,10):ctx.rect(W*0.14,top-14,W*0.72,bot-top+28)); ctx.fill();
+      claws.forEach(c=>{
+        ctx.strokeStyle="rgba(255,255,255,.18)"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(c.x,top); ctx.lineTo(c.x,bot); ctx.stroke();
+        const cy=top+c.norm*(bot-top);
+        clawGlyph(c.x,cy,c.norm);
+        ctx.fillStyle=c.set?"#7d9a8a":"rgba(255,255,255,.35)";
+        ctx.beginPath(); ctx.arc(c.x,cy,4,0,6.28); ctx.fill();
+      });
+      stepSparks(sp); drawSparks(ctx,sp);
+      craftLabel(ctx,W,H,`Drag each claw to the ${preset.label.split(" — ")[0].toLowerCase()} angle  ·  ${claws.filter(c=>c.set).length}/3 set`,
+        "aim for the same angle on all three — consistency matters as much as precision");
+    }
     craftAnim=requestAnimationFrame(draw);
   };
   draw();
-  const mark=(x,y)=>{ lastPt={x,y};
-    frays.forEach(fr=>{ if(!fr.sealed && Math.hypot(fr.x-x,fr.y-y)<22){ fr.heat++;
-      if(fr.heat>=16){ fr.sealed=true; craftHit(sp,fr.x,fr.y,"#7d9a8a"); } } });
-    const n=frays.filter(f=>f.sealed).length; setCraftQ(craftScore(n/5));
-    if(!done && n>=5){ done=true; finishBuild(1); } };
-  bindPointer(cv,{ down:(x,y)=>{drawing=true;mark(x,y);}, move:(x,y)=>{if(drawing)mark(x,y);},
-    up:()=>{ drawing=false; if(!done){ const n=frays.filter(f=>f.sealed).length; if(n>=3){ done=true; finishBuild(craftScore(n/5)); } } } });
+  const maybeFinish=()=>{
+    if(done || !claws.every(c=>c.set)) return; done=true;
+    const norms=claws.map(c=>c.norm);
+    const mean=norms.reduce((a,b)=>a+b,0)/3;
+    const sd=Math.sqrt(norms.reduce((a,b)=>a+(b-mean)*(b-mean),0)/3);
+    const consistency=clamp(1-sd*4,0,1);
+    const precision=clamp(1-norms.reduce((a,b)=>a+Math.abs(b-preset.target),0)/3/0.5,0,1);
+    const q=craftScore(clamp((precision*0.6+consistency*0.4)*heatMult(),0,1));
+    preset.axes.forEach(ax=>craftAddTrait(ax, Math.round((precision*0.6+consistency*0.4)*2)));
+    craftSetMeta({angle:preset.k, consistency:Math.round(consistency*100), heatCracked:craftHeat.cracked});
+    setCraftQ(q); finishBuild(q);
+  };
+  bindPointer(cv,{
+    down:(x,y)=>{
+      if(phase==="choose"){ const b=chooseBtns.find(b=>b.hit(x,y)); if(!b) return;
+        preset=b.p; phase="set"; Audio2.sfx.clink(); return; }
+      dragIdx=claws.findIndex(c=>Math.hypot(c.x-x, (top+c.norm*(bot-top))-y)<30);
+      if(dragIdx>=0) working=true;
+    },
+    move:(x,y)=>{ if(dragIdx>=0){ claws[dragIdx].norm=clamp((y-top)/(bot-top),0,1); } },
+    up:()=>{ if(dragIdx>=0){ claws[dragIdx].set=true; craftHit(sp,claws[dragIdx].x, top+claws[dragIdx].norm*(bot-top), "#7d9a8a");
+        dragIdx=-1; working=false; maybeFinish(); } }
+  });
+}
+
+/* FIELD KIT — The Packed Case (spatial puzzle with loadout consequences).
+   Real shaped supplies — bandage (2×1), salve (1×1), splint (3×1), tonic
+   (2×2) — go into a fixed grid case. WHAT you fit determines what the kit
+   can actually do: many bandages means many small recoveries, a couple of
+   tonics means fewer, stronger ones, splints add protection. The player
+   decides when the case is full enough and closes it — push too far and
+   there's nowhere left for the piece that would have mattered most. */
+function craftPack(cv,ctx){
+  const W=cv.width,H=cv.height, sp=[];
+  const cx=W*0.14, cy=H*0.12, cw=W*0.72, ch=H*0.40, cols=6, rows=4;
+  const cellW=cw/cols, cellH=ch/rows;
+  const PIECES={
+    bandage:{cells:[[0,0],[1,0]], color:"#c9d2d8"},
+    salve:  {cells:[[0,0]], color:"#7d9a8a"},
+    splint: {cells:[[0,0],[1,0],[2,0]], color:"#8a5a2b"},
+    tonic:  {cells:[[0,0],[1,0],[0,1],[1,1]], color:"#b5322b"}
+  };
+  const occ=Array.from({length:cols},()=>Array(rows).fill(false));
+  const placed=[]; const counts={bandage:0,salve:0,splint:0,tonic:0};
+  let held=null, done=false, working=false, stashBtn=null;
+  const trayY=H*0.63, trayItems=Object.keys(PIECES).map((k,i)=>({k, x:cx+i*(cw/4)+cw/8, y:trayY}));
+  const canPlace=(k,gx,gy)=>PIECES[k].cells.every(([dx,dy])=>{
+    const x=gx+dx,y=gy+dy; return x>=0&&x<cols&&y>=0&&y<rows&&!occ[x][y]; });
+  const place=(k,gx,gy)=>{ PIECES[k].cells.forEach(([dx,dy])=>{ occ[gx+dx][gy+dy]=true; }); placed.push({k,gx,gy}); counts[k]++; };
+  const usedCells=()=>placed.reduce((a,p)=>a+PIECES[p.k].cells.length,0);
+  const draw=()=>{
+    craftBg(ctx,W,H);
+    heatTick(working); drawHeat(ctx,W,H,H*0.065);
+    ctx.fillStyle="#8a6a3a"; ctx.strokeStyle="#5a3f1c"; ctx.lineWidth=3;
+    ctx.beginPath(); (ctx.roundRect?ctx.roundRect(cx,cy,cw,ch,10):ctx.rect(cx,cy,cw,ch)); ctx.fill(); ctx.stroke();
+    for(let i=1;i<cols;i++){ ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.beginPath(); ctx.moveTo(cx+i*cellW,cy); ctx.lineTo(cx+i*cellW,cy+ch); ctx.stroke(); }
+    for(let j=1;j<rows;j++){ ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.beginPath(); ctx.moveTo(cx,cy+j*cellH); ctx.lineTo(cx+cw,cy+j*cellH); ctx.stroke(); }
+    placed.forEach(p=>{ const {cells,color}=PIECES[p.k];
+      cells.forEach(([dx,dy])=>{ const x=cx+(p.gx+dx)*cellW, y=cy+(p.gy+dy)*cellH;
+        ctx.fillStyle=color; ctx.fillRect(x+2,y+2,cellW-4,cellH-4); }); });
+    stepSparks(sp); drawSparks(ctx,sp);
+    trayItems.forEach(t=>{ ctx.fillStyle=PIECES[t.k].color; ctx.beginPath(); ctx.arc(t.x,t.y,16,0,6.28); ctx.fill();
+      ctx.strokeStyle="#2b241c"; ctx.lineWidth=1.4; ctx.stroke();
+      ctx.fillStyle="#f3ecd8"; ctx.font='700 10px "Noto Sans",sans-serif'; ctx.textAlign="center";
+      ctx.fillText(t.k[0].toUpperCase(), t.x, t.y+3.5);
+      ctx.fillText(`×${counts[t.k]}`, t.x, t.y+30); });
+    if(held){
+      const {cells,color}=PIECES[held.k]; const ok=canPlace(held.k,held.gx,held.gy);
+      ctx.globalAlpha=0.55;
+      cells.forEach(([dx,dy])=>{ const gx=held.gx+dx, gy=held.gy+dy; if(gx<0||gx>=cols||gy<0||gy>=rows) return;
+        ctx.fillStyle= ok?color:"#b5322b"; ctx.fillRect(cx+gx*cellW+2,cy+gy*cellH+2,cellW-4,cellH-4); });
+      ctx.globalAlpha=1;
+    }
+    ctx.fillStyle="rgba(216,189,132,.85)"; ctx.textAlign="center"; ctx.font='700 12px "Noto Sans",sans-serif';
+    ctx.fillText(`packed ${usedCells()}/${cols*rows} cells — tap a supply below, then tap the case`, W/2, cy+ch+16);
+    stashBtn=craftBtn(ctx,W,H,"Close the case", placed.length>0);
+    craftAnim=requestAnimationFrame(draw);
+  };
+  draw();
+  const finish=()=>{
+    if(done) return; done=true;
+    const frac=clamp(usedCells()/(cols*rows*0.75),0,1);
+    const q=craftScore(clamp(frac*heatMult(),0,1));
+    craftAddTrait("recover", clamp(Math.round(counts.bandage*0.5+counts.tonic*1.1+counts.salve*0.3),0,5));
+    craftAddTrait("protect", Math.round(counts.splint*0.7));
+    craftAddTrait("speed", -Math.round(usedCells()/8));
+    craftSetMeta({packed:Object.assign({},counts), cells:usedCells(), heatCracked:craftHeat.cracked});
+    craftHit(sp,cx+cw/2,cy+ch/2,"#bd9d5f");
+    setCraftQ(q); finishBuild(q);
+  };
+  bindPointer(cv,{
+    down:(x,y)=>{
+      if(stashBtn && stashBtn.hit(x,y)){ finish(); return; }
+      const t=trayItems.find(t=>Math.hypot(t.x-x,t.y-y)<18);
+      if(t){ held={k:t.k, gx:0, gy:0}; working=true; Audio2.sfx.tick&&Audio2.sfx.tick(); return; }
+      if(held && x>cx&&x<cx+cw&&y>cy&&y<cy+ch){
+        const gx=Math.floor((x-cx)/cellW), gy=Math.floor((y-cy)/cellH);
+        if(canPlace(held.k,gx,gy)){ place(held.k,gx,gy); craftHit(sp,x,y,PIECES[held.k].color); held=null; working=false; }
+        else { Audio2.sfx.snap&&Audio2.sfx.snap(); FX.buzz(10); }
+      }
+    },
+    move:(x,y)=>{ if(held && x>cx&&x<cx+cw&&y>cy&&y<cy+ch){
+      held.gx=Math.floor((x-cx)/cellW); held.gy=Math.floor((y-cy)/cellH); } },
+    up:()=>{}
+  });
+}
+
+/* ROPE — The Braid Rhythm (timing). The player picks a tempo — faster
+   finishes stronger but is harder to hold — then braids on the beat,
+   alternating left and right strands. A missed beat leaves a real weak
+   spot AT THAT POSITION in the finished rope, visible as a scar, not just
+   a lower number. */
+function craftWeave(cv,ctx){
+  const W=cv.width,H=cv.height, sp=[]; const ry=H*0.42;
+  const TEMPOS=[{k:"slow",label:"Slow braid — safest, least value",bpm:76,val:0.78},
+                {k:"standard",label:"Standard braid",bpm:104,val:1.0},
+                {k:"fast",label:"Fast braid — best value, hardest to hold",bpm:138,val:1.3}];
+  let phase="choose", tempo=null, chooseBtns=[];
+  const totalBeats=8; let beatIdx=0, results=[], beatT=0, resolved=false, done=false, lastT=null;
+  const draw=()=>{
+    craftBg(ctx,W,H);
+    const now=performance.now(); const dt = lastT!=null?Math.min(0.08,(now-lastT)/1000):0.016; lastT=now;
+    heatTick(phase==="braid"); drawHeat(ctx,W,H,H*0.09);
+    if(phase==="choose"){
+      craftLabel(ctx,W,H,"Choose the braid tempo","faster finishes stronger but is harder to hold on the beat");
+      const bw=W*0.62,bh=32; let by=H*0.32;
+      chooseBtns = TEMPOS.map(t=>{ const b={x:W*0.5-bw/2,y:by,w:bw,h:bh,t};
+        ctx.fillStyle="#6a4a2a"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,b.h,8):ctx.rect(b.x,b.y,b.w,b.h)); ctx.fill();
+        ctx.fillStyle="#f3ecd8"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font='700 13px "Noto Sans",sans-serif';
+        ctx.fillText(t.label, b.x+b.w/2, b.y+b.h/2); ctx.textBaseline="alphabetic";
+        by+=bh+11; return {...b, hit:(px,py)=>px>b.x&&px<b.x+b.w&&py>b.y&&py<b.y+b.h}; });
+    } else if(phase==="braid"){
+      const period=60/tempo.bpm*2.1;
+      if(!resolved){ beatT+=dt;
+        if(beatT>=period){ results.push({hit:false, idx:beatIdx}); resolved=true; Audio2.sfx.snap&&Audio2.sfx.snap(); setTimeout(advanceBeat,180); } }
+      ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=20; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(W*0.08,ry); ctx.lineTo(W*0.92,ry); ctx.stroke();
+      ctx.strokeStyle="rgba(0,0,0,.2)"; ctx.lineWidth=2;
+      for(let x=W*0.08;x<W*0.92;x+=16){ ctx.beginPath(); ctx.moveTo(x,ry-9); ctx.lineTo(x+9,ry+9); ctx.stroke(); }
+      results.forEach(r=>{ if(!r.hit){ const sx=W*0.08+(r.idx+0.5)*(W*0.84/totalBeats);
+        ctx.strokeStyle="#b5322b"; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(sx-6,ry-14); ctx.lineTo(sx+6,ry+14); ctx.stroke(); } });
+      ctx.strokeStyle="rgba(255,255,255,.4)"; ctx.setLineDash([4,4]); ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(W*0.5,ry-40); ctx.lineTo(W*0.5,ry+40); ctx.stroke(); ctx.setLineDash([]);
+      const side = beatIdx%2===0?"L":"R";
+      const frac=clamp(beatT/period,0,1);
+      const startX = side==="L"?W*0.08:W*0.92;
+      const mx=startX+(W*0.5-startX)*frac;
+      ctx.fillStyle= side==="L"?"#7d9a8a":"#d8b45f";
+      ctx.beginPath(); ctx.arc(mx,ry,10,0,6.28); ctx.fill();
+      stepSparks(sp); drawSparks(ctx,sp);
+      craftLabel(ctx,W,H,`Beat ${beatIdx+1}/${totalBeats} — tap the ${side==="L"?"LEFT":"RIGHT"} side on the beat`,
+        "alternate strands on the beat; a missed beat leaves a weak spot at that point in the rope");
+    }
+    craftAnim=requestAnimationFrame(draw);
+  };
+  const advanceBeat=()=>{ beatIdx++; beatT=0; resolved=false; if(beatIdx>=totalBeats) finish(); };
+  draw();
+  const finish=()=>{
+    if(done) return; done=true;
+    const hits=results.filter(r=>r.hit).length;
+    const acc=hits/totalBeats;
+    const q=craftScore(clamp(acc*tempo.val*heatMult(),0,1));
+    craftAddTrait("protect", Math.round(acc*tempo.val*2));
+    if(tempo.k==="fast") craftAddTrait("reach", 1);
+    craftSetMeta({tempo:tempo.k, weakSpots:results.filter(r=>!r.hit).map(r=>r.idx), heatCracked:craftHeat.cracked});
+    setCraftQ(q); finishBuild(q);
+  };
+  bindPointer(cv,{
+    down:(x,y)=>{
+      if(phase==="choose"){ const b=chooseBtns.find(b=>b.hit(x,y)); if(!b) return;
+        tempo=b.t; phase="braid"; Audio2.sfx.clink(); return; }
+      if(phase!=="braid" || resolved || done) return;
+      const side = beatIdx%2===0?"L":"R";
+      const clickSide = x<W*0.5?"L":"R";
+      const period=60/tempo.bpm*2.1; const frac=beatT/period;
+      const onTime = frac>=0.55 && frac<=1.15;
+      const hit = clickSide===side && onTime;
+      results.push({hit, idx:beatIdx}); resolved=true;
+      if(hit){ craftHit(sp, x, ry, "#7d9a8a"); } else { Audio2.sfx.bad(); FX.buzz(12); }
+      setTimeout(advanceBeat,180);
+    }, move:()=>{}, up:()=>{}
+  });
 }
 
 /* pointer helper: normalizes mouse/touch to canvas coords */
@@ -5542,7 +5931,10 @@ function commitItem(){
     grants, material:c.material?c.material.id:"basic",
     variant:c.variant?c.variant.id:null, reagent:c.reagent?c.reagent.id:null,
     perks, bonus:(c.variant&&c.variant.bonus)?Object.assign({},c.variant.bonus):null,
-    quality:c.finalQ, qtier:c.qtier, traits:c.scaledTraits, assignedTo:null };
+    quality:c.finalQ, qtier:c.qtier, traits:c.scaledTraits, assignedTo:null,
+    genName: genItemName(c.bp, c.scaledTraits, c.qtier),
+    makerMark: c.makerMark||null, craftMeta: c.craftMeta||null,
+    tally:{}, wear:0 };
   f.forged.push(item);
   // bench mastery: fine crafts unlock variants next visit, and eventually Tempering
   const s=S(); s.benchMastery=s.benchMastery||{};
@@ -5863,8 +6255,10 @@ window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, has
   _dbg:()=>W, _finishBuild:(q)=>finishBuild(q),
   _testCraft:(type)=>{ // test-only: set up a minimal build + run one craft interaction
     W = W || {}; W.cur = { bp:{craft:type, id:'t', name:'Test', gear:type, grants:[], base:{}}, traits:{}, buildQ:0 };
+    W.f = E.getFlow() || {}; W.embers = W.embers!=null?W.embers:5; W.maxItems = W.maxItems!=null?W.maxItems:5; W.pool = W.pool||[];
     const cv=document.createElement('canvas'); cv.id='craftCanvas'; cv.width=560; cv.height=360;
     document.body.appendChild(cv); const ctx=cv.getContext('2d');
+    heatInit();
     const fn={trace:craftTrace,align:craftAlign,tension:craftTension,fold:craftFold,fit:craftFit,pack:craftPack,weave:craftWeave}[type];
     if(fn) fn(cv,ctx); return !!fn;
   },
@@ -5880,7 +6274,9 @@ window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, has
   _variants:(bpId)=>unlockedVariants(bpId),
   _blueprints:()=>BLUEPRINTS,
   _gearIcon:(k)=>GEAR_ICON[k]||"",
-  _reagents:()=>REAGENTS };
+  _reagents:()=>REAGENTS,
+  _heat:()=>craftHeat,
+  _heatTick:(active,ms)=>{ if(!craftHeat) return; craftHeatLastT = performance.now()-(ms||16); heatTick(active); } };
 window.__RD_PLAN = { openPlan: openAssign };  // legacy alias — plan step folded into assign
 })();
 </script>
@@ -6021,6 +6417,20 @@ function comboShape(ids){
 }
 /* derive what the player's forged tools DO on this specific road, as both
    live game modifiers and a plain-language readout shown above the caption */
+/* which SPECIFIC forged item earns credit for a capability — fine work first,
+   so the strongest piece in the tray is the one the road points at */
+function pickItemByGrant(f, grantList){
+  const forged=(f.forged||[]).filter(it=>it.qtier!=="ruined" && (it.grants||[]).some(g=>grantList.includes(g)));
+  if(!forged.length) return null;
+  forged.sort((a,b)=>(b.quality||0)-(a.quality||0));
+  return forged[0];
+}
+function pickItemByPerk(f, perk){
+  const forged=(f.forged||[]).filter(it=>it.qtier!=="ruined" && (it.perks||[]).includes(perk));
+  if(!forged.length) return null;
+  forged.sort((a,b)=>(b.quality||0)-(a.quality||0));
+  return forged[0];
+}
 function computeForgePassives(f){
   const caps=(f.stats&&f.stats.caps)||{};
   const tr=(f.stats&&f.stats.traits)||{};
@@ -6032,18 +6442,35 @@ function computeForgePassives(f){
     surefoot:perks.has("surefoot"),                  // rides scree & mud
     heal:!!caps.heal,                                // completed terms heal more
     smoke:!!caps.smoke,                              // one free gate-save from a smoke charge
+    descend:!!caps.descend,
     momentumFloor:1.0,
     healMult:1,
     gainMult:1,      // how fast momentum builds per completed term
     valueMult:1,     // pickup / ink value
-    chips:[]
+    chips:[],
+    // itemFor: the exact item credited when a capability actually does something —
+    // this is what makes gear feel present instead of a stat line (see DEPTH_PLAN §4)
+    itemFor:{
+      cut: pickItemByGrant(f,["cut"]) || (perks.has("keenedge")?pickItemByPerk(f,"keenedge"):null),
+      shoot: pickItemByGrant(f,["shoot"]),
+      climb: pickItemByGrant(f,["climb"]) || (perks.has("surefoot")?pickItemByPerk(f,"surefoot"):null),
+      descend: pickItemByGrant(f,["descend"]),
+      smoke: pickItemByGrant(f,["smoke"]),
+      heal: pickItemByGrant(f,["heal"])
+    }
   };
   // a keen edge keeps the pace: momentum can't collapse below ×1.6
-  if(P.cutClear){ P.momentumFloor=1.6; P.chips.push({ic:"🗡",label:"Keen edge",desc:"clears snags · momentum never drops below ×1.6"}); }
-  if(P.climbFast) P.chips.push({ic:"🧗",label:"Climbing gear",desc:"opens the swift upper ledge"});
-  if(P.surefoot) P.chips.push({ic:"👣",label:"Sure-foot",desc:"scree & mud can't slow the squad"});
-  if(P.heal){ P.healMult=1.6; P.chips.push({ic:"✚",label:"Field kit",desc:"terms heal the squad far more"}); }
-  if(P.smoke) P.chips.push({ic:"☁",label:"Smoke shell",desc:"saves you from one wrong gate"});
+  if(P.cutClear){ P.momentumFloor=1.6;
+    const it=P.itemFor.cut;
+    P.chips.push({ic:"🗡",label:it?it.genName:"Keen edge",desc:"clears snags · momentum never drops below ×1.6", itemId:it&&it.id}); }
+  if(P.climbFast){ const it=P.itemFor.climb;
+    P.chips.push({ic:"🧗",label:it?it.genName:"Climbing gear",desc:"opens the swift upper ledge", itemId:it&&it.id}); }
+  if(P.surefoot){ const it=P.itemFor.climb;
+    P.chips.push({ic:"👣",label:it?it.genName:"Sure-foot",desc:"scree & mud can't slow the squad", itemId:it&&it.id}); }
+  if(P.heal){ P.healMult=1.6; const it=P.itemFor.heal;
+    P.chips.push({ic:"✚",label:it?it.genName:"Field kit",desc:"terms heal the squad far more", itemId:it&&it.id}); }
+  if(P.smoke){ const it=P.itemFor.smoke;
+    P.chips.push({ic:"☁",label:it?it.genName:"Smoke shell",desc:"saves you from one wrong gate", itemId:it&&it.id}); }
   // control/reach traits sharpen the scholar's eye — momentum builds faster
   const focus=(tr.control||0)+(tr.reach||0);
   if(focus>=2){ P.gainMult=1.35; P.chips.push({ic:"🔎",label:"Scholar's poise",desc:"terms build momentum 35% faster"}); }
@@ -6056,6 +6483,21 @@ function computeForgePassives(f){
   if(!P.chips.length) P.chips.push({ic:"◦",label:"Bare-handed",desc:"nothing forged — the words alone must carry them"});
   P.smokeSaves = P.smoke?1:0;
   return P;
+}
+/* flash the exact item that just did something, on the forge strip AND on its
+   carrier's silhouette — an invisible passive becomes a visible event */
+function flashItem(item, verb, txt){
+  if(!item) return txt;
+  item.tally=item.tally||{}; item.tally[verb]=(item.tally[verb]||0)+1;
+  M.actFlash={itemId:item.id, wid:item.assignedTo, t:0.9};
+  const row=document.querySelector(`.forge-chip[data-item="${item.id}"]`);
+  if(row){
+    row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+    const tEl=row.querySelector(".fc-tally");
+    if(tEl){ const n=Object.values(item.tally).reduce((a,b)=>a+b,0);
+      tEl.textContent = `· ${n} use${n===1?"":"s"}`; }
+  }
+  return `<b>${item.genName}</b> ${txt}`;
 }
 
 /* ==================================================================
@@ -6452,7 +6894,8 @@ function useAbility(kind){
   const left=M.abilities[kind]||0; if(left<=0){ Audio2.sfx.bad(); return; }
   if(kind==="mend"){
     M.abilities.mend--; statGain({stamina:20,morale:12,safety:4});
-    caption("A field kit opens — bindings, warm broth, a steadier breath. The squad recovers."); 
+    const it=M.forge.itemFor && M.forge.itemFor.heal;
+    caption(flashItem(it,"mended","opens — bindings, warm broth, a steadier breath. The squad recovers."));
     pop(M.cv.width*0.30,M.laneY-70,"mended"); Audio2.sfx.good(); FX.buzz(16); refreshAbilityReady(); return;
   }
   // OUTSIDE a raid, Strike and Vanish still do real work on the road
@@ -6465,26 +6908,30 @@ function useAbility(kind){
       M.hazards.forEach(h=>{ if(h.hit||h.passed) return;
         const hx=screenX(h.p); if(hx>sx && hx<sx+M.cv.width*0.62){ h.hit=true; h.passed=true; } });
       bumpMomentum(0.35*M.forge.gainMult); statGain({morale:6,safety:4});
-      caption(`Forged steel goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road before the squad reaches ${cleared>1?"them":"it"}.`);
+      const it=(M.forge.itemFor && (M.forge.itemFor.cut||M.forge.itemFor.shoot));
+      caption(flashItem(it,"struck",`goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road before the squad reaches ${cleared>1?"them":"it"}.`));
       pop(sx+120, M.laneY-70, "road cleared!"); Audio2.sfx.great(); FX.buzz(24);
       M.sweepT=0.6; refreshAbilityReady(); return;
     }
     // vanish: a phase window — hazards pass through them, and loose parts are drawn in
     M.abilities.vanish--; M.phaseT=5.0;
     statGain({safety:6});
-    caption("A smoke shell blooms early — for a few strides nothing can touch them, and stray word-parts drift into reaching hands.");
+    const it=M.forge.itemFor && M.forge.itemFor.smoke;
+    caption(flashItem(it,"phased","blooms early — for a few strides nothing can touch them, and stray word-parts drift into reaching hands."));
     pop(sx, M.laneY-70, "phased!"); Audio2.sfx.clink(); FX.buzz(18);
     refreshAbilityReady(); return;
   }
   if(kind==="strike"){
     M.abilities.strike--; M.raid.resolved=true; M.defeated++;
     statGain({morale:12,safety:8});
-    caption(`Forged steel and bowwork cut the ambush down before it lands — no words needed today.`);
+    const it=(M.forge.itemFor && (M.forge.itemFor.cut||M.forge.itemFor.shoot));
+    caption(flashItem(it,"struck",`and bowwork cut the ambush down before it lands — no words needed today.`));
     pop(M.cv.width*0.62,M.laneY-60,"raiders down!"); Audio2.sfx.great(); FX.buzz(26);
   } else {
     M.abilities.vanish--; M.raid.resolved=true; M.avoided++;
     statGain({safety:10,morale:5});
-    caption(`A smoke shell blooms — the squad melts sideways into haze and the ambush closes on nothing.`);
+    const it=M.forge.itemFor && M.forge.itemFor.smoke;
+    caption(flashItem(it,"vanished","blooms — the squad melts sideways into haze and the ambush closes on nothing."));
     pop(M.cv.width*0.62,M.laneY-60,"vanished!"); Audio2.sfx.clink(); FX.buzz(18);
   }
   M.raiders=[]; refreshAbilityReady();
@@ -6618,7 +7065,10 @@ function renderForgeStrip(){
   const strip=$('#forge-strip'); if(!strip) return; strip.innerHTML="";
   (M.forge.chips||[]).forEach(c=>{
     const chip=el("div","forge-chip");
-    chip.innerHTML=`<span class="fc-ic">${c.ic}</span><span><b>${c.label}</b> &mdash; <span class="fc-desc">${c.desc}</span></span>`;
+    if(c.itemId) chip.dataset.item=c.itemId;
+    const item=c.itemId ? (M.f.forged||[]).find(it=>it.id===c.itemId) : null;
+    const n = item ? Object.values(item.tally||{}).reduce((a,b)=>a+b,0) : 0;
+    chip.innerHTML=`<span class="fc-ic">${c.ic}</span><span><b>${c.label}</b> &mdash; <span class="fc-desc">${c.desc}</span>${item?` <span class="fc-tally">${n?`· ${n} use${n===1?"":"s"}`:""}</span>`:""}</span>`;
     strip.appendChild(chip);
   });
 }
@@ -6698,6 +7148,7 @@ function tick(t){
     if(M.revealT>0) M.revealT=Math.max(0,M.revealT-dt);
     if(M.surgeT>0) M.surgeT=Math.max(0,M.surgeT-dt);
     if(M.comboBadT>0) M.comboBadT=Math.max(0,M.comboBadT-dt);
+    if(M.actFlash && M.actFlash.t>0) M.actFlash.t=Math.max(0,M.actFlash.t-dt);
     if(M.paceT>0){ M.paceT=Math.max(0,M.paceT-dt); if(M.paceT<=0) M.paceMult=1; }
     coolMomentum(dt);
     const weatherPenalty = (M.weather!=="clear") ? clamp(1-(M.weatherProt/140),0.4,1) : 1;
@@ -6756,7 +7207,10 @@ function tick(t){
           } else {
             const counter=hazardCounter(h.kind);
             if(counter && counter.negate){
-              caption(counter.txt); statGain({morale:2});
+              const creditKind = (h.kind==="roots"||h.kind==="branch") ? "cut" : "climb";
+              const it=M.forge.itemFor && M.forge.itemFor[creditKind];
+              caption(it?flashItem(it, creditKind==="cut"?"cleared":"steadied", counter.txt.replace(/^A forged edge |^Claws and sure feet |^Resin-waxed soles /,"")) : counter.txt);
+              statGain({morale:2});
               pop(sx,M.laneY-70,counter.pop||"countered!"); Audio2.sfx.clink(); FX.buzz(10);
             } else {
               const soft = M.stats.safety<15 ? 1.35 : 1;
@@ -7378,7 +7832,8 @@ function draw(t){
   M.caravan.forEach((c,i)=>{
     const wob=Math.sin(t*0.008*c.pace + c.phase);
     const low = M.stats.stamina<34;
-    drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4, c.color, wob, low, c.weapon, c.gearKind);
+    const lit = M.actFlash && M.actFlash.t>0 && (c.gear||[]).some(g=>g.id===M.actFlash.itemId);
+    drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4, c.color, wob, low, c.weapon, c.gearKind, lit?M.actFlash.t:0);
   });
   // crossing into a new band — a soft confirmation around the squad's actual height
   if(M.laneFlashT>0){
@@ -7654,7 +8109,7 @@ function drawRaider(ctx,x,y,t,phase){
   ctx.beginPath(); ctx.moveTo(8,-26); ctx.lineTo(14,-38); ctx.stroke();
   ctx.restore();
 }
-function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind){
+function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind,litT){
   ctx.save(); ctx.translate(x,y);
   // shadow
   ctx.fillStyle="rgba(26,22,19,0.16)"; ctx.beginPath(); ctx.ellipse(0,4,15,4,0,0,6.28); ctx.fill();
@@ -7677,13 +8132,19 @@ function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind){
   }
   // weapon carried at the side (canvas glyph)
   drawWeapon(ctx, weapon);
-  // forged gear worn at the hip (small distinct glyph so it reads as "their tool")
-  if(gearKind) drawGearGlyph(ctx, gearKind);
+  // forged gear worn at the hip (small distinct glyph so it reads as "their tool") —
+  // it flares bright the instant it actually does something, not just idly worn
+  if(gearKind) drawGearGlyph(ctx, gearKind, litT);
   ctx.restore();
 }
-function drawGearGlyph(ctx, kind){
+function drawGearGlyph(ctx, kind, litT){
   ctx.save(); ctx.translate(-10,-18);
   ctx.lineCap="round";
+  if(litT>0){
+    const a=clamp(litT/0.9,0,1);
+    ctx.save(); ctx.globalAlpha=a*0.85; ctx.fillStyle="#f3ecd8";
+    ctx.beginPath(); ctx.arc(0,0,7+(1-a)*7,0,6.28); ctx.fill(); ctx.restore();
+  }
   if(kind==="hook"){ ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,6); ctx.lineTo(0,-6);
     ctx.arc(2,-6,2,3.14,0,true); ctx.stroke(); }
   else if(kind==="smoke"){ ctx.fillStyle="#5f6f52"; ctx.beginPath(); ctx.roundRect?ctx.roundRect(-3,-2,6,7,2):ctx.rect(-3,-2,6,7); ctx.fill(); }
