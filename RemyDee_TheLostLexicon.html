@@ -595,6 +595,11 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .path-row .pr-sub{flex-basis:100%;font-size:.72rem;color:var(--ink-soft,#8a7a5f);line-height:1.35;}
 .path-grant{margin-top:8px;padding:6px 9px;border-radius:8px;font-size:.74rem;line-height:1.4;
   background:rgba(51,81,63,.1);border:1px solid rgba(51,81,63,.25);color:var(--jade-deep,#33513f);}
+.path-seed-row{margin-top:6px;padding-top:10px;border-top:1px dashed var(--rice-3);}
+.seed-input{font-family:var(--font-read);font-size:.8rem;padding:4px 8px;border-radius:8px;
+  border:1px solid var(--ink-line);background:var(--parch);color:var(--ink);width:110px;
+  text-transform:uppercase;letter-spacing:.04em;}
+.small-btn{padding:4px 10px !important;font-size:.72rem !important;min-width:0 !important;}
 /* ---- the unlock card on the result screen ---- */
 .unlock-card{padding:16px;margin-top:14px;text-align:left;border-color:var(--gold);
   background:linear-gradient(180deg,rgba(189,157,95,.14),rgba(243,236,216,.6));}
@@ -607,6 +612,8 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 /* ---- commission board ---- */
 .road-report{background:rgba(189,157,95,.12);border:1px dashed var(--gold);border-radius:10px;
   padding:8px 12px;margin-bottom:10px;font-size:.86rem;}
+.road-code .rc-code{font-family:monospace;font-weight:700;letter-spacing:.06em;background:rgba(0,0,0,.08);
+  padding:1px 6px;border-radius:5px;}
 .commission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
 .comm-card{position:relative;text-align:left;font:inherit;color:inherit;cursor:pointer;
   background:var(--parch,#f3ecd8);border:1.5px solid var(--rice-3,#d8cfb4);border-radius:12px;
@@ -1368,6 +1375,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
               <div class="path-spine" id="path-spine"></div>
               <div class="path-now" id="path-now"></div>
               <div class="path-rows" id="path-rows"></div>
+              <div class="path-row path-seed-row" id="path-seed-row"></div>
             </div>
             <div class="panel aside-card spotlight" data-spot>
               <h3>Remy&rsquo;s ledger</h3>
@@ -3498,6 +3506,27 @@ function markStudied(partId){
 }
 function affinity(){ return affinityLevel(studiedCount()); }
 
+/* ==================================================================
+   SEEDED CONTRACTS — a small, fast PRNG plus a shareable code so two
+   players (or the same player twice) can generate the identical road.
+   ================================================================== */
+function mulberry32(seed){
+  let a=seed>>>0;
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+function seedToCode(seed){ return (seed>>>0).toString(36).toUpperCase().padStart(7,'0'); }
+function codeToSeed(code){
+  const clean=String(code||"").trim().replace(/[^0-9A-Za-z]/g,"");
+  if(!clean) return null;
+  const n=parseInt(clean,36);
+  return Number.isFinite(n) ? (n>>>0) : null;
+}
+
 window.__RD_ENG = {
   Audio2, Save, S:()=>S, setS:(v)=>{S=v;}, newGame, freshMastery,
   applySettings, persist, go, refreshTopbars,
@@ -3508,6 +3537,7 @@ window.__RD_ENG = {
   partyFor, commitParty, benchCapacityFor,
   unlockedBps, unlockBp, bpUnlockedBy,
   studiedCount, markStudied, affinity,
+  mulberry32, seedToCode, codeToSeed,
   getFlow:()=>flow, setFlow:(f)=>{flow=f;}
 };
 })();
@@ -3885,6 +3915,28 @@ function renderPath(){
     row("Lexicon affinity", `${aff.name}`,
         nx ? `${studied} / ${nx.need} parts read — next: ${nx.name}` : (aff.grant||"every level earned"))+
     (aff.grant? `<div class="path-grant">✦ ${aff.grant}</div>` : "");
+  renderSeedRow();
+}
+/* SEEDED CONTRACTS — enter a shared code here and the NEXT road you prepare
+   (weather, hazard deck, event order, gate distractors) will match it exactly. */
+function renderSeedRow(){
+  const host=$('#path-seed-row'); if(!host) return;
+  const queued=S().pendingSeed;
+  host.innerHTML = `<span class="pr-k">Seeded road</span>
+    <span class="pr-v"><input type="text" id="path-seed-input" maxlength="8" placeholder="enter a code" class="seed-input" value="${queued!=null?E.seedToCode(queued):""}"/>
+    <button class="btn ghost small-btn" id="path-seed-btn" type="button">Set</button>
+    ${queued!=null?'<button class="btn ghost small-btn" id="path-seed-clear" type="button">Clear</button>':""}</span>
+    <span class="pr-sub">${queued!=null? `Code ${E.seedToCode(queued)} queued — your next road will match it exactly.` : "Leave blank for a random road, or enter a friend's code to walk the same one."}</span>`;
+  const btn=$('#path-seed-btn');
+  if(btn) btn.onclick=()=>{
+    const inp=$('#path-seed-input'); const raw=(inp&&inp.value)||"";
+    const seed=E.codeToSeed(raw);
+    if(seed==null){ toast("That doesn't look like a valid road code."); return; }
+    S().pendingSeed=seed; persist(); renderSeedRow();
+    toast(`Road code ${E.seedToCode(seed)} queued for your next expedition.`);
+  };
+  const clr=$('#path-seed-clear');
+  if(clr) clr.onclick=()=>{ S().pendingSeed=null; persist(); renderSeedRow(); toast("Seed cleared — the next road will be random."); };
 }
 /* ==================================================================
    THE CAMPAIGN MAP — a spot-to-spot trail through all eight chapters.
@@ -4811,9 +4863,13 @@ function openForge(){
   const maxItems = E.benchCapacityFor(f.chapter);
   f.forged = f.forged || [];
   depositHeirloom(f);
-  // the road ahead is scouted BEFORE forging — bench choices answer real intel
+  // the road ahead is scouted BEFORE forging — bench choices answer real intel.
+  // SEEDED CONTRACTS: a pending shared seed (typed in at the hub) makes this
+  // exact road — weather, hazard deck, event order, gate distractors — the
+  // same one anyone else playing that code will get.
   if(!f.roadPlan && window.__RD_MISSION && window.__RD_MISSION.buildRoadPlan){
-    f.roadPlan = window.__RD_MISSION.buildRoadPlan(f);
+    const s=S(); const seed=s.pendingSeed; s.pendingSeed=null;
+    f.roadPlan = window.__RD_MISSION.buildRoadPlan(f, seed);
   }
   W={ f, pool, slotIdx:0, maxItems,
       step:null, cur:null, timerId:null, over:false, temperUsed:false };
@@ -4947,6 +5003,13 @@ function openCommission(){
     const rep=el("div","road-report");
     rep.innerHTML=`<b>Scout's report:</b> `+plan.intel.join(" ");
     body.appendChild(rep);
+  }
+  // SEEDED CONTRACTS — this road's shareable code, so a fair comparison or a
+  // rematch is always one code away
+  if(plan && plan.code){
+    const codeRow=el("div","road-report road-code");
+    codeRow.innerHTML=`<b>Road code:</b> <span class="rc-code">${plan.code}</span> <span class="small muted">— anyone who enters this code gets this exact road</span>`;
+    body.appendChild(codeRow);
   }
 
   const recs=recommendedFor(f, W.pool);
@@ -6836,6 +6899,7 @@ function runMission(){
         hazardDeck:null, revealT:0,
         fork:null, slowT:0, banditT:0, paceMult:1, paceT:0,
         surgeHeld:false, surging:false, bandSeen:{0:false,1:false,2:false},
+        roadSeed:(f.roadPlan && f.roadPlan.seed!=null) ? f.roadPlan.seed : null, seedDraws:0,
         abilities:computeAbilities(f), abilities0:computeAbilities(f), raid:null, threat:0, laneFlashT:0,
         collected:{}, matsFound:[], reagentsFound:[], cachesMarked:0, inkFound:0,
         // ---- Word Road: momentum multiplier + live term builder ----
@@ -7152,34 +7216,47 @@ const EV_INTEL={
 };
 const EV_HINTS={ storm:["kit","rope"], cache:["blade"], slide:["blade","claws"],
   bandits:["bow","blade","smoke"], scholar:[], oasis:[], traveler:[] };
-function buildRoadPlan(f){
-  const enemy=!!(f.chapter && f.chapter.enemy);
-  const size=(f.members&&f.members.length)||2;
-  const flavor=shuffle(EV_FLAVOR.slice());
-  const n = 7 + (size>=3?1:0) + (Math.random()<0.5?1:0);   // 7–9 stops, varies per run
-  const types=["gate","gate","gate"];
-  if(enemy) types.push("bandits");
-  types.push("gate");
-  while(types.length<n) types.push(flavor.length?flavor.shift():pick(EV_FLAVOR));
-  shuffle(types);
-  const span0=0.10, span1=0.94, step=(span1-span0)/(Math.max(2,n)-1);
-  const evs=types.map((tp,i)=>({ at:+((span0+step*i)+(Math.random()-0.5)*step*0.4).toFixed(3), type:tp }));
-  evs.forEach(e=>{ e.at=clamp(e.at,0.08,0.95); });
-  // a raid belongs in the back half of the road
-  const bi=evs.findIndex(e=>e.type==="bandits");
-  if(bi>=0 && evs[bi].at<0.45){
-    const li=evs.length-2;
-    const t=evs[bi].type; evs[bi].type=evs[li].type; evs[li].type=t;
+/* SEEDED CONTRACTS. buildRoadPlan already generates the whole road
+   procedurally — feeding it a seed makes the generation deterministic, so a
+   shared code produces the same event order, weather beats, and gate/hazard
+   material for anyone who plays it. The seed only governs THIS function's
+   own random draws (swapped in and restored before returning), so it never
+   leaks into bench crafting or unrelated randomness. */
+function buildRoadPlan(f, seedIn){
+  const seed = (seedIn!=null) ? (seedIn>>>0) : (Math.random()*0xFFFFFFFF)>>>0;
+  const origRandom=Math.random;
+  Math.random = E.mulberry32(seed);
+  try{
+    const enemy=!!(f.chapter && f.chapter.enemy);
+    const size=(f.members&&f.members.length)||2;
+    const flavor=shuffle(EV_FLAVOR.slice());
+    const n = 7 + (size>=3?1:0) + (Math.random()<0.5?1:0);   // 7–9 stops, varies run to run
+    const types=["gate","gate","gate"];
+    if(enemy) types.push("bandits");
+    types.push("gate");
+    while(types.length<n) types.push(flavor.length?flavor.shift():pick(EV_FLAVOR));
+    shuffle(types);
+    const span0=0.10, span1=0.94, step=(span1-span0)/(Math.max(2,n)-1);
+    const evs=types.map((tp,i)=>({ at:+((span0+step*i)+(Math.random()-0.5)*step*0.4).toFixed(3), type:tp }));
+    evs.forEach(e=>{ e.at=clamp(e.at,0.08,0.95); });
+    // a raid belongs in the back half of the road
+    const bi=evs.findIndex(e=>e.type==="bandits");
+    if(bi>=0 && evs[bi].at<0.45){
+      const li=evs.length-2;
+      const t=evs[bi].type; evs[bi].type=evs[li].type; evs[li].type=t;
+    }
+    // scout intel: name up to two of the drawn flavor beats + gear hints for the bench
+    const intel=[], hints=new Set();
+    evs.forEach(e=>{
+      if(EV_INTEL[e.type] && intel.length<2 && e.type!=="oasis" && e.type!=="scholar" && !intel.includes(EV_INTEL[e.type]))
+        intel.push(EV_INTEL[e.type]);
+      (EV_HINTS[e.type]||[]).forEach(h=>hints.add(h));
+    });
+    if(enemy){ hints.add("smoke"); }
+    return { events:evs, intel, hints:[...hints], seed, code:E.seedToCode(seed) };
+  } finally {
+    Math.random = origRandom;
   }
-  // scout intel: name up to two of the drawn flavor beats + gear hints for the bench
-  const intel=[], hints=new Set();
-  evs.forEach(e=>{
-    if(EV_INTEL[e.type] && intel.length<2 && e.type!=="oasis" && e.type!=="scholar" && !intel.includes(EV_INTEL[e.type]))
-      intel.push(EV_INTEL[e.type]);
-    (EV_HINTS[e.type]||[]).forEach(h=>hints.add(h));
-  });
-  if(enemy){ hints.add("smoke"); }
-  return { events:evs, intel, hints:[...hints] };
 }
 function seedParticles(weather){
   M.particles=[];
@@ -7259,6 +7336,7 @@ function spawnAheadP(extra){ return M.progress + (M.cv.width*0.78 + (extra||0))/
 
 /* ---------- spawning ---------- */
 function spawnPickup(forceLane, forceType, extra){
+  withRoadSeed(()=>{
   const lane=forceLane!=null?forceLane:(Math.floor(Math.random()*3));
   let type=forceType;
   if(!type){
@@ -7275,21 +7353,34 @@ function spawnPickup(forceLane, forceType, extra){
   const reagentId = (type==="reagent") ? pick(Object.keys(window.__RD_REAGENTS||{ink:1})) : null;
   const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.055, ROAD_TOP+0.01, ROAD_BOT-0.01);
   M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, y, type, partId, reagentId, hover:0, got:false, read:false});
+  });
 }
 /* weighted, weather-aware hazard deck — refilled when empty, rebuilt when weather turns */
+/* run one draw of `fn` through a seed-derived, isolated RNG (swapped in and
+   restored immediately) when this road has a seed — used for the deck and
+   spawn tables so a Seeded Contract reproduces them exactly, without ever
+   leaving Math.random globally patched. */
+function withRoadSeed(fn){
+  if(M.roadSeed==null) return fn();
+  M.seedDraws=(M.seedDraws||0)+1;
+  const orig=Math.random;
+  Math.random = E.mulberry32(((M.roadSeed>>>0) + M.seedDraws*2654435761)>>>0);
+  try{ return fn(); } finally { Math.random=orig; }
+}
 function buildHazardDeck(){
   const w={rock:2, roots:2, rapids:2, scree:1, mud:1, wasps:1, branch:1};
   if(M.enemy) w.patrol=2;
   if(M.weather==="rain"||M.weather==="snow"){ w.mud+=2; w.rapids+=1; w.wasps=0; }
   const deck=[];
   Object.keys(w).forEach(k=>{ for(let i=0;i<w[k];i++) deck.push(k); });
-  return shuffle(deck);
+  return withRoadSeed(()=>shuffle(deck));
 }
 function spawnHazard(){
   if(!M.hazardDeck || !M.hazardDeck.length) M.hazardDeck=buildHazardDeck();
   const k=M.hazardDeck.pop();
   const def=HAZARDS[k]; if(!def) return;
   if(def.needEnemy && !M.enemy) return;
+  withRoadSeed(()=>{
   const lane=def.lanes[Math.floor(Math.random()*def.lanes.length)];
   const p=spawnAheadP(Math.random()*120);
   // NOTHING blocks the approach to a rune gate — a gate asks the player to think,
@@ -7297,6 +7388,7 @@ function spawnHazard(){
   if(inGateCorridor(p)) return;
   const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.05, ROAD_TOP+0.02, ROAD_BOT-0.02);
   M.hazards.push({p, lane, y, kind:k, hit:false, passed:false});
+  });
 }
 /* what the bench answers on the road: gear/perks counter specific hazards */
 function hazardCounter(kind){
@@ -7732,16 +7824,22 @@ function openGate(){
   // that carries a term's actual meaning. Every gate here asks you to prove you
   // still know one, under real pressure (see updateBossPhase).
   const forceKind = (M.boss && M.boss.phase===1) ? "root" : null;
+  // targetId stays adaptive (weighted to THIS player's weak/unseen parts) even
+  // on a seeded road; only the distractor set and lane placement — the part
+  // of a gate that's pure structure, not personalization — is seed-deterministic
   const targetId=pickRoadPart(forceKind);
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
-  const distract=shuffle(pool).slice(0,2);
-  const rest=shuffle(distract);
-  const laneIds=[null,null,null];
-  const ansLane=pick(reach);
-  laneIds[ansLane]=targetId;
-  [0,1,2].forEach(l=>{ if(laneIds[l]==null) laneIds[l]=rest.length?rest.shift():pick(pool); });
-  const askMeaning=Math.random()<0.6;    // 60%: prompt a meaning, lanes show parts
+  const gateRoll = withRoadSeed(()=>{
+    const distract=shuffle(pool).slice(0,2);
+    const rest=shuffle(distract);
+    const laneIds=[null,null,null];
+    const ansLane=pick(reach);
+    laneIds[ansLane]=targetId;
+    [0,1,2].forEach(l=>{ if(laneIds[l]==null) laneIds[l]=rest.length?rest.shift():pick(pool); });
+    return { laneIds, ansLane, askMeaning: Math.random()<0.6 };
+  });
+  const {laneIds, ansLane, askMeaning}=gateRoll;    // 60%: prompt a meaning, lanes show parts
   const kindWord=kind==="prefix"?"prefix":kind==="suffix"?"suffix":"root";
   M.gate={
     p: M.progress+GATE_LEAD, laneIds, ansLane, targetId, kind, conceptId:targetId,
