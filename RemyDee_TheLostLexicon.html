@@ -1075,6 +1075,19 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .consequences{text-align:left;margin:16px 0;}
 .consq{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--rice-3);}
 .consq .ic{flex:0 0 auto;font-size:1.1rem;}
+/* the gear debrief — closes the loop from craft decision to road consequence */
+.gear-debrief{text-align:left;}
+.debrief-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--rice-3);}
+.debrief-row:last-child{border-bottom:none;}
+.debrief-row .db-ico{flex:0 0 30px;width:30px;height:30px;margin-top:2px;}
+.debrief-row .db-ico svg{width:100%;height:100%;}
+.debrief-row .db-name{font-weight:700;color:var(--ink);}
+.debrief-row .db-tier{font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:2px 7px;border-radius:999px;margin-left:6px;background:var(--rice-3);color:var(--ink);}
+.debrief-row .db-tier.fine{background:linear-gradient(180deg,var(--jade),var(--jade-deep));color:var(--rice);}
+.debrief-row .db-tier.flawed{background:linear-gradient(180deg,var(--gold,#d8b45f),var(--gold-deep,#8a6a2b));color:var(--ink);}
+.debrief-row .db-uses{font-size:.78rem;color:var(--jade-deep);margin-top:3px;}
+.debrief-row .db-verdict{font-size:.74rem;color:var(--ink-3,#7a6f5c);margin-top:2px;font-style:italic;}
 #page-reward{overflow:hidden;}
 .page-unfold{transform-origin:top center;}
 
@@ -1641,6 +1654,10 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           <div class="panel" style="padding:16px;text-align:left;">
             <span class="eyebrow">What your work set in motion</span>
             <div class="consequences" id="consequences"></div>
+          </div>
+          <div class="panel" id="gear-debrief-panel" style="padding:16px;text-align:left;display:none;">
+            <span class="eyebrow">What your bench did</span>
+            <div class="gear-debrief" id="gear-debrief"></div>
           </div>
           <div class="panel unlock-card" id="unlock-card" style="display:none;"></div>
           <div class="panel" id="page-reward" style="padding:16px;margin-top:14px;display:none;">
@@ -8443,6 +8460,36 @@ function finalizeArrival(){
 }
 
 /* ================= RESULT ================= */
+/* ================= THE GEAR DEBRIEF =================
+   Closes the loop from craft decision → road consequence → next bench
+   decision: an itemized "what your bench did" list, one row per forged
+   item, its quality, its Maker's Mark, how many times it actually did
+   something, and whether it was worth its embers (DEPTH_PLAN §4.5). */
+function renderGearDebrief(f){
+  const panel=$('#gear-debrief-panel'); const host=$('#gear-debrief');
+  if(!panel || !host) return;
+  const items=(f&&f.forged)||[];
+  if(!items.length){ panel.style.display="none"; return; }
+  panel.style.display="";
+  host.innerHTML="";
+  const gearIcon = (k)=> (window.__RD_PREP && window.__RD_PREP._gearIcon) ? window.__RD_PREP._gearIcon(k) : "";
+  items.forEach(it=>{
+    const tally=it.tally||{};
+    const uses=Object.values(tally).reduce((a,b)=>a+b,0);
+    const verbs=Object.keys(tally);
+    const verdict = uses>=3 ? "earned its ember many times over" : uses>=1 ? "earned its ember" : "never came into play this road";
+    const carrier = it.assignedTo && TRAVELERS[it.assignedTo] ? TRAVELERS[it.assignedTo].name : (it.assignedTo||"unassigned");
+    const row=el("div","debrief-row");
+    row.innerHTML=`<div class="db-ico">${gearIcon(it.icon)}</div>
+      <div class="db-body">
+        <div class="db-name">${it.genName||it.name} <span class="db-tier ${it.qtier}">${it.qtier}</span></div>
+        <div class="small muted">carried by ${carrier}${it.makerMark?` &middot; stamped ${it.makerMark.text}${it.makerMark.matched?" (a true match)":""}`:""}</div>
+        <div class="db-uses">${uses? verbs.map(v=>`${v} &times;${tally[v]}`).join(" &middot; ") : "no activations recorded"}</div>
+        <div class="db-verdict">${verdict}</div>
+      </div>`;
+    host.appendChild(row);
+  });
+}
 function showResult(){
   const f=E.getFlow(); const st=f.stats; const chapter=f.chapter;
   const chFrac = M ? (M.challengesDone? M.challengesWon/M.challengesDone : 1) : 1;
@@ -8493,6 +8540,7 @@ function showResult(){
     });
     FX.stagger($$('#consequences .consq'),{stagger:120,y:10});
     renderHeirloomPick(f, cons);
+    renderGearDebrief(f);
     // an excellent expedition teaches the bench something lasting
     if(grade==="excellent" && window.__RD_PREP && window.__RD_PREP.unlockTech)
       window.__RD_PREP.unlockTech("twinstoke");

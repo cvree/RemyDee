@@ -104,5 +104,18 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(fineGain > flawedGain, `quality visibility: a fine kit heals meaningfully more than a flawed one (fine +${fineGain} vs flawed +${flawedGain})`);
   assert(flawedGain > 0, 'quality visibility: a flawed item still does real work — it is weaker, not useless');
 
+  /* ================= THE GEAR DEBRIEF ================= */
+  // the healItem above was mended twice (flawed then fine) — drive to arrival
+  // and confirm the result screen itemizes exactly what it did
+  const doc2 = window.document;
+  MI._state().evIdx = MI._state().events.length;
+  MI._state().gate = null; MI._state().paused = false; MI._state().questionOpen = false;
+  MI._state().progress = 0.995;
+  await until(() => doc2.querySelector('#s-result').classList.contains('active'), 15000, 'result screen reached');
+  const debrief = doc2.getElementById('gear-debrief').innerHTML;
+  assert(debrief.includes(healItem.genName || healItem.name), 'gear debrief: the exact forged item appears by name');
+  assert(/mended\s*&times;\s*2|mended\D*2/.test(debrief), `gear debrief: its real usage tally is itemized (${debrief.match(/mended[^<]*/) || 'not found'})`);
+  assert(debrief.includes('earned its ember'), 'gear debrief: a used item is told it earned its keep');
+
   summary(errors);
 })();
