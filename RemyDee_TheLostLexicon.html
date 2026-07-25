@@ -902,6 +902,8 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .combo-tok.k-suffix{background:linear-gradient(180deg,#c39a3f,#8a6a2b);}
 .combo-join{color:rgba(243,236,216,.55);font-weight:700;font-size:.8rem;}
 .combo-hint{font-size:.66rem;color:rgba(243,236,216,.6);font-style:italic;letter-spacing:.02em;}
+.combo-pending{flex-basis:100%;text-align:center;font-size:.66rem;color:var(--gold-soft,#d8b45f);
+  letter-spacing:.02em;margin-top:1px;}
 /* HOVER TO STUDY — the definition card that follows the cursor on the road */
 .study-card{position:absolute;z-index:8;pointer-events:none;display:none;
   transform:translate(-50%,-118%);min-width:120px;max-width:230px;padding:8px 11px 10px;
@@ -7384,6 +7386,17 @@ function updateMomentumMeter(){
     if(lab.textContent!==w) lab.textContent=w; }
 }
 /* rebuild the term-in-progress tokens — only when the combo actually changes */
+/* CHAIN RISK, made visible. A partial chain is already a real stake — a hazard
+   hit clears it (knockMomentum) — but the player never saw what that was worth
+   until now. This estimates what one more (a suffix) would bank, so gathering
+   feels like an active gamble instead of an invisible background tally. */
+function comboPendingValue(){
+  if(!M || !M.combo || !M.combo.length) return null;
+  const projected=M.combo.length+1;
+  const ink=Math.round((2+projected)*M.momentum*M.forge.valueMult);
+  const gain=(0.5+projected*0.26)*M.forge.gainMult;
+  return { ink, momentum:(M.momentum+gain).toFixed(1), parts:M.combo.length };
+}
 function updateComboHud(){
   const cb=$('#combo-build'); if(!cb) return;
   cb.innerHTML="";
@@ -7392,6 +7405,9 @@ function updateComboHud(){
     const p=PARTS[id]; cb.appendChild(el("span","combo-tok k-"+p.kind, p.text)); });
   if(PARTS[M.combo[M.combo.length-1]].kind!=="suffix"){
     cb.appendChild(el("span","combo-join","+")); cb.appendChild(el("span","combo-hint","suffix?")); }
+  const pv=comboPendingValue();
+  if(pv){ cb.appendChild(el("span","combo-pending",
+    `bank ≈ ${pv.ink} ink · ×${pv.momentum} — a hit now loses it`)); }
 }
 function updateWordHud(){ updateMomentumMeter(); updateComboHud(); }
 function renderForgeStrip(){

@@ -104,6 +104,23 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(fineGain > flawedGain, `quality visibility: a fine kit heals meaningfully more than a flawed one (fine +${fineGain} vs flawed +${flawedGain})`);
   assert(flawedGain > 0, 'quality visibility: a flawed item still does real work — it is weaker, not useless');
 
+  /* ================= CHAIN RISK, MADE VISIBLE ================= */
+  const partsD = D.PARTS;
+  const rootId = Object.keys(partsD).find(id => partsD[id].kind === 'root');
+  const prefixId = Object.keys(partsD).find(id => partsD[id].kind === 'prefix');
+  MI._state().combo = [];
+  const doc3 = window.document;
+  assert(!/bank ≈/.test(doc3.getElementById('combo-build').innerHTML), 'chain risk: nothing pending with an empty chain');
+  MI._pushCombo(rootId);
+  assert(/bank ≈/.test(doc3.getElementById('combo-build').innerHTML), 'chain risk: a partial chain shows what completing it would bank');
+
+  // a mismatched next part breaks the chain the same way a hazard hit does
+  // (pushCombo's "broken" path) — the pending value must go with it
+  MI._pushCombo(prefixId);
+  MI._pushCombo(prefixId); // two prefixes in a row cannot extend a chain — forces the broken/reset path
+  assert(!/bank ≈/.test(doc3.getElementById('combo-build').innerHTML) || MI._state().combo.length <= 1,
+    'chain risk: breaking the chain clears (or restarts fresh) the pending value shown for it');
+
   /* ================= THE GEAR DEBRIEF ================= */
   // the healItem above was mended twice (flawed then fine) — drive to arrival
   // and confirm the result screen itemizes exactly what it did
