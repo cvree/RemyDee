@@ -218,11 +218,17 @@ function setupCanvas(window, P, type) {
     P._forceDecode(true);
     P._pickMaterial(0);
     P._finishBuild(0.95);
+    // this blade's dominant axis is power (heavy tempered edge material) — "hyper-"
+    // ("above, excessive") is a genuine semantic match for a hard-hitting blade
+    await until(() => P._pickMark('hyper'), 8000, 'maker\'s mark offered and a matching part stamped');
     await until(() => flow.forged.length === 1, 8000, 'blade committed');
     const item = flow.forged[0];
     assert(typeof item.genName === 'string' && item.genName.length > 0, 'item identity: a forged item gets a generated name');
     assert(item.tally && typeof item.tally === 'object', 'item identity: every forged item starts with a usage tally');
     assert('wear' in item, 'item identity: every forged item tracks wear');
+    assert(item.makerMark && item.makerMark.partId === 'hyper' && item.makerMark.matched === true,
+      'maker\'s marks: a semantically matching part is recorded as a true match');
+    assert(item.traits.power > 4, `maker's marks: a true match grants a real trait bonus on top of the craft (power=${item.traits.power})`);
 
     // now put it to work on the road and confirm the SPECIFIC item is credited
     const MI = window.__RD_MISSION;

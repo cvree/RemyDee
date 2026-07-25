@@ -740,6 +740,21 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .mat-card h4{font-size:1.02rem;margin-bottom:4px;color:var(--ink);}
 .mat-card .mc-traits{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:8px;}
 .mat-card .mc-lockmsg{font-size:.66rem;color:var(--cinnabar);font-weight:700;margin-top:6px;}
+
+/* maker's marks — a recognition check disguised as a flavor choice */
+.maker-mark{max-width:560px;margin:14px auto 0;text-align:center;}
+.maker-mark h4{margin-bottom:4px;color:var(--gold-soft);}
+.mm-opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;}
+.mm-opt{padding:8px 12px;border-radius:10px;background:var(--parch);border:2px solid transparent;
+  cursor:pointer;text-align:left;min-width:96px;transition:transform .12s var(--ease),box-shadow .12s,border-color .2s;
+  box-shadow:0 3px 10px var(--shadow);}
+.mm-opt b{display:block;font-size:.9rem;color:var(--ink);}
+.mm-opt span{display:block;font-size:.66rem;color:var(--jade-deep);margin-top:2px;}
+.mm-opt:hover{transform:translateY(-2px);}
+.mm-opt.right{background:linear-gradient(180deg,var(--jade),var(--jade-deep));border-color:var(--jade-deep);}
+.mm-opt.right b,.mm-opt.right span{color:var(--rice);}
+.mm-opt.dim{opacity:.55;}
+.mm-opt:disabled{cursor:not-allowed;}
 .trait-chip{font-size:.64rem;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.02em;}
 .trait-chip.good{background:rgba(79,114,97,.18);color:var(--jade-deep);}
 .trait-chip.cost{background:rgba(181,50,43,.14);color:var(--cinnabar-deep);}
@@ -5880,13 +5895,78 @@ function stepTest(){
         toast("Back into the coals — steady hands this time.");
         stepBuild(); };
       const keep=el("button","btn ghost"); keep.textContent = qtier==="ruined" ? "Sweep it up →" : "Ship it flawed →";
-      keep.onclick=()=>{ finishTest(qtier, verdict, stage); row.remove(); };
+      keep.onclick=()=>{ row.remove(); offerMakerMark(qtier, verdict, stage); };
       row.appendChild(again); row.appendChild(keep);
       stage.appendChild(row);
       return;
     }
-    finishTest(qtier, verdict, stage);
+    offerMakerMark(qtier, verdict, stage);
   });
+}
+/* ==================================================================
+   MAKER'S MARKS — a recognition check disguised as a flavor choice.
+   Before the piece ships, the player stamps one word-part into it. A part
+   whose meaning genuinely matches what the item does (a cutting suffix on
+   a blade, a speed prefix on light gear) grants a real bonus; a mismatch
+   stays purely cosmetic. Reuses the existing PARTS data — no new content.
+   ================================================================== */
+const AXIS_PARTS = {
+  power:  ["hyper","poly","megaly","rrhage"],
+  speed:  ["tachy"],
+  stealth:["hypo","dys","sub"],
+  reach:  ["ectasis","megaly","hemi"],
+  control:["scopy","logy","stasis"],
+  protect:["peri","anti","endo","brady"],
+  recover:["poiesis","stasis","hypo"]
+};
+function dominantAxis(traits){
+  let best=null, bv=0;
+  AXES.forEach(a=>{ const v=(traits||{})[a]||0; if(v>bv){ bv=v; best=a; } });
+  return best;
+}
+function offerMakerMark(qtier, verdict, stage){
+  if(qtier==="ruined"){ finishTest(qtier, verdict, stage); return; }
+  const axis=dominantAxis(W.cur.scaledTraits||W.cur.traits||{});
+  const goodIds=(axis && AXIS_PARTS[axis])||[];
+  const pool=new Set();
+  goodIds.forEach(id=>{ if(PARTS[id]) pool.add(id); });
+  shuffle(seenParts().slice()).slice(0,6).forEach(id=>pool.add(id));
+  if(pool.size<4) Object.keys(PARTS).forEach(id=>{ if(pool.size<5) pool.add(id); });
+  const opts=shuffle([...pool]).slice(0,5);
+  const panel=el("div","maker-mark");
+  const itemLabel=(W.cur.variant||W.cur.bp).name.toLowerCase();
+  panel.innerHTML=`<h4>Stamp a maker's mark (optional)</h4>
+    <div class="small muted">Choose a word-part whose meaning matches what this ${itemLabel} does. A true match grants a real bonus; a mismatch stays decoration.</div>`;
+  const row=el("div","mm-opts");
+  let picked=false;
+  opts.forEach(id=>{
+    const p=PARTS[id]; if(!p) return;
+    const b=el("button","mm-opt"); b.type="button"; b.dataset.part=id; b.innerHTML=`<b>${p.text}</b><span>${p.mean}</span>`;
+    b.onclick=()=>{
+      if(picked) return; picked=true;
+      $$(".mm-opt",row).forEach(x=>x.disabled=true);
+      const matched=goodIds.includes(id);
+      W.cur.makerMark={partId:id, matched, text:p.text, mean:p.mean};
+      if(matched){
+        W.cur.scaledTraits=W.cur.scaledTraits||{};
+        W.cur.scaledTraits[axis]=(W.cur.scaledTraits[axis]||0)+1;
+        b.classList.add("right");
+        toast(`${p.text} matches — the mark takes, and the piece is stronger for it.`);
+        Audio2.sfx.great();
+      } else {
+        b.classList.add("dim");
+        toast(`${p.text} means "${p.mean}" — a fine mark, but it doesn't match what this piece does.`);
+        Audio2.sfx.tick&&Audio2.sfx.tick();
+      }
+      setTimeout(()=>{ panel.remove(); finishTest(qtier, verdict, stage); }, 650);
+    };
+    row.appendChild(b);
+  });
+  panel.appendChild(row);
+  const skip=el("button","btn ghost"); skip.type="button"; skip.textContent="Leave it unmarked →";
+  skip.onclick=()=>{ if(picked) return; picked=true; panel.remove(); finishTest(qtier, verdict, stage); };
+  panel.appendChild(skip);
+  stage.appendChild(panel);
 }
 function finishTest(qtier, verdict, stage){
   // A RUINED piece never reaches the tray — the ember is spent, the bench is empty.
@@ -6276,7 +6356,9 @@ window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, has
   _gearIcon:(k)=>GEAR_ICON[k]||"",
   _reagents:()=>REAGENTS,
   _heat:()=>craftHeat,
-  _heatTick:(active,ms)=>{ if(!craftHeat) return; craftHeatLastT = performance.now()-(ms||16); heatTick(active); } };
+  _heatTick:(active,ms)=>{ if(!craftHeat) return; craftHeatLastT = performance.now()-(ms||16); heatTick(active); },
+  _skipMark:()=>{ const skip=document.querySelector('.maker-mark .btn.ghost'); if(skip){ skip.click(); return true; } return false; },
+  _pickMark:(partId)=>{ const btn=$$('.mm-opt').find(b=>b.dataset.part===partId); if(btn){ btn.click(); return true; } return false; } };
 window.__RD_PLAN = { openPlan: openAssign };  // legacy alias — plan step folded into assign
 })();
 </script>
