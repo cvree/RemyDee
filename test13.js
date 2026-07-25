@@ -81,5 +81,28 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(MI._surging() === false, 'pace: surge will not engage with the stamina tank near empty');
   MI._setSurge(false);
 
+  /* ================= QUALITY YOU CAN SEE ================= */
+  // add a healing item so Mend has something to be credited to, then compare
+  // its real effect at flawed vs fine quality — the tier must change the
+  // OUTCOME, not just a label
+  const healItem = mk('kit', 'Field kit', ['heal'], { recover: 2 }, 'flawed');
+  flow.forged.push(healItem);
+  MI._state().forge.itemFor.heal = healItem;
+  MI._state().abilities.mend = 5;
+  MI._state().stats.stamina = 40;
+  healItem.qtier = 'flawed';
+  MI._use('mend');
+  const staminaAfterFlawed = MI._state().stats.stamina;
+  const flawedGain = staminaAfterFlawed - 40;
+
+  MI._state().stats.stamina = 40;
+  healItem.qtier = 'fine';
+  MI._use('mend');
+  const staminaAfterFine = MI._state().stats.stamina;
+  const fineGain = staminaAfterFine - 40;
+
+  assert(fineGain > flawedGain, `quality visibility: a fine kit heals meaningfully more than a flawed one (fine +${fineGain} vs flawed +${flawedGain})`);
+  assert(flawedGain > 0, 'quality visibility: a flawed item still does real work — it is weaker, not useless');
+
   summary(errors);
 })();

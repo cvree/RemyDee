@@ -6604,7 +6604,7 @@ function computeForgePassives(f){
 function flashItem(item, verb, txt){
   if(!item) return txt;
   item.tally=item.tally||{}; item.tally[verb]=(item.tally[verb]||0)+1;
-  M.actFlash={itemId:item.id, wid:item.assignedTo, t:0.9};
+  M.actFlash={itemId:item.id, wid:item.assignedTo, t:item.qtier==="fine"?1.15:0.9, tier:item.qtier};
   const row=document.querySelector(`.forge-chip[data-item="${item.id}"]`);
   if(row){
     row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
@@ -7035,49 +7035,66 @@ function hazardsAhead(){
   return M.hazards.filter(h=>{ if(h.hit||h.passed) return false;
     const hx=screenX(h.p); return hx>sx && hx<sx+M.cv.width*0.62; }).length;
 }
+/* QUALITY YOU CAN SEE. The same ability does visibly less with a flawed tool
+   and visibly more with a fine one — the ruined/flawed/ok/fine ladder finally
+   pays off in the moment, not just as a number on a card (DEPTH_PLAN §4.4). */
+function tierMult(item){ if(!item) return 1; return item.qtier==="fine"?1.25 : item.qtier==="flawed"?0.6 : 1; }
+function tierNote(item){ if(!item) return ""; if(item.qtier==="fine") return " — a clean, decisive strike of fine work."; if(item.qtier==="flawed") return ", though the flaw in it shows — it catches, and does less than it should."; return ""; }
 function useAbility(kind){
   if(!M||M.done) return;
   const left=M.abilities[kind]||0; if(left<=0){ Audio2.sfx.bad(); return; }
   if(kind==="mend"){
-    M.abilities.mend--; statGain({stamina:20,morale:12,safety:4});
+    M.abilities.mend--;
     const it=M.forge.itemFor && M.forge.itemFor.heal;
-    caption(flashItem(it,"mended","opens — bindings, warm broth, a steadier breath. The squad recovers."));
-    pop(M.cv.width*0.30,M.laneY-70,"mended"); Audio2.sfx.good(); FX.buzz(16); refreshAbilityReady(); return;
+    const tm=tierMult(it);
+    statGain({stamina:Math.round(20*tm),morale:Math.round(12*tm),safety:Math.round(4*tm)});
+    caption(flashItem(it,"mended",`opens — bindings, warm broth, a steadier breath. The squad recovers${tierNote(it)}`));
+    pop(M.cv.width*0.30,M.laneY-70,tm>1?"mended well":"mended"); (tm>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(tm>1?22:16); refreshAbilityReady(); return;
   }
   // OUTSIDE a raid, Strike and Vanish still do real work on the road
   if(!M.raid || M.raid.resolved){
     const sx=M.cv.width*0.30;
     if(kind==="strike"){
-      const cleared=hazardsAhead();
-      if(!cleared){ caption("Nothing on the road worth drawing steel for — save the charge."); Audio2.sfx.bad(); return; }
-      M.abilities.strike--;
-      M.hazards.forEach(h=>{ if(h.hit||h.passed) return;
-        const hx=screenX(h.p); if(hx>sx && hx<sx+M.cv.width*0.62){ h.hit=true; h.passed=true; } });
-      bumpMomentum(0.35*M.forge.gainMult); statGain({morale:6,safety:4});
       const it=(M.forge.itemFor && (M.forge.itemFor.cut||M.forge.itemFor.shoot));
-      caption(flashItem(it,"struck",`goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road before the squad reaches ${cleared>1?"them":"it"}.`));
-      pop(sx+120, M.laneY-70, "road cleared!"); Audio2.sfx.great(); FX.buzz(24);
+      const tm=tierMult(it);
+      // a flawed edge doesn't reliably clear the whole corridor — it can miss the back of the pack
+      const corridor=M.hazards.filter(h=>{ if(h.hit||h.passed) return false;
+        const hx=screenX(h.p); return hx>sx && hx<sx+M.cv.width*0.62; });
+      if(!corridor.length){ caption("Nothing on the road worth drawing steel for — save the charge."); Audio2.sfx.bad(); return; }
+      M.abilities.strike--;
+      const clearFrac = tm<1 ? 0.6 : 1;
+      const toClear = tm<1 ? corridor.slice(0, Math.max(1,Math.round(corridor.length*clearFrac))) : corridor;
+      toClear.forEach(h=>{ h.hit=true; h.passed=true; });
+      bumpMomentum(0.35*M.forge.gainMult*tm); statGain({morale:Math.round(6*tm),safety:Math.round(4*tm)});
+      const cleared=toClear.length;
+      caption(flashItem(it,"struck",`goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road${cleared<corridor.length?", though one further back slips through":""}${tierNote(it)}`));
+      pop(sx+120, M.laneY-70, cleared<corridor.length?"road half-cleared":"road cleared!"); (tm>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(tm>1?28:20);
       M.sweepT=0.6; refreshAbilityReady(); return;
     }
-    // vanish: a phase window — hazards pass through them, and loose parts are drawn in
-    M.abilities.vanish--; M.phaseT=5.0;
-    statGain({safety:6});
+    // vanish: a phase window — hazards pass through them, and loose parts are drawn in.
+    // a flawed shell thins early: the window is real, but shorter.
+    M.abilities.vanish--;
     const it=M.forge.itemFor && M.forge.itemFor.smoke;
-    caption(flashItem(it,"phased","blooms early — for a few strides nothing can touch them, and stray word-parts drift into reaching hands."));
+    const tm=tierMult(it);
+    M.phaseT=clamp(5.0*tm,2.0,6.5);
+    statGain({safety:Math.round(6*tm)});
+    caption(flashItem(it,"phased",`blooms early — for a few strides nothing can touch them, and stray word-parts drift into reaching hands${tierNote(it)}`));
     pop(sx, M.laneY-70, "phased!"); Audio2.sfx.clink(); FX.buzz(18);
     refreshAbilityReady(); return;
   }
   if(kind==="strike"){
     M.abilities.strike--; M.raid.resolved=true; M.defeated++;
-    statGain({morale:12,safety:8});
     const it=(M.forge.itemFor && (M.forge.itemFor.cut||M.forge.itemFor.shoot));
-    caption(flashItem(it,"struck",`and bowwork cut the ambush down before it lands — no words needed today.`));
+    const tm=tierMult(it);
+    statGain({morale:Math.round(12*tm),safety:Math.round(8*tm)});
+    caption(flashItem(it,"struck",`and bowwork cut the ambush down before it lands — no words needed today${tierNote(it)}`));
     pop(M.cv.width*0.62,M.laneY-60,"raiders down!"); Audio2.sfx.great(); FX.buzz(26);
   } else {
     M.abilities.vanish--; M.raid.resolved=true; M.avoided++;
-    statGain({safety:10,morale:5});
     const it=M.forge.itemFor && M.forge.itemFor.smoke;
-    caption(flashItem(it,"vanished","blooms — the squad melts sideways into haze and the ambush closes on nothing."));
+    const tm=tierMult(it);
+    statGain({safety:Math.round(10*tm),morale:Math.round(5*tm)});
+    caption(flashItem(it,"vanished",`blooms — the squad melts sideways into haze and the ambush closes on nothing${tierNote(it)}`));
     pop(M.cv.width*0.62,M.laneY-60,"vanished!"); Audio2.sfx.clink(); FX.buzz(18);
   }
   M.raiders=[]; refreshAbilityReady();
@@ -8031,7 +8048,7 @@ function draw(t){
     const wob=Math.sin(t*0.008*c.pace + c.phase);
     const low = M.stats.stamina<34;
     const lit = M.actFlash && M.actFlash.t>0 && (c.gear||[]).some(g=>g.id===M.actFlash.itemId);
-    drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4, c.color, wob, low, c.weapon, c.gearKind, lit?M.actFlash.t:0);
+    drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4, c.color, wob, low, c.weapon, c.gearKind, lit?M.actFlash.t:0, lit?M.actFlash.tier:null);
   });
   // crossing into a new band — a soft confirmation around the squad's actual height
   if(M.laneFlashT>0){
@@ -8307,7 +8324,7 @@ function drawRaider(ctx,x,y,t,phase){
   ctx.beginPath(); ctx.moveTo(8,-26); ctx.lineTo(14,-38); ctx.stroke();
   ctx.restore();
 }
-function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind,litT){
+function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind,litT,litTier){
   ctx.save(); ctx.translate(x,y);
   // shadow
   ctx.fillStyle="rgba(26,22,19,0.16)"; ctx.beginPath(); ctx.ellipse(0,4,15,4,0,0,6.28); ctx.fill();
@@ -8331,17 +8348,32 @@ function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind,litT){
   // weapon carried at the side (canvas glyph)
   drawWeapon(ctx, weapon);
   // forged gear worn at the hip (small distinct glyph so it reads as "their tool") —
-  // it flares bright the instant it actually does something, not just idly worn
-  if(gearKind) drawGearGlyph(ctx, gearKind, litT);
+  // it flares bright the instant it actually does something, not just idly worn.
+  // QUALITY YOU CAN SEE: fine work glows clean and steady; flawed work flickers.
+  if(gearKind) drawGearGlyph(ctx, gearKind, litT, litTier);
   ctx.restore();
 }
-function drawGearGlyph(ctx, kind, litT){
+function drawGearGlyph(ctx, kind, litT, litTier){
   ctx.save(); ctx.translate(-10,-18);
   ctx.lineCap="round";
   if(litT>0){
-    const a=clamp(litT/0.9,0,1);
-    ctx.save(); ctx.globalAlpha=a*0.85; ctx.fillStyle="#f3ecd8";
-    ctx.beginPath(); ctx.arc(0,0,7+(1-a)*7,0,6.28); ctx.fill(); ctx.restore();
+    const dur = litTier==="fine"?1.15:0.9;
+    const a=clamp(litT/dur,0,1);
+    if(litTier==="flawed"){
+      // an uneven, stuttering flicker instead of a clean glow — the flaw shows
+      const flicker = 0.5+0.5*Math.sin(performance.now()*0.045);
+      ctx.save(); ctx.globalAlpha=a*0.55*flicker; ctx.fillStyle="#e2a15a";
+      ctx.beginPath(); ctx.arc(1.5,1.5,6+(1-a)*5,0,6.28); ctx.fill(); ctx.restore();
+    } else if(litTier==="fine"){
+      ctx.save(); ctx.globalAlpha=a*0.95; ctx.fillStyle="#f3ecd8";
+      ctx.beginPath(); ctx.arc(0,0,9+(1-a)*9,0,6.28); ctx.fill();
+      ctx.globalAlpha=a*0.5; ctx.strokeStyle="#d8b45f"; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(0,0,13+(1-a)*10,0,6.28); ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.save(); ctx.globalAlpha=a*0.85; ctx.fillStyle="#f3ecd8";
+      ctx.beginPath(); ctx.arc(0,0,7+(1-a)*7,0,6.28); ctx.fill(); ctx.restore();
+    }
   }
   if(kind==="hook"){ ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,6); ctx.lineTo(0,-6);
     ctx.arc(2,-6,2,3.14,0,true); ctx.stroke(); }
