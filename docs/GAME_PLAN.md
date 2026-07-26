@@ -398,8 +398,8 @@ player has previously gotten wrong, and the party ladder starts one step higher.
 | **5** | Term-builder failure costs · naming-record chip | ✅ |
 | **6** | Progression panel · unlock cards on the result screen | ✅ |
 | **7** | Final boss encounter (3 phases) | ✅ |
-| **8** | Endless Road · seeded contracts | 🧭 |
-| **9** | Lexicon Trials · New Game+ | 🧭 |
+| **8** | Endless Road · seeded contracts | ✅ (see `DEPTH_PLAN.md` §5.1–5.2) |
+| **9** | Lexicon Trials · New Game+ | Lexicon Trials ✅ (see `DEPTH_PLAN.md` §5.3) · New Game+ 🧭 |
 | **10** | Pause menu · rune gate lead-distance fix (player-reported) | ✅ |
 
 ---

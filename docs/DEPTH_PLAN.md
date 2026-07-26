@@ -51,14 +51,25 @@ assertions on top of the existing 247). In order:
 - **The Endless Road (§5.2):** one road, no destination, a 200+ event stream
   with tightening spacing, ends the instant stamina breaks, bare-handed by
   design, remembers a best score.
+- **Lexicon Trials (§5.3):** a new hub panel offers short, gate-heavy runs —
+  `buildTrialEvents` (8 stops, ~75% gates) rather than a full road — filtered
+  to one lens: **Prefixes**, **Roots**, **Suffixes** (`pickRoadPart`'s existing
+  `kindFilter`, the same hook the final boss's Stripping phase uses), or **Your
+  weak spots**, generated straight from the player's own `mastery.parts` data
+  (`pickRoadPart`'s new `onlyWeak` argument, falling back to the full pool
+  when fewer than 3 parts actually qualify as weak, so a new player still gets
+  a real trial). Bare-handed and hazard-calmed like the Endless Road — the
+  gates are the whole point — it ends at normal arrival with an accuracy
+  debrief (`endLexiconTrial`) naming the exact parts missed, and remembers a
+  best accuracy **per mode**, independently.
 
 **Not done in this pass**, deliberately deferred as the plan's own §6 table
-marks them lower-priority than the above: Terrain forks (§3.5), Lexicon
-Trials, New Game+, weather-as-a-verb, ghost caravans, and traveler bonds
-(§5.3–5.6). The Seal blueprint's *Counter-Stamp* fiction (assembling the die
-from word-parts directly, rather than inheriting Blade's fold mechanic) is
-also still open — it currently plays as a fold/quench craft, which is
-functionally sound but not the bespoke word-assembly version described below.
+marks them lower-priority than the above: Terrain forks (§3.5), New Game+,
+weather-as-a-verb, ghost caravans, and traveler bonds (§5.4–5.6). The Seal
+blueprint's *Counter-Stamp* fiction (assembling the die from word-parts
+directly, rather than inheriting Blade's fold mechanic) is also still open —
+it currently plays as a fold/quench craft, which is functionally sound but
+not the bespoke word-assembly version described below.
 
 ---
 
@@ -354,11 +365,18 @@ One road, no destination, escalating density and gate difficulty; ends when
 stamina breaks. The pure-fluency mode and the natural home for a leaderboard.
 Also the best possible testbed for §3.3's difficulty curve.
 
-### 5.3 Lexicon Trials 🧭
-Short focused runs against a single body system or word-part kind. The question
-engine already tracks per-part mastery, so trials can be **generated from the
-player's own weak spots** — the most educationally valuable mode in the plan, and
-mostly assembly of existing parts.
+### 5.3 Lexicon Trials ✅
+Short focused runs against a single word-part kind (prefix / root / suffix), or
+against the player's own weak spots — the question engine already tracked
+per-part mastery, so the weak-spot trial really is **generated from the
+player's own gaps**, no new content. Shipped as `buildTrialEvents` /
+`startLexiconTrial` / `endLexiconTrial`, mirroring the Endless Road's pattern
+(bare-handed, its own lightweight result panel) but short — 8 gate-heavy
+stops instead of a whole road — and calmer, since the gates are the point,
+not survival. A best accuracy is remembered per mode. Body-system trials
+("cardiovascular trial") are not shipped: `PARTS` carries no system tag today,
+so that variant would need real content work, not just a filter, and is left
+for a future pass.
 
 ### 5.4 New Game+ — *The Second Reading* 🧭
 Carry bench mastery, techniques, and affinity into a fresh campaign. In exchange:
@@ -395,7 +413,7 @@ Sequenced so each pass ships something playable and de-risks the next.
 | **E** | Remaining craft redesigns + Maker's marks (§2.2–2.3) | Now with the pattern established. |
 | **F** | Seeded Contracts + Endless Road (§5.1–5.2) | Replayability, once the core loop is worth replaying. |
 | **G** | Quality visibility + gear debrief (§4.4–4.5) | Lands best after the crafts actually produce varied items. |
-| **H** | Lexicon Trials, NG+, structural variety (§5.3–5.5) | Long tail. |
+| **H** | Lexicon Trials (§5.3) ✅, then NG+ + structural variety (§5.4–5.5) | Long tail — Trials shipped first as the cheapest, most educational of the three. |
 
 **Deliberate ordering note:** replayability is *last* among the major systems, not
 first. There is no point making people replay a loop before the loop is worth

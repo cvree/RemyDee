@@ -413,6 +413,9 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .meter-row{display:flex;justify-content:space-between;font-size:.78rem;margin:12px 0 4px;font-weight:600;}
 .radix-nap{margin-top:14px;text-align:center;font-size:.8rem;color:var(--jade-deep);font-style:italic;}
 .regions-list b{font-family:var(--font-cal);}
+.trial-modes{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.trial-mode-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.trial-mode-row .trial-best{font-size:.76rem;color:var(--ink-soft);white-space:nowrap;}
 
 /* ============================================================
    PARTY BRIEF (case) — all travelers
@@ -1386,6 +1389,11 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
               <button class="btn" id="endless-start" type="button">Walk the Endless Road &rarr;</button>
             </div>
             <div class="panel aside-card spotlight" data-spot>
+              <h3>Lexicon Trials</h3>
+              <p class="small muted">Short, focused runs — a handful of rune gates, nothing else. Pick a lens: your own weak spots, or a single kind of part.</p>
+              <div class="trial-modes" id="trial-modes"></div>
+            </div>
+            <div class="panel aside-card spotlight" data-spot>
               <h3>Remy&rsquo;s ledger</h3>
               <p class="small muted" id="ledger-note">Serve travelers well and recover the lost pages of the Great Medical Lexicon.</p>
               <div class="meter-row"><span>Lexicon mastery</span><span id="mastery-pct">0%</span></div>
@@ -1649,6 +1657,17 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           <div class="small" id="er-body"></div>
           <div class="pause-actions">
             <button class="btn jade" id="er-continue">Return to the school</button>
+          </div>
+        </div>
+      </div>
+      <!-- LEXICON TRIAL — a short, focused run against one lens on the word-parts -->
+      <div class="pause-menu" id="trial-result">
+        <div class="pause-card">
+          <span class="eyebrow">Lexicon Trial</span>
+          <h3 id="tr-acc"></h3>
+          <div class="small" id="tr-body"></div>
+          <div class="pause-actions">
+            <button class="btn jade" id="tr-continue">Return to the school</button>
           </div>
         </div>
       </div>
@@ -3903,7 +3922,24 @@ function showHub(){
     const es=$('#endless-start');
     if(es) es.onclick=()=>{ Audio2.sfx.brush(); FX.buzz(16);
       if(window.__RD_MISSION && window.__RD_MISSION.startEndlessRoad) window.__RD_MISSION.startEndlessRoad(); };
+    renderTrialModes();
   }});
+}
+/* LEXICON TRIALS panel: one row per mode, a start button, and that mode's
+   best accuracy so far (nothing shown until it's actually been played). */
+function renderTrialModes(){
+  const host=$('#trial-modes'); if(!host || !window.__RD_MISSION) return;
+  const MODES=window.__RD_MISSION.TRIAL_MODES; const best=S().trialBest||{};
+  host.innerHTML = Object.keys(MODES).map(mode=>{
+    const b=best[mode];
+    return `<div class="trial-mode-row">
+      <button class="btn sm" type="button" data-trial="${mode}">${MODES[mode].label} &rarr;</button>
+      <span class="trial-best">${b ? `best ${b.acc}%` : "not yet tried"}</span>
+    </div>`;
+  }).join('');
+  host.querySelectorAll('[data-trial]').forEach(btn=>{
+    btn.onclick=()=>{ Audio2.sfx.brush(); FX.buzz(16); window.__RD_MISSION.startLexiconTrial(btn.dataset.trial); };
+  });
 }
 /* The progression panel. It answers, without a menu: where am I, what does the
    next road give me, and what is the next thing that opens up? */
@@ -6513,6 +6549,7 @@ function reviewChallenge(){
 /* ---------- mission state ---------- */
 let M=null;
 let pendingEndless=false;   // ENDLESS ROAD — set true just before runMission() to flag the coming mission
+let pendingTrial=null;      // LEXICON TRIAL — {mode,kind,label} set just before runMission() to flag the coming mission
 const VIS=2600;               // px of world per 1.0 progress (visual scroll scale)
 const LANES=[
   {id:"high", y:0.40, label:"Upper ledges — swift, loose rock", need:"climb", spd:1.18, col:"#8fa08f"},
@@ -6570,12 +6607,19 @@ const LEXEME_STYLE={
 };
 /* pick a word-part to place on the road, biased toward parts the player hasn't mastered yet.
    An optional kindFilter restricts the pool — used by the final boss's Stripping phase,
-   which asks only after suffixes. */
-function pickRoadPart(kindFilter){
+   which asks only after suffixes, and by a kind-focused Lexicon Trial (DEPTH_PLAN §5.3).
+   An optional onlyWeak narrows the pool to the player's own weak parts — a Lexicon Trial
+   generated from their own gaps — falling back to the full (or kind-filtered) pool when
+   fewer than 3 parts actually qualify as weak, so an early player still gets a real trial. */
+function pickRoadPart(kindFilter, onlyWeak){
   const weak=new Set(weakParts()); const seen=new Set(seenParts());
   let ids=Object.keys(PARTS);
   if(kindFilter) ids=ids.filter(id=>PARTS[id].kind===kindFilter);
   if(!ids.length) ids=Object.keys(PARTS);
+  if(onlyWeak){
+    const weakIds=ids.filter(id=>weak.has(id));
+    if(weakIds.length>=3) ids=weakIds;
+  }
   const sorted=ids.slice().sort((a,b)=>{
     const sa=(weak.has(a)?2:0)+(seen.has(a)?0:1);
     const sb=(weak.has(b)?2:0)+(seen.has(b)?0:1);
@@ -6934,8 +6978,9 @@ function runMission(){
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
         maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"",
-        endless:pendingEndless };
-    pendingEndless=false;
+        endless:pendingEndless,
+        trial: pendingTrial ? Object.assign({correct:0,total:0,missed:[]}, pendingTrial) : null };
+    pendingEndless=false; pendingTrial=null;
     M.laneY = LANES[1].y*cv.height; M.targetY = M.laneY;
     M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
@@ -7336,6 +7381,64 @@ function endEndlessRoad(){
   if(panel){ panel.classList.add('show');
     const cont=$('#er-continue'); if(cont) cont.onclick=()=>{ panel.classList.remove('show'); window.__RD_SCREENS.showHub(); }; }
 }
+/* ==================================================================
+   LEXICON TRIALS (DEPTH_PLAN §5.3) — short, focused runs against a single
+   word-part kind, or against the player's own weak spots. The question
+   engine already tracks per-part mastery (S().mastery.parts), so the
+   "weak" trial is literally generated from the player's own gaps — no new
+   content, just a different lens on data the game already keeps. Bare-
+   handed like the Endless Road, but short (one gate-heavy stop list) and
+   calmer (fewer hazards) so the gates stay the whole point. */
+const TRIAL_MODES = {
+  weak:   { label:"Your weak spots", kind:null,     dest:"wherever your own gaps are" },
+  prefix: { label:"Prefixes",        kind:"prefix", dest:"the prefix shelf" },
+  root:   { label:"Roots",           kind:"root",   dest:"the root cellar" },
+  suffix: { label:"Suffixes",        kind:"suffix", dest:"the suffix loft" }
+};
+function buildTrialEvents(){
+  const flavor=["oasis","cache"];
+  const n=8, span0=0.10, span1=0.92, step=(span1-span0)/(n-1);
+  // a fixed gate count (not a per-stop dice roll) so the trial is reliably
+  // gate-heavy every time, never just by luck — this IS the drill
+  const restCt=n-1, restGates=Math.round(restCt*0.7);
+  const rest=[]; for(let i=0;i<restCt;i++) rest.push(i<restGates ? "gate" : pick(flavor));
+  shuffle(rest);
+  const types=["gate"].concat(rest);
+  return types.map((tp,i)=>({at:+(span0+step*i).toFixed(3), type:tp}));
+}
+function startLexiconTrial(mode){
+  const def=TRIAL_MODES[mode]; if(!def) return;
+  const servedN=(S().servedChapterIds||[]).length;
+  const src = CHAPTERS[clamp(servedN, 0, CHAPTERS.length-1)] || CHAPTERS[0];
+  const chapter = Object.assign({}, src, { name:`Lexicon Trial — ${def.label}`, dest:def.dest, enemy:null });
+  const members = (src.members||[]).slice(0, Math.min(2, (src.members||[]).length || 1));
+  const route={ id:"trial", name:"a lexicon trial", weather:"clear" };
+  const flow = { chapter, builders:[], members, idx:0, results:{}, forged:[], route,
+    stats:{ tot:{stamina:5,morale:5,safety:5,weather:4,speed:4,health:4}, prepScore:0.42,
+      caps:{}, traits:{}, perks:[], route, overall:0.5 } };
+  E.setFlow(flow);
+  flow.roadPlan={ events:buildTrialEvents(), intel:[], hints:[] };
+  pendingTrial={ mode, kind:def.kind, label:def.label };
+  runMission();
+}
+function endLexiconTrial(){
+  if(M.done) return; M.done=true; M.paused=true;
+  if(M._unbind){ M._unbind(); M._unbind=null; }
+  const t=M.trial, acc = t.total ? Math.round(100*t.correct/t.total) : 0;
+  const s=S(); s.trialBest=s.trialBest||{};
+  const prior=s.trialBest[t.mode];
+  const isNewBest = !prior || acc>prior.acc || (acc===prior.acc && t.total>prior.total);
+  if(isNewBest) s.trialBest[t.mode]={acc, correct:t.correct, total:t.total};
+  persist();
+  (acc>=70 ? Audio2.sfx.chime : Audio2.sfx.bad)(); FX.buzz(acc>=70?18:30);
+  const missedNames=[...new Set(t.missed)].slice(0,4).map(id=>PARTS[id]?PARTS[id].text:id).join(", ");
+  const aEl=$('#tr-acc'), bEl=$('#tr-body'), panel=$('#trial-result');
+  if(aEl) aEl.textContent = `${t.correct} / ${t.total} correct — ${acc}%`;
+  if(bEl) bEl.innerHTML = (missedNames ? `Worth another look: <b>${missedNames}</b>.` : `Clean run — no misses.`)
+    + (isNewBest ? `<br><span style="color:var(--gold)">New best for ${t.label}.</span>` : `<br>Best so far: ${prior.acc}%.`);
+  if(panel){ panel.classList.add('show');
+    const cont=$('#tr-continue'); if(cont) cont.onclick=()=>{ panel.classList.remove('show'); window.__RD_SCREENS.showHub(); }; }
+}
 function seedParticles(weather){
   M.particles=[];
   if(FX.reduced()) return;
@@ -7565,9 +7668,11 @@ function tick(t){
     if(M.endless && M.stats.stamina<=0 && !M.done){ endEndlessRoad(); }
 
     // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
-    // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
+    // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve).
+    // A LEXICON TRIAL calms hazards further still — the gates are the whole point, not dodging.
+    const trialCalm = M.trial ? 1.7 : 1;
     M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.1+Math.random()*1.0; spawnPickup(); }
-    M.spawnHazT-=dt;  if(M.spawnHazT<=0){ M.spawnHazT=(1.9+Math.random()*1.4)/diffCurve.density; spawnHazard(); }
+    M.spawnHazT-=dt;  if(M.spawnHazT<=0){ M.spawnHazT=(1.9+Math.random()*1.4)/diffCurve.density*trialCalm; spawnHazard(); }
 
     // hazards crossing the squad
     const sx=M.cv.width*0.30;
@@ -7626,7 +7731,8 @@ function tick(t){
     if(evn && M.progress>=evn.at && !(M.raid && !M.raid.resolved)){ M.evIdx++; fireEvent(evn); }
 
     if(t-lastStep>420){ lastStep=t; if(!FX.reduced()) Audio2.sfx.step&&Audio2.sfx.step(); }
-    if(!M.endless && M.progress>=1 && !M.arriving){ arrive(); }
+    if(M.trial && M.progress>=1 && !M.done){ endLexiconTrial(); }
+    else if(!M.endless && !M.trial && M.progress>=1 && !M.arriving){ arrive(); }
   } else if(M.questionOpen){
     // the cost of hesitation — no timer, but the open road drains them
     M.stats.stamina=clamp(M.stats.stamina - dt*2.6*rel,0,100);
@@ -7921,11 +8027,11 @@ function openGate(){
   // Phase I of the final boss (The Stripping) — Radicida slays ROOTS, the part
   // that carries a term's actual meaning. Every gate here asks you to prove you
   // still know one, under real pressure (see updateBossPhase).
-  const forceKind = (M.boss && M.boss.phase===1) ? "root" : null;
+  const forceKind = (M.boss && M.boss.phase===1) ? "root" : (M.trial ? M.trial.kind : null);
   // targetId stays adaptive (weighted to THIS player's weak/unseen parts) even
   // on a seeded road; only the distractor set and lane placement — the part
   // of a gate that's pure structure, not personalization — is seed-deterministic
-  const targetId=pickRoadPart(forceKind);
+  const targetId=pickRoadPart(forceKind, M.trial && M.trial.mode==="weak");
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
   const gateRoll = withRoadSeed(()=>{
@@ -7964,6 +8070,7 @@ function resolveGate(){
   const gp=$('#gate-prompt'); if(gp) gp.classList.remove('show');
   if(window.__RD_QE) window.__RD_QE.record([G.conceptId], ok);
   G.flareT=0.9; G.flareLane=bandAt(M.laneY); G.flareOk=ok;
+  if(M.trial){ M.trial.total++; if(ok) M.trial.correct++; else M.trial.missed.push(G.targetId); }
   if(ok){
     M.challengesWon++; bumpMomentum(0.9*M.forge.gainMult); M.surgeT=0.5; setPace(1.6,3);
     statGain({morale:8,safety:6,stamina:4});
@@ -8906,6 +9013,7 @@ function showEnding(){
 
 window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChallenge, buildRoadPlan, _dbg:()=>M,
   startEndlessRoad, endEndlessRoad, buildEndlessEvents,
+  startLexiconTrial, endLexiconTrial, buildTrialEvents, TRIAL_MODES,
   _state:()=>M,
   _forceRaid:()=>{ if(M && !M.done && (!M.raid||M.raid.resolved)) banditRaid(); return M&&M.raid; },
   _use:(k)=>useAbility(k),
