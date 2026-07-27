@@ -930,8 +930,16 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .gate-prompt.show{display:block;animation:gpIn .35s var(--ease-back);}
 @keyframes gpIn{0%{transform:translate(-50%,-8px);opacity:0;}100%{transform:translate(-50%,0);opacity:1;}}
 .gate-prompt b{color:var(--gold-soft);}
-/* forged-gear readout: what each tool you made actually does on THIS road */
-.forge-strip{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;pointer-events:none;}
+/* forged-gear readout: what each tool you made actually does on THIS road.
+   CLUTTER RULE: the road itself is the thing worth looking at, so the strip is
+   collapsed while walking. A chip springs out for a moment when its item
+   actually does something, and the ⚒ toggle pins the whole strip open. */
+.forge-strip{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;pointer-events:none;
+  max-height:0;opacity:0;overflow:hidden;margin-bottom:0;
+  transition:max-height .28s var(--ease),opacity .22s var(--ease),margin-bottom .28s var(--ease);}
+.forge-strip.open,.forge-strip.peek{max-height:92px;opacity:1;margin-bottom:8px;}
+.forge-strip.peek .forge-chip{opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;}
+.forge-strip.peek .forge-chip.flash{opacity:1;transform:none;}
 .forge-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;
   background:rgba(243,236,216,.92);border:1px solid var(--ink-line);box-shadow:0 3px 8px rgba(0,0,0,.35);
   font-family:var(--font-read);font-size:.66rem;color:var(--ink);font-weight:600;max-width:220px;}
@@ -949,19 +957,24 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   border-radius:8px;background:rgba(181,50,43,.06);}
 .mini-stakes .ms-dot{width:8px;height:8px;border-radius:50%;background:var(--cinnabar);animation:msPulse 1.1s ease-in-out infinite;}
 @keyframes msPulse{0%,100%{opacity:.35;transform:scale(.8);}50%{opacity:1;transform:scale(1.15);}}
-.mission-hint{font-size:.72rem;color:rgba(243,236,216,.85);text-align:center;margin-bottom:6px;
+/* the control hint sits in the empty sky above the road — it costs the walkable
+   band no height, covers no word-part, and fades for good once you are walking */
+.mission-hint{position:absolute;left:50%;transform:translateX(-50%);top:168px;z-index:6;
+  width:max-content;max-width:min(94vw,720px);font-size:.72rem;color:rgba(243,236,216,.9);text-align:center;
+  padding:5px 14px;border-radius:999px;background:rgba(20,16,10,.62);pointer-events:none;
   text-shadow:0 1px 3px rgba(0,0,0,.6);letter-spacing:.02em;transition:opacity 1s var(--ease);}
 .mission-hint.fade{opacity:0;}
 /* ability bar — consumable tools with charges (= how many you crafted) */
-.ability-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;pointer-events:auto;}
-.ability-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;
-  min-width:74px;padding:8px 12px 6px;border-radius:12px;cursor:pointer;border:1px solid var(--ink-line);
+.ability-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:0;pointer-events:none;}
+.ability-btn{position:relative;display:flex;flex-direction:row;align-items:center;gap:6px;pointer-events:auto;
+  min-width:0;padding:5px 11px;border-radius:999px;cursor:pointer;border:1px solid var(--ink-line);
   background:linear-gradient(180deg,rgba(243,236,216,.95),rgba(226,213,184,.95));color:var(--ink);
   box-shadow:0 4px 10px rgba(0,0,0,.4);transition:transform .12s var(--ease-back),opacity .2s,box-shadow .2s;
   font-family:var(--font-read);}
-.ability-btn .ab-name{font-weight:700;font-size:.82rem;letter-spacing:.02em;}
-.ability-btn .ab-hint{font-size:.62rem;color:var(--jade-deep);}
-.ability-btn .ab-charge{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;border-radius:50%;
+.ability-btn .ab-name{font-weight:700;font-size:.76rem;letter-spacing:.02em;}
+.ability-btn .ab-hint{font-size:.6rem;color:var(--jade-deep);max-width:112px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
+.ability-btn .ab-charge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;border-radius:50%;
   background:var(--cinnabar);color:var(--rice);font-size:.72rem;font-weight:700;display:flex;
   align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.5);}
 .ability-btn:not(.spent):hover{transform:translateY(-3px);box-shadow:0 7px 16px rgba(0,0,0,.5);}
@@ -969,37 +982,104 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .ability-btn.ready{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);animation:abReady 1s ease-in-out infinite;}
 @keyframes abReady{0%,100%{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 4px var(--gold-soft),0 8px 18px rgba(0,0,0,.5);}}
 [data-motion="reduced"] .ability-btn.ready{animation:none;}
-.pace-row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:2px;}
-.pace-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;
-  min-width:88px;padding:8px 14px 6px;border-radius:12px;cursor:pointer;border:1px solid var(--gold-deep,#8a6a2b);
+.pace-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:0;
+  pointer-events:none;}
+.pace-btn{position:relative;display:flex;flex-direction:row;align-items:center;gap:6px;pointer-events:auto;
+  min-width:0;padding:5px 13px;border-radius:999px;cursor:pointer;border:1px solid var(--gold-deep,#8a6a2b);
   background:linear-gradient(180deg,rgba(216,189,132,.30),rgba(90,63,28,.55));color:var(--rice);
   box-shadow:0 4px 10px rgba(0,0,0,.4);transition:transform .1s var(--ease-back),box-shadow .15s,background .15s;
   font-family:var(--font-read);user-select:none;touch-action:none;}
-.pace-btn .pb-glyph{font-size:1.1rem;line-height:1;}
-.pace-btn .pb-name{font-weight:700;font-size:.82rem;letter-spacing:.03em;}
-.pace-btn .pb-hint{font-size:.6rem;color:rgba(243,236,216,.75);}
+.pace-btn .pb-glyph{font-size:1rem;line-height:1;}
+.pace-btn .pb-name{font-weight:700;font-size:.76rem;letter-spacing:.03em;}
+.pace-btn .pb-hint{font-size:.6rem;color:rgba(243,236,216,.75);max-width:130px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
 .pace-btn:hover{transform:translateY(-2px);}
 .pace-btn.active{background:linear-gradient(180deg,rgba(216,189,132,.9),rgba(181,50,43,.55));
   box-shadow:0 0 0 3px rgba(216,189,132,.5),0 6px 16px rgba(0,0,0,.5);transform:translateY(-1px) scale(1.03);}
 .pace-btn.starved{opacity:.45;cursor:not-allowed;}
 .lane-flash{position:absolute;left:0;right:0;z-index:5;pointer-events:none;height:33.3%;
   background:rgba(216,189,132,.18);opacity:0;transition:opacity .35s;}
-.mission-hud{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:14px;
-  background:linear-gradient(0deg,rgba(20,14,8,.86),transparent);color:var(--rice);}
-.mission-caption{font-family:var(--font-orn);font-style:italic;font-size:clamp(15px,2.4vw,22px);
-  text-align:center;text-shadow:0 2px 6px #000;min-height:1.6em;margin-bottom:10px;transition:opacity .5s;}
-.mission-top{position:absolute;top:0;left:0;right:0;z-index:6;padding:12px 16px;display:flex;
-  justify-content:space-between;align-items:center;color:var(--rice);gap:10px;flex-wrap:wrap;
-  background:linear-gradient(180deg,rgba(20,14,8,.72),transparent);}
-.mission-top .who{font-family:var(--font-cal);font-weight:700;font-size:.98rem;}
+/* THE BOTTOM BAR is a thin control rail, never a wall. It is pointer-transparent
+   except for the buttons themselves, so the mouse can lead the squad all the way
+   to the bottom of the road without the HUD swallowing the cursor. */
+.mission-hud{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:8px 12px 10px;
+  background:linear-gradient(0deg,rgba(20,14,8,.82),rgba(20,14,8,.42) 62%,transparent);
+  color:var(--rice);pointer-events:none;}
+.mission-caption{font-family:var(--font-orn);font-style:italic;font-size:clamp(13px,1.9vw,18px);
+  text-align:center;text-shadow:0 2px 6px #000;line-height:1.32;margin-bottom:7px;
+  height:2.64em;overflow:hidden;transition:opacity .5s var(--ease);}
+.mission-caption.dim{opacity:0;}
+.mission-top{position:absolute;top:0;left:0;right:0;z-index:6;padding:8px 14px;display:flex;
+  justify-content:space-between;align-items:center;color:var(--rice);gap:10px;flex-wrap:nowrap;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(20,14,8,.66),transparent);}
+.mission-top .who{font-family:var(--font-cal);font-weight:700;font-size:.82rem;opacity:.9;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34vw;}
+.mission-top .icon-btn{pointer-events:auto;}
 .mission-pause-btn{flex:none;font-size:.7rem;letter-spacing:.02em;background:rgba(255,255,255,.1);
   color:var(--rice);border-color:rgba(255,255,255,.2);}
 .mission-pause-btn:hover{background:rgba(255,255,255,.18);}
-.prep-bars{display:flex;gap:12px;font-size:.72rem;flex-wrap:wrap;}
-.prep-bars .pb{display:flex;flex-direction:column;gap:3px;min-width:64px;}
-.prep-bars .pb .lab{color:var(--gold-soft);letter-spacing:.05em;}
-.prep-bars .pb .bar{height:7px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden;}
+.mission-top-btns{display:flex;gap:6px;align-items:center;flex:none;}
+.prep-bars{display:flex;gap:9px;font-size:.66rem;flex-wrap:nowrap;}
+.prep-bars .pb{display:flex;flex-direction:column;gap:2px;min-width:52px;}
+.prep-bars .pb .lab{color:var(--gold-soft);letter-spacing:.05em;font-size:.6rem;}
+.prep-bars .pb .bar{height:6px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden;}
 .prep-bars .pb .bar > i{display:block;height:100%;background:var(--jade-soft);border-radius:5px;transition:width .5s var(--ease);}
+/* stamina is the run's clock — when it runs low the bar says so, loudly */
+.prep-bars .pb.critical .lab{color:var(--cinnabar);animation:pbCrit .7s ease-in-out infinite;}
+@keyframes pbCrit{0%,100%{opacity:.45;}50%{opacity:1;}}
+[data-motion="reduced"] .prep-bars .pb.critical .lab{animation:none;}
+/* NARROW SCREENS get the same road, not a squeezed one: the chapter title and the
+   ability hints drop away so the control rail stays one row and the top strip stops
+   pushing the pause button off the edge. The walkable band re-measures either way. */
+@media (max-width:700px){
+  .mission-top{padding:6px 8px;gap:6px;}
+  .mission-top .who{display:none;}
+  .prep-bars{gap:6px;}
+  .prep-bars .pb{min-width:44px;}
+  .pace-gauge{padding:3px 8px;gap:4px;}
+  .pace-gauge .pg-lab{display:none;}
+  .ability-btn .ab-hint,.pace-btn .pb-hint{display:none;}
+  .ability-btn,.pace-btn{padding:6px 10px;}
+  .mission-caption{height:3.9em;font-size:13px;}
+  .mission-hint{top:150px;font-size:.66rem;max-width:92vw;}
+  .term-banner{max-width:96%;padding:6px 12px 7px;}
+}
+/* ACCELERATION, MADE LEGIBLE — the gauge that tells you a right answer just put
+   the caravan into a higher gear, and stays lit while the burst holds */
+.pace-gauge{display:inline-flex;align-items:center;gap:7px;padding:3px 11px;border-radius:999px;
+  background:rgba(20,16,10,.5);border:1px solid rgba(189,157,95,.45);pointer-events:none;
+  font-family:var(--font-read);transition:border-color .25s,box-shadow .25s,transform .18s var(--ease-back);}
+.pace-gauge .pg-lab{font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,236,216,.62);}
+.pace-gauge .pg-val{font-family:var(--font-cal);font-weight:900;font-size:.92rem;color:var(--gold-soft);min-width:38px;text-align:right;}
+.pace-gauge .pg-arrow{font-size:.76rem;opacity:0;transform:translateY(3px);transition:opacity .2s,transform .2s;color:#8fd38f;}
+.pace-gauge.accel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(216,189,132,.32);transform:scale(1.06);}
+.pace-gauge.accel .pg-arrow{opacity:1;transform:translateY(-1px);}
+.pace-gauge.brake{border-color:var(--cinnabar);}
+.pace-gauge.brake .pg-arrow{opacity:1;transform:translateY(1px) rotate(180deg);color:#e2726a;}
+/* THE LEARNING BEAT — the built term and what it means, held in clear sky for a
+   moment so the reward and the lesson are the same event */
+.term-banner{position:absolute;top:6px;left:50%;transform:translate(-50%,-6px);z-index:9;pointer-events:none;
+  opacity:0;transition:opacity .3s var(--ease),transform .3s var(--ease-back);
+  padding:7px 18px 8px;border-radius:12px;text-align:center;max-width:min(94%,620px);
+  background:rgba(22,19,15,.93);border:1px solid var(--gold);box-shadow:0 10px 28px rgba(0,0,0,.55);}
+.term-banner.show{opacity:1;transform:translate(-50%,0);}
+.term-banner .tb-word{display:inline;font-family:var(--font-cal);font-weight:900;
+  font-size:clamp(16px,2.4vw,23px);color:var(--gold-soft);letter-spacing:.01em;}
+.term-banner .tb-tag{display:inline-block;margin-left:8px;font-size:.55rem;letter-spacing:.11em;vertical-align:middle;
+  text-transform:uppercase;padding:1px 8px;border-radius:999px;background:rgba(51,81,63,.8);color:#dfeadf;}
+.term-banner .tb-tag.coined{background:rgba(138,106,43,.75);color:#f2e4c4;}
+.term-banner .tb-parts{display:block;font-size:.66rem;color:rgba(243,236,216,.72);letter-spacing:.03em;margin-top:2px;}
+.term-banner .tb-def{display:block;font-size:.8rem;color:var(--rice);margin-top:2px;line-height:1.3;}
+/* while the word is being read, the meters step back rather than crowd it */
+.word-hud{transition:opacity .25s var(--ease);}
+.word-hud.hushed{opacity:.22;}
+/* the run recap on the collapse card — what the walk actually taught */
+.collapse-learned{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0 6px;}
+.collapse-learned .cl-stat{padding:6px 9px;border-radius:10px;background:rgba(90,63,28,.07);
+  border:1px solid var(--ink-line);}
+.collapse-learned .cl-v{display:block;font-family:var(--font-cal);font-weight:900;font-size:1.2rem;color:var(--jade-deep);line-height:1.1;}
+.collapse-learned .cl-l{display:block;font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);}
 .mini-challenge{position:absolute;inset:0;z-index:7;display:none;align-items:center;justify-content:center;
   background:rgba(20,14,8,.6);backdrop-filter:blur(2px);}
 .mini-challenge.show{display:flex;animation:screenIn .3s;}
@@ -1581,8 +1661,18 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       <div class="mission-top">
         <span class="who" id="mission-who"></span>
         <div class="prep-bars" id="mission-prep"></div>
-        <button class="icon-btn mission-pause-btn" id="mission-pause-btn" aria-label="Pause" title="Pause (Esc)">&#10074;&#10074;</button>
+        <div class="mission-top-btns">
+          <div class="pace-gauge" id="pace-gauge" title="How fast the caravan is travelling right now">
+            <span class="pg-lab">pace</span><span class="pg-val" id="pg-val">&times;1.00</span><span class="pg-arrow" id="pg-arrow">&#9650;</span>
+          </div>
+          <button class="icon-btn mission-pause-btn" id="mission-gear-btn" aria-label="Show forged gear" title="Show what your forged gear is doing (G)">&#9874;</button>
+          <button class="icon-btn mission-pause-btn" id="mission-pause-btn" aria-label="Pause" title="Pause (Esc)">&#10074;&#10074;</button>
+        </div>
       </div>
+      <!-- the built term and its meaning, held in clear sky: the reward IS the lesson -->
+      <div class="term-banner" id="term-banner" aria-live="polite"></div>
+      <!-- the control hint lives in the empty sky, never over the road itself -->
+      <div class="mission-hint" id="mission-hint">Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.</div>
       <!-- Word Road HUD: momentum multiplier, the term you are assembling, and gate prompts -->
       <div class="word-hud" id="word-hud">
         <div class="momentum" id="momentum">
@@ -1641,6 +1731,20 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           </div>
         </div>
       </div>
+      <!-- THE COLLAPSE — stamina is the run's clock on every road. When it breaks
+           the party goes down where they stand and the walk has to be made again. -->
+      <div class="pause-menu" id="road-collapse">
+        <div class="pause-card">
+          <span class="eyebrow">The party is down</span>
+          <h3>Stamina broke on the road</h3>
+          <p class="small" id="collapse-body"></p>
+          <div class="collapse-learned" id="collapse-learned"></div>
+          <div class="pause-actions">
+            <button class="btn jade" id="collapse-retry">Walk it again</button>
+            <button class="btn ghost" id="collapse-quit">Turn back to the school</button>
+          </div>
+        </div>
+      </div>
       <!-- ENDLESS ROAD — no destination, stamina is the only clock -->
       <div class="pause-menu" id="endless-result">
         <div class="pause-card">
@@ -1653,15 +1757,14 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
         </div>
       </div>
       <div class="mission-hud">
+        <div class="mission-caption" id="mission-caption"></div>
         <div class="forge-strip" id="forge-strip"></div>
         <div class="pace-row">
           <div class="ability-bar" id="ability-bar"></div>
           <button class="pace-btn" id="pace-btn" type="button" title="Hold to surge (Space)">
-            <span class="pb-glyph">&#9889;</span><span class="pb-name">Surge</span><span class="pb-hint">burn stamina for speed &amp; reach</span>
+            <span class="pb-glyph">&#9889;</span><span class="pb-name">Surge</span><span class="pb-hint">burn stamina for speed</span>
           </button>
         </div>
-        <div class="mission-hint" id="mission-hint">Move freely with the <b>mouse</b>, <b>W/S</b> or the <b>arrow keys</b> &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning and study it. Hold <b>Space</b> to <b>Surge</b>.</div>
-        <div class="mission-caption" id="mission-caption"></div>
       </div>
     </section>
 
@@ -6514,10 +6617,14 @@ function reviewChallenge(){
 let M=null;
 let pendingEndless=false;   // ENDLESS ROAD — set true just before runMission() to flag the coming mission
 const VIS=2600;               // px of world per 1.0 progress (visual scroll scale)
+/* Lane positions are BAND-RELATIVE (u: 0 = top of the walkable band, 1 = bottom),
+   not absolute canvas fractions. The band itself is computed every frame from the
+   canvas minus whatever the HUD is actually occupying, so nothing that matters —
+   a word-part, a hazard, the squad — can ever end up underneath the interface. */
 const LANES=[
-  {id:"high", y:0.40, label:"Upper ledges — swift, loose rock", need:"climb", spd:1.18, col:"#8fa08f"},
-  {id:"mid",  y:0.615, label:"Mountain trail — the steady way", need:null,    spd:1.00, col:"#b3a37c"},
-  {id:"low",  y:0.815, label:"River floor — slow but sheltered", need:null,   spd:0.85, col:"#7f958f"}
+  {id:"high", u:0.07, label:"Upper ledges — swift, loose rock", need:"climb", spd:1.18, col:"#8fa08f"},
+  {id:"mid",  u:0.50, label:"Mountain trail — the steady way", need:null,    spd:1.00, col:"#b3a37c"},
+  {id:"low",  u:0.93, label:"River floor — slow but sheltered", need:null,   spd:0.85, col:"#7f958f"}
 ];
 /* Hazards can now appear in MORE THAN ONE lane (lanes:[...]) and are drawn from a
    weighted, weather-aware deck per run — no lane is ever "the safe lane" by rote.
@@ -6539,22 +6646,53 @@ const HAZARDS={
    and whichever band they are nearest decides the footing they're walking on.
    Everything on the road resolves by vertical distance, so half-committing to a
    lane is a real, expressive choice rather than an impossible one. */
-const ROAD_TOP=0.355, ROAD_BOT=0.865;
+const ROAD_TOP=0.30, ROAD_BOT=0.90;   // the widest the band is ever allowed to be
 const HIT_R=44;          // vertical hit/collect radius in canvas px
 const MOVE_SPD=560;      // keyboard travel, canvas px per second
+/* ==================================================================
+   THE PLAYFIELD IS NEVER UNDER THE INTERFACE.
+   syncRoadInsets() measures what the top strip and the bottom control rail
+   are really occupying (they resize with the viewport and with how many
+   abilities you forged) and converts it into canvas pixels. The walkable
+   band is then the canvas minus those two strips, so a word-part on the
+   river floor is always a word-part you can see and reach.
+   ================================================================== */
+function syncRoadInsets(){
+  if(!M || !M.cv) return;
+  const rc=M.cv.getBoundingClientRect();
+  if(!rc.height){ M.inset={top:0,bot:0}; return; }
+  const sy=M.cv.height/rc.height;
+  const h=(sel)=>{ const n=$(sel); if(!n) return 0; const r=n.getBoundingClientRect(); return (r.height||0)*sy; };
+  M.inset={ top: h('.mission-top')+10*sy, bot: h('.mission-hud')+10*sy };
+}
+function bandTopPx(){
+  const H=M.cv.height, ins=M.inset||{top:0,bot:0};
+  return Math.max(ROAD_TOP*H, Math.min(ins.top, H*0.42));
+}
+function bandBotPx(){
+  const H=M.cv.height, ins=M.inset||{top:0,bot:0};
+  return Math.min(ROAD_BOT*H, Math.max(H-ins.bot, bandTopPx()+H*0.30));
+}
+function bandH(){ return Math.max(1, bandBotPx()-bandTopPx()); }
+/* u (0..1 across the band) <-> canvas pixels */
+function bandY(u){ return bandTopPx() + clamp(u,0,1)*bandH(); }
+function bandU(y){ return clamp((y-bandTopPx())/bandH(),0,1); }
+function laneYpx(i){ return bandY(LANES[clamp(i,0,2)].u); }
 function bandAt(y){
-  const H=M.cv.height; let best=1, bd=1e9;
-  LANES.forEach((L,i)=>{ const d=Math.abs(L.y*H-y); if(d<bd){ bd=d; best=i; } });
+  let best=1, bd=1e9;
+  LANES.forEach((L,i)=>{ const d=Math.abs(bandY(L.u)-y); if(d<bd){ bd=d; best=i; } });
   return best;
 }
-/* the upper ledges stay shut without climbing gear — as a ceiling, not a snap-back */
+/* the upper ledges stay shut without climbing gear — as a ceiling, not a snap-back.
+   The ceiling now sits exactly on the seam between the ledge and the trail, so the
+   locked road still gives the player every pixel of movement it legitimately can. */
 function roadMinY(){
-  const H=M.cv.height;
-  return (M.caps && M.caps.climb) ? ROAD_TOP*H : (LANES[1].y-0.055)*H;
+  if(M.caps && M.caps.climb) return bandTopPx();
+  return bandY((LANES[0].u+LANES[1].u)/2 + 0.012);
 }
-function roadMaxY(){ return ROAD_BOT*M.cv.height; }
-/* every hazard and pickup carries a real Y; distance decides whether it lands */
-function objY(o){ return (o.y!=null ? o.y : LANES[o.lane].y) * M.cv.height; }
+function roadMaxY(){ return bandBotPx(); }
+/* every hazard and pickup carries a real band position; distance decides whether it lands */
+function objY(o){ return o.u!=null ? bandY(o.u) : laneYpx(o.lane); }
 function nearRow(o, extra){ return Math.abs(objY(o)-M.laneY) < (HIT_R+(extra||0)); }
 
 const PICKUP_DEFS={
@@ -6712,6 +6850,13 @@ function flashItem(item, verb, txt){
   M.actFlash={itemId:item.id, wid:item.assignedTo, t:item.qtier==="fine"?1.15:0.9, tier:item.qtier};
   const row=document.querySelector(`.forge-chip[data-item="${item.id}"]`);
   if(row){
+    // the strip stays collapsed while walking, so the chip that just DID something
+    // springs out on its own for a moment and then folds away again
+    const strip=$('#forge-strip');
+    if(strip && !(M&&M.gearPinned)){
+      strip.classList.add('peek');
+      clearTimeout(M._chipT); M._chipT=setTimeout(()=>{ if(M&&!M.gearPinned) strip.classList.remove('peek'); }, 2600);
+    }
     row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
     const tEl=row.querySelector(".fc-tally");
     if(tEl){ const n=Object.values(item.tally).reduce((a,b)=>a+b,0);
@@ -6934,9 +7079,18 @@ function runMission(){
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
         maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"",
+        // ---- ACCELERATION: an eased pace you can feel building, plus the burst a
+        // correct answer buys. paceNow chases paceTarget instead of snapping to it,
+        // which is the whole difference between "faster" and "accelerating". ----
+        inset:{top:0,bot:0}, paceNow:1, paceTarget:1, paceLive:1, rushT:0, rushPow:0, rushKind:null,
+        gearShown:1, streak:0, bestStreak:0, correctAnswers:0, wrongAnswers:0,
+        streakParts:[], partsStudiedRun:[], capT:0,
+        // ---- the run's clock: when stamina breaks, the party goes down ----
+        collapsing:false, fallT:0,
         endless:pendingEndless };
     pendingEndless=false;
-    M.laneY = LANES[1].y*cv.height; M.targetY = M.laneY;
+    syncRoadInsets();
+    M.laneY = laneYpx(1); M.targetY = M.laneY;
     M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
     if(isBossRoad(f)){
@@ -6951,32 +7105,45 @@ function runMission(){
     renderForgeStrip();
     updateWordHud();
     const routeOpen = caps.climb ? "Climbing gear opens the whole slope — the upper ledges included."
-      : "Without climbing gear the upper ledges stay closed — the trail and the river floor are yours.";
+      : "Without climbing gear the upper ledges stay closed — the trail and the river floor are yours.";   // the hint pill teaches the controls; the caption stays flavour
     if(isBossRoad(f)){
-      caption(`He steps from the archive's shadow. "Lord Jian is a name for a man who still believed in doors," he says. "Radix — the root. Caedere — to slay. I am <b>Jian Radicida, the Root-Slayer</b>." <b>Move freely</b> — the mouse leads them, or hold W/S.`);
+      caption(`He steps from the archive's shadow. "Radix — the root. Caedere — to slay. I am <b>Jian Radicida, the Root-Slayer</b>."`);
     } else {
-      caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. <b>Move freely</b> — the mouse leads them, or hold W/S. <b>Hover a word-part</b> to read what it means. ${routeOpen}`);
+      caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. ${routeOpen}`);
     }
     const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500); }
     $('#mini-challenge').classList.remove('show');
     $('#pause-menu').classList.remove('show');
     $('#pause-quit-confirm').classList.remove('show');
+    const cp=$('#road-collapse'); if(cp) cp.classList.remove('show');
+    const tb=$('#term-banner'); if(tb) tb.classList.remove('show');
+    setGearStripOpen(false);
+    updatePaceGauge(true);
     Audio2.sfx.whoosh();
     seedParticles(M.weather);
     bindMissionPointer(cv);
+    // the interface can resize under the player (rotation, window drag, a wrapped
+    // ability row); the walkable band follows it so nothing hides beneath the HUD
+    requestAnimationFrame(()=>{ syncRoadInsets(); if(M){ M.laneY=clamp(M.laneY,roadMinY(),roadMaxY()); M.targetY=M.laneY;
+      M.caravan.forEach(c=>c.laneY=M.laneY); } });
     FX.raf((t)=>tick(t));
   }});
 }
 function bindMissionPointer(cv){
   const rect=()=>cv.getBoundingClientRect();
-  const local=(e)=>{ const rc=rect(); const sx=cv.width/rc.width, sy=cv.height/rc.height;
+  const local=(e)=>{ const rc=rect();
+    const sx=cv.width/(rc.width||1), sy=cv.height/(rc.height||1);
     const cx=(e.touches?e.touches[0].clientX:(e.changedTouches?e.changedTouches[0].clientX:e.clientX));
     const cy=(e.touches?e.touches[0].clientY:(e.changedTouches?e.changedTouches[0].clientY:e.clientY));
     return { x:(cx-rc.left)*sx, y:(cy-rc.top)*sy }; };
 
-  // MOVEMENT IS FREE. The mouse leads the squad directly by height; W/S and the
-  // arrow keys travel continuously while held; a drag does the same on touch.
-  // No snapping, no three fixed rails.
+  // MOVEMENT IS FREE — AND THE WHOLE WINDOW DRIVES IT.
+  // The old binding listened on the canvas alone, so the moment the cursor slid
+  // over the bottom control rail (or off the top of the view) the squad simply
+  // stopped following: the mouse looked like it had a dead zone. Steering is now
+  // bound at the window, and the pointer's height maps into the walkable band
+  // rather than being hard-clamped at its edges — reaching for the river floor
+  // walks them to the river floor, every time.
   const steerTo=(y)=>{
     if(!M||M.done||M.paused) return;
     const minY=roadMinY();
@@ -6986,20 +7153,35 @@ function bindMissionPointer(cv){
     M.targetY = clamp(y, minY, roadMaxY());
     M.steering = true;
   };
+  /* The band is a little shorter than the canvas (sky above, control rail below).
+     Rather than waste that travel, the pointer's position across the view is
+     re-spread across the band, with the middle of the view still landing on the
+     middle of the road — so it reads as 1:1 while giving both edges real reach. */
+  const bandFromPointer=(y)=>{
+    const H=M.cv.height, top=bandTopPx(), bot=bandBotPx();
+    const edge=Math.max(6, H*0.035);                 // a forgiving margin at both ends
+    const f=clamp((y-edge)/Math.max(1,(H-edge*2)),0,1);
+    return top + f*(bot-top);
+  };
   const move=(e)=>{
     if(!M||M.done) return;
     const p=local(e);
-    M.pointer.x=p.x; M.pointer.y=p.y; M.pointer.over=true;
+    M.pointer.x=p.x; M.pointer.y=p.y;
+    M.pointer.over = p.x>=0 && p.x<=M.cv.width && p.y>=0 && p.y<=M.cv.height;
     // a mouse leads; a finger only leads while it's down
     if(e.pointerType==="touch" && !(e.buttons&1)) return;
-    steerTo(p.y);
+    steerTo(bandFromPointer(p.y));
   };
   const down=(e)=>{ if(!M||M.done) return; const p=local(e);
-    M.pointer.x=p.x; M.pointer.y=p.y; M.pointer.over=true; steerTo(p.y); };
+    M.pointer.x=p.x; M.pointer.y=p.y; M.pointer.over=true; steerTo(bandFromPointer(p.y)); };
   const leave=()=>{ if(M) M.pointer.over=false; };
-  cv.addEventListener('pointerdown',down);
-  cv.addEventListener('pointermove',move);
+  window.addEventListener('pointerdown',down);
+  window.addEventListener('pointermove',move);
   cv.addEventListener('pointerleave',leave);
+  const onResize=()=>{ if(!M||M.done) return; syncRoadInsets();
+    M.targetY=clamp(M.targetY==null?M.laneY:M.targetY, roadMinY(), roadMaxY());
+    M.laneY=clamp(M.laneY, roadMinY(), roadMaxY()); };
+  window.addEventListener('resize',onResize);
 
   const isUp   = k => k==='ArrowUp'   || k==='w' || k==='W';
   const isDown = k => k==='ArrowDown' || k==='s' || k==='S';
@@ -7010,7 +7192,9 @@ function bindMissionPointer(cv){
     // ability hotkeys: 1 strike, 2 vanish, 3 mend
     else if(e.key==='1'){ useAbility('strike'); }
     else if(e.key==='2'){ useAbility('vanish'); }
-    else if(e.key==='3'){ useAbility('mend'); } };
+    else if(e.key==='3'){ useAbility('mend'); }
+    // G pins the forged-gear strip open; it stays out of the way otherwise
+    else if(e.key==='g'||e.key==='G'){ setGearStripOpen(!M.gearPinned); } };
   const keyUp=(e)=>{ if(!M) return;
     if(isUp(e.key)) M.keyUp=false; else if(isDown(e.key)) M.keyDn=false;
     else if(e.key===' ' || e.code==='Space') setSurgeHeld(false); };
@@ -7027,8 +7211,8 @@ function bindMissionPointer(cv){
     paceBtn.addEventListener('pointerleave',pdOff);
     paceBtn.addEventListener('pointercancel',pdOff);
   }
-  M._unbind=()=>{ cv.removeEventListener('pointerdown',down); cv.removeEventListener('pointermove',move);
-    cv.removeEventListener('pointerleave',leave);
+  M._unbind=()=>{ window.removeEventListener('pointerdown',down); window.removeEventListener('pointermove',move);
+    cv.removeEventListener('pointerleave',leave); window.removeEventListener('resize',onResize);
     window.removeEventListener('keydown',key); window.removeEventListener('keyup',keyUp);
     if(paceBtn){ paceBtn.removeEventListener('pointerdown',pdOn); paceBtn.removeEventListener('pointerup',pdOff);
       paceBtn.removeEventListener('pointerleave',pdOff); paceBtn.removeEventListener('pointercancel',pdOff); } };
@@ -7055,9 +7239,9 @@ function stepMovement(dt){
 /* BAND IDENTITY, said once each — the first time the squad actually commits to a
    band, name what it's for so the choice reads as a strategy, not a speed pick. */
 const BAND_INTRO=[
-  "The upper ledge — rare finds and worse falls. Loose rock and steeper hazards, but the road's richest reagents and lexicon shards live up here.",
-  "The mountain trail — the steady way. Most of the road's answers are found here; a complete route on its own.",
-  "The river floor — slow, but forgiving. Ink runs thick and the squad recovers here; the tactical lane when stamina is failing."
+  "The upper ledge — rare finds, worse falls. The richest reagents and shards live up here, and so do the steepest hazards.",
+  "The mountain trail — the steady way. Most of the road's answers are found here.",
+  "The river floor — slow, but forgiving. Ink runs thick and the squad recovers here: the lane to take when stamina is failing."
 ];
 function announceBand(lane){
   if(!M || M.bandSeen==null || M.bandSeen[lane]) return;
@@ -7070,7 +7254,7 @@ function announceBand(lane){
 function setLane(lane){
   lane=clamp(lane,0,2);
   if(lane===0 && LANES[0].need && !M.caps[LANES[0].need]) lane=1;
-  const y = clamp(LANES[lane].y*M.cv.height, roadMinY(), roadMaxY());
+  const y = clamp(laneYpx(lane), roadMinY(), roadMaxY());
   M.targetY=y; M.laneY=y; M.lane=lane; M.laneFlashT=0.5;
 }
 
@@ -7336,6 +7520,70 @@ function endEndlessRoad(){
   if(panel){ panel.classList.add('show');
     const cont=$('#er-continue'); if(cont) cont.onclick=()=>{ panel.classList.remove('show'); window.__RD_SCREENS.showHub(); }; }
 }
+/* ==================================================================
+   THE COLLAPSE — stamina is the clock on EVERY road, not just the
+   Endless one. When it breaks, the party does not quietly limp on at
+   half speed: they go down in the road, the round ends, and the walk
+   has to be made again. It is the walk's real fail state, and it is
+   the reason the river floor, a mend charge and a completed term all
+   matter while you are still standing.
+   ================================================================== */
+function beginCollapse(){
+  if(!M || M.done || M.collapsing) return;
+  M.collapsing=true; M.fallT=0; M.paused=true;
+  M.surgeHeld=false; M.surging=false; M.rushT=0; M.rushPow=0;
+  M.keyUp=false; M.keyDn=false;
+  M.paceNow=0; M.paceLive=0; updatePaceGauge(true);   // the road has stopped; the gauge says so
+  if(M._unbind){ M._unbind(); M._unbind=null; }
+  hideTermBanner();
+  const gp=$('#gate-prompt'); if(gp) gp.classList.remove('show');
+  const sc=$('#study-card'); if(sc) sc.classList.remove('show');
+  const pb=$('#pace-btn'); if(pb){ pb.classList.remove('active'); pb.classList.add('starved'); }
+  caption("Their legs give out. One after another the party goes down in the road — this walk ends here.");
+  pop(M.cv.width*0.30, M.laneY-92, "the party falls", true);
+  Audio2.sfx.bad(); FX.buzz(46);
+}
+function updateCollapse(dt){
+  M.fallT+=dt;
+  M.pops.forEach(pp=>pp.age+=dt);
+  M.pops=M.pops.filter(pp=>pp.age<1.3);
+  if(M.fallT>=1.7 && !M.collapseShown){ M.collapseShown=true; finishCollapse(); }
+}
+function finishCollapse(){
+  // the Endless Road already has a scoreboard of its own for exactly this moment
+  if(M.endless){ endEndlessRoad(); return; }
+  M.done=true;
+  const panel=$('#road-collapse'); if(!panel){ window.__RD_SCREENS.showHub(); return; }
+  const dist=Math.round(clamp(M.progress,0,1)*100);
+  const body=$('#collapse-body');
+  if(body) body.innerHTML=`They went down <b>${dist}%</b> of the way to ${M.f.chapter.dest}. `
+    + `Nothing found on this walk is kept — but everything you <i>read</i> stays in your Lexicon, `
+    + `and the bench you forged is untouched. Walk it again.`;
+  const learned=$('#collapse-learned');
+  if(learned){
+    learned.innerHTML="";
+    [[ (M.partsStudiedRun||[]).length, "parts read"],
+     [ M.realTermsBuilt||0,            "real terms"],
+     [ (M.termsBuilt||[]).length,      "words chained"],
+     [ M.bestStreak||0,                "best streak"]].forEach(([v,l])=>{
+      const d=el("div","cl-stat"); d.innerHTML=`<span class="cl-v">${v}</span><span class="cl-l">${l}</span>`;
+      learned.appendChild(d);
+    });
+  }
+  panel.classList.add('show');
+  const again=$('#collapse-retry'); if(again) again.onclick=retryMission;
+  const quit=$('#collapse-quit'); if(quit) quit.onclick=()=>{ panel.classList.remove('show');
+    toast("You turn back — the road can be walked again another day."); window.__RD_SCREENS.showHub(); };
+  Audio2.sfx.stamp && Audio2.sfx.stamp();
+}
+/* walk the very same road again — same squad, same bench, same seed */
+function retryMission(){
+  const panel=$('#road-collapse'); if(panel) panel.classList.remove('show');
+  if(!E.getFlow()){ window.__RD_SCREENS.showHub(); return; }
+  if(M) M.done=true;
+  Audio2.sfx.whoosh && Audio2.sfx.whoosh();
+  runMission();
+}
 function seedParticles(weather){
   M.particles=[];
   if(FX.reduced()) return;
@@ -7346,24 +7594,122 @@ function seedParticles(weather){
       sway:Math.random()*6.28, r:weather==="rain"?1:2+Math.random()*2, rain:weather==="rain"});
   }
 }
+/* CAPTIONS SPEAK, THEN GET OUT OF THE WAY.
+   The caption is the game's teaching voice, so it has to be readable — but a line
+   of prose parked permanently across the bottom of the road is exactly the clutter
+   that made the walk hard to look at. Every caption now fades itself out a few
+   seconds after it is done being new. */
+const CAPTION_HOLD=5.4;
 function caption(txt){
-  if(txt===M.lastCap) return; M.lastCap=txt;
+  if(txt===M.lastCap){ M.capT=CAPTION_HOLD; return; }
+  M.lastCap=txt;
   const c=$('#mission-caption'); if(!c) return;
+  c.classList.remove('dim');
   c.innerHTML=txt;      // captions carry markup: control names, term spellings
+  M.capT=CAPTION_HOLD;
   if(!FX.reduced()){ c.style.opacity=0; c.style.transform="translateY(8px)";
     FX.to(c,{opacity:1,y:0,duration:0.5}); }
+}
+function ageCaption(dt){
+  if(M.capT<=0) return;
+  M.capT-=dt;
+  if(M.capT<=0){ const c=$('#mission-caption'); if(c) c.classList.add('dim'); }
+}
+/* THE FORGED-GEAR STRIP is pinned open on demand (G, or the ⚒ button) and
+   otherwise only flickers a single chip into view when that item does something. */
+function setGearStripOpen(on){
+  if(!M) return;
+  M.gearPinned=!!on;
+  const strip=$('#forge-strip'); if(!strip) return;
+  strip.classList.toggle('open', !!on);
+  strip.classList.remove('peek');   // pinned open shows every chip; unpinned shows none
+  const btn=$('#mission-gear-btn'); if(btn) btn.setAttribute('aria-pressed', on?'true':'false');
+  syncRoadInsets();
 }
 function renderPrepBars(){
   const wrap=$('#mission-prep'); wrap.innerHTML="";
   [["stamina","Stamina"],["morale","Morale"],["safety","Safety"]].forEach(([k,lab])=>{
-    const pb=el("div","pb");
+    const pb=el("div","pb"); pb.dataset.stat=k;
     pb.innerHTML=`<span class="lab">${lab}</span><div class="bar"><i id="pb-${k}" style="width:${M.stats[k]}%"></i></div>`;
     wrap.appendChild(pb);
   });
 }
 function updatePrepBars(){
   ["stamina","morale","safety"].forEach(k=>{ const i=$('#pb-'+k); if(i){ i.style.width=M.stats[k]+"%";
-    i.style.background = M.stats[k]<34?"var(--cinnabar)":M.stats[k]<60?"var(--gold)":"var(--jade-soft)"; } });
+    i.style.background = M.stats[k]<34?"var(--cinnabar)":M.stats[k]<60?"var(--gold)":"var(--jade-soft)";
+    // stamina is the run's clock: it gets a visible warning state of its own
+    if(k==="stamina" && i.parentElement && i.parentElement.parentElement)
+      i.parentElement.parentElement.classList.toggle('critical', M.stats[k]<22); } });
+}
+/* ==================================================================
+   ACCELERATION — the feel of getting a word right.
+   A right answer does not just add a number: it kicks the caravan into a
+   higher gear. rush() opens a burst that decays over a second or two;
+   the pace value eases toward it instead of snapping, the road scrolls
+   harder, speed streaks tear past, and the gauge in the corner climbs.
+   ================================================================== */
+function rush(pow, kind){
+  if(!M||M.done) return;
+  M.rushPow=Math.min(1.6, (M.rushT>0?M.rushPow*0.55:0) + (pow||0.5));
+  M.rushT=Math.max(M.rushT, 1.05 + (pow||0.5)*0.8);
+  M.rushKind=kind||"answer";
+  const g=$('#pace-gauge'); if(g && !FX.reduced()){ g.classList.remove('accel'); void g.offsetWidth; g.classList.add('accel'); }
+  Audio2.sfx.whoosh && Audio2.sfx.whoosh();
+}
+function brakePace(){
+  if(!M||M.done) return;
+  M.rushT=0; M.rushPow=0;
+  const g=$('#pace-gauge'); if(g){ g.classList.remove('accel'); g.classList.add('brake');
+    setTimeout(()=>g.classList.remove('brake'), 900); }
+}
+/* how much extra pace the current burst is worth, on an ease-out curve */
+function rushBoost(){
+  if(!M || M.rushT<=0) return 1;
+  const a=clamp(M.rushT/1.6,0,1);
+  return 1 + M.rushPow*0.85*(a*a);
+}
+function updatePaceGauge(force){
+  const v=$('#pg-val'), g=$('#pace-gauge'); if(!v||!M) return;
+  const txt="×"+(M.paceLive||M.paceNow||1).toFixed(2);
+  if(force || v.textContent!==txt) v.textContent=txt;
+  if(g && M.rushT<=0) g.classList.remove('accel');
+}
+/* THE LEARNING BEAT — a built term, its parts, and its meaning, held in clear
+   sky for a moment. The reward for chaining a word and the lesson the chain
+   teaches are deliberately the same event. */
+let termBannerTimer=null;
+function showTermBanner(word, parts, def, real){
+  const b=$('#term-banner'); if(!b) return;
+  b.innerHTML=`<span class="tb-word">${word}</span><span class="tb-tag${real?"":" coined"}">${real?"real term":"coined"}</span>
+    <span class="tb-parts">${parts}</span>
+    ${def?`<span class="tb-def">${def}</span>`:""}`;
+  b.classList.add('show');
+  const wh=$('#word-hud'); if(wh) wh.classList.add('hushed');
+  clearTimeout(termBannerTimer);
+  termBannerTimer=setTimeout(hideTermBanner, real?3400:2300);
+}
+function hideTermBanner(){
+  const b=$('#term-banner'); if(b) b.classList.remove('show');
+  const wh=$('#word-hud'); if(wh) wh.classList.remove('hushed');
+  clearTimeout(termBannerTimer);
+}
+/* a right answer anywhere on the road feeds one streak — gates, chained terms and
+   the popup challenges all count, so the walk rewards being right, not being lucky */
+function scoreCorrect(power, label){
+  if(!M||M.done) return;
+  M.correctAnswers=(M.correctAnswers||0)+1;
+  M.streak=(M.streak||0)+1;
+  if(M.streak>(M.bestStreak||0)) M.bestStreak=M.streak;
+  // a streak compounds the burst: three right in a row is a genuinely different ride
+  const streakBonus=Math.min(0.55, Math.max(0,M.streak-1)*0.14);
+  rush((power||0.5)+streakBonus, label);
+  if(M.streak>=3) pop(M.cv.width*0.30, M.laneY-108, `${M.streak} in a row!`);
+}
+function scoreWrong(){
+  if(!M||M.done) return;
+  M.wrongAnswers=(M.wrongAnswers||0)+1;
+  M.streak=0;
+  brakePace();
 }
 function pop(x,y,txt,bad){
   M.pops.push({x,y,txt,age:0,bad:!!bad});
@@ -7443,8 +7789,8 @@ function spawnPickup(forceLane, forceType, extra){
   }
   const partId = (type==="lexeme") ? pickRoadPart() : null;
   const reagentId = (type==="reagent") ? pick(Object.keys(window.__RD_REAGENTS||{ink:1})) : null;
-  const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.055, ROAD_TOP+0.01, ROAD_BOT-0.01);
-  M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, y, type, partId, reagentId, hover:0, got:false, read:false});
+  const u = clamp(LANES[lane].u + (Math.random()-0.5)*0.10, 0.02, 0.98);
+  M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, u, type, partId, reagentId, hover:0, got:false, read:false});
   });
 }
 /* weighted, weather-aware hazard deck — refilled when empty, rebuilt when weather turns */
@@ -7478,8 +7824,8 @@ function spawnHazard(){
   // NOTHING blocks the approach to a rune gate — a gate asks the player to think,
   // and stacking a reflex dodge on top of that is what made gates feel terrible.
   if(inGateCorridor(p)) return;
-  const y = clamp(LANES[lane].y + (Math.random()-0.5)*0.05, ROAD_TOP+0.02, ROAD_BOT-0.02);
-  M.hazards.push({p, lane, y, kind:k, hit:false, passed:false});
+  const u = clamp(LANES[lane].u + (Math.random()-0.5)*0.09, 0.03, 0.97);
+  M.hazards.push({p, lane, u, kind:k, hit:false, passed:false});
   });
 }
 /* what the bench answers on the road: gear/perks counter specific hazards */
@@ -7506,9 +7852,17 @@ function tick(t){
   if(!M||M.done) return;
   const dt=Math.min(0.05,(t-(M._lt||t))/1000); M._lt=t;
   const rel=relaxMult();
+  // THE COLLAPSE runs its own little loop: the walk is over, but the party still
+  // has to fall down in front of you before the round is called.
+  if(M.collapsing){ updateCollapse(dt); draw(t); return; }
+  // the walkable band tracks the real interface, a few times a second
+  M._insetT=(M._insetT||0)-dt;
+  if(M._insetT<=0){ M._insetT=0.25; syncRoadInsets(); }
+  ageCaption(dt);
   // free vertical movement: mouse leads, W/S and arrows travel, touch drags
   if(M.laneFlashT>0) M.laneFlashT=Math.max(0,M.laneFlashT-dt);
   if(M.phaseT>0) M.phaseT=Math.max(0,M.phaseT-dt);
+  if(M.rushT>0) M.rushT=Math.max(0,M.rushT-dt);
   if(!M.paused) stepMovement(dt);
   M.caravan.forEach((c,i)=>{ c.laneY += (M.laneY-c.laneY)*Math.min(1,dt*(6.0-i*0.7)); });
 
@@ -7541,8 +7895,18 @@ function tick(t){
     const diffCurve = difficultyAt(M.endless ? Math.min(1, M.progress/2.2) : M.progress);
     // surging is a genuine burst — but it also means less time to react to what's ahead
     const surgeBoost = M.surging ? 1.5 : 1;
+    // ACCELERATION. Knowledge-driven pace — momentum and the burst a right answer
+    // buys — EASES in rather than snapping, so getting a word right is felt as the
+    // road winding up underneath you instead of a number changing. Held inputs
+    // (Surge) and scripted event paces stay instant, because a button the player
+    // is holding must answer immediately.
+    M.paceTarget = momoFactor * rushBoost();
+    const chase = M.paceTarget>M.paceNow ? 2.6 : 1.5;   // quick to gather speed, slow to shed it
+    M.paceNow += (M.paceTarget-M.paceNow)*Math.min(1, dt*chase);
+    M.paceLive = M.paceNow * surgeBoost * forkPace;
+    updatePaceGauge();
     // slower base pace than before — the road gives real time to read hazards and decide
-    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * forkPace * finalStretch * momoFactor * surgeBoost * 1.55;
+    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * finalStretch * M.paceLive * 1.55;
     // the final boss holds the road at the Archive's threshold until the Chorus is sung;
     // the Endless Road has no destination at all, so progress simply never caps
     const progressCap = M.endless ? Infinity : ((M.boss && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1);
@@ -7561,8 +7925,15 @@ function tick(t){
     M.stats.safety = clamp(M.stats.safety - dt*Math.max(0.2,safeDrain),0,100);
     updatePrepBars();
     updateMomentumMeter();
-    // ENDLESS ROAD ends the instant stamina breaks — no destination, only the walk itself
-    if(M.endless && M.stats.stamina<=0 && !M.done){ endEndlessRoad(); }
+    // STAMINA IS THE CLOCK ON EVERY ROAD. When it breaks the party goes down where
+    // they stand — the round is over and the walk has to be made again.
+    if(M.stats.stamina<=0 && !M.done && !M.collapsing && !M.arriving){ beginCollapse(); return; }
+    // one warning, once, while there is still time to do something about it
+    if(M.stats.stamina<20 && !M._staminaWarned){
+      M._staminaWarned=true;
+      caption("They are running on empty — drop to the <b>river floor</b> to recover, or build a term to catch your breath. If stamina breaks, the party falls.");
+      Audio2.sfx.bad && Audio2.sfx.bad();
+    } else if(M.stats.stamina>34 && M._staminaWarned){ M._staminaWarned=false; }
 
     // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
     // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
@@ -7645,7 +8016,7 @@ function tick(t){
     let hovered=null;
     M.pickups.forEach(pk=>{
       if(pk.got) return;
-      const px=screenX(pk.p), py=(pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26;
+      const px=screenX(pk.p), py=objY(pk)-26;
       const near = canHover && pk.type==="lexeme" &&
         Math.hypot(M.pointer.x-px, M.pointer.y-py) < 54;
       if(near){
@@ -7661,7 +8032,7 @@ function tick(t){
       if(pk.got) return;
       const px=screenX(pk.p);
       if(nearRow(pk, reachBonus) && px < sx+30+ reachBonus && px > sx-40){
-        collectPickup(pk, px, (pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26);
+        collectPickup(pk, px, objY(pk)-26);
       }
     });
   }
@@ -7688,6 +8059,10 @@ function studyPart(pk, px, py){
   if(lvl.n>=3) gains.morale=(gains.morale||0)+5;      // Keeper: reading lifts spirits too
   statGain(gains);
   bumpMomentum(0.22*M.forge.gainMult);
+  // reading pays in speed too — curiosity is never the slow option
+  rush(0.3, "study");
+  M.partsStudiedRun=M.partsStudiedRun||[];
+  if(!M.partsStudiedRun.includes(pk.partId)) M.partsStudiedRun.push(pk.partId);
   markPartSeen(pk.partId);
   const res=E.markStudied(pk.partId);
   // Phase II (The Blank Page): if this part's meaning was never unsealed by a
@@ -7737,7 +8112,7 @@ function showStudyCard(pk){
   const rc=M.cv.getBoundingClientRect(), host=card.parentElement.getBoundingClientRect();
   const sx=rc.width/M.cv.width, sy=rc.height/M.cv.height;
   const px=screenX(pk.p)*sx + (rc.left-host.left);
-  const py=((pk.y!=null?pk.y:LANES[pk.lane].y)*M.cv.height-26)*sy + (rc.top-host.top);
+  const py=(objY(pk)-26)*sy + (rc.top-host.top);
   card.style.left=Math.round(px)+"px";
   card.style.top =Math.round(py)+"px";
   card.classList.add('show');
@@ -7832,6 +8207,8 @@ function coolMomentum(dt){
 function knockMomentum(){                 // a hazard hit costs pace and breaks the chain
   M.momentum=clamp(M.momentum*0.6, M.forge.momentumFloor, MOMENTUM_MAX);
   if(M.combo.length){ M.combo=[]; M.comboBadT=0.4; }
+  // a clean hit is a brake you can feel: the burst dies and the streak resets
+  M.streak=0; brakePace();
   updateWordHud();
 }
 
@@ -7869,6 +8246,13 @@ function completeTerm(){
   const label=realId? TERMS[realId].spell
     : ids.map(id=>(PARTS[id].stem||PARTS[id].text).replace(/[-\/o]+$/,'').replace(/[-\/]/g,'')).join("");
   M.termsBuilt.push(label);
+  // ACCELERATION: chaining a whole word is the biggest kick on the road, and a
+  // real term kicks harder than a coined one.
+  scoreCorrect(realId?1.0:0.55, "term");
+  // THE LESSON AND THE REWARD ARE THE SAME EVENT — the banner names the word,
+  // spells out the parts that made it, and gives the meaning, up in clear sky.
+  const partTrail=ids.map(id=>`${PARTS[id].text} <span style="opacity:.62">(${PARTS[id].mean})</span>`).join(" + ");
+  showTermBanner(label, partTrail, realId?TERMS[realId].def:"", !!realId);
   if(realId){ M.realTermsBuilt++;
     caption(`✦ ${TERMS[realId].spell} — ${TERMS[realId].def}. Momentum ×${M.momentum.toFixed(1)}!`);
   } else {
@@ -7966,6 +8350,7 @@ function resolveGate(){
   G.flareT=0.9; G.flareLane=bandAt(M.laneY); G.flareOk=ok;
   if(ok){
     M.challengesWon++; bumpMomentum(0.9*M.forge.gainMult); M.surgeT=0.5; setPace(1.6,3);
+    scoreCorrect(0.8, "gate");
     statGain({morale:8,safety:6,stamina:4});
     caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
     pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
@@ -7977,6 +8362,7 @@ function resolveGate(){
     pop(M.cv.width*0.30,M.laneY-88,"smoke saved!"); Audio2.sfx.clink();
   } else {
     M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
+    scoreWrong();
     M.stats.morale=clamp(M.stats.morale-7,0,100); M.stats.stamina=clamp(M.stats.stamina-5,0,100);
     caption(`Wrong gate — the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
     pop(M.cv.width*0.30,M.laneY-88,"wrong gate",true); Audio2.sfx.bad(); FX.buzz(24);
@@ -8120,6 +8506,10 @@ function answer(correct, btn, correctText, battle, flavor, q){
   if(correct){
     if(!flavor) M.challengesWon++;
     Audio2.sfx.great(); FX.buzz(20);
+    // KNOWING IT MAKES YOU FASTER. A right answer under pressure kicks the caravan
+    // into a higher gear the moment the question box clears.
+    scoreCorrect(0.75, "answer");
+    bumpMomentum(0.35*M.forge.gainMult);
     if(btn) btn.classList.add("jade");
     if(battle){ statGain({morale:12,safety:10,stamina:6});
       caption("The right word at the right moment — the squad rallies and the raiders scatter."); }
@@ -8139,6 +8529,7 @@ function answer(correct, btn, correctText, battle, flavor, q){
       caption("Right — the squad moves with confidence."); }
   } else {
     Audio2.sfx.bad(); FX.buzz(30);
+    scoreWrong();
     if(btn) btn.classList.add("cinnabar-btn");
     if(battle){ M.stats.morale=clamp(M.stats.morale-10,0,100); M.stats.safety=clamp(M.stats.safety-8,0,100);
       caption("The word slips away and the raiders press — the squad pays in bruises before breaking free."); }
@@ -8166,21 +8557,40 @@ function draw(t){
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,sky1); g.addColorStop(1,sky2);
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   const scroll=M.progress*1400;
-  const hills=[{c:"#9fb0a4",amp:60,base:H*0.40,sp:0.25},{c:"#7f958a",amp:80,base:H*0.50,sp:0.45},{c:"#5f7a6c",amp:70,base:H*0.58,sp:0.7}];
+  const bTop=bandTopPx(), bBot=bandBotPx(), bH=bandH();
+  const hills=[{c:"#9fb0a4",amp:60,base:bTop*0.62,sp:0.25},{c:"#7f958a",amp:80,base:bTop*0.82,sp:0.45},
+               {c:"#5f7a6c",amp:70,base:bTop+bH*0.06,sp:0.7}];
   hills.forEach((hl,idx)=>{
     ctx.fillStyle=hl.c; ctx.beginPath(); ctx.moveTo(0,H);
     for(let x=0;x<=W;x+=24){ const wx=x+scroll*hl.sp;
-      const y=hl.base - Math.sin(wx*0.004+idx)*hl.amp - Math.sin(wx*0.013)*18; ctx.lineTo(x,y); }
+      const y=hl.base - Math.sin(wx*0.004+idx)*hl.amp*0.6 - Math.sin(wx*0.013)*14; ctx.lineTo(x,y); }
     ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
   });
-  // ground wash under the lanes
-  ctx.fillStyle="#c9bd97"; ctx.fillRect(0,H*0.56,W,H*0.44);
+  // ground wash under the lanes — it starts where the last hill lands so the
+  // widened road reads as continuous ground rather than an empty tan field
+  const groundTop=bTop-bH*0.02;
+  ctx.fillStyle="#c9bd97"; ctx.fillRect(0,groundTop,W,H-groundTop);
+  // scrolling ground texture: sparse grit and cart-ruts drifting past at the
+  // road's real speed, so the walk always looks like it is moving
+  if(!FX.reduced()){
+    ctx.save(); ctx.globalAlpha=0.14; ctx.fillStyle="#8a7c5c";
+    for(let i=0;i<26;i++){
+      const seed=i*97.13;
+      const gx=((seed*13.7 - scroll*(0.55+ (i%5)*0.14)) % (W+120) + W+120) % (W+120) - 60;
+      const gy=groundTop + ((seed*31.7)%1000/1000)*(H-groundTop);
+      ctx.fillRect(gx, gy, 10+(i%4)*7, 2);
+    }
+    ctx.restore();
+  }
   // the three ways
   LANES.forEach((L,i)=>{
-    const y=L.y*H;
+    const y=laneYpx(i);
     const locked = L.need && !M.caps[L.need];
     ctx.save();
     ctx.globalAlpha = locked?0.35:0.9;
+    // a soft trodden margin, so each way reads as a corridor with width, not a wire
+    ctx.fillStyle= i===2 ? "rgba(127,149,143,.18)" : i===0 ? "rgba(143,160,143,.18)" : "rgba(179,163,124,.24)";
+    ctx.fillRect(0, y-bH*0.10, W, bH*0.20);
     // ribbon
     ctx.strokeStyle=L.col; ctx.lineWidth=i===0?7:i===1?12:10; ctx.lineCap="round";
     ctx.beginPath(); ctx.moveTo(0,y+6);
@@ -8201,16 +8611,55 @@ function draw(t){
       ctx.strokeStyle="rgba(189,157,95,.5)"; ctx.setLineDash([8,8]); ctx.lineWidth=2;
       ctx.beginPath(); ctx.moveTo(0,y-34); ctx.lineTo(W,y-34); ctx.stroke(); ctx.setLineDash([]);
     }
-    if(locked){
-      ctx.fillStyle="rgba(60,50,40,.7)"; ctx.font="13px 'Noto Sans',sans-serif"; ctx.textAlign="left";
-      ctx.fillText("⨯ needs climbing gear", 16, y-12);
-    }
     ctx.restore();
   });
+  // A LOCKED LEDGE IS TERRAIN, NOT A DEAD ZONE. Everything above the ceiling is
+  // drawn as a sheer face the squad plainly cannot get onto, and labelled on the
+  // seam itself — so a mouse that stops climbing reads as rock in the way rather
+  // than a control that broke.
+  if(!(M.caps && M.caps.climb)){
+    const ceil=roadMinY();
+    ctx.save();
+    ctx.fillStyle="rgba(58,64,58,.32)"; ctx.fillRect(0,bTop-8,W,ceil-(bTop-8));
+    ctx.strokeStyle="rgba(48,54,48,.6)"; ctx.lineWidth=2; ctx.setLineDash([10,7]);
+    ctx.beginPath(); ctx.moveTo(0,ceil); ctx.lineTo(W,ceil); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="rgba(243,236,216,.9)"; ctx.font="700 12px 'Noto Sans',sans-serif"; ctx.textAlign="left";
+    ctx.fillText("⨯ the upper ledges need climbing gear", 16, ceil-8);
+    ctx.restore();
+  }
+  /* WAYSTONES ON THE FAR VERGE. A marker every 5% of the road, numbered every
+     25%. They tell you how far you have actually come without opening anything,
+     and — because they stream past at the road's true speed — they are the
+     clearest read the player has on how fast the caravan is going right now. */
+  {
+    const step=0.05, vergeY=bTop-10;
+    const first=Math.floor((M.progress-0.14)/step)*step;
+    ctx.save(); ctx.textAlign="center";
+    for(let k=0;k<28;k++){
+      const p=first+k*step;
+      if(p<-0.001) continue;
+      const px=screenX(p);
+      if(px<-30) continue;
+      if(px>W+30) break;
+      const major=Math.abs(Math.round(p/step)%5)<0.001;
+      ctx.globalAlpha=major?0.62:0.4;
+      ctx.fillStyle="#7d8a7d";
+      const wStone=major?7:4, hStone=major?17:9;
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(px-wStone/2, vergeY-hStone, wStone, hStone, 2);
+      else ctx.rect(px-wStone/2, vergeY-hStone, wStone, hStone);
+      ctx.fill();
+      if(major){
+        ctx.globalAlpha=0.68; ctx.fillStyle="#4e5a4e"; ctx.font="700 11px 'Noto Sans',sans-serif";
+        ctx.fillText(M.endless? p.toFixed(2) : Math.round(clamp(p,0,1)*100)+"%", px, vergeY-hStone-5);
+      }
+    }
+    ctx.restore();
+  }
   // pickups
   M.pickups.forEach(pk=>{
     if(pk.got) return;
-    const x=screenX(pk.p), y=(pk.y!=null?pk.y:LANES[pk.lane].y)*H - 26;
+    const x=screenX(pk.p), y=objY(pk) - 26;
     if(x<-40||x>W+40) return;
     drawPickup(ctx,x,y,pk.type,t,pk.partId);
     if(pk.hover>0){
@@ -8224,7 +8673,7 @@ function draw(t){
   // co-located with the squad the instant progress reaches 1 (they truly reach it)
   drawFinishGate(ctx, screenX(1), M.laneY, H, t, M.progress>0.95);
   M.hazards.forEach(h=>{
-    const x=screenX(h.p), y=(h.y!=null?h.y:LANES[h.lane].y)*H;
+    const x=screenX(h.p), y=objY(h);
     if(x<-60||x>W+60||h.hit) return;
     drawHazard(ctx,x,y,h.kind,t,M.revealT>0);
   });
@@ -8237,23 +8686,48 @@ function draw(t){
     if(hx>sx && hx<sx+180) incoming=true;
   });
   // walkers
-  // walkers
   if(incoming){
     const pulse=0.5+Math.sin(t*0.02)*0.5;
     ctx.strokeStyle=`rgba(226,60,40,${0.5+pulse*0.4})`; ctx.lineWidth=3;
     ctx.beginPath(); ctx.arc(sx, M.laneY, 30+pulse*6, 0, 6.28); ctx.stroke();
   }
-  // PACE — surging reads as forward pressure: speed streaks trailing the squad,
-  // never obscuring the road ahead where questions and hazards need to be read
-  if(M.surging && !FX.reduced()){
-    ctx.save(); ctx.globalAlpha=0.34;
-    for(let i=0;i<6;i++){
-      const yy = M.laneY - 46 + i*17 + Math.sin(t*0.02+i)*3;
-      const len = 40+Math.random()*46;
-      const g2=ctx.createLinearGradient(sx-70-len,0,sx-70,0);
-      g2.addColorStop(0,"rgba(216,189,132,0)"); g2.addColorStop(1,"rgba(216,189,132,.85)");
-      ctx.strokeStyle=g2; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(sx-70-len,yy); ctx.lineTo(sx-70,yy); ctx.stroke();
+  /* ACCELERATION YOU CAN SEE.
+     Streaks tear past behind the squad whenever the caravan is genuinely moving
+     faster than a walk — a surge, a hot momentum chain, or the burst a right
+     answer just bought. Their number, length and brightness all read the same
+     single pace figure, so the picture never lies about how fast you are going.
+     They stay BEHIND the squad so the road ahead, where hazards and gates have
+     to be read, is never obscured. */
+  const paceOver = Math.max(0, (M.paceLive||M.paceNow||1) - 1.05);
+  const rushA = M.rushT>0 ? clamp(M.rushT/1.6,0,1) : 0;
+  const streakStrength = clamp(paceOver*0.55 + rushA*0.55 + (M.surging?0.35:0), 0, 1.25);
+  if(streakStrength>0.06 && !FX.reduced()){
+    const n=Math.min(14, 3+Math.round(streakStrength*10));
+    ctx.save(); ctx.globalAlpha=clamp(0.16+streakStrength*0.34,0,0.6);
+    for(let i=0;i<n;i++){
+      const yy = M.laneY - 56 + (i/(n-1||1))*112 + Math.sin(t*0.02+i)*3;
+      const len = (34+streakStrength*130)*(0.6+Math.random()*0.7);
+      const g2=ctx.createLinearGradient(sx-60-len,0,sx-60,0);
+      g2.addColorStop(0,"rgba(216,189,132,0)");
+      g2.addColorStop(1, rushA>0.35 ? "rgba(243,236,216,.95)" : "rgba(216,189,132,.85)");
+      ctx.strokeStyle=g2; ctx.lineWidth=1.5+streakStrength;
+      ctx.beginPath(); ctx.moveTo(sx-60-len,yy); ctx.lineTo(sx-60,yy); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // the kick itself: a bright chevron wake blooming out behind the squad the
+  // instant a right answer lands, decaying with the burst
+  if(rushA>0.02 && !FX.reduced()){
+    ctx.save();
+    ctx.globalAlpha=rushA*0.5;
+    ctx.strokeStyle="rgba(243,236,216,.95)"; ctx.lineWidth=3; ctx.lineCap="round";
+    for(let k=0;k<3;k++){
+      const off=(1-rushA)*150 + k*26;
+      ctx.beginPath();
+      ctx.moveTo(sx-30-off, M.laneY-40);
+      ctx.lineTo(sx-58-off, M.laneY-14);
+      ctx.lineTo(sx-30-off, M.laneY+12);
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -8261,7 +8735,10 @@ function draw(t){
     const wob=Math.sin(t*0.008*c.pace + c.phase);
     const low = M.stats.stamina<34;
     const lit = M.actFlash && M.actFlash.t>0 && (c.gear||[]).some(g=>g.id===M.actFlash.itemId);
-    drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4, c.color, wob, low, c.weapon, c.gearKind, lit?M.actFlash.t:0, lit?M.actFlash.tier:null);
+    // THE COLLAPSE: each traveler drops in turn, front of the line first
+    const fall = M.collapsing ? clamp((M.fallT-i*0.16)/0.5,0,1) : 0;
+    drawWalker(ctx, sx - c.lag, c.laneY + (low?4:0) - Math.abs(wob)*4*(1-fall), c.color,
+      wob*(1-fall), low, c.weapon, c.gearKind, lit?M.actFlash.t:0, lit?M.actFlash.tier:null, fall);
   });
   // crossing into a new band — a soft confirmation around the squad's actual height
   if(M.laneFlashT>0){
@@ -8292,7 +8769,7 @@ function draw(t){
     M.gateSweepT=Math.max(0,M.gateSweepT-0.016);
     ctx.save(); ctx.globalAlpha=clamp(M.gateSweepT,0,0.35);
     ctx.fillStyle="rgba(216,189,132,.55)";
-    ctx.fillRect(sx, H*ROAD_TOP-20, W-sx, H*(ROAD_BOT-ROAD_TOP)+50);
+    ctx.fillRect(sx, bandTopPx()-20, W-sx, bandH()+50);
     ctx.restore();
   }
   // raiders during an ambush — they visibly CLOSE IN as the timer runs down
@@ -8338,12 +8815,19 @@ function draw(t){
   // rune gate spanning the road
   if(M.gate) drawGate(ctx,W,H,t);
   // destination banner
-  if(M.progress>0.86 && !M.gate){ const a=(M.progress-0.86)/0.14;
+  if(M.progress>0.86 && !M.gate && !M.endless){ const a=(M.progress-0.86)/0.14;
     ctx.globalAlpha=clamp(a,0,1); ctx.fillStyle="#b5322b";
-    const bx=W*0.88, by=LANES[1].y*H-90;
+    const bx=W*0.88, by=laneYpx(1)-90;
     ctx.fillRect(bx-4,by,8,70); ctx.fillRect(bx,by,54,34);
     ctx.fillStyle="#f3ecd8"; ctx.font="20px 'Noto Serif SC',serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
     ctx.fillText("到",bx+26,by+18); ctx.globalAlpha=1; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  }
+  // the road goes dim as the party goes down
+  if(M.collapsing){
+    ctx.save();
+    ctx.globalAlpha=clamp(M.fallT/1.4,0,0.62);
+    ctx.fillStyle="#140e08"; ctx.fillRect(0,0,W,H);
+    ctx.restore();
   }
 }
 /* the rune gate: three labelled arches marching toward the squad; steer into
@@ -8355,7 +8839,7 @@ function drawGate(ctx,W,H,t){
   ctx.save();
   ctx.textAlign="center"; ctx.textBaseline="middle";
   for(let lane=0;lane<3;lane++){
-    const y=LANES[lane].y*H;
+    const y=laneYpx(lane);
     const id=G.laneIds[lane]; if(!id) continue;
     const part=PARTS[id];
     const locked = LANES[lane].need && !M.caps[LANES[lane].need];
@@ -8412,6 +8896,16 @@ function drawPickup(ctx,x,y,type,t,partId){
     ctx.fillText(part.kind[0].toUpperCase(), -w/2+3, -h/2+3.5);
     ctx.fillStyle=style.color; ctx.font="700 12px 'Noto Sans',sans-serif";
     ctx.fillText(part.text, 2, 0.5);
+    /* REINFORCEMENT, NOT A CHEAT SHEET.
+       A part you have already sat and read carries its meaning on the tile from
+       then on — every later sighting is one more free repetition. A part you have
+       never read stays bare, so the invitation to hover and learn it is intact. */
+    if(!M.boss && (S().studied||[]).includes(partId)){
+      ctx.font="600 9px 'Noto Sans',sans-serif";
+      ctx.fillStyle="rgba(43,36,28,.72)";
+      const m=part.mean.length>22 ? part.mean.slice(0,21)+"…" : part.mean;
+      ctx.fillText(m, 2, h/2+8);
+    }
     ctx.textBaseline="alphabetic";
   }
   else if(type==="ink"){ ctx.fillStyle="#2b241c"; ctx.beginPath();
@@ -8537,8 +9031,17 @@ function drawRaider(ctx,x,y,t,phase){
   ctx.beginPath(); ctx.moveTo(8,-26); ctx.lineTo(14,-38); ctx.stroke();
   ctx.restore();
 }
-function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind,litT,litTier){
+function drawWalker(ctx,x,y,color,wob,low,weapon,gearKind,litT,litTier,fall){
   ctx.save(); ctx.translate(x,y);
+  // THE FALL — when stamina breaks the traveler topples forward onto the road and
+  // stays there. Eased so the drop has weight rather than snapping flat.
+  const f=clamp(fall||0,0,1);
+  if(f>0){
+    const e=1-Math.pow(1-f,3);
+    ctx.translate(-e*16, e*6);
+    ctx.rotate(-e*1.42);              // ~81°: down in the dirt
+    ctx.globalAlpha=1-e*0.18;
+  }
   // shadow
   ctx.fillStyle="rgba(26,22,19,0.16)"; ctx.beginPath(); ctx.ellipse(0,4,15,4,0,0,6.28); ctx.fill();
   // legs
@@ -8933,10 +9436,10 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _inGateCorridor:(p)=>inGateCorridor(p),
   _spawnHazardAt:(p,lane,kind)=>{ if(!M) return null;
     if(inGateCorridor(p)) return null;
-    M.hazards.push({p, lane, y:LANES[lane].y, kind, hit:false, passed:false}); return M.hazards.length; },
+    M.hazards.push({p, lane, u:LANES[lane].u, kind, hit:false, passed:false}); return M.hazards.length; },
   _hazards:()=>M&&M.hazards,
   _study:(partId)=>{ if(!M) return null;
-    const pk={p:M.progress+0.1, lane:1, y:LANES[1].y, type:"lexeme", partId, hover:0.4, got:false, read:true};
+    const pk={p:M.progress+0.1, lane:1, u:LANES[1].u, type:"lexeme", partId, hover:0.4, got:false, read:true};
     M.pickups.push(pk); studyPart(pk, 100, 100); return {studied:E.studiedCount(), affinity:E.affinity()}; },
   _useAbility:(k)=>{ useAbility(k); return M&&{abilities:Object.assign({},M.abilities), phaseT:M.phaseT, hazards:M.hazards.filter(h=>!h.hit).length}; },
   _hazardsAhead:()=>hazardsAhead(),
@@ -8952,10 +9455,23 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     M.chorus.placed[emptyIdx]=t.id; t.used=true; renderChorus(); return M.chorus.placed.slice(); },
   _chorusCheck:()=>{ checkChorus(); return M&&M.chorus; },
   _peekCard:(partId)=>{ if(!M) return null;
-    const pk={p:M.progress, lane:1, y:LANES[1].y, type:"lexeme", partId, hover:0.4, got:false, read:false};
+    const pk={p:M.progress, lane:1, u:LANES[1].u, type:"lexeme", partId, hover:0.4, got:false, read:false};
     showStudyCard(pk);
     const card=$('#study-card');
     return { sealed: card ? /sc-sealed/.test(card.innerHTML) : null, sealRevealed:pk.sealRevealed }; },
+  /* --- band geometry / clutter / collapse / acceleration hooks (headless tests) --- */
+  _band:()=>M?{top:bandTopPx(), bot:bandBotPx(), h:bandH(), inset:Object.assign({},M.inset||{})}:null,
+  _laneY:(i)=>M?laneYpx(i):null,
+  _syncInsets:()=>{ syncRoadInsets(); return M&&M.inset; },
+  _setInset:(top,bot)=>{ if(M) M.inset={top:top||0,bot:bot||0}; return M&&M.inset; },
+  _collapse:()=>{ beginCollapse(); return M&&{collapsing:M.collapsing, done:M.done}; },
+  _stepCollapse:(dt)=>{ if(M&&M.collapsing) updateCollapse(dt||0.05); return M&&{fallT:M.fallT, done:M.done}; },
+  _retry:()=>retryMission(),
+  _pace:()=>M&&{now:M.paceNow, live:M.paceLive, target:M.paceTarget, rushT:M.rushT, rushPow:M.rushPow, streak:M.streak},
+  _rush:(p)=>{ rush(p); return M&&{rushT:M.rushT, boost:rushBoost()}; },
+  _rushBoost:()=>rushBoost(),
+  _gearStrip:(on)=>{ setGearStripOpen(on); return M&&M.gearPinned; },
+  _ageCaption:(dt)=>{ ageCaption(dt||0.05); return M&&M.capT; },
   /* --- pause menu hooks (headless tests) --- */
   GATE_LEAD:()=>GATE_LEAD,
   _openPause:()=>{ openPauseMenu(); return M&&{paused:M.paused, pausedByMenu:M.pausedByMenu}; },
@@ -9000,6 +9516,8 @@ function bindPauseMenu(){
   const quitYes=$('#pause-quit-yes'); if(quitYes) quitYes.onclick=abandonMission;
   const quitNo=$('#pause-quit-no'); if(quitNo) quitNo.onclick=()=>{ const qc=$('#pause-quit-confirm'); if(qc) qc.classList.remove('show'); };
   const pauseBtn=$('#mission-pause-btn'); if(pauseBtn) pauseBtn.onclick=()=>{ if(M && M.pausedByMenu) closePauseMenu(); else openPauseMenu(); };
+  const gearBtn=$('#mission-gear-btn'); if(gearBtn) gearBtn.onclick=()=>{ if(M) setGearStripOpen(!M.gearPinned); };
+  const retry=$('#collapse-retry'); if(retry) retry.onclick=retryMission;
 }
 function boot(){
   const S0=E.S();
