@@ -33,7 +33,10 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   const g = MI._forceGate();
   assert(g, 'a gate opened');
   const leadAtSpawn = g.p - MI._state().progress;
-  assert(Math.abs(leadAtSpawn - MI.GATE_LEAD()) < 0.001, 'the gate actually spawns at the documented lead distance');
+  // the difficulty setting scales how much road you get to read a gate over
+  assert(Math.abs(leadAtSpawn - MI._gateLead()) < 0.001, 'the gate actually spawns at this run\'s lead distance');
+  assert(MI._gateLead() >= MI.GATE_LEAD() * 0.7 && MI._gateLead() <= MI.GATE_LEAD() * 1.6,
+    'the difficulty setting scales the lead distance without ever collapsing it');
   // roughly translate that into real seconds at a typical steady pace, the way a player would experience it
   const typicalSpeed = 0.045; // progress/sec, representative of steady (non-surging) travel
   const readSeconds = leadAtSpawn / typicalSpeed;

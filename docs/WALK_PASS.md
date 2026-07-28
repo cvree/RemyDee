@@ -121,3 +121,101 @@ the eased-not-stepped acceleration curve, streak compounding and braking, the
 term banner's contents, the folded gear strip and self-fading caption, the
 collapse → recap → retry loop, and that a collapsed run never hands out an
 arrival grade.
+
+---
+
+# The Difficulty Pass — what shipped
+
+The road had one curve, and it was the same curve for a first-day learner and
+someone who already knows their roots. This pass gives the player the choice, and
+gives the game a way to make that choice for them.
+
+## 7. Four settings, one tuning table
+
+Asked once on the first launch, before the story starts — not buried in a menu —
+and changeable from Settings forever after. A returning save keeps the curve it
+was already playing (Steady) rather than being interrupted mid-campaign.
+
+| | Gentle ◔ | Steady ◑ | Demanding ◕ | The road that learns ◍ |
+|---|---|---|---|---|
+| tier | 0.10 | 0.42 | 0.86 | moves |
+| hazard density | ×0.62 | ×0.90 | ×1.42 | — |
+| hazard bite | ×0.45 | ×0.85 | ×1.27 | — |
+| stamina clock | ×0.55 | ×0.95 | ×1.37 | — |
+| starting strength | ×1.22 | ×1.07 | ×0.91 | — |
+| road to read a gate over | ×1.55 | ×1.20 | ×0.83 | — |
+| answers per question | 3 | 3 | 4 | — |
+| a wrong door dimmed | always | no | no | — |
+
+Everything downstream reads **one** object, `diffTune()`, so a setting can never
+be cosmetic — and the within-road ramp (the last third of any road is visibly
+harder than the first) survives at every setting rather than being replaced by it.
+
+Two guarantees the tests hold:
+
+- **The run takes one snapshot** of the difficulty when the squad sets out.
+  An adaptive road can never rewrite the rules of a walk in progress.
+- **A fixed setting never drifts.** Whatever the player does, Demanding stays
+  Demanding.
+
+Relaxed pace stays exactly what it was — an accessibility softener that rides on
+top, not a difficulty in disguise.
+
+## 8. The road that learns
+
+A single rating in 0..1, fed by two signals:
+
+- **Every answer, anywhere** — bench, forge, road, Training Hall — moves it
+  slightly. One lucky guess proves nothing; a run of them proves something.
+- **Every finished run** moves it much more, because a run is the only signal
+  that covers pacing, steering and stamina management together. The run's quality
+  is re-centred before it is believed (a merely-fine arrival is *par*, not
+  evidence of struggling), or the road would oscillate instead of settling.
+
+Confidence ramps in over the first ~24 answers and ~3 runs, so a new player is
+not judged by their first two guesses. The tier is clamped to `[0.10, 0.96]` —
+never gentler than Gentle, never harder than Demanding.
+
+**It reports itself.** Every results page carries a *"The road you are walking"*
+panel: the band by name (Gentle / Steady / Demanding / Unforgiving), a marker on
+the scale, and — when it has just moved — which way and exactly what that means
+for the next walk. A difficulty that changes in secret is one the player can
+never trust or aim at (NORTH_STAR, Pillar II).
+
+**No unfair walls.** A fixed setting will not move on its own, so after a road has
+put the party down twice the collapse card offers to ease it — one step down, or
+straight onto the road that learns. Offered, never imposed.
+
+## 9. Three systems that make a hard road worth walking
+
+**Completion gates.** Above tier 0.55, gates start asking the hardest and most
+useful thing they can: a real term with one part torn out, and its meaning
+underneath — `gastr/o + ___ → "inflammation of the stomach"`. Recognising a part
+is recall; finishing a word is construction under time pressure, the transfer
+mode NORTH_STAR §2 asks the road to deliver. Getting one right shows the whole
+assembled term and banks construction mastery for it.
+
+**The re-ask loop.** Wrong answers were being collected in `M.reask` and never
+looked at again — a promise the code made in a comment and never kept. Now
+roughly two in three questions after a mistake come back to the exact part you
+missed, and the gates prefer it too. Getting it right clears the debt, pays extra
+momentum, and says so: *"That one caught you earlier — and you have it now."*
+Being corrected in the moment is worth far more than being told at the end.
+
+**The flow state.** Four right answers in a row and the caravan enters flow:
+everything found is worth ×1.6, momentum will not fall below a hot floor, and the
+meter says so. The price is that the road stops being careful with you — the
+stamina clock runs ×1.35 and hazards bite ×1.3. So a hot streak becomes a real
+decision: ride it for the haul, or drop to the river floor and bank what you
+have. One wrong answer, or one hazard taken square, ends it and takes the hot
+floor with it. Push-your-luck that can only be earned by knowing things
+(NORTH_STAR, Pillar I).
+
+---
+
+`test17.js` covers the four settings and that none of their knobs is cosmetic,
+the within-road ramp surviving at every setting, the adaptive rating's floor,
+ceiling, confidence ramp and non-drift when fixed, the per-run snapshot, the live
+stamina clock, completion gates, the re-ask loop, the flow state's entry and
+exit, the results panel's reporting, and save/migration of both the setting and
+the adaptive read.

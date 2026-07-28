@@ -882,6 +882,13 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   background:rgba(20,16,10,.5);border:1px solid rgba(189,157,95,.5);box-shadow:0 4px 12px rgba(0,0,0,.4);
   backdrop-filter:blur(3px);transition:box-shadow .3s,border-color .3s;}
 .momentum.hot{border-color:var(--gold);box-shadow:0 0 0 2px rgba(189,157,95,.4),0 6px 16px rgba(0,0,0,.5);}
+/* FLOW — four right in a row. Worth more, and more dangerous. */
+.momentum.flow{border-color:#e2a15a;background:rgba(70,30,14,.62);
+  box-shadow:0 0 0 3px rgba(226,161,90,.45),0 8px 20px rgba(0,0,0,.55);animation:moFlow 1.5s ease-in-out infinite;}
+.momentum.flow .mo-lab{color:#f0c68a;}
+@keyframes moFlow{0%,100%{box-shadow:0 0 0 3px rgba(226,161,90,.4),0 8px 20px rgba(0,0,0,.55);}
+  50%{box-shadow:0 0 0 6px rgba(226,161,90,.24),0 10px 26px rgba(0,0,0,.55);}}
+[data-motion="reduced"] .momentum.flow{animation:none;}
 .momentum.surge{animation:moSurge .5s var(--ease-back);}
 @keyframes moSurge{0%{transform:scale(1);}45%{transform:scale(1.18);}100%{transform:scale(1);}}
 [data-motion="reduced"] .momentum.surge{animation:none;}
@@ -1029,6 +1036,38 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .prep-bars .pb.critical .lab{color:var(--cinnabar);animation:pbCrit .7s ease-in-out infinite;}
 @keyframes pbCrit{0%,100%{opacity:.45;}50%{opacity:1;}}
 [data-motion="reduced"] .prep-bars .pb.critical .lab{animation:none;}
+/* ===== DIFFICULTY CHOOSER — four honest cards, one of them adaptive ===== */
+.diff-wrap{max-width:920px;margin:0 auto;padding:8px 0 24px;}
+.diff-lede{max-width:660px;margin:-4px auto 22px;text-align:center;}
+.diff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
+.diff-card{position:relative;text-align:left;padding:16px 16px 14px;border-radius:14px;cursor:pointer;
+  background:var(--parch);border:2px solid var(--ink-line);box-shadow:0 6px 16px rgba(0,0,0,.22);
+  transition:transform .14s var(--ease-back),box-shadow .18s,border-color .18s;font-family:var(--font-read);}
+.diff-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.3);}
+.diff-card.on{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,189,132,.42),0 12px 26px rgba(0,0,0,.3);}
+.diff-card .dc-glyph{font-size:1.5rem;line-height:1;color:var(--jade-deep);}
+.diff-card .dc-name{display:block;font-family:var(--font-cal);font-weight:900;font-size:1.12rem;margin-top:4px;color:var(--ink);}
+.diff-card .dc-lede{display:block;font-size:.78rem;color:var(--cinnabar-deep);font-style:italic;margin:2px 0 7px;}
+.diff-card .dc-note{display:block;font-size:.74rem;color:var(--ink-soft);line-height:1.42;}
+.diff-card .dc-current{position:absolute;top:10px;right:10px;font-size:.56rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--jade-deep);color:var(--rice);}
+/* the little bar that shows where a setting sits on the one scale everything reads */
+.dc-scale{display:block;height:5px;border-radius:3px;margin-top:10px;background:rgba(43,36,28,.14);overflow:hidden;}
+.dc-scale > i{display:block;height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--jade-soft),var(--gold),var(--cinnabar));}
+.dc-scale.adaptive > i{background:repeating-linear-gradient(90deg,var(--jade-soft) 0 8px,var(--gold) 8px 16px);}
+/* ===== where the road is running, on the results page ===== */
+.road-level{padding:14px 16px;text-align:left;margin-top:14px;}
+.road-level .rl-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.road-level .rl-band{font-family:var(--font-cal);font-weight:900;font-size:1.1rem;color:var(--jade-deep);}
+.road-level .rl-moved{font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;padding:2px 8px;
+  border-radius:999px;background:var(--gold);color:var(--ink);font-weight:700;}
+.road-level .rl-body{font-size:.8rem;color:var(--ink-soft);margin-top:6px;line-height:1.45;}
+.road-level .rl-track{position:relative;height:8px;border-radius:5px;margin-top:10px;background:rgba(43,36,28,.14);}
+.road-level .rl-track > i{position:absolute;top:-3px;width:14px;height:14px;border-radius:50%;
+  background:var(--gold);border:2px solid var(--ink);transition:left .6s var(--ease);transform:translateX(-50%);}
+.road-level .rl-ticks{display:flex;justify-content:space-between;font-size:.58rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft);margin-top:5px;}
 /* NARROW SCREENS get the same road, not a squeezed one: the chapter title and the
    ability hints drop away so the control rail stays one row and the top strip stops
    pushing the pause button off the edge. The walkable band re-measures either way. */
@@ -1407,6 +1446,31 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
       </div>
     </section>
 
+    <!-- ============ DIFFICULTY ============ -->
+    <section class="screen" id="s-difficulty">
+      <div class="backdrop" id="diff-bg"></div>
+      <div class="content">
+        <div class="diff-wrap">
+          <div class="section-head">
+            <span class="eyebrow" id="diff-eyebrow">Before you set out</span>
+            <h2 id="diff-heading">How hard should the road be?</h2>
+            <span class="divider"></span>
+          </div>
+          <p class="small muted diff-lede">
+            This changes the <b>road</b>, never the words. Every term is real and verified at
+            every setting &mdash; what moves is how dense the hazards are, how fast the squad
+            tires, how long you get to read a rune gate, and how many answers a question offers.
+            You can change it whenever you like from Settings.
+          </p>
+          <div class="diff-grid" id="diff-grid"></div>
+          <div class="build-controls" style="justify-content:space-between;margin-top:20px;">
+            <button class="btn ghost" id="diff-back">&larr; Back</button>
+            <button class="btn" id="diff-confirm">Set out &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ INTRO ============ -->
     <section class="screen" id="s-intro">
       <div class="backdrop" id="intro-bg"></div>
@@ -1741,6 +1805,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           <div class="collapse-learned" id="collapse-learned"></div>
           <div class="pause-actions">
             <button class="btn jade" id="collapse-retry">Walk it again</button>
+            <button class="btn ghost" id="collapse-ease" style="display:none;">Ease the road</button>
             <button class="btn ghost" id="collapse-quit">Turn back to the school</button>
           </div>
         </div>
@@ -1781,6 +1846,8 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
           <h2 id="result-title"></h2>
           <div class="result-line" id="result-summary"></div>
           <div class="reward-grid" id="reward-grid"></div>
+          <!-- where the road is running, and whether it just moved -->
+          <div class="panel road-level" id="road-level" style="display:none;"></div>
           <div class="panel" style="padding:16px;text-align:left;">
             <span class="eyebrow">What your work set in motion</span>
             <div class="consequences" id="consequences"></div>
@@ -3279,7 +3346,7 @@ const Save = {
 /* Bring any older save up to the v3 schema (chapter-based). Safe, non-destructive. */
 function migrate(st){
   if(!st || typeof st!=="object") return null;
-  if(st.ver===3 || st.ver===4 || st.ver===5 || st.ver===6){
+  if(st.ver>=3 && st.ver<=7){
     if(!Array.isArray(st.foundMats)) st.foundMats=[];
     if(!st.arcade) st.arcade={ slice:{best:0,plays:0}, match:{best:0,plays:0} };  // v3 → v4 backfill
     // v4 → v5 backfill: bench progression + road economy
@@ -3296,7 +3363,15 @@ function migrate(st){
       // a returning player keeps everything their finished chapters have earned
       st.unlockedBps = blueprintsEarnedBy(st.servedChapterIds||[]);
     }
-    st.ver=6;
+    // v6 → v7 backfill: the difficulty setting and the adaptive skill read
+    if(!st.settings || typeof st.settings!=="object") st.settings=newGame().settings;
+    if(st.settings.difficulty===undefined){
+      // a returning player has already been playing the old fixed curve — that is
+      // Steady, and they keep it rather than being asked mid-campaign
+      st.settings.difficulty = "steady";
+    }
+    if(!st.skill || typeof st.skill!=="object") st.skill={rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null};
+    st.ver=7;
     // backfill mastery entries for any PARTS/TERMS added since this save was written,
     // so returning players' weak/seen tracking covers the newly learnable content
     if(st.mastery){
@@ -3328,9 +3403,117 @@ function freshMastery(){
   const parts={}; Object.keys(PARTS).forEach(p=>parts[p]={seen:0,correct:0,wrong:0});
   return {terms, parts};
 }
+/* ==================================================================
+   DIFFICULTY — four honest settings and one shared tuning table.
+
+   Three fixed modes pin the road at a level. The fourth, THE ROAD THAT
+   LEARNS, watches how the player is actually doing and moves between
+   them, so a struggling player is not walled and a fluent one is not
+   bored. Everything downstream reads ONE object (diffTune()), so a
+   setting can never be cosmetic: it moves hazard density and bite, the
+   stamina clock, how much road you get to read a gate over, how many
+   answers a question offers, and how much the squad starts with.
+
+   The scale is a single number, tier ∈ [0,1]: 0 = gentlest, 1 = hardest.
+   ================================================================== */
+const DIFFS=[
+  { key:"easy",     name:"Gentle",    glyph:"◔", tier:0.10,
+    lede:"Learn first, survive second.",
+    note:"Hazards are soft and rare, the squad's strength drains slowly, gates hang far up the road, and one wrong door is always dimmed for you." },
+  { key:"steady",   name:"Steady",    glyph:"◑", tier:0.42,
+    lede:"The road as it was meant to be walked.",
+    note:"A fair fight. Hazards bite, stamina is a real clock, and you get a proper look at every gate before you must choose." },
+  { key:"hard",     name:"Demanding", glyph:"◕", tier:0.86,
+    lede:"For someone who already knows their roots.",
+    note:"Dense, hard-hitting roads. Stamina burns fast, gates arrive close and offer a fourth answer, and nothing is dimmed for you." },
+  { key:"adaptive", name:"The road that learns", glyph:"◍", tier:null,
+    lede:"It finds your level, and keeps finding it.",
+    note:"Starts at Steady and moves with you — every answer, every arrival and every collapse nudges it. Where it has settled is always shown on the results page." }
+];
+const DIFF_BY_KEY=(()=>{ const m={}; DIFFS.forEach(d=>m[d.key]=d); return m; })();
+/* the adaptive rating in 0..1 — an exponentially-weighted read of how the
+   player is actually doing, fed by every answer and every finished run */
+function skillState(){
+  if(!S.skill || typeof S.skill!=="object") S.skill={rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null};
+  if(typeof S.skill.rating!=="number") S.skill.rating=0.5;
+  return S.skill;
+}
+/* answers move the rating gently; a single unlucky guess should never
+   swing the whole road, but a run of them should */
+function noteSkillAnswer(ok){
+  const sk=skillState();
+  const w = 0.055;
+  sk.rating = clamp(sk.rating + (ok? w*(1-sk.rating) : -w*1.25*sk.rating), 0.02, 0.98);
+  sk.answers=(sk.answers||0)+1;
+}
+/* a finished run is worth far more than a single answer: it is the only
+   signal that covers pacing, steering and stamina management together.
+
+   outcome.score is the run's natural 0..1 quality (a mission's overall grade,
+   or how far a collapse got). It is re-centred before it is believed: a
+   merely-fine arrival is PAR, not evidence of struggling — otherwise an
+   ordinary good run would drag a strong player back down and the road would
+   oscillate instead of settling. */
+function noteSkillRun(outcome){
+  const sk=skillState();
+  const score=clamp(outcome.score,0,1);
+  const evidence=clamp(0.5 + (score-0.55)*1.5, 0, 1);
+  const w=0.22;
+  sk.rating = clamp(sk.rating*(1-w) + evidence*w, 0.02, 0.98);
+  sk.runs=(sk.runs||0)+1;
+}
+/* rating → tier. Deliberately compressed: even a struggling player still
+   meets hazards, and even a fluent one is never given an unsurvivable road. */
+function adaptiveTier(){
+  const sk=skillState();
+  // confidence ramps in over the first handful of answers so a new player
+  // is not judged by their first two guesses
+  const conf=clamp((sk.answers||0)/24,0,1)*0.75 + clamp((sk.runs||0)/3,0,1)*0.25;
+  const target=clamp(0.10 + sk.rating*0.86, 0.10, 0.96);
+  return 0.42 + (target-0.42)*clamp(conf,0,1);
+}
+function diffKey(){
+  const k=(S.settings && S.settings.difficulty) || "adaptive";
+  return DIFF_BY_KEY[k] ? k : "adaptive";
+}
+function diffTier(){
+  const k=diffKey();
+  if(k==="adaptive"){ const t=adaptiveTier(); skillState().tier=t; return t; }
+  return DIFF_BY_KEY[k].tier;
+}
+/* the name of the fixed band the road is currently sitting in — what an
+   adaptive player is actually playing right now, in words */
+function tierBandName(t){
+  t=(t==null)?diffTier():t;
+  if(t<0.26) return "Gentle";
+  if(t<0.62) return "Steady";
+  if(t<0.85) return "Demanding";
+  return "Unforgiving";
+}
+/* THE ONE TUNING TABLE. Everything the difficulty setting touches lives here,
+   interpolated across the tier, so no system can drift out of step with it. */
+function diffTune(){
+  const t=diffTier();
+  const lerp=(a,b)=>a+(b-a)*t;
+  const relax = S.settings && S.settings.timerRelax;   // accessibility, on top of difficulty
+  return {
+    tier:t, key:diffKey(), band:tierBandName(t),
+    density:  lerp(0.62, 1.55),   // hazard spawn rate
+    dmg:      lerp(0.45, 1.40),   // hazard bite
+    drain:    lerp(0.55, 1.50),   // stamina/morale/safety clock — the run's real timer
+    startMul: lerp(1.22, 0.86),   // how much the squad sets out with
+    gateLead: lerp(1.55, 0.72),   // how much road you get to read a gate over
+    choices:  t>=0.72 ? 4 : 3,    // answers offered per question
+    mercyDim: t<0.28,             // one wrong door dimmed at every gate
+    momentumDecay: lerp(0.18, 0.46),
+    healMul:  lerp(1.35, 0.85),   // what a completed term restores
+    relax:    !!relax
+  };
+}
+
 function newGame(){
   return {
-    ver:6,
+    ver:7,
     chapter:0,                 // index into CHAPTERS
     rep:0, coin:0, pages:0,
     servedChapterIds:[],       // chapter ids completed
@@ -3340,8 +3523,10 @@ function newGame(){
     settings:{
       motion:false, contrast:false, textSize:"md",
       vol:{master:0.8,music:0.45,sfx:0.8,voice:1}, muted:false,
-      timerRelax:false
+      timerRelax:false,
+      difficulty:null            // chosen on the first launch; null = not asked yet
     },
+    skill:{ rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null },
     support:{hint:3, consult:2, recall:3},
     foundMats:[],              // rare materials discovered on the road (unlock at the bench)
     pending:[],                // travelers a capped party couldn't fit — they wait for the next chapter
@@ -3381,7 +3566,8 @@ function weakParts(){ return Object.keys(S.mastery.parts).filter(id=>{ const m=S
 /* ================= NAVIGATION (with FX) ================= */
 let current="s-title";
 const TRANSITION={ "s-build":"ink", "s-forge":"wash", "s-assign":"scroll", "s-mission":"mist",
-  "s-result":"seal", "s-hub":"ink", "s-case":"wash", "s-end":"mist", "s-intro":"wash" };
+  "s-result":"seal", "s-hub":"ink", "s-case":"wash", "s-end":"mist", "s-intro":"wash",
+  "s-difficulty":"wash" };
 function swap(id, onShow){
   const cur=$('#'+current); if(cur) cur.classList.remove('active');
   const nx=$('#'+id); if(nx){ nx.classList.add('active'); nx.scrollTop=0;
@@ -3652,6 +3838,8 @@ function codeToSeed(code){
 window.__RD_ENG = {
   Audio2, Save, S:()=>S, setS:(v)=>{S=v;}, newGame, freshMastery,
   applySettings, persist, go, refreshTopbars,
+  DIFFS, DIFF_BY_KEY, diffKey, diffTier, diffTune, tierBandName,
+  skillState, noteSkillAnswer, noteSkillRun, adaptiveTier,
   markPartSeen, markPartResult, seenParts, weakParts,
   portraitSVG, remySVG, radixSVG, walkerSVG, buildBackdrop,
   travNeed, travWeapon, travRoleName,
@@ -3717,6 +3905,9 @@ window.__RD_QE = (function(){
   /* write results back into the shared mastery model */
   function record(conceptIds, ok){
     (conceptIds||[]).forEach(id=>{ if(PARTS[id]){ E.markPartSeen(id); E.markPartResult(id, ok); }});
+    // THE ROAD THAT LEARNS reads every answer the player gives, anywhere in the
+    // game — the bench, the forge, the road, the Training Hall all feed one number
+    if(E.noteSkillAnswer) E.noteSkillAnswer(!!ok);
   }
 
   /* ---- misspelling generator for spelling items ---- */
@@ -3742,8 +3933,20 @@ window.__RD_QE = (function(){
 
   function generate(o){
     o=o||{};
+    /* FOCUS. A caller can aim a question at ONE specific part — used by the road's
+       re-ask loop, which brings back the exact thing you just got wrong instead of
+       letting it slide. Only the part-shaped forms can honour it. */
+    const focus = (o.focus && PARTS[o.focus]) ? o.focus : null;
+    /* HOW MANY ANSWERS. The difficulty setting decides how wide the field is:
+       three on the gentler roads, four once the player is genuinely fluent.
+       A caller can override it (the arcade pins its own). */
+    const nWrong = clamp((o.choices!=null ? o.choices : (E.diffTune?E.diffTune().choices:3)) - 1, 1, 4);
     let types=(o.types&&o.types.length)?o.types.slice():ALL_TYPES.slice();
     if(o.allowTF===false) types=types.filter(t=>t!=="trueFalse");
+    if(focus){
+      types=types.filter(t=>t==="partMeaning"||t==="meaningPart"||t==="trueFalse");
+      if(!types.length) types=["partMeaning"];
+    }
     const kind = o.prefer || BIAS_KIND[o.conceptBias] || null;
     // some types need a term with 2+ parts; drop cvRule if none learned
     const multiTerms=learnedTerms().filter(t=>TERMS[t].build.length>=2);
@@ -3752,26 +3955,26 @@ window.__RD_QE = (function(){
 
     /* -------- PART-based forms -------- */
     if(type==="partMeaning"){
-      const id=pickPart(kind); const p=PARTS[id];
-      const wrongs=distractParts(id,2).map(w=>PARTS[w].mean);
+      const id=focus||pickPart(kind); const p=PARTS[id];
+      const wrongs=distractParts(id,nWrong).map(w=>PARTS[w].mean);
       return norm({ type, conceptIds:[id], prompt:`What does <b>${p.text}</b> mean?`,
         options:opts(p.mean, wrongs), explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`,
         pron:p.pron });
     }
     if(type==="meaningPart"){
-      const id=pickPart(kind); const p=PARTS[id];
-      const wrongs=distractParts(id,2).map(w=>PARTS[w].text);
+      const id=focus||pickPart(kind); const p=PARTS[id];
+      const wrongs=distractParts(id,nWrong).map(w=>PARTS[w].text);
       return norm({ type, conceptIds:[id], prompt:`Which word part means <b>${p.mean}</b>?`,
         options:opts(p.text, wrongs), explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`,
         pron:p.pron });
     }
     if(type==="trueFalse"){
-      const id=pickPart(kind); const p=PARTS[id];
+      const id=focus||pickPart(kind); const p=PARTS[id];
       const lie=Math.random()<0.5;
       let shownMean=p.mean;
       if(lie){ const other=distractParts(id,1)[0]; shownMean=other?PARTS[other].mean:p.mean+" (falsely)"; }
       const trueStmt=!lie;
-      return norm({ type, conceptIds:[id], laneLayout:"tf",
+      return norm({ type, conceptIds:[id], laneLayout:"tf", focused:!!focus,
         prompt:`True or false: <b>${p.text}</b> means &ldquo;${shownMean}&rdquo;.`,
         options:shuffle([{label:"True",ok:trueStmt},{label:"False",ok:!trueStmt}]),
         explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.` });
@@ -3781,14 +3984,14 @@ window.__RD_QE = (function(){
     const terms=learnedTerms();
     if(type==="termDef"){
       const t=pick(terms); const T=TERMS[t];
-      const wrongs=shuffle(terms.filter(x=>x!==t && TERMS[x].def!==T.def)).slice(0,2).map(x=>TERMS[x].def);
+      const wrongs=shuffle(terms.filter(x=>x!==t && TERMS[x].def!==T.def)).slice(0,nWrong).map(x=>TERMS[x].def);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`What does <b>${T.spell}</b> mean?`, options:opts(T.def, wrongs),
         explanation:`<b>${T.spell}</b> — ${T.def}. ${T.note||""}` });
     }
     if(type==="defTerm"){
       const t=pick(terms); const T=TERMS[t];
-      const wrongs=shuffle(terms.filter(x=>x!==t && TERMS[x].spell!==T.spell)).slice(0,2).map(x=>TERMS[x].spell);
+      const wrongs=shuffle(terms.filter(x=>x!==t && TERMS[x].spell!==T.spell)).slice(0,nWrong).map(x=>TERMS[x].spell);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`Which term means &ldquo;${T.def}&rdquo;?`, options:opts(T.spell, wrongs),
         explanation:`It is <b>${T.spell}</b>. ${T.note||""}` });
@@ -3796,7 +3999,7 @@ window.__RD_QE = (function(){
     if(type==="spelling"){
       const t=pick(terms); const T=TERMS[t];
       const wrongs=[ misspell(T.spell) ];
-      const other=shuffle(terms.filter(x=>x!==t)).slice(0,1).map(x=>TERMS[x].spell);
+      const other=shuffle(terms.filter(x=>x!==t)).slice(0,Math.max(1,nWrong-1)).map(x=>TERMS[x].spell);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`Spelled correctly, the term meaning <b>${T.def}</b> is:`,
         options:opts(T.spell, wrongs.concat(other)),
@@ -3805,7 +4008,7 @@ window.__RD_QE = (function(){
     if(type==="bodySystem"){
       const t=pick(terms); const T=TERMS[t];
       const systems=[...new Set(Object.keys(TERMS).map(x=>TERMS[x].system))];
-      const wrongs=shuffle(systems.filter(s=>s!==T.system)).slice(0,2);
+      const wrongs=shuffle(systems.filter(s=>s!==T.system)).slice(0,nWrong);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`<b>${T.spell}</b> belongs to which body system?`, options:opts(T.system, wrongs),
         explanation:`<b>${T.spell}</b> — ${T.def} — is classified under <b>${T.system}</b>.` });
@@ -3844,7 +4047,7 @@ window.__RD_QE = (function(){
     q.questionType = q.type;
     q.conceptIds = q.conceptIds||[];
     q.termIds = q.termIds||[];
-    q.laneLayout = q.laneLayout || (q.options.length===2 ? "tf":"three");
+    q.laneLayout = q.laneLayout || (q.options.length===2 ? "tf" : q.options.length>=4 ? "four" : "three");
     // find correct label
     const c=q.options.find(o=>o.ok); q.correctLabel = c?c.label:"";
     return q;
@@ -3908,6 +4111,54 @@ const { Audio2, Save, applySettings, persist, go, refreshTopbars,
 const S = E.S;
 
 /* ================= TITLE ================= */
+/* ==================================================================
+   THE DIFFICULTY CHOOSER — asked once, on the first launch, and
+   reachable from Settings forever after. Four cards, each of which
+   says plainly what it actually changes; nothing here touches the
+   vocabulary, only the road it is learned on.
+   ================================================================== */
+function showDifficulty(opts){
+  opts=opts||{};
+  const from = opts.from || "title";
+  let chosen = E.S().settings.difficulty || "adaptive";
+  go("s-difficulty",{onShow:()=>{
+    buildBackdrop($('#diff-bg'),"valley");
+    $('#diff-eyebrow').textContent = from==="settings" ? "Change it any time" : "Before you set out";
+    $('#diff-heading').textContent = from==="settings" ? "How hard should the road be?" : "How hard should the road be?";
+    const grid=$('#diff-grid'); grid.innerHTML="";
+    const cur=E.S().settings.difficulty;
+    E.DIFFS.forEach(d=>{
+      const card=el("button","diff-card"+(d.key===chosen?" on":""));
+      card.dataset.key=d.key;
+      const isAdaptive = d.tier==null;
+      const pct = isAdaptive ? 100 : Math.round(d.tier*100);
+      card.innerHTML=`${cur===d.key?'<span class="dc-current">current</span>':''}
+        <span class="dc-glyph">${d.glyph}</span>
+        <span class="dc-name">${d.name}</span>
+        <span class="dc-lede">${d.lede}</span>
+        <span class="dc-note">${d.note}</span>
+        <span class="dc-scale${isAdaptive?" adaptive":""}"><i style="width:${pct}%"></i></span>`;
+      card.onclick=()=>{ chosen=d.key;
+        $$('#diff-grid .diff-card').forEach(c=>c.classList.toggle('on', c.dataset.key===d.key));
+        Audio2.sfx.clink && Audio2.sfx.clink(); };
+      grid.appendChild(card);
+    });
+    FX.stagger($$('#diff-grid .diff-card'),{stagger:70,y:12});
+    const back=$('#diff-back');
+    back.textContent = from==="settings" ? "← Back" : "← Back to the title";
+    back.onclick=()=>{ Audio2.sfx.paper();
+      if(from==="settings") showHub(); else showTitle(); };
+    const go2=$('#diff-confirm');
+    go2.textContent = from==="settings" ? "Keep this setting" : "Set out →";
+    go2.onclick=()=>{
+      E.S().settings.difficulty=chosen; persist();
+      Audio2.sfx.brush(); FX.buzz(18);
+      const d=E.DIFF_BY_KEY[chosen];
+      toast(`The road is set to ${d.name}.`);
+      if(from==="settings") showHub(); else startIntro();
+    };
+  }});
+}
 function showTitle(){
   go("s-title",{instant:true,onShow:()=>{
     buildBackdrop($('#title-bg'),"valley");
@@ -3921,7 +4172,9 @@ function showTitle(){
     if(has){ const s=Save.read(); const ch=CHAPTERS[Math.min(s.chapter||0,CHAPTERS.length-1)];
       $('#continue-note').textContent = s? `${ch?(ch.num===0?'Prologue':'Chapter '+ch.num):'—'} · ${s.pages}/8 pages`:""; }
     $('#btn-begin').onclick=()=>{ Audio2.resume(); E.setS(E.newGame()); applySettings();
-      Audio2.sfx.brush(); FX.buzz(20); startIntro(); };
+      Audio2.sfx.brush(); FX.buzz(20);
+      // ask how hard the road should be before the story starts, not buried in a menu
+      showDifficulty({from:"title"}); };
     $('#btn-continue').onclick=()=>{ Audio2.resume(); const s=Save.read();
       if(s){ E.setS(s); applySettings(); refreshTopbars(); Audio2.sfx.paper(); showHub(); } };
     $('#btn-glossary-title').onclick=()=>{ Audio2.resume(); openGloss(); };
@@ -4612,6 +4865,24 @@ function renderSettings(){
   const body=$('#settings-body'); body.innerHTML="";
   const st=S().settings;
   const h=(t)=>body.appendChild(el("div","set-head",t));
+  /* DIFFICULTY FIRST — it is the setting that changes the game most, so it is
+     not buried under the volume sliders. The row says where the road is right
+     now, which for the adaptive setting is a live answer. */
+  h("The road");
+  const dRow=el("div","set-row");
+  const cur=E.DIFF_BY_KEY[E.diffKey()];
+  const band=E.tierBandName();
+  const liveNote = E.diffKey()==="adaptive"
+    ? `Currently walking at <b>${band}</b> — it moves with you.`
+    : cur.lede;
+  dRow.innerHTML=`<div><div class="set-label">Difficulty &mdash; ${cur.glyph} ${cur.name}</div>
+      <div class="small muted">${liveNote}</div></div>
+    <button class="btn ghost sm" id="set-difficulty">Change</button>`;
+  dRow.querySelector('#set-difficulty').onclick=()=>{
+    $('#modal-settings').classList.remove('show');
+    showDifficulty({from:"settings"});
+  };
+  body.appendChild(dRow);
   h("Comfort & access");
   body.appendChild(toggleRow("Reduced motion","Calms animations and transitions.",st.motion,v=>{ st.motion=v; applySettings(); persist(); }));
   body.appendChild(toggleRow("High contrast","Stronger text and edges.",st.contrast,v=>{ st.contrast=v; applySettings(); persist(); }));
@@ -4635,7 +4906,7 @@ function renderSettings(){
   body.appendChild(dz);
 }
 
-window.__RD_SCREENS = { showTitle, startIntro, showHub, openChapter, openBuilder, openGloss, openSettings, renderLedger, renderChapters,
+window.__RD_SCREENS = { showTitle, startIntro, showHub, openChapter, openBuilder, openGloss, openSettings, renderLedger, renderChapters, showDifficulty,
   _builderState:()=>builderState, _checkBuild:()=>checkBuild(), _placeCorrect:()=>{ if(builderState){ builderState.placed=builderState.needed.slice(); } } };
 })();
 </script>
@@ -6602,15 +6873,36 @@ const { Audio2, persist, go, buildBackdrop, refreshTopbars, weakParts, seenParts
 const S = E.S;
 
 /* ---------- adaptive review ---------- */
+/* THE RE-ASK LOOP.
+   Every wrong answer on the road — a missed gate, a fumbled challenge — drops its
+   concept into M.reask. This is where that debt is collected: roughly two in three
+   questions after a mistake come back to the exact part you got wrong, while it is
+   still fresh and still costing you. Getting it right clears the debt and says so.
+   Being corrected in the moment is worth far more than being told at the end. */
+function takeReask(){
+  if(!M || !M.reask || !M.reask.length) return null;
+  if(Math.random()>0.68) return null;
+  const idx=Math.floor(Math.random()*M.reask.length);
+  return M.reask[idx];
+}
+function clearReask(ids){
+  if(!M || !M.reask || !M.reask.length) return false;
+  const before=M.reask.length;
+  const set=new Set(ids||[]);
+  M.reask=M.reask.filter(id=>!set.has(id));
+  return M.reask.length<before;
+}
 function reviewChallenge(){
   // Unified: adaptive question from the shared engine. Returns the mission popup's
   // legacy shape {clue, correct, options[]} plus conceptIds/explanation so wrong
   // answers can be recorded and re-asked later in the same run.
   const QE = window.__RD_QE;
-  const q = QE.generate({ allowTF:true,
+  const focus = takeReask();
+  const q = QE.generate({ allowTF:true, choices:E.diffTune().choices, focus,
     types:["termDef","defTerm","spelling","similar","partMeaning","meaningPart","trueFalse"] });
   return { clue:q.prompt, correct:q.correctLabel, options:q.options.map(o=>o.label),
-           conceptIds:q.conceptIds, explanation:q.explanation, questionType:q.questionType };
+           conceptIds:q.conceptIds, explanation:q.explanation, questionType:q.questionType,
+           reask: !!(focus && q.conceptIds.includes(focus)) };
 }
 
 /* ---------- mission state ---------- */
@@ -6722,7 +7014,18 @@ function pickRoadPart(kindFilter){
   return pick(sorted.slice(0, Math.min(10, sorted.length)));
 }
 
+/* Relaxed pace is the accessibility softener and stays exactly what it was.
+   The difficulty setting rides on top of it, through difficultyAt() for what the
+   road does to you and diffTune().drain for how fast the clock runs. */
 function relaxMult(){ return S().settings.timerRelax ? 0.55 : 1; }
+/* record one of the four ways a term can be known (see NORTH_STAR §2's four
+   cognitive modes) — finishing a word on the road is construction, earned */
+function markTermMastery(termId, mode){
+  const tm=S().mastery.terms[termId]; if(!tm) return;
+  if(mode) tm[mode]=true;
+  if(!S().completedTerms.includes(termId)) S().completedTerms.push(termId);
+  persist();
+}
 
 /* ==================================================================
    THE DIFFICULTY CURVE — the road's last third should visibly, felt-ly
@@ -6733,9 +7036,13 @@ function relaxMult(){ return S().settings.timerRelax ? 0.55 : 1; }
 function difficultyAt(progress){
   const p=clamp(progress,0,1);
   const flatten = S().settings.timerRelax ? 0.5 : 1;
+  const D=E.diffTune();
   return {
-    density: 1 + p*p*0.85*flatten,   // hazard spawn rate: ~1.0 early → ~1.85 late
-    dmg:     1 + p*p*0.42*flatten    // hazard bite: ~1.0 early → ~1.42 late
+    // the within-road ramp is unchanged in shape; the difficulty setting decides
+    // where that ramp starts and how steep it is allowed to get
+    density: D.density * (1 + p*p*0.85*flatten),
+    dmg:     D.dmg     * (1 + p*p*0.42*flatten),
+    tier:    D.tier
   };
 }
 
@@ -7051,13 +7358,16 @@ function runMission(){
         gear, gearKind: gear.length?gear[0].gear:null, base:i, phase:Math.random()*6.28,
         lag:i*40, laneY:0 }; });
     const tot=f.stats.tot;
-    const clampStat=(v)=>clamp(40+v*7,10,100);
+    // ONE SNAPSHOT PER RUN. The difficulty is read once when the squad sets out, so
+    // an adaptive road can never shift its own rules underneath a walk in progress.
+    const DIFF=E.diffTune();
+    const clampStat=(v)=>clamp((40+v*7)*DIFF.startMul,10,100);
     const enemy=f.chapter.enemy?ENEMIES[f.chapter.enemy]:null;
     const caps=(f.stats&&f.stats.caps)||{};
     M={ f, r, ctx, cv, caravan, enemy, caps, progress:0, paused:false, done:false,
         stats:{ stamina:clampStat(tot.stamina), morale:clampStat(tot.morale), safety:clampStat(tot.safety) },
         weatherProt: clampStat(tot.weather), speedStat: clampStat(tot.speed),
-        weather:r.weather,
+        weather:r.weather, diff:DIFF,
         lane:1, laneY:0.615, targetY:null, keyUp:false, keyDn:false, steering:false, warnedHigh:false,
         phaseT:0, sweepT:0, gateSweepT:0, studiedRun:0,
         pointer:{x:0,y:0,over:false},
@@ -7084,6 +7394,7 @@ function runMission(){
         // which is the whole difference between "faster" and "accelerating". ----
         inset:{top:0,bot:0}, paceNow:1, paceTarget:1, paceLive:1, rushT:0, rushPow:0, rushKind:null,
         gearShown:1, streak:0, bestStreak:0, correctAnswers:0, wrongAnswers:0,
+        flow:false, flowEntered:0, reask:[],
         streakParts:[], partsStudiedRun:[], capT:0,
         // ---- the run's clock: when stamina breaks, the party goes down ----
         collapsing:false, fallT:0,
@@ -7091,6 +7402,7 @@ function runMission(){
     pendingEndless=false;
     syncRoadInsets();
     M.laneY = laneYpx(1); M.targetY = M.laneY;
+    M.forge.momentumFloor0=M.forge.momentumFloor;   // the honest floor, restored when flow breaks
     M.momentum=M.forge.momentumFloor; M.bestMomentum=M.momentum;   // a keen edge starts you above ×1
     M.caravan.forEach(c=>c.laneY=M.laneY);
     if(isBossRoad(f)){
@@ -7553,12 +7865,16 @@ function finishCollapse(){
   // the Endless Road already has a scoreboard of its own for exactly this moment
   if(M.endless){ endEndlessRoad(); return; }
   M.done=true;
+  // THE ROAD THAT LEARNS: going down is the clearest evidence there is. How far
+  // they got still counts — collapsing at 90% is not the same as collapsing at 10%.
+  const shiftedTo=noteRunOutcome(clamp(M.progress,0,1)*0.30);
   const panel=$('#road-collapse'); if(!panel){ window.__RD_SCREENS.showHub(); return; }
   const dist=Math.round(clamp(M.progress,0,1)*100);
   const body=$('#collapse-body');
   if(body) body.innerHTML=`They went down <b>${dist}%</b> of the way to ${M.f.chapter.dest}. `
     + `Nothing found on this walk is kept — but everything you <i>read</i> stays in your Lexicon, `
     + `and the bench you forged is untouched. Walk it again.`;
+  if(shiftedTo && body) body.innerHTML += `<br><span style="color:var(--jade-deep)">The road eases toward <b>${shiftedTo}</b> for the next walk.</span>`;
   const learned=$('#collapse-learned');
   if(learned){
     learned.innerHTML="";
@@ -7570,11 +7886,64 @@ function finishCollapse(){
       learned.appendChild(d);
     });
   }
+  /* NO UNFAIR WALLS (NORTH_STAR, Design Rule 2). A fixed difficulty will not move
+     on its own, so after a road has put the party down twice the card offers to
+     ease it — one step down, or straight onto the road that learns. It is offered,
+     never imposed: a player who wants the wall keeps the wall. */
+  const st=S(); st.roadFails=st.roadFails||{};
+  const chId=M.f.chapter.id;
+  st.roadFails[chId]=(st.roadFails[chId]||0)+1;
+  persist();
+  const ease=$('#collapse-ease');
+  const key=E.diffKey();
+  const order=["easy","steady","hard"];
+  const idx=order.indexOf(key);
+  const canEase = st.roadFails[chId]>=2 && key!=="easy";
+  if(ease){
+    ease.style.display = canEase ? "" : "none";
+    if(canEase){
+      const target = key==="adaptive" ? null : order[Math.max(0,idx-1)];
+      ease.textContent = target
+        ? `Ease the road to ${E.DIFF_BY_KEY[target].name}`
+        : "Let the road find your level";
+      ease.onclick=()=>{
+        if(target){ st.settings.difficulty=target; }
+        else {
+          // already adaptive and still stuck: hand the rating a real nudge downward
+          const sk=E.skillState(); sk.rating=clamp(sk.rating-0.22,0.02,0.98); sk.tier=E.diffTier();
+        }
+        persist();
+        toast(target ? `The road is set to ${E.DIFF_BY_KEY[target].name}.` : "The road gives ground.");
+        retryMission();
+      };
+    }
+  }
   panel.classList.add('show');
   const again=$('#collapse-retry'); if(again) again.onclick=retryMission;
   const quit=$('#collapse-quit'); if(quit) quit.onclick=()=>{ panel.classList.remove('show');
     toast("You turn back — the road can be walked again another day."); window.__RD_SCREENS.showHub(); };
   Audio2.sfx.stamp && Audio2.sfx.stamp();
+}
+/* ==================================================================
+   THE ROAD THAT LEARNS — report a finished run, and say so out loud.
+   score is 0..1: a collapse near the start is 0, a clean strong arrival
+   is 1. Returns the NAME of the band the road moved into, or null if it
+   did not move — the caller shows that to the player, because a
+   difficulty that changes silently is a difficulty the player cannot
+   trust (NORTH_STAR, Pillar II: always know where you stand).
+   ================================================================== */
+function noteRunOutcome(score){
+  if(!E.noteSkillRun) return null;
+  const before=E.tierBandName();
+  const adaptive = E.diffKey()==="adaptive";
+  E.noteSkillRun({score:clamp(score,0,1)});
+  const sk=E.skillState(); sk.tier=E.diffTier();
+  persist();
+  if(!adaptive) return null;
+  const after=E.tierBandName();
+  if(after===before) return null;
+  sk.lastTierName=after;
+  return after;
 }
 /* walk the very same road again — same squad, same bench, same seed */
 function retryMission(){
@@ -7693,6 +8062,39 @@ function hideTermBanner(){
   const wh=$('#word-hud'); if(wh) wh.classList.remove('hushed');
   clearTimeout(termBannerTimer);
 }
+/* ==================================================================
+   THE FLOW — push-your-luck, earned only by knowing things.
+   Four right answers in a row and the caravan enters flow: everything
+   found is worth more, momentum will not fall below a hot floor, and the
+   squad recovers with every word. The price is that the road stops
+   being careful with you — hazards bite harder and the clock runs
+   faster. So a hot streak is a real decision: ride it for the haul, or
+   drop to the river floor and bank what you have. One mistake, or one
+   hazard taken square, ends it (NORTH_STAR Pillar III: effort must be
+   legible, and a careless run must look different from a careful one).
+   ================================================================== */
+const FLOW_AT=4;
+function flowValueMult(){ return (M && M.flow) ? 1.6 : 1; }
+function enterFlow(){
+  if(!M || M.flow) return;
+  M.flow=true; M.flowEntered=(M.flowEntered||0)+1;
+  M.forge.momentumFloor=Math.max(M.forge.momentumFloor, 2.2);
+  M.momentum=Math.max(M.momentum, 2.2);
+  const mo=$('#momentum'); if(mo) mo.classList.add('flow');
+  caption(`<b>Flow — ${M.streak} right in a row.</b> Everything on the road is worth more and the squad keeps its pace &mdash; but the road stops being gentle. One hit ends it.`);
+  pop(M.cv.width*0.30, M.laneY-128, "FLOW!");
+  Audio2.sfx.great && Audio2.sfx.great(); FX.buzz(34);
+}
+function exitFlow(reason){
+  if(!M || !M.flow) return;
+  M.flow=false;
+  M.forge.momentumFloor=M.forge.momentumFloor0!=null ? M.forge.momentumFloor0 : 1.0;
+  const mo=$('#momentum'); if(mo) mo.classList.remove('flow');
+  caption(reason==="hit"
+    ? "The flow breaks on the impact — back to walking it honestly."
+    : "The flow breaks. Build it again: four right in a row.");
+  pop(M.cv.width*0.30, M.laneY-108, "flow lost", true);
+}
 /* a right answer anywhere on the road feeds one streak — gates, chained terms and
    the popup challenges all count, so the walk rewards being right, not being lucky */
 function scoreCorrect(power, label){
@@ -7703,12 +8105,14 @@ function scoreCorrect(power, label){
   // a streak compounds the burst: three right in a row is a genuinely different ride
   const streakBonus=Math.min(0.55, Math.max(0,M.streak-1)*0.14);
   rush((power||0.5)+streakBonus, label);
-  if(M.streak>=3) pop(M.cv.width*0.30, M.laneY-108, `${M.streak} in a row!`);
+  if(M.streak===FLOW_AT) enterFlow();
+  else if(M.streak>=3) pop(M.cv.width*0.30, M.laneY-108, `${M.streak} in a row!`);
 }
 function scoreWrong(){
   if(!M||M.done) return;
   M.wrongAnswers=(M.wrongAnswers||0)+1;
   M.streak=0;
+  exitFlow("wrong");
   brakePace();
 }
 function pop(x,y,txt,bad){
@@ -7728,7 +8132,7 @@ function updateMomentumMeter(){
   if(mx && mx.textContent!=="×"+v) mx.textContent="×"+v;
   if(fill) fill.style.width=clamp((M.momentum-1)/(MOMENTUM_MAX-1)*100,0,100)+"%";
   if(mo) mo.classList.toggle('hot', M.momentum>=2.5);
-  if(lab){ const w=M.momentum>=4?"unstoppable":M.momentum>=3?"flying":M.momentum>=2?"rolling":"momentum";
+  if(lab){ const w=M.flow?"in flow":M.momentum>=4?"unstoppable":M.momentum>=3?"flying":M.momentum>=2?"rolling":"momentum";
     if(lab.textContent!==w) lab.textContent=w; }
 }
 /* rebuild the term-in-progress tokens — only when the combo actually changes */
@@ -7914,14 +8318,18 @@ function tick(t){
     if(M.boss) updateBossPhase(dt);
     if(M.gate) updateGate(dt);
 
-    // passive drains — prep cushions, lanes shift the cost; momentum eases them
+    // passive drains — prep cushions, lanes shift the cost; momentum eases them.
+    // The difficulty setting scales the whole clock: on Gentle the squad can afford
+    // to explore, on Demanding stamina is the thing you are really fighting.
     const cushion = clamp(M.f.stats.prepScore,0.2,1);
     const momoEase = 0.8 + M.momentum*0.2;   // ×1 → 1.0, ×5 → 1.8 less drain
+    // flow buys its rewards with a faster clock — that is the whole gamble
+    const drainMul = M.diff.drain * (M.flow?1.35:1);
     // the river floor is the tactical recovery lane — walking it actually mends the squad
-    let stamDrain = (3.6-cushion*2.4 + (M.lane===0?1.1:0) - (M.lane===2?1.9:0))/momoEase;
-    let safeDrain = (1.5-cushion*1.0 - (M.lane===2?0.7:0))/momoEase;
+    let stamDrain = (3.6-cushion*2.4 + (M.lane===0?1.1:0) - (M.lane===2?1.9:0))*drainMul/momoEase;
+    let safeDrain = (1.5-cushion*1.0 - (M.lane===2?0.7:0))*drainMul/momoEase;
     M.stats.stamina = clamp(M.stats.stamina - dt*stamDrain,0,100);
-    if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5)/momoEase,0,100);
+    if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5)*drainMul/momoEase,0,100);
     M.stats.safety = clamp(M.stats.safety - dt*Math.max(0.2,safeDrain),0,100);
     updatePrepBars();
     updateMomentumMeter();
@@ -7972,7 +8380,8 @@ function tick(t){
             } else {
               const soft = M.stats.safety<15 ? 1.35 : 1;
               const mult = (counter && counter.half) ? 0.5 : 1;
-              Object.keys(hz.dmg).forEach(k=>{ M.stats[k]=clamp(M.stats[k]-hz.dmg[k]*rel*soft*mult*diffCurve.dmg,0,100); });
+              const flowBite = M.flow?1.3:1;   // the road stops being careful with you in flow
+              Object.keys(hz.dmg).forEach(k=>{ M.stats[k]=clamp(M.stats[k]-hz.dmg[k]*rel*soft*mult*diffCurve.dmg*flowBite,0,100); });
               if(hz.slow) M.slowT=hz.slow*mult;
               if(hz.dropLane){ M.targetY=clamp(M.targetY+M.cv.height*0.13, roadMinY(), roadMaxY()); M.laneFlashT=0.5;
                 caption("The scree carries them bodily down the slope!"); }
@@ -8136,7 +8545,7 @@ function collectPickup(pk,px,py){
     const def=PICKUP_DEFS[pk.type];
     M.collected[pk.type]=(M.collected[pk.type]||0)+1;
     if(def.gain) statGain(def.gain);
-    if(def.ink) M.inkFound+=Math.round(def.ink*M.forge.valueMult);
+    if(def.ink) M.inkFound+=Math.round(def.ink*M.forge.valueMult*flowValueMult());
     pop(px,py,def.pop, false);
     Audio2.sfx.clink(); FX.buzz(10);
     if(pk.type==="shard") caption("A lexicon shard glints in the dust — knowledge pays for the road.");
@@ -8202,13 +8611,13 @@ function bumpMomentum(amt){
 function coolMomentum(dt){
   if(M.moT>0){ M.moT=Math.max(0,M.moT-dt); return; }
   const floor=M.forge.momentumFloor;
-  if(M.momentum>floor) M.momentum=Math.max(floor, M.momentum-dt*0.30);
+  if(M.momentum>floor) M.momentum=Math.max(floor, M.momentum-dt*M.diff.momentumDecay);
 }
 function knockMomentum(){                 // a hazard hit costs pace and breaks the chain
   M.momentum=clamp(M.momentum*0.6, M.forge.momentumFloor, MOMENTUM_MAX);
   if(M.combo.length){ M.combo=[]; M.comboBadT=0.4; }
-  // a clean hit is a brake you can feel: the burst dies and the streak resets
-  M.streak=0; brakePace();
+  // a clean hit is a brake you can feel: the burst dies, the streak resets, flow ends
+  M.streak=0; exitFlow("hit"); brakePace();
   updateWordHud();
 }
 
@@ -8239,9 +8648,9 @@ function completeTerm(){
   const gain=(0.5+n*0.26)*M.forge.gainMult*(realId?1.3:1);
   bumpMomentum(gain);
   M.surgeT=0.6; setPace(1.5+M.momentum*0.12, 3.2);
-  const heal=Math.round((5+n*4)*(0.7+M.momentum*0.12)*M.forge.healMult);
+  const heal=Math.round((5+n*4)*(0.7+M.momentum*0.12)*M.forge.healMult*M.diff.healMul);
   statGain({stamina:heal, morale:Math.round(heal*0.7), safety:Math.round(heal*0.5)});
-  const ink=Math.round((2+n)*M.momentum*M.forge.valueMult);
+  const ink=Math.round((2+n)*M.momentum*M.forge.valueMult*flowValueMult());
   M.inkFound+=ink;
   const label=realId? TERMS[realId].spell
     : ids.map(id=>(PARTS[id].stem||PARTS[id].text).replace(/[-\/o]+$/,'').replace(/[-\/]/g,'')).join("");
@@ -8283,9 +8692,15 @@ function completeTerm(){
    clear of hazards while the player is deciding. */
 const GATE_LEAD=0.18;
 const GATE_CLEAR_BEFORE=0.17, GATE_CLEAR_AFTER=0.04;
+/* how far ahead THIS run's gates open. Gentle hangs them far up the road so there
+   is time to think; Demanding puts them close, which is the difference between
+   recall and fluency. The cleared corridor scales with it so the approach to a
+   gate is never stacked with a reflex dodge (Design Rule 2). */
+function gateLead(){ return GATE_LEAD * ((M && M.diff) ? M.diff.gateLead : 1); }
+function gateClearBefore(){ return GATE_CLEAR_BEFORE * ((M && M.diff) ? M.diff.gateLead : 1); }
 function inGateCorridor(p){
   if(!M || !M.gate || M.gate.resolved) return false;
-  return p > M.gate.p-GATE_CLEAR_BEFORE && p < M.gate.p+GATE_CLEAR_AFTER;
+  return p > M.gate.p-gateClearBefore() && p < M.gate.p+GATE_CLEAR_AFTER;
 }
 function sweepGateCorridor(){
   let swept=0;
@@ -8299,6 +8714,30 @@ function sweepGateCorridor(){
     caption("The gate's rune-light burns the road clear ahead — nothing stands between them and the choice.");
   }
 }
+/* THE COMPLETION GATE — the hardest thing a gate can ask, and the most useful.
+   Instead of "which door reads X", it shows a real term with one part torn out
+   and its meaning underneath: `gastr/o + ___  →  inflammation of the stomach`.
+   Recognising a part is recall; finishing a word is CONSTRUCTION under time
+   pressure — the transfer mode NORTH_STAR §2 asks the road to deliver. It only
+   appears once the road is running at a demanding tier, and never during the
+   final boss's Stripping phase, which has a gate form of its own. */
+function pickCompletionGate(){
+  const ids=Object.keys(TERMS).filter(id=>TERMS[id].build.length>=2);
+  if(!ids.length) return null;
+  // prefer terms whose parts this player is shaky on, and that they have met
+  const weak=new Set(weakParts()), seen=new Set(seenParts());
+  const scored=ids.map(id=>{
+    const b=TERMS[id].build;
+    return { id, s: b.filter(p=>weak.has(p)).length*2 + b.filter(p=>seen.has(p)).length + Math.random() };
+  }).sort((a,b)=>b.s-a.s);
+  const termId=pick(scored.slice(0,Math.min(8,scored.length))).id;
+  const build=TERMS[termId].build;
+  const slot=Math.floor(Math.random()*build.length);
+  const targetId=build[slot];
+  if(!PARTS[targetId]) return null;
+  const shown=build.map((p,i)=> i===slot ? "___" : (PARTS[p]?PARTS[p].text:"?"));
+  return { termId, targetId, slot, skeleton:shown.join(" + "), def:TERMS[termId].def, spell:TERMS[termId].spell };
+}
 function openGate(){
   if(M.gate) return;
   const reach=[1,2]; if(M.caps.climb) reach.unshift(0);
@@ -8306,10 +8745,17 @@ function openGate(){
   // that carries a term's actual meaning. Every gate here asks you to prove you
   // still know one, under real pressure (see updateBossPhase).
   const forceKind = (M.boss && M.boss.phase===1) ? "root" : null;
+  // A demanding road starts asking you to FINISH words rather than just name parts
+  const completion = (!forceKind && M.diff.tier>=0.55 && Math.random() < (M.diff.tier-0.45)*1.1)
+    ? pickCompletionGate() : null;
   // targetId stays adaptive (weighted to THIS player's weak/unseen parts) even
   // on a seeded road; only the distractor set and lane placement — the part
   // of a gate that's pure structure, not personalization — is seed-deterministic
-  const targetId=pickRoadPart(forceKind);
+  // the re-ask loop reaches the gates as well: a part you just missed is the part
+  // the next arch is most likely to ask you for
+  const reaskId = (!completion && !forceKind) ? takeReask() : null;
+  const targetId = completion ? completion.targetId
+                 : (reaskId && PARTS[reaskId] ? reaskId : pickRoadPart(forceKind));
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
   const gateRoll = withRoadSeed(()=>{
@@ -8324,15 +8770,21 @@ function openGate(){
   const {laneIds, ansLane, askMeaning}=gateRoll;    // 60%: prompt a meaning, lanes show parts
   const kindWord=kind==="prefix"?"prefix":kind==="suffix"?"suffix":"root";
   M.gate={
-    p: M.progress+GATE_LEAD, laneIds, ansLane, targetId, kind, conceptId:targetId,
-    showMeaning:!askMeaning,             // when we ask for the part, lanes show meanings
-    prompt: askMeaning
+    p: M.progress+gateLead(), laneIds, ansLane, targetId, kind, conceptId:targetId,
+    form: completion ? "completion" : (askMeaning?"meaning":"reading"),
+    completion, reask: !!(reaskId && reaskId===targetId),
+    // a completion gate always shows the candidate PARTS — the player supplies the meaning
+    showMeaning: completion ? false : !askMeaning,
+    prompt: completion
+      ? `Finish the word — <b>${completion.skeleton}</b> &rarr; &ldquo;${completion.def}&rdquo;`
+      : askMeaning
       ? `Rune gate — take the ${kindWord} meaning <b>${PARTS[targetId].mean}</b>`
       : `Rune gate — which path reads <b>${PARTS[targetId].text}</b>?`,
     resolved:false, flareT:0, flareLane:-1, flareOk:false
   };
-  // Lexicographer affinity dims one false door before the player commits
-  if(E.affinity().n>=4){
+  // Lexicographer affinity dims one false door before the player commits — and on
+  // the gentlest roads, so does the road itself, so a learner always has a way in
+  if(E.affinity().n>=4 || M.diff.mercyDim){
     const wrongs=[0,1,2].filter(l=>l!==ansLane && M.gate.laneIds[l]);
     if(wrongs.length) M.gate.dimmed=pick(wrongs);
   }
@@ -8352,7 +8804,21 @@ function resolveGate(){
     M.challengesWon++; bumpMomentum(0.9*M.forge.gainMult); M.surgeT=0.5; setPace(1.6,3);
     scoreCorrect(0.8, "gate");
     statGain({morale:8,safety:6,stamina:4});
-    caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
+    if(G.completion){
+      // finishing a word is the harder ask, so it pays like one — and the banner
+      // shows the whole assembled term, meaning and all
+      bumpMomentum(0.5*M.forge.gainMult);
+      caption(`✦ ${G.completion.spell} — ${G.completion.def}. You finished the word yourself.`);
+      showTermBanner(G.completion.spell,
+        TERMS[G.completion.termId].build.map(id=>`${PARTS[id].text} <span style="opacity:.62">(${PARTS[id].mean})</span>`).join(" + "),
+        G.completion.def, true);
+      markTermMastery(G.completion.termId, "construction");
+    } else if(G.reask && clearReask([G.conceptId])){
+      bumpMomentum(0.3*M.forge.gainMult); statGain({morale:6});
+      caption(`✦ Put right — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. That one caught you earlier.`);
+    } else {
+      caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
+    }
     pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
     // Phase I (The Stripping): naming a root correctly pushes the erasure back
     if(M.boss && M.boss.phase===1) M.boss.erosion=clamp(M.boss.erosion-0.3,0,1);
@@ -8364,7 +8830,9 @@ function resolveGate(){
     M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
     scoreWrong();
     M.stats.morale=clamp(M.stats.morale-7,0,100); M.stats.stamina=clamp(M.stats.stamina-5,0,100);
-    caption(`Wrong gate — the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
+    caption(G.completion
+      ? `Wrong gate — <b>${G.completion.spell}</b> needed ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`
+      : `Wrong gate — the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
     pop(M.cv.width*0.30,M.laneY-88,"wrong gate",true); Audio2.sfx.bad(); FX.buzz(24);
     M.reask=(M.reask||[]).concat(G.conceptId);
   }
@@ -8511,6 +8979,13 @@ function answer(correct, btn, correctText, battle, flavor, q){
     scoreCorrect(0.75, "answer");
     bumpMomentum(0.35*M.forge.gainMult);
     if(btn) btn.classList.add("jade");
+    // the re-ask loop closes: you missed this one earlier and you have it now
+    if(q && q.reask && clearReask(q.conceptIds)){
+      bumpMomentum(0.3*M.forge.gainMult);
+      statGain({morale:6});
+      pop(M.cv.width*0.30, M.laneY-108, "put right!");
+      caption("That one caught you earlier — and you have it now. The squad walks a little taller.");
+    }
     if(battle){ statGain({morale:12,safety:10,stamina:6});
       caption("The right word at the right moment — the squad rallies and the raiders scatter."); }
     else if(flavor==="scholar"){
@@ -9189,6 +9664,42 @@ function renderGearDebrief(f){
     host.appendChild(row);
   });
 }
+/* ==================================================================
+   WHERE THE ROAD IS RUNNING — shown after every arrival.
+   For a fixed setting this is a quiet confirmation. For the adaptive
+   setting it is the whole contract made visible: what level you are
+   actually being given, and the moment it changes. A difficulty that
+   moves in secret is one the player can never trust or aim at.
+   ================================================================== */
+function renderRoadLevel(movedTo, bandBefore){
+  const panel=$('#road-level'); if(!panel) return;
+  const key=E.diffKey(), d=E.DIFF_BY_KEY[key], t=E.diffTier(), band=E.tierBandName(t);
+  const sk=E.skillState();
+  panel.style.display="";
+  const adaptive = key==="adaptive";
+  let body;
+  if(!adaptive){
+    body = `You set the road to <b>${d.name}</b>, and that is exactly where it stays. `
+         + `Switch it any time from Settings — the words never change, only the road.`;
+  } else if(movedTo){
+    const harder = ["Gentle","Steady","Demanding","Unforgiving"].indexOf(movedTo)
+                 > ["Gentle","Steady","Demanding","Unforgiving"].indexOf(bandBefore);
+    body = harder
+      ? `You are reading these faster than the road was asking. It moves up from <b>${bandBefore}</b> to <b>${movedTo}</b> — denser hazards, a quicker clock, and gates that arrive with less warning.`
+      : `That was a hard walk, so the road gives ground: <b>${bandBefore}</b> down to <b>${movedTo}</b>. Fewer hazards, a slower clock, and longer to read each gate.`;
+  } else {
+    body = `The road is holding at <b>${band}</b> — it reckons that is your level right now. `
+         + `Keep answering well and it will ask for more; struggle and it will give ground.`;
+  }
+  panel.innerHTML=`<span class="eyebrow">The road you are walking</span>
+    <div class="rl-head"><span class="rl-band">${d.glyph} ${adaptive?band:d.name}</span>
+      ${movedTo?`<span class="rl-moved">the road just moved</span>`:""}</div>
+    <div class="rl-body">${body}</div>
+    <div class="rl-track"><i style="left:${Math.round(clamp(t,0,1)*100)}%"></i></div>
+    <div class="rl-ticks"><span>Gentle</span><span>Steady</span><span>Demanding</span><span>Unforgiving</span></div>`;
+  if(movedTo){ Audio2.sfx.chime && Audio2.sfx.chime(); }
+  if(sk) sk.lastTierName=band;
+}
 function showResult(){
   const f=E.getFlow(); const st=f.stats; const chapter=f.chapter;
   const chFrac = M ? (M.challengesDone? M.challengesWon/M.challengesDone : 1) : 1;
@@ -9232,6 +9743,14 @@ function showResult(){
     if(M){ const moD=el("div","reward"); moD.innerHTML=`<div class="rv">×${M.bestMomentum.toFixed(1)}</div><div class="rl">Top momentum</div>`; rg.appendChild(moD); }
     setTimeout(()=>{ FX.countUp(repEl,repGain,{prefix:"+"}); FX.countUp(coinEl,coinGain,{prefix:"+"});
       if(chEl) FX.countUp(chEl, termsBuilt,{}); }, 300);
+    /* THE ROAD THAT LEARNS reports itself. An arrival is worth the run's overall
+       quality; the panel below always says what level the road is running at, and
+       flags it when the road has just moved — a difficulty the player cannot see
+       is a difficulty the player cannot trust (NORTH_STAR, Pillar II). */
+    const bandBefore = E.tierBandName();
+    const movedTo = noteRunOutcome(overall);
+    renderRoadLevel(movedTo, bandBefore);
+    if(S().roadFails) delete S().roadFails[chapter.id];   // arriving clears the tally
     const uc=$('#unlock-card'); if(uc){ uc.style.display="none"; uc.innerHTML=""; }
     const cons=$('#consequences'); cons.innerHTML="";
     consequenceLines(f,grade,st).forEach(c=>{
@@ -9467,13 +9986,24 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _collapse:()=>{ beginCollapse(); return M&&{collapsing:M.collapsing, done:M.done}; },
   _stepCollapse:(dt)=>{ if(M&&M.collapsing) updateCollapse(dt||0.05); return M&&{fallT:M.fallT, done:M.done}; },
   _retry:()=>retryMission(),
-  _pace:()=>M&&{now:M.paceNow, live:M.paceLive, target:M.paceTarget, rushT:M.rushT, rushPow:M.rushPow, streak:M.streak},
+  _pace:()=>M&&{now:M.paceNow, live:M.paceLive, target:M.paceTarget, rushT:M.rushT, rushPow:M.rushPow,
+    streak:M.streak, flow:M.flow},
+  _flowAt:()=>FLOW_AT,
+  _scoreCorrect:(p)=>{ scoreCorrect(p==null?0.5:p,"test"); return M&&{streak:M.streak, flow:M.flow}; },
+  _scoreWrong:()=>{ scoreWrong(); return M&&{streak:M.streak, flow:M.flow}; },
+  _reask:()=>M&&(M.reask||[]).slice(),
+  _pushReask:(id)=>{ if(M){ M.reask=(M.reask||[]).concat(id); } return M&&M.reask.slice(); },
+  _reviewChallenge:()=>reviewChallenge(),
+  _pickCompletionGate:()=>pickCompletionGate(),
+  _noteRunOutcome:(sc)=>noteRunOutcome(sc),
   _rush:(p)=>{ rush(p); return M&&{rushT:M.rushT, boost:rushBoost()}; },
   _rushBoost:()=>rushBoost(),
   _gearStrip:(on)=>{ setGearStripOpen(on); return M&&M.gearPinned; },
   _ageCaption:(dt)=>{ ageCaption(dt||0.05); return M&&M.capT; },
   /* --- pause menu hooks (headless tests) --- */
   GATE_LEAD:()=>GATE_LEAD,
+  _gateLead:()=>gateLead(),
+  _diff:()=>M&&M.diff,
   _openPause:()=>{ openPauseMenu(); return M&&{paused:M.paused, pausedByMenu:M.pausedByMenu}; },
   _closePause:()=>{ closePauseMenu(); return M&&{paused:M.paused, pausedByMenu:M.pausedByMenu}; },
   _abandon:()=>abandonMission(),
