@@ -785,11 +785,58 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .craft-quality .cq-bar > i.q-poor{background:linear-gradient(90deg,#c06a2a,#e0a05a);}
 .craft-quality .cq-bar > i.q-ok{background:linear-gradient(90deg,var(--gold),#d8bd84);}
 .craft-quality .cq-bar > i.q-fine{background:linear-gradient(90deg,var(--jade-soft),#bfe0c8);}
+.craft-quality .cq-bar > i.q-master{background:linear-gradient(90deg,#d8b45f,#f6e6b0 45%,#d8b45f);
+  box-shadow:0 0 10px rgba(216,180,95,.7);}
 .craft-stakes{width:100%;max-width:520px;margin-top:6px;font-size:.7rem;letter-spacing:.02em;
   color:rgba(243,236,216,.8);text-align:center;line-height:1.5;}
 .craft-stakes b{color:var(--gold-soft);}
 .craft-stakes .cs-ruin{color:#e08a72;}
+.craft-stakes .cs-master{color:#f0dca8;font-weight:700;}
 .craft-quality .cq-pct{font-family:var(--font-cal);font-weight:700;font-size:.9rem;color:var(--rice);min-width:2.6em;text-align:right;}
+
+/* THE RUBRIC — the mystery percentage, itemized. Three named criteria, live,
+   so you can see WHICH hand is letting you down while there is still time to
+   fix it. A masterwork needs every row starred, not a flattering average. */
+.craft-rubric{width:100%;max-width:520px;display:flex;flex-direction:column;gap:5px;margin-top:2px;}
+.craft-rubric .cr-head{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-soft);font-weight:700;}
+.craft-rubric .cr-head .cr-gate{color:rgba(243,236,216,.55);letter-spacing:.02em;text-transform:none;font-weight:600;}
+.cr-row{display:grid;grid-template-columns:15px minmax(0,1.1fr) minmax(0,1fr) 2.9em;align-items:center;gap:8px;}
+.cr-row .cr-pip{font-size:.8rem;line-height:1;text-align:center;color:rgba(243,236,216,.3);transition:color .2s;}
+.cr-row.at-par .cr-pip{color:var(--jade-soft);}
+.cr-row.at-master .cr-pip{color:#f0dca8;text-shadow:0 0 8px rgba(216,180,95,.8);}
+.cr-row .cr-name{font-size:.72rem;font-weight:700;color:rgba(243,236,216,.9);letter-spacing:.02em;}
+.cr-row .cr-name i{display:block;font-size:.6rem;font-weight:400;font-style:normal;
+  color:rgba(243,236,216,.5);letter-spacing:0;}
+.cr-row .cr-bar{height:9px;border-radius:5px;background:var(--rice-3);position:relative;}
+.cr-row .cr-bar > i{position:relative;z-index:1;}
+/* the masterwork line, drawn ON the bar and above its fill — the target is
+   never a guess, and you can watch the fill approach it */
+.cr-row .cr-bar::after{content:"";position:absolute;top:-2px;bottom:-2px;left:var(--mb,88%);width:2px;z-index:2;
+  background:rgba(240,220,168,.9);border-radius:1px;}
+.cr-row .cr-bar > i{display:block;height:100%;width:0%;border-radius:5px;
+  background:linear-gradient(90deg,#c06a2a,#e0a05a);transition:width .16s linear,background .25s;}
+.cr-row.at-par .cr-bar > i{background:linear-gradient(90deg,var(--jade),var(--jade-soft));}
+.cr-row.at-master .cr-bar > i{background:linear-gradient(90deg,#d8b45f,#f6e6b0);}
+.cr-row .cr-val{font-family:var(--font-cal);font-weight:700;font-size:.76rem;
+  color:rgba(243,236,216,.75);text-align:right;}
+.cr-row.at-master .cr-val{color:#f0dca8;}
+.craft-rubric .cr-weak{font-size:.66rem;color:#e0a05a;text-align:center;min-height:1.2em;letter-spacing:.02em;}
+
+/* THE SPEC SHEET — what the piece you actually built will do on the road,
+   in plain language, plus the one thing that would have made it perfect. */
+.spec-sheet{width:100%;max-width:520px;text-align:left;background:rgba(20,14,8,.5);
+  border:1px solid rgba(189,157,95,.28);border-radius:12px;padding:11px 13px;}
+.spec-sheet .ss-title{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gold-soft);font-weight:700;margin-bottom:7px;}
+.spec-sheet ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;}
+.spec-sheet li{font-size:.76rem;line-height:1.45;color:rgba(243,236,216,.88);
+  display:flex;gap:7px;align-items:flex-start;}
+.spec-sheet li .ss-ic{flex:0 0 auto;width:1.1em;text-align:center;opacity:.85;}
+.spec-sheet li b{color:var(--gold-soft);}
+.spec-sheet .ss-lesson{margin-top:9px;padding-top:8px;border-top:1px dashed rgba(189,157,95,.28);
+  font-size:.73rem;line-height:1.5;color:#e0b88a;}
+.spec-sheet .ss-lesson.perfect{color:#f0dca8;}
 
 /* step 4 — test result splash */
 .test-stage{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;}
@@ -804,6 +851,11 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .test-verdict .tv-grade.ok{color:var(--gold-soft);}
 .test-verdict .tv-grade.flawed{color:#e08a5a;}
 .test-verdict .tv-grade.ruined{color:#e04a34;text-shadow:0 0 12px rgba(224,74,52,.4);}
+.test-verdict .tv-grade.masterwork{color:#f6e6b0;text-shadow:0 0 16px rgba(216,180,95,.75);
+  animation:tvMaster 2.2s ease-in-out infinite;}
+@keyframes tvMaster{0%,100%{text-shadow:0 0 16px rgba(216,180,95,.75);}50%{text-shadow:0 0 26px rgba(246,230,176,.95);}}
+[data-motion="reduced"] .test-verdict .tv-grade.masterwork{animation:none;}
+.forged-chip.q-master{border-color:#d8b45f;box-shadow:0 0 0 2px rgba(216,180,95,.4),0 0 12px rgba(216,180,95,.3);}
 
 /* --- assign step: warriors receiving gear --- */
 .assign-wrap{max-width:1080px;margin:0 auto;}
@@ -5245,11 +5297,13 @@ function depositHeirloom(f){
   if(!h || f._heirDeposited) return;
   f._heirDeposited=true;
   S().heirloom=null;
-  const order=["fine","ok","flawed"];
+  // a masterwork has one more journey in it than a fine piece — part of what
+  // makes chasing a perfect build worth the trouble
+  const order=["masterwork","fine","ok","flawed"];
   const i=order.indexOf(h.qtier);
-  if(i<0 || i>=2){ persist(); toast(`${h.name} finally gives out on the bench — its journey ends.`); return; }
+  if(i<0 || i>=3){ persist(); toast(`${h.name} finally gives out on the bench — its journey ends.`); return; }
   const worn=Object.assign({}, h, { id:"heir_"+Date.now(), qtier:order[i+1], heirloom:true, assignedTo:null,
-    quality: h.qtier==="fine"?0.7:0.5, traits:{} });
+    quality: (h.qtier==="masterwork"||h.qtier==="fine")?0.7:0.5, traits:{} });
   Object.keys(h.traits||{}).forEach(k=>{ worn.traits[k]=+( (h.traits[k]||0)*0.85 ).toFixed(2); });
   f.forged.push(worn);
   persist();
@@ -5363,7 +5417,7 @@ function renderTray(){
   tray.innerHTML='<span class="ft-label">On the bench:</span>';
   if(!f.forged.length){ const s=el("span","small muted"); s.textContent="nothing yet"; s.style.opacity=".7"; tray.appendChild(s); return; }
   f.forged.forEach(it=>{
-    const chip=el("span","forged-chip fc-pop "+(it.qtier==="fine"?"q-fine":it.qtier==="flawed"?"q-flawed":""));
+    const chip=el("span","forged-chip fc-pop "+(it.qtier==="masterwork"?"q-master":it.qtier==="fine"?"q-fine":it.qtier==="flawed"?"q-flawed":""));
     chip.innerHTML=`<span class="fc-ico">${GEAR_ICON[it.icon]||""}</span>${it.name}`;
     tray.appendChild(chip);
   });
@@ -5605,36 +5659,45 @@ function stepBuild(){
   const instruct=el("div","build-instruct");
   stage.appendChild(instruct);
   const holder=el("div","craft-canvas-holder");
-  const cv=el("canvas"); cv.id="craftCanvas"; cv.width=560; cv.height=360; holder.appendChild(cv);
+  // the canvas carries a reserved scrap apron along the bottom; every craft lays
+  // itself out against craftH(cv) so the apron is guaranteed clear of the work
+  const cv=el("canvas"); cv.id="craftCanvas"; cv.width=560; cv.height=360+APRON; holder.appendChild(cv);
   stage.appendChild(holder);
   const q=el("div","craft-quality");
   q.innerHTML=`<span class="cq-label">Quality</span>
     <div class="cq-bar"><i id="cq-fill" class="q-ruin" style="width:0%"></i></div>
     <span class="cq-pct" id="cq-pct">0%</span>`;
   stage.appendChild(q);
+  // the itemized grade lives directly under the bar it explains
+  const rub=el("div","craft-rubric"); rub.id="craft-rubric";
+  stage.appendChild(rub);
   // THE STAKES, stated before a hand touches the piece — punishing is only fair
   // when the player can see exactly what they are working against.
   const stakes=el("div","craft-stakes");
+  const mb=Math.round(masterBar()*100);
   stakes.innerHTML = S().settings.timerRelax
-    ? `<b>fine</b> 82% &middot; <b>serviceable</b> 58% &middot; below that it ships flawed. <i>Relax mode: nothing here can be ruined.</i>`
-    : `<b>fine</b> 82% &middot; <b>serviceable</b> 58% &middot; <b>flawed</b> 34% &middot; <span class="cs-ruin">below 34% the piece is ruined and the embers are spent</span>`;
+    ? `<span class="cs-master">masterwork</span> every row ≥ ${mb}% &middot; <b>fine</b> 82% &middot; <b>serviceable</b> 58% &middot; below that it ships flawed. <i>Relax mode: nothing here can be ruined.</i>`
+    : `<span class="cs-master">masterwork</span> every row ≥ ${mb}% &middot; <b>fine</b> 82% &middot; <b>serviceable</b> 58% &middot; <b>flawed</b> 34% &middot; <span class="cs-ruin">below 34% the piece is ruined and the embers are spent</span>`;
   stage.appendChild(stakes);
   body.appendChild(stage);
 
   const type=bp.craft;
+  // one line per craft naming the actual decision in it — these had drifted out of
+  // sync with the mini-games and were describing interactions that no longer exist
   const instructs={
-    align:"Set the halves by eye — your first release commits the join, and a trembling drag scars it.",
-    fold:"Crease corner to corner. The closer and straighter each fold runs to the true diagonal, the better it holds.",
-    tension:"Draw to the marked weight, hold the string dead steady, then release — the bow remembers a shaking hand.",
-    trace:"Trace the profile tight to the guide. Wandering off the edge or jerking the hand dulls the blade.",
-    fit:"Seat each claw dead-center in its small socket. Dropped claws scuff the leather.",
-    pack:"Tap each tool cleanly into the middle of its column — crooked packing rattles on the road. Tap the base strip to close the case.",
-    weave:"Work each fray with small, sustained strokes — one careless swipe won't take."
+    trace:"Run the edge along the channel, then choose: quench and bank it, or fold again for a keener blade on a narrower line. Your sloppiest fold sets the whole edge.",
+    align:"The true balance is hidden. Tap the track to strike the beam — each probe reports what it reads at that point and then goes quiet again. You have five.",
+    tension:"Three draws, three traits, and you choose which draw gets your steadiest hand. Heat never resets between them, and all three must come out even.",
+    fold:"Pick how many pleats to attempt, watch the fold order once, then reproduce it from memory. Only six pleats can fill the Density row — and six is the hardest to hold.",
+    fit:"Set the FIRST claw against the scribed mark. Then the mark disappears and you match the other two by eye — against your own first claw.",
+    pack:"Tap a supply, then tap the case. Fit as much as you can AND keep the weight even across the strap — a full case that swings is still a bad case.",
+    weave:"Strike each strand on the beat, then HOLD to seat it home. Let go early and it sits loose; hold too long and you overwork the fibre."
   };
   instruct.innerHTML=instructs[type]||"Work the piece by hand.";
 
   const ctx=cv.getContext('2d');
   heatInit();
+  scrapInit(cv);
   // dispatch to the right mini-interaction; each calls finishBuild(q) when done
   if(type==="trace") craftTrace(cv,ctx);
   else if(type==="align") craftAlign(cv,ctx);
@@ -5643,7 +5706,7 @@ function stepBuild(){
   else if(type==="fit") craftFit(cv,ctx);
   else if(type==="pack") craftPack(cv,ctx);
   else if(type==="weave") craftWeave(cv,ctx);
-  else finishBuild(0.7);
+  else { craftRub=null; finishBuild(0.7); }   // unknown craft type: no rubric to snapshot
 }
 /* THE CRAFT CURVE.
    Every mini-game used to end with clamp(score, 0.3, 1) — a floor that guaranteed
@@ -5659,14 +5722,24 @@ function craftScore(raw){
   return clamp(p*1.18-0.14,0,1);
 }
 function setCraftQ(v){
+  // the rubric pulses every frame now, and a craft's RAF can outlive the piece it
+  // was grading by a frame or two when the wizard advances (W.cur goes null on the
+  // commission board) — so this has to be safe to call into nothing
+  if(!W||!W.cur) return;
   W.cur.buildQ=clamp(v,0,1);
   const fill=$('#cq-fill'); const pct=$('#cq-pct');
   if(fill) fill.style.width=(W.cur.buildQ*100)+"%";
   if(pct) pct.textContent=Math.round(W.cur.buildQ*100)+"%";
-  if(fill) fill.className = W.cur.buildQ>=0.82?"q-fine" : W.cur.buildQ>=0.58?"q-ok" : W.cur.buildQ>=0.34?"q-poor" : "q-ruin";
+  if(fill) fill.className = (rubIsMaster()&&W.cur.buildQ>=0.90) ? "q-master"
+    : W.cur.buildQ>=0.82?"q-fine" : W.cur.buildQ>=0.58?"q-ok" : W.cur.buildQ>=0.34?"q-poor" : "q-ruin";
 }
+/* the live pulse every craft's RAF calls: grade the rubric, then show it */
+function craftPulse(){ rubPaint(); setCraftQ(rubBuildScore()); }
 function finishBuild(q){
+  if(!W||!W.cur) return;          // a stale craft RAF must not resurrect a finished piece
+  W.cur.rubric=rubSnapshot();     // freeze how this piece was graded, for the spec sheet
   setCraftQ(q);
+  rubPaint();
   if(craftAnim){ cancelAnimationFrame(craftAnim); craftAnim=null; }
   // shard burst on the bench
   spawnShards();
@@ -5700,6 +5773,9 @@ function craftBg(ctx,W,H){ // subtle bench felt so the stage doesn't read as emp
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   ctx.strokeStyle="rgba(189,157,95,.06)"; ctx.lineWidth=1;
   for(let y=H*0.2;y<H;y+=26){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  // the scrap apron rides below every craft's working area, drawn once here so
+  // all seven benches get it without touching their own layouts
+  if(ctx.canvas) drawApron(ctx,ctx.canvas);
 }
 function craftLabel(ctx,W,H,txt,sub){
   ctx.fillStyle="rgba(236,226,203,.92)"; ctx.textAlign="center";
@@ -5725,34 +5801,248 @@ function craftBtn(ctx,W,H,label,active){ // a "commit" strip at the very bottom
 let craftHeat=null, craftHeatLastT=null;
 function heatInit(){
   const relax = S().settings.timerRelax;
-  craftHeat = { v:0.30, band:[0.42,0.62], driftT:0, cracked:false, relax };
+  // the piece comes off the coals ALREADY WORKABLE. Heat used to open at 0.30
+  // against a band starting at 0.40, so every craft began with a stretch of "cold"
+  // the player had no way to skip — and the Temper row then charged them for it.
+  // The interesting risk is overheating, not starting cold.
+  // The opening band matches the width heatTick will keep using, so relax mode gets
+  // its wider target from the first stroke rather than only after one.
+  const w0 = relax?0.34:0.20;
+  craftHeat = { v:0.44, band:[0.5-w0/2, 0.5+w0/2], driftT:0, cracked:false, relax,
+                inBandT:0, activeT:0, quenches:0, started:false };
   craftHeatLastT=null;
 }
-function heatTick(active){
+/* `frozen` is for the beats where the player CANNOT act — a choice screen, or
+   watching a fold order play back. Heat neither climbs nor drains through those,
+   because charging Temper for time the player was not allowed to work is the same
+   unearned penalty as opening the craft cold. */
+function heatTick(active, frozen){
   const H=craftHeat; if(!H) return;
   const now=performance.now();
   const dt = craftHeatLastT!=null ? Math.min(0.08,(now-craftHeatLastT)/1000) : 0.016;
   craftHeatLastT=now;
+  // the clock does not start until the player's first stroke. Every craft opens on
+  // something to read — an angle to pick, a tempo to choose, a guide to look at —
+  // and the heat used to bleed away underneath all of it.
+  if(!H.started){ if(!active){ rubSet("temper", heatTemper()); return; } H.started=true; }
+  if(frozen){ rubSet("temper", heatTemper()); return; }
   const rise = H.relax?0.09:0.16, fall = H.relax?0.24:0.15;
   H.v = clamp(H.v + (active? rise : -fall)*dt, 0, 1);
   H.driftT += dt;
   const width = H.relax?0.34:0.20;
   const center = 0.5 + Math.sin(H.driftT*0.3)*0.15;
   H.band = [clamp(center-width/2,0.04,0.96-width), clamp(center+width/2,0.04+width,0.96)];
+  // TEMPER is measured, not inferred: how much of your working time was spent in
+  // the band. Only time spent actually WORKING counts, so idling to dodge the
+  // measurement doesn't earn you anything.
+  if(active){ H.activeT+=dt; if(heatInBand()) H.inBandT+=dt; }
   if(!H.relax && H.v>=0.94 && !H.cracked){ H.cracked=true; Audio2.sfx.bad&&Audio2.sfx.bad(); FX.buzz(28); }
+  rubSet("temper", heatTemper());
 }
 function heatInBand(){ return craftHeat && craftHeat.v>=craftHeat.band[0] && craftHeat.v<=craftHeat.band[1]; }
 function heatDanger(){ return craftHeat && !craftHeat.relax && craftHeat.v>=0.80; }
-/* the instantaneous quality multiplier this heat state grants — hot & in-band
-   is the reward for skillful pacing, cold is safe-but-slow, cracked is the
-   permanent cost of ignoring the danger line */
-function heatMult(){
-  const H=craftHeat; if(!H) return 1;
-  if(H.cracked) return 0.5;
-  if(heatInBand()) return 1.3;
-  if(heatDanger()) return 1.08;
-  if(H.v < H.band[0]*0.55) return 0.72;
-  return 0.95;
+/* HEAT DISCIPLINE IS A GRADED CRITERION NOW, not a hidden multiplier.
+   It used to silently scale the result by 0.5–1.3× — the player felt an
+   unexplained score and had no way to read it. It is now the third row of
+   every rubric: the share of your working time spent in the band. A crack
+   caps it hard, because a cracked piece can never be a masterwork. */
+function heatTemper(){
+  const H=craftHeat; if(!H) return 0;
+  if(H.activeT<0.35) return 0.5;                      // not enough work yet to judge
+  const share = clamp(H.inBandT/H.activeT, 0, 1);
+  const base = H.relax ? clamp(0.45+share*0.75,0,1) : share;
+  return H.cracked ? Math.min(base, 0.42) : base;
+}
+/* kept for legacy call sites; the crafts now grade temper instead of multiplying by it */
+function heatMult(){ return 1; }
+function heatCool(amt){
+  const H=craftHeat; if(!H) return;
+  H.v = clamp(H.v - amt, 0, 1); H.quenches++;
+}
+
+/* ==================================================================
+   THE RUBRIC — three named criteria per craft, live, and the gate on a
+   perfect piece.
+
+   Before: every craft ended in one opaque percentage. A player who scored
+   61% learned nothing about which hand let them down, so "work more
+   carefully" was the only available strategy — which is not a strategy.
+
+   Now each craft declares up to three NAMED, weighted criteria that update
+   while you work, and the grade is gated on the WEAKEST of them. An average
+   can be flattered by one strong axis; a minimum cannot. That single rule
+   is what makes a perfect piece a matter of tact rather than persistence.
+   ================================================================== */
+/* ONE LIVE BENCH AT A TIME.
+   `craftAnim` only ever held the LAST scheduled frame id, so starting a second
+   craft orphaned the first one's render loop — it kept running for the rest of
+   the session. That was invisible while the loops only drew; now that they also
+   publish the rubric's grade every frame, a zombie loop from an earlier piece
+   would overwrite the current piece's quality with its own stale score. Each
+   craft run takes a generation token and its loop stops rescheduling the moment
+   it stops being the current one. */
+let craftGen=0;
+function craftNewGen(){ return ++craftGen; }
+function craftFrame(gen, fn){
+  if(gen!==craftGen) return craftAnim;      // leave the live loop's id untouched
+  return requestAnimationFrame(fn);
+}
+
+const PAR_BAR=0.70, MASTER_BAR=0.88;
+function masterBar(){ return S().settings.timerRelax ? 0.80 : MASTER_BAR; }
+let craftRub=null;
+/* defs: [{k, label, hint, w}] — w defaults so the three rows sum to 1 */
+function rubInit(defs){
+  const total=defs.reduce((a,d)=>a+(d.w||1),0);
+  craftRub={ defs:defs.map(d=>({...d, w:(d.w||1)/total})), v:{} };
+  defs.forEach(d=>{ craftRub.v[d.k]=0; });
+  rubBuildDOM();
+}
+function rubSet(k,val){
+  if(!craftRub || craftRub.v[k]==null) return;
+  craftRub.v[k]=clamp(val,0,1);
+}
+function rubOverall(){
+  if(!craftRub) return 0;
+  return clamp(craftRub.defs.reduce((a,d)=>a+craftRub.v[d.k]*d.w,0),0,1);
+}
+function rubMin(){
+  if(!craftRub) return 0;
+  return craftRub.defs.reduce((lo,d)=>Math.min(lo,craftRub.v[d.k]),1);
+}
+function rubWeakest(){
+  if(!craftRub) return null;
+  let worst=null;
+  craftRub.defs.forEach(d=>{ if(!worst || craftRub.v[d.k]<craftRub.v[worst.k]) worst=d; });
+  return worst;
+}
+/* a piece is perfect only when EVERY row clears the bar — and it was never cracked */
+function rubIsMaster(){
+  if(!craftRub) return false;
+  if(craftHeat && craftHeat.cracked) return false;
+  return rubMin() >= masterBar();
+}
+/* the finished, immutable record of how this piece was graded — carried to the
+   test step so the spec sheet can name exactly what the player did */
+function rubSnapshot(){
+  if(!craftRub) return null;
+  return { rows:craftRub.defs.map(d=>({k:d.k,label:d.label,hint:d.hint,v:+craftRub.v[d.k].toFixed(3),w:+d.w.toFixed(3)})),
+           overall:+rubOverall().toFixed(3), min:+rubMin().toFixed(3),
+           master:rubIsMaster(), cracked:!!(craftHeat&&craftHeat.cracked),
+           weakest:(rubWeakest()||{}).k||null };
+}
+function rubBuildDOM(){
+  const host=$('#craft-rubric'); if(!host||!craftRub) return;
+  const mb=Math.round(masterBar()*100);
+  host.innerHTML=`<div class="cr-head"><span>the grade, itemized</span>
+      <span class="cr-gate">every row past ${mb}% = a masterwork</span></div>`
+    + craftRub.defs.map(d=>`<div class="cr-row" data-k="${d.k}">
+        <span class="cr-pip">○</span>
+        <span class="cr-name">${d.label}<i>${d.hint||""}</i></span>
+        <span class="cr-bar"><i></i></span>
+        <span class="cr-val">0%</span></div>`).join("")
+    + `<div class="cr-weak" id="cr-weak"></div>`;
+  // the masterwork line on each bar tracks the live bar, relax mode included
+  $$('#craft-rubric .cr-bar').forEach(b=>b.style.setProperty('--mb', mb+'%'));
+  host.querySelectorAll('.cr-bar').forEach(b=>{ b.style.position='relative'; });
+}
+function rubPaint(){
+  const host=$('#craft-rubric'); if(!host||!craftRub) return;
+  const mb=masterBar();
+  craftRub.defs.forEach(d=>{
+    const row=host.querySelector(`.cr-row[data-k="${d.k}"]`); if(!row) return;
+    const v=craftRub.v[d.k];
+    row.classList.toggle("at-par", v>=PAR_BAR && v<mb);
+    row.classList.toggle("at-master", v>=mb);
+    row.querySelector(".cr-pip").textContent = v>=mb?"★" : v>=PAR_BAR?"✓" : "○";
+    row.querySelector(".cr-bar > i").style.width=(v*100)+"%";
+    row.querySelector(".cr-val").textContent=Math.round(v*100)+"%";
+  });
+  // name the row that is actually costing you the grade — the whole point
+  const weak=rubWeakest(), w=$('#cr-weak');
+  if(w){
+    if(craftHeat && craftHeat.cracked) w.textContent="the crack is set — this piece can no longer be perfect";
+    else if(weak && craftRub.v[weak.k] < mb) w.textContent=`holding you back: ${weak.label.toLowerCase()}`;
+    else w.textContent="every row clear — this is masterwork work";
+  }
+}
+/* the shaped build score. The rubric decides it; the curve only sets how
+   unforgiving careless work is. */
+function rubBuildScore(){
+  const o=rubOverall(), lo=rubMin();
+  // the weakest row drags the whole piece — you cannot coast on one strength
+  const shaped = o*0.72 + lo*0.28;
+  return craftScore(shaped);
+}
+
+/* ==================================================================
+   THE SCRAP APRON — breakable offcuts along the bottom of every bench.
+
+   The unfun in the heat layer was that cooling the piece meant doing
+   NOTHING: stand still and wait for a bar to fall. Cooling is now a verb.
+   Smashing the slag and offcuts on the apron vents heat, and it is the only
+   active way to shed it — so the strategic pause became the most tactile
+   thing on the bench instead of the most boring.
+   ================================================================== */
+const APRON=54;
+function craftH(cv){ return cv.height-APRON; }
+let craftScrap=null;
+function scrapInit(cv){
+  const n=4+Math.floor(Math.random()*3), W=cv.width, y0=craftH(cv);
+  craftScrap={ items:[], sp:[], smashed:0, spawned:n, y0 };
+  for(let i=0;i<n;i++){
+    const x = W*0.09 + (i+Math.random()*0.55)*(W*0.82/n);
+    const r = 12+Math.random()*8;
+    const pts=[]; const sides=5+Math.floor(Math.random()*3);
+    for(let k=0;k<sides;k++){ const a=k/sides*6.283; const rr=r*(0.68+Math.random()*0.42);
+      pts.push({x:Math.cos(a)*rr, y:Math.sin(a)*rr*0.72}); }
+    craftScrap.items.push({ x, y:y0+APRON*0.52, r, pts, hp:2,
+      kind: Math.random()<0.5?"slag":"offcut", wob:Math.random()*6.28 });
+  }
+}
+function drawApron(ctx,cv){
+  const Wd=cv.width, y0=craftH(cv);
+  ctx.save();
+  ctx.fillStyle="#2e2114"; ctx.fillRect(0,y0,Wd,APRON);
+  ctx.fillStyle="rgba(0,0,0,.32)"; ctx.fillRect(0,y0,Wd,4);
+  ctx.strokeStyle="rgba(189,157,95,.20)"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(0,y0+1.5); ctx.lineTo(Wd,y0+1.5); ctx.stroke();
+  const S2=craftScrap;
+  if(S2){
+    S2.items.forEach(it=>{
+      if(it.hp<=0) return;
+      it.wob+=0.014;
+      ctx.save(); ctx.translate(it.x, it.y+Math.sin(it.wob)*0.7);
+      ctx.fillStyle = it.kind==="slag" ? "#5b4a37" : "#7a6242";
+      ctx.strokeStyle="rgba(0,0,0,.45)"; ctx.lineWidth=1.4;
+      ctx.beginPath(); it.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      // a hairline that says "one more hit" — damage you can read before you commit
+      if(it.hp===1){ ctx.strokeStyle="rgba(213,100,58,.9)"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(-it.r*0.5,-it.r*0.2); ctx.lineTo(it.r*0.35,it.r*0.3); ctx.stroke(); }
+      ctx.restore();
+    });
+    stepSparks(S2.sp); drawSparks(ctx,S2.sp);
+    const left=S2.items.filter(i=>i.hp>0).length;
+    ctx.fillStyle="rgba(216,189,132,.5)"; ctx.font='600 9.5px "Noto Sans",sans-serif'; ctx.textAlign="right";
+    ctx.fillText(left?`smash the scrap to vent heat  ·  ${left} left`:"apron clear", Wd-8, y0+APRON-6);
+  }
+  ctx.restore();
+}
+/* returns true when the tap was consumed by the apron, so the craft beneath
+   never sees a stray pointer event */
+function scrapTap(cv,x,y){
+  const S2=craftScrap; if(!S2) return false;
+  if(y < craftH(cv)) return false;
+  const it=S2.items.find(i=>i.hp>0 && Math.hypot(i.x-x,i.y-y) < i.r+11);
+  if(!it) return true;                       // apron taps are always swallowed
+  it.hp--;
+  if(it.hp>0){ Audio2.sfx.tick&&Audio2.sfx.tick(); craftSpark(S2.sp,x,y,"#8a7a5a",5); FX.buzz(8); return true; }
+  S2.smashed++;
+  craftSpark(S2.sp,it.x,it.y, it.kind==="slag"?"#d5643a":"#bd9d5f", 16);
+  Audio2.sfx.clink(); FX.buzz(15);
+  heatCool(it.kind==="slag" ? 0.16 : 0.10);  // slag carries more heat away
+  return true;
 }
 function drawHeat(ctx,cw,ch,y){
   const H=craftHeat; if(!H) return;
@@ -5775,14 +6065,16 @@ function drawHeat(ctx,cw,ch,y){
 }
 /* helpers a nested craft closure can call without colliding with its own
    local `W`/`H` (canvas width/height) shadowing the outer wizard state */
-function craftAddTrait(axis, amt){ if(!amt) return; W.cur.traits=W.cur.traits||{}; W.cur.traits[axis]=(W.cur.traits[axis]||0)+amt; }
-function craftSetMeta(meta){ W.cur.craftMeta=Object.assign({}, W.cur.craftMeta||{}, meta); }
+function craftAddTrait(axis, amt){ if(!amt||!W||!W.cur) return; W.cur.traits=W.cur.traits||{}; W.cur.traits[axis]=(W.cur.traits[axis]||0)+amt; }
+function craftSetMeta(meta){ if(!W||!W.cur) return; W.cur.craftMeta=Object.assign({}, W.cur.craftMeta||{}, meta); }
 /* a small two-button decision prompt drawn over the bottom of the canvas —
    used by every "stop here, or push for more" moment */
 function craftChoice(ctx,cw,ch,leftLabel,rightLabel,rightDisabled){
-  const bw=cw*0.34, y=ch*0.82, h=36;
+  // the buttons sit ABOVE craftLabel's two lines (H-30 / H-12) — they used to be
+  // drawn straight over the title, hiding the sentence explaining the choice
+  const bw=cw*0.34, y=ch*0.66, h=36;
   const lb={x:cw*0.5-bw-8,y,w:bw,h}, rb={x:cw*0.5+8,y,w:bw,h};
-  ctx.fillStyle="rgba(20,14,8,.55)"; ctx.fillRect(0,ch*0.665,cw,ch*0.335);
+  ctx.fillStyle="rgba(20,14,8,.62)"; ctx.fillRect(0,ch*0.58,cw,ch*0.42);
   ctx.fillStyle="#33513f"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(lb.x,lb.y,lb.w,lb.h,8):ctx.rect(lb.x,lb.y,lb.w,lb.h)); ctx.fill();
   ctx.fillStyle= rightDisabled?"rgba(90,63,28,.4)":"#b5322b";
   ctx.beginPath(); (ctx.roundRect?ctx.roundRect(rb.x,rb.y,rb.w,rb.h,8):ctx.rect(rb.x,rb.y,rb.w,rb.h)); ctx.fill();
@@ -5802,22 +6094,41 @@ function craftChoice(ctx,cw,ch,leftLabel,rightLabel,rightDisabled){
    climbing, the channel keeps narrowing, a sloppy late pass can chip the
    whole edge). This is literally how folded steel is made. */
 function craftTrace(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[];
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen();
   const maxFold=5;
   let fold=0, guide, hit, chanW, phase="trace", drawing=false, working=false, done=false;
-  let errSum=0, errN=0; const passQs=[]; let choice=null;
+  let errSum=0, errN=0; const passQs=[], passCovs=[]; let choice=null;
+  rubInit([
+    {k:"line",  label:"Line",     hint:"how tight to the channel you held", w:1.35},
+    {k:"edge",  label:"Edge",     hint:"how much of the blade you actually worked", w:1.0},
+    {k:"temper",label:"Temper",   hint:"time worked inside the heat band", w:0.85}
+  ]);
   const newPass=()=>{
     chanW = Math.max(9, 25 - fold*3.2);
     guide=[]; for(let i=0;i<=48;i++){ const t=i/48; guide.push({x:W*0.12+t*W*0.76, y:H*0.52-Math.sin(t*Math.PI)*H*0.30}); }
     hit=new Array(guide.length).fill(false); errSum=0; errN=0;
   };
   newPass();
-  const passQuality=()=>{ const cov=hit.filter(Boolean).length/hit.length; const avgErr=errN?errSum/errN:20;
-    const precision=clamp(1-avgErr/(chanW*1.6),0,1); return cov*0.5+precision*0.5; };
-  const bankNow=()=>clamp((passQs.reduce((a,b)=>a+b,0)/Math.max(1,passQs.length))*heatMult(),0,1);
+  const passPrecision=()=>{ const avgErr=errN?errSum/errN:chanW*1.6;
+    return clamp(1-avgErr/(chanW*1.6),0,1); };
+  const passCov=()=>hit.filter(Boolean).length/hit.length;
+  // each fold is graded on its own and the WORST pass sets the line: a razor
+  // edge is only as good as its sloppiest fold, which is what makes pushing
+  // for a fifth fold a real gamble rather than free upside
+  const mean=(a)=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  const gradeNow=()=>{
+    const ps=passQs.concat(phase==="trace"&&errN?[passPrecision()]:[]);
+    const cs=passCovs.concat(phase==="trace"?[passCov()]:[]);
+    rubSet("line", ps.length ? mean(ps)*0.6+Math.min(...ps)*0.4 : 0);
+    // more folds = a keener blade, but only folds you finished cleanly count
+    rubSet("edge", clamp(mean(cs)*(0.62+Math.min(passQs.length,maxFold)*0.095),0,1));
+    craftPulse();
+  };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
     heatTick(phase==="trace" && working);
+    gradeNow();
     drawHeat(ctx,W,H,H*0.115);
     ctx.strokeStyle="rgba(216,189,132,.22)"; ctx.lineWidth=chanW*2; ctx.lineCap="round";
     ctx.beginPath(); guide.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.stroke();
@@ -5831,25 +6142,25 @@ function craftTrace(cv,ctx){
       craftLabel(ctx,W,H,`Fold ${fold+1} of up to ${maxFold} — run the edge along the narrowing channel`,
         "a steady pass keeps it keen; each fold sharpens the blade but leaves less room for error");
     } else {
+      const worst=passQs.length?Math.min(...passQs):0;
       craftLabel(ctx,W,H,`${fold+1} fold${fold?"s":""} done — quench now, or fold again?`,
-        `banking now ≈ ${Math.round(bankNow()*100)}% quality · another fold narrows the channel further`);
+        `banking now ≈ ${Math.round(rubBuildScore()*100)}%  ·  sloppiest fold so far ${Math.round(worst*100)}%  ·  one bad pass sets the whole line`);
       choice = craftChoice(ctx,W,H,"Quench now",fold+1>=maxFold?"channel too thin":"Fold again", fold+1>=maxFold);
     }
-    craftAnim=requestAnimationFrame(draw);
+    craftAnim=craftFrame(gen,draw);
   };
   draw();
   const mark=(x,y)=>{ let best=1e9;
     guide.forEach((p,i)=>{ const d=Math.hypot(p.x-x,p.y-y); if(d<best)best=d; if(d<chanW+8) hit[i]=true; });
     if(best<chanW*3) { errSum+=best; errN++; }
-    setCraftQ(clamp(passQuality()*heatMult(),0,1));
   };
   const finalizeQuench=()=>{
     if(done) return; done=true;
-    const q=craftScore(bankNow());
-    craftSetMeta({folds:fold+1, heatCracked:craftHeat.cracked});
+    const q=rubBuildScore();
+    craftSetMeta({folds:fold+1, worstFold:Math.round(Math.min(...passQs.concat([1]))*100), heatCracked:craftHeat.cracked});
     craftAddTrait("power", Math.min(3,Math.round(fold*0.7)));
     if(fold>=2) craftAddTrait("control", 1);
-    setCraftQ(q); finishBuild(q);
+    finishBuild(q);
   };
   bindPointer(cv,{
     down:(x,y)=>{
@@ -5863,27 +6174,51 @@ function craftTrace(cv,ctx){
     },
     move:(x,y)=>{ if(phase==="trace" && drawing) mark(x,y); },
     up:()=>{ drawing=false; working=false; if(phase!=="trace") return;
-      const cov=hit.filter(Boolean).length/hit.length;
-      if(cov>=0.6){ passQs.push(passQuality()); craftHit(sp,W*0.5,H*0.4,"#dfe6ea"); phase="decide"; }
+      if(passCov()>=0.6){ passQs.push(passPrecision()); passCovs.push(passCov());
+        craftHit(sp,W*0.5,H*0.4,"#dfe6ea"); phase="decide"; }
     }
   });
 }
 
-/* HOOK — The Balance Point (hidden optimum, deduction). The join's true
-   center of gravity is hidden; sliding it gives hot/cold feedback (a wobble
-   ring, a pitch, and no visible target). The player decides: commit on a
-   decent read now, or spend more heat probing for a cleaner one? Which side
-   of the slider you lean toward also sets the hook's actual build — reach
-   (light, far-throwing) versus stability (heavy, sure-holding). */
+/* HOOK — The Balance Point (deduction on a budget).
+
+   Before: dragging the slider gave continuous free hot/cold feedback, so the
+   "hidden" optimum wasn't hidden at all — you swept the bar until the ring
+   went calm and committed. No decision, no tact, just a scrub.
+
+   Now the information costs something. You get FIVE probe strikes; each rings
+   the beam and reports the reading AT THAT POINT ONLY, then the beam goes
+   quiet again. You are triangulating a hidden number from a handful of
+   samples — and every probe you didn't need to spend is scored, so a player
+   who reads the ring well is rewarded for stopping early. Which side you
+   finally commit to still sets the build: reach versus stability. */
 function craftAlign(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const midY=H*0.40;
-  const target = 0.28 + Math.random()*0.44;   // hidden true balance, re-rolled every craft
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen(); const midY=H*0.38;
+  const target = 0.24 + Math.random()*0.52;   // hidden true balance, re-rolled every craft
+  const MAXPROBE=5;
   let pos=0.5, dragging=false, working=false, done=false;
-  const dist=()=>Math.abs(pos-target);
-  const warmth=()=>clamp(1-dist()/0.5,0,1);   // 1 = dead-on, 0 = far off
+  const probes=[];                            // {p, w} readings the player has bought
+  let ringT=0, ringAt=null;
+  const warmthAt=(p)=>clamp(1-Math.abs(p-target)/0.5,0,1);
+  const warmth=()=>warmthAt(pos);
+  rubInit([
+    {k:"read",   label:"Read",   hint:"how close the committed join sits to true balance", w:1.5},
+    {k:"economy",label:"Economy",hint:"probes left unspent — a good ear needs fewer", w:0.75},
+    {k:"temper", label:"Temper", hint:"time worked inside the heat band", w:0.85}
+  ]);
+  const grade=()=>{
+    // Read is only credited for what the player has actually LEARNED: committing
+    // on a lucky guess you never probed near cannot score full marks
+    const near = probes.length ? Math.min(...probes.map(pr=>Math.abs(pr.p-pos))) : 1;
+    const confidence = clamp(1-near/0.22, 0.35, 1);
+    rubSet("read", warmth()*confidence);
+    rubSet("economy", clamp((MAXPROBE-probes.length)/(MAXPROBE-1),0,1));
+    craftPulse();
+  };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
-    heatTick(working); drawHeat(ctx,W,H,H*0.10);
+    heatTick(working); grade(); drawHeat(ctx,W,H,H*0.10);
     // the beam, pivoting around the slider position — visibly tips toward whichever side is heavier
     const tip = (pos-0.5)*44;
     ctx.save(); ctx.translate(W/2,midY); ctx.rotate(tip*0.01);
@@ -5891,45 +6226,65 @@ function craftAlign(cv,ctx){
     ctx.beginPath(); ctx.moveTo(-W*0.30,0); ctx.lineTo(W*0.30,0); ctx.stroke();
     ctx.fillStyle="#bd9d5f"; ctx.beginPath(); ctx.arc(0,0,8,0,6.28); ctx.fill();
     ctx.restore();
-    // slider handle
-    const hx=W*0.20+pos*W*0.60;
-    ctx.strokeStyle="rgba(255,255,255,.18)"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(W*0.20,H*0.62); ctx.lineTo(W*0.80,H*0.62); ctx.stroke();
-    const w=warmth();
-    // wobble ring: tighter and calmer the closer you are to the hidden balance
-    const wob = (1-w)*10+2;
-    ctx.strokeStyle = w>0.86 ? "#7d9a8a" : w>0.6 ? "#d8b45f" : "#d5643a";
-    ctx.lineWidth=3;
-    ctx.beginPath(); ctx.arc(hx,H*0.62, 14+Math.sin(performance.now()*0.01*(1.2+(1-w)*3))*wob, 0,6.28); ctx.stroke();
-    ctx.fillStyle="#c9d2d8"; ctx.beginPath(); ctx.arc(hx,H*0.62,9,0,6.28); ctx.fill();
-    if(w>0.86){ craftSpark(sp,hx,H*0.62,"#7d9a8a",1); }
+    const trackY=H*0.60, tx=W*0.20, tw=W*0.60;
+    ctx.strokeStyle="rgba(255,255,255,.18)"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(tx,trackY); ctx.lineTo(tx+tw,trackY); ctx.stroke();
+    // every probe you've bought stays pinned on the track as a readable sample —
+    // the puzzle is solved by reasoning over marks, not by scrubbing
+    probes.forEach(pr=>{
+      const px=tx+pr.p*tw;
+      const col = pr.w>0.86?"#7d9a8a" : pr.w>0.62?"#d8b45f" : "#d5643a";
+      ctx.strokeStyle=col; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(px,trackY-16); ctx.lineTo(px,trackY-4); ctx.stroke();
+      ctx.fillStyle=col; ctx.font='700 10px "Noto Sans",sans-serif'; ctx.textAlign="center";
+      ctx.fillText(Math.round(pr.w*100), px, trackY-20);
+    });
+    // the ring only blooms on a probe, then dies — no free continuous feedback
+    if(ringAt!=null){ ringT+=0.045;
+      if(ringT<1){ const r=10+ringT*54;
+        ctx.strokeStyle=`rgba(216,180,95,${(1-ringT)*0.85})`; ctx.lineWidth=3-ringT*2;
+        ctx.beginPath(); ctx.arc(tx+ringAt.p*tw, trackY, r, 0, 6.28); ctx.stroke(); }
+      else ringAt=null;
+    }
+    const hx=tx+pos*tw;
+    ctx.fillStyle="#c9d2d8"; ctx.beginPath(); ctx.arc(hx,trackY,9,0,6.28); ctx.fill();
+    ctx.strokeStyle="rgba(20,14,8,.8)"; ctx.lineWidth=1.6; ctx.stroke();
     stepSparks(sp); drawSparks(ctx,sp);
-    const feel = w>0.9?"dead calm — this is it" : w>0.72?"warmer, barely wobbling" : w>0.45?"a slow, steady wobble" : "shaking hard — cold";
-    ctx.fillStyle="rgba(236,226,203,.85)"; ctx.textAlign="center"; ctx.font='700 13px "Noto Sans",sans-serif';
-    ctx.fillText(feel, W/2, H*0.72);
+    const left=MAXPROBE-probes.length;
+    ctx.textAlign="center";
+    ctx.fillStyle= left?"rgba(236,226,203,.9)":"#e2a15a"; ctx.font='700 13px "Noto Sans",sans-serif';
+    ctx.fillText(left ? `Tap the track to strike the beam — ${left} probe${left>1?"s":""} left`
+                      : "No probes left — commit on what you know", W/2, H*0.70);
     ctx.font='600 11px "Noto Sans",sans-serif'; ctx.fillStyle="rgba(236,226,203,.55)";
-    ctx.fillText("‹ reach & speed          stability & grip ›", W/2, H*0.78);
-    stepSparks(sp);
-    const btn=craftBtn(ctx,W,H,"Commit the join", true);
-    stashBtn=btn;
-    craftAnim=requestAnimationFrame(draw);
+    ctx.fillText("‹ reach & speed          stability & grip ›", W/2, H*0.76);
+    stashBtn=craftBtn(ctx,W,H,"Commit the join", true);
+    craftAnim=craftFrame(gen,draw);
   };
   let stashBtn=null;
   draw();
+  const probe=(p)=>{
+    if(probes.length>=MAXPROBE) { Audio2.sfx.bad(); return; }
+    const w=warmthAt(p);
+    probes.push({p, w});
+    ringAt={p}; ringT=0;
+    craftSpark(sp, W*0.20+p*W*0.60, H*0.60, w>0.86?"#7d9a8a":"#bd9d5f", w>0.86?12:6);
+    (w>0.86?Audio2.sfx.good:Audio2.sfx.clink)(); FX.buzz(w>0.86?16:9);
+    // striking the beam puts heat INTO the piece, so probing freely costs Temper
+    if(craftHeat) craftHeat.v=clamp(craftHeat.v+0.06,0,1);
+  };
   bindPointer(cv,{
     down:(x,y)=>{
       if(stashBtn && stashBtn.hit(x,y)){ if(!done){ done=true;
-        const w=warmth();
-        const q=craftScore(clamp(w*heatMult(),0,1));
+        const q=rubBuildScore();
         craftAddTrait("reach", Math.round((1-pos)*2));
         craftAddTrait("protect", Math.round(pos*2));
-        craftSetMeta({balanceLean: pos<0.5?"reach":"stability", balanceRead:Math.round(w*100)});
-        craftHit(sp,W/2,midY,"#7d9a8a"); setCraftQ(q); finishBuild(q); }
+        craftSetMeta({balanceLean: pos<0.5?"reach":"stability", balanceRead:Math.round(warmth()*100),
+                      probesUsed:probes.length, heatCracked:craftHeat.cracked});
+        craftHit(sp,W/2,midY,"#7d9a8a"); finishBuild(q); }
         return; }
       dragging=true; working=true; pos=clamp((x-W*0.20)/(W*0.60),0,1);
-      setCraftQ(clamp(warmth()*heatMult(),0,1));
+      probe(pos);
     },
-    move:(x)=>{ if(!dragging) return; pos=clamp((x-W*0.20)/(W*0.60),0,1);
-      setCraftQ(clamp(warmth()*heatMult(),0,1)); },
+    move:(x)=>{ if(!dragging) return; pos=clamp((x-W*0.20)/(W*0.60),0,1); },
     up:()=>{ dragging=false; working=false; }
   });
 }
@@ -5942,22 +6297,36 @@ function craftAlign(cv,ctx){
    it's calm, or gamble a late, hot draw for a heat bonus? A bow can never
    max all three. */
 function craftTension(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const cx=W*0.20, top=H*0.16, bot=H*0.62, midY=(top+bot)/2;
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen(); const cx=W*0.20, top=H*0.16, bot=H*0.60, midY=(top+bot)/2;
   const span=W*0.52, band=0.14;
   const AX=[{k:"power",label:"Power",target:0.72,color:"#d5643a"},
             {k:"speed",label:"Speed",target:0.42,color:"#7d9a8a"},
             {k:"control",label:"Accuracy",target:0.58,color:"#bd9d5f"}];
   let remaining=AX.slice(), results=[], cur=null, pull=0, dragging=false, working=false, phase="pick", done=false;
   const samples=[];
+  rubInit([
+    {k:"aim",    label:"Aim",    hint:"average accuracy across the three draws", w:1.2},
+    {k:"balance",label:"Balance",hint:"a limb tuned evenly — no draw left behind", w:1.1},
+    {k:"temper", label:"Temper", hint:"time worked inside the heat band", w:0.85}
+  ]);
+  const grade=()=>{
+    // Balance is the tactful row: three draws averaging 0.8 beats one at 1.0 and
+    // two at 0.7, so a bow you dumped all your steadiness into can never be perfect
+    const qs=results.map(r=>r.q);
+    rubSet("aim", qs.length?qs.reduce((a,b)=>a+b,0)/3:0);
+    rubSet("balance", qs.length>=2 ? clamp(1-(Math.max(...qs)-Math.min(...qs))*1.25,0,1)*(qs.length/3) : qs.length*0.2);
+    craftPulse();
+  };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
-    heatTick(working); drawHeat(ctx,W,H,H*0.09);
+    heatTick(working, phase==="pick"); grade(); drawHeat(ctx,W,H,H*0.09);
     ctx.textAlign="left"; ctx.font='700 12px "Noto Sans",sans-serif';
     let ry=H*0.16;
     results.forEach(r=>{ ctx.fillStyle=r.color; ctx.fillText(`${r.label}: ${"●".repeat(Math.max(1,Math.round(r.q*5)))}`, W*0.62, ry); ry+=18; });
     if(phase==="pick"){
       craftLabel(ctx,W,H,`Draw ${results.length+1} of 3 — which trait gets this draw?`,
-        "heat keeps rising across all three draws — a late draw is hotter and shakier, but rewards a steady hand");
+        "all three must come out EVEN for a masterwork — your steadiest hand is not a free win, it is a choice about where to spend it");
       const bw=W*0.24, bh=32, gap=10; const totalW=remaining.length*bw+(remaining.length-1)*gap;
       let bx=W/2-totalW/2;
       pickBtns = remaining.map(ax=>{
@@ -5984,7 +6353,7 @@ function craftTension(cv,ctx){
         "a shaking draw loosens the whole limb");
     }
     stepSparks(sp); drawSparks(ctx,sp);
-    craftAnim=requestAnimationFrame(draw);
+    craftAnim=craftFrame(gen,draw);
   };
   let pickBtns=[];
   draw();
@@ -5994,15 +6363,19 @@ function craftTension(cv,ctx){
       sd=Math.sqrt(recent.reduce((a,b)=>a+(b-mean)*(b-mean),0)/recent.length); }
     const steadiness=clamp(1-sd*9,0,1);
     const acc=clamp(1-Math.abs(pull-cur.target)/0.4,0,1);
-    const q=clamp((acc*0.62+steadiness*0.38)*heatMult(),0,1);
+    const q=clamp(acc*0.62+steadiness*0.38,0,1);
     results.push({k:cur.k, label:cur.label, color:cur.color, q});
     craftAddTrait(cur.k, Math.round(q*4));
     craftHit(sp,cx+pull*span,midY, acc>0.6?cur.color:"#d5643a");
     samples.length=0; dragging=false; working=false;
     if(results.length>=3){
-      craftSetMeta({draws:results.map(r=>({axis:r.k,q:Math.round(r.q*100)})), heatCracked:craftHeat.cracked});
-      const q3=craftScore(clamp(results.reduce((a,b)=>a+b.q,0)/3*heatMult(),0,1));
-      done=true; setCraftQ(q3); finishBuild(q3);
+      grade();
+      // the strongest draw names what this bow is FOR — the road reads it
+      const best=results.slice().sort((a,b)=>b.q-a.q)[0];
+      craftSetMeta({draws:results.map(r=>({axis:r.k,q:Math.round(r.q*100)})), bestDraw:best.k,
+                    heatCracked:craftHeat.cracked});
+      const q3=rubBuildScore();
+      done=true; finishBuild(q3);
     } else {
       phase="pick"; cur=null;
     }
@@ -6029,18 +6402,34 @@ function craftTension(cv,ctx){
    memory. A missed pleat is a "leak" — logged, not fatal — so a shaky memory
    still ships a usable, if patchy, shell. */
 function craftFold(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[];
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen();
   const CHOICES=[{n:3,label:"3 pleats — quick, light"},{n:4,label:"4 pleats — balanced"},
     {n:5,label:"5 pleats — dense, heavy"},{n:6,label:"6 pleats — thickest, slowest"}];
   let phase="choose", pleats=null, seq=[], showIdx=-1, input=[], points=[], done=false, chooseBtns=[], showTimer=null;
+  rubInit([
+    {k:"recall", label:"Recall", hint:"pleats folded in the right order", w:1.5},
+    {k:"density",label:"Density",hint:"how much smoke the shell will actually hold", w:0.9},
+    {k:"temper", label:"Temper", hint:"time worked inside the heat band", w:0.85}
+  ]);
+  const grade=()=>{
+    if(!pleats){ rubSet("density",0); rubSet("recall",0); craftPulse(); return; }
+    // Density and Recall pull in OPPOSITE directions — six pleats is the only road
+    // to a full Density row, and the only way to fail Recall. That tension is the
+    // craft: a perfect shell means holding six in your head, cleanly.
+    rubSet("density", clamp((pleats.n-2)/4,0,1));
+    const correct=input.filter((v,idx)=>v===seq[idx]).length;
+    rubSet("recall", seq.length? correct/seq.length : 0);
+    craftPulse();
+  };
   const layout=(n)=>{ points=[]; const cx=W*0.5, cy=H*0.44, r=Math.min(W,H)*0.28;
     for(let i=0;i<n;i++){ const a=-Math.PI/2 + i*(Math.PI*2/n); points.push({x:cx+Math.cos(a)*r, y:cy+Math.sin(a)*r, i}); } };
   const startSequence=()=>{ layout(pleats.n); seq=shuffle(points.map(p=>p.i)); input=[]; showIdx=-1; phase="show"; };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
-    heatTick(phase==="input"); drawHeat(ctx,W,H,H*0.09);
+    heatTick(phase==="input", phase==="show"); grade(); drawHeat(ctx,W,H,H*0.09);
     if(phase==="choose"){
-      craftLabel(ctx,W,H,"Choose how many pleats to fold","more pleats hold smoke longer but weigh the carrier down — and are harder to remember");
+      craftLabel(ctx,W,H,"Choose how many pleats to fold","only six pleats can fill the Density row — and six is the hardest order to hold in your head");
       const bw=W*0.44,bh=32; let by=H*0.28;
       chooseBtns = CHOICES.map(c=>{ const b={x:W*0.5-bw/2,y:by,w:bw,h:bh,c};
         ctx.fillStyle="#5f6f52"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,b.h,8):ctx.rect(b.x,b.y,b.w,b.h)); ctx.fill();
@@ -6061,7 +6450,7 @@ function craftFold(cv,ctx){
         phase==="show" ? `Watch the fold order  ·  ${Math.max(0,showIdx+1)}/${seq.length}` : `Reproduce the fold order  ·  ${input.length}/${seq.length}`,
         phase==="show" ? "then reproduce it from memory" : "tap the pleats in the order they flashed");
     }
-    craftAnim=requestAnimationFrame(draw);
+    craftAnim=craftFrame(gen,draw);
   };
   draw();
   const advanceShow=()=>{ showIdx++;
@@ -6078,12 +6467,15 @@ function craftFold(cv,ctx){
       else { craftSpark(sp,p.x,p.y,"#d5643a",8); Audio2.sfx.bad(); FX.buzz(14); input.push(-1); }
       if(input.length>=seq.length){
         const correct=input.filter((v,idx)=>v===seq[idx]).length;
-        const acc=correct/seq.length;
-        const q=craftScore(clamp(acc*heatMult(),0,1));
+        grade();
+        const q=rubBuildScore();
         craftAddTrait("stealth", Math.min(3, Math.round(pleats.n*0.5)));
         craftAddTrait("speed", -Math.max(0,pleats.n-3));
-        craftSetMeta({pleats:pleats.n, remembered:correct, of:seq.length, heatCracked:craftHeat.cracked});
-        done=true; setCraftQ(q); finishBuild(q);
+        // a leaking pleat is a real hole in the shell — the road shortens the
+        // phase window for each one, so a shaky memory ships a patchy smoke
+        craftSetMeta({pleats:pleats.n, remembered:correct, of:seq.length,
+                      leaks:seq.length-correct, heatCracked:craftHeat.cracked});
+        done=true; finishBuild(q);
       }
     }, move:()=>{}, up:()=>{}
   });
@@ -6095,21 +6487,41 @@ function craftFold(cv,ctx){
    Individual precision matters, but so does matching yourself: a mismatched
    set is unstable, not just imprecise. */
 function craftFit(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[];
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen();
   const PRESETS=[{k:"steep",label:"Steep — grip & reach",target:0.80,axes:["protect","reach"]},
                  {k:"shallow",label:"Shallow — speed",target:0.22,axes:["speed"]},
                  {k:"balanced",label:"Balanced — control",target:0.50,axes:["control"]}];
   let phase="choose", preset=null, chooseBtns=[];
-  const xs=[W*0.26,W*0.5,W*0.74], top=H*0.20, bot=H*0.62;
+  const xs=[W*0.26,W*0.5,W*0.74], top=H*0.20, bot=H*0.60;
   const claws=xs.map(x=>({x, norm:0.5, set:false}));
   let dragIdx=-1, working=false, done=false;
+  rubInit([
+    {k:"angle", label:"Angle", hint:"how near the chosen bite each claw sits", w:1.15},
+    {k:"match", label:"Match", hint:"all three claws agreeing with each other", w:1.15},
+    {k:"temper",label:"Temper",hint:"time worked inside the heat band", w:0.85}
+  ]);
+  const grade=()=>{
+    if(!preset){ craftPulse(); return; }
+    const set=claws.filter(c=>c.set);
+    if(!set.length){ rubSet("angle",0); rubSet("match",0); craftPulse(); return; }
+    const norms=set.map(c=>c.norm);
+    const mean=norms.reduce((a,b)=>a+b,0)/norms.length;
+    const sd=Math.sqrt(norms.reduce((a,b)=>a+(b-mean)*(b-mean),0)/norms.length);
+    const prog=set.length/3;
+    // Angle and Match are graded separately on purpose: three claws set neatly to
+    // the WRONG angle scores Match but fails Angle, and vice versa. You need both.
+    rubSet("angle", clamp(1-norms.reduce((a,b)=>a+Math.abs(b-preset.target),0)/norms.length/0.42,0,1)*prog);
+    rubSet("match", clamp(1-sd*4.4,0,1)*prog);
+    craftPulse();
+  };
   const clawGlyph=(x,y,norm)=>{ ctx.save(); ctx.translate(x,y); ctx.rotate((norm-0.5)*1.1);
     ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=5; ctx.lineCap="round";
     ctx.beginPath(); ctx.moveTo(-12,-12); ctx.lineTo(0,14); ctx.moveTo(0,-14); ctx.lineTo(0,14); ctx.moveTo(12,-12); ctx.lineTo(0,14); ctx.stroke();
     ctx.restore(); };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
-    heatTick(phase==="set" && working); drawHeat(ctx,W,H,H*0.09);
+    heatTick(phase==="set" && working); grade(); drawHeat(ctx,W,H,H*0.09);
     if(phase==="choose"){
       craftLabel(ctx,W,H,"Choose the bite angle","every claw in the set will need to match it — a mismatch throws the whole climb off");
       const bw=W*0.5,bh=32; let by=H*0.30;
@@ -6120,7 +6532,23 @@ function craftFit(cv,ctx){
         by+=bh+12; return {...b, hit:(px,py)=>px>b.x&&px<b.x+b.w&&py>b.y&&py<b.y+b.h}; });
     } else {
       ctx.fillStyle="#5a3f1c"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(W*0.14,top-14,W*0.72,bot-top+28,10):ctx.rect(W*0.14,top-14,W*0.72,bot-top+28)); ctx.fill();
-      claws.forEach(c=>{
+      // THE MARKED CLAW. The template is scribed on the first post only. Set that
+      // one against the mark, then set the other two BY EYE against your own
+      // first claw — the mark is gone by then. Matching yourself is the craft.
+      const nSet=claws.filter(c=>c.set).length;
+      if(nSet===0){
+        const ty=top+preset.target*(bot-top);
+        ctx.strokeStyle="rgba(125,154,138,.85)"; ctx.lineWidth=2; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(claws[0].x-40,ty); ctx.lineTo(claws[0].x+40,ty); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle="rgba(125,154,138,.9)"; ctx.font='700 10px "Noto Sans",sans-serif'; ctx.textAlign="center";
+        ctx.fillText("scribed mark", claws[0].x, ty-7);
+      } else if(claws[0].set){
+        // your own first claw stays visible as the only reference you get
+        const ry=top+claws[0].norm*(bot-top);
+        ctx.strokeStyle="rgba(216,189,132,.28)"; ctx.lineWidth=1; ctx.setLineDash([3,5]);
+        ctx.beginPath(); ctx.moveTo(W*0.16,ry); ctx.lineTo(W*0.84,ry); ctx.stroke(); ctx.setLineDash([]);
+      }
+      claws.forEach((c,i)=>{
         ctx.strokeStyle="rgba(255,255,255,.18)"; ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(c.x,top); ctx.lineTo(c.x,bot); ctx.stroke();
         const cy=top+c.norm*(bot-top);
@@ -6129,29 +6557,33 @@ function craftFit(cv,ctx){
         ctx.beginPath(); ctx.arc(c.x,cy,4,0,6.28); ctx.fill();
       });
       stepSparks(sp); drawSparks(ctx,sp);
-      craftLabel(ctx,W,H,`Drag each claw to the ${preset.label.split(" — ")[0].toLowerCase()} angle  ·  ${claws.filter(c=>c.set).length}/3 set`,
-        "aim for the same angle on all three — consistency matters as much as precision");
+      craftLabel(ctx,W,H,
+        nSet===0 ? `Set the FIRST claw to the scribed mark  ·  0/3 set`
+                 : `Now match the rest by eye — the mark is gone  ·  ${nSet}/3 set`,
+        nSet===0 ? "this is the only claw that gets a template" : "Angle grades you against the mark; Match grades you against yourself");
     }
-    craftAnim=requestAnimationFrame(draw);
+    craftAnim=craftFrame(gen,draw);
   };
   draw();
   const maybeFinish=()=>{
     if(done || !claws.every(c=>c.set)) return; done=true;
-    const norms=claws.map(c=>c.norm);
-    const mean=norms.reduce((a,b)=>a+b,0)/3;
-    const sd=Math.sqrt(norms.reduce((a,b)=>a+(b-mean)*(b-mean),0)/3);
-    const consistency=clamp(1-sd*4,0,1);
-    const precision=clamp(1-norms.reduce((a,b)=>a+Math.abs(b-preset.target),0)/3/0.5,0,1);
-    const q=craftScore(clamp((precision*0.6+consistency*0.4)*heatMult(),0,1));
-    preset.axes.forEach(ax=>craftAddTrait(ax, Math.round((precision*0.6+consistency*0.4)*2)));
-    craftSetMeta({angle:preset.k, consistency:Math.round(consistency*100), heatCracked:craftHeat.cracked});
-    setCraftQ(q); finishBuild(q);
+    grade();
+    const q=rubBuildScore();
+    const score=(craftRub.v.angle+craftRub.v.match)/2;
+    preset.axes.forEach(ax=>craftAddTrait(ax, Math.round(score*2)));
+    craftSetMeta({angle:preset.k, consistency:Math.round(craftRub.v.match*100),
+                  heatCracked:craftHeat.cracked});
+    finishBuild(q);
   };
   bindPointer(cv,{
     down:(x,y)=>{
       if(phase==="choose"){ const b=chooseBtns.find(b=>b.hit(x,y)); if(!b) return;
         preset=b.p; phase="set"; Audio2.sfx.clink(); return; }
-      dragIdx=claws.findIndex(c=>Math.hypot(c.x-x, (top+c.norm*(bot-top))-y)<30);
+      const hitIdx=claws.findIndex(c=>Math.hypot(c.x-x, (top+c.norm*(bot-top))-y)<30);
+      // the marked claw is set first, always — the reference has to exist before
+      // the other two can be judged against it
+      if(hitIdx>0 && !claws[0].set){ Audio2.sfx.bad(); FX.buzz(8); return; }
+      dragIdx=hitIdx;
       if(dragIdx>=0) working=true;
     },
     move:(x,y)=>{ if(dragIdx>=0){ claws[dragIdx].norm=clamp((y-top)/(bot-top),0,1); } },
@@ -6168,7 +6600,7 @@ function craftFit(cv,ctx){
    decides when the case is full enough and closes it — push too far and
    there's nowhere left for the piece that would have mattered most. */
 function craftPack(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[];
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen();
   const cx=W*0.14, cy=H*0.12, cw=W*0.72, ch=H*0.40, cols=6, rows=4;
   const cellW=cw/cols, cellH=ch/rows;
   const PIECES={
@@ -6180,14 +6612,37 @@ function craftPack(cv,ctx){
   const occ=Array.from({length:cols},()=>Array(rows).fill(false));
   const placed=[]; const counts={bandage:0,salve:0,splint:0,tonic:0};
   let held=null, done=false, working=false, stashBtn=null;
-  const trayY=H*0.63, trayItems=Object.keys(PIECES).map((k,i)=>({k, x:cx+i*(cw/4)+cw/8, y:trayY}));
+  // the tray sits below the case AND below the strap gauge that reads its balance
+  const trayY=H*0.72, trayItems=Object.keys(PIECES).map((k,i)=>({k, x:cx+i*(cw/4)+cw/8, y:trayY}));
   const canPlace=(k,gx,gy)=>PIECES[k].cells.every(([dx,dy])=>{
     const x=gx+dx,y=gy+dy; return x>=0&&x<cols&&y>=0&&y<rows&&!occ[x][y]; });
   const place=(k,gx,gy)=>{ PIECES[k].cells.forEach(([dx,dy])=>{ occ[gx+dx][gy+dy]=true; }); placed.push({k,gx,gy}); counts[k]++; };
   const usedCells=()=>placed.reduce((a,p)=>a+PIECES[p.k].cells.length,0);
+  /* CARRY BALANCE. A case can be crammed full and still be useless: load it all
+     down one side and it swings on the strap and rattles all the way to the
+     cavern. WHERE you put each supply now matters as much as how many you fit,
+     which turns a tidy packing puzzle into an actual planning problem. */
+  const WEIGHT={bandage:1,salve:1,splint:2,tonic:3};
+  const sideLoad=()=>{ let l=0,r=0;
+    placed.forEach(p=>{ const w=WEIGHT[p.k]/PIECES[p.k].cells.length;
+      PIECES[p.k].cells.forEach(([dx,dy])=>{ ((p.gx+dx)<cols/2 ? (l+=w) : (r+=w)); }); });
+    return {l,r}; };
+  const balance=()=>{ const {l,r}=sideLoad(); const t=l+r;
+    return t<=0 ? 0 : clamp(1-Math.abs(l-r)/(t*0.5),0,1); };
+  rubInit([
+    {k:"capacity",label:"Capacity",hint:"how much of the case you actually filled", w:1.1},
+    {k:"balance", label:"Balance", hint:"weight spread evenly across the strap", w:1.2},
+    {k:"temper",  label:"Temper",  hint:"time worked inside the heat band", w:0.85}
+  ]);
+  const grade=()=>{
+    rubSet("capacity", clamp(usedCells()/(cols*rows*0.8),0,1));
+    rubSet("balance", placed.length?balance():0);
+    craftPulse();
+  };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
-    heatTick(working); drawHeat(ctx,W,H,H*0.065);
+    heatTick(working); grade(); drawHeat(ctx,W,H,H*0.065);
     ctx.fillStyle="#8a6a3a"; ctx.strokeStyle="#5a3f1c"; ctx.lineWidth=3;
     ctx.beginPath(); (ctx.roundRect?ctx.roundRect(cx,cy,cw,ch,10):ctx.rect(cx,cy,cw,ch)); ctx.fill(); ctx.stroke();
     for(let i=1;i<cols;i++){ ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.beginPath(); ctx.moveTo(cx+i*cellW,cy); ctx.lineTo(cx+i*cellW,cy+ch); ctx.stroke(); }
@@ -6208,22 +6663,40 @@ function craftPack(cv,ctx){
         ctx.fillStyle= ok?color:"#b5322b"; ctx.fillRect(cx+gx*cellW+2,cy+gy*cellH+2,cellW-4,cellH-4); });
       ctx.globalAlpha=1;
     }
+    // THE STRAP. A live see-saw across the case's centre line — the one thing
+    // that tells you a full case is still a bad case.
+    const {l,r}=sideLoad(); const bal=balance();
+    ctx.strokeStyle="rgba(255,255,255,.30)"; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(cx+cw/2,cy-6); ctx.lineTo(cx+cw/2,cy+ch+6); ctx.stroke(); ctx.setLineDash([]);
+    const by=cy+ch+22, bw2=cw*0.5, bx2=cx+cw/2-bw2/2;
+    const tilt = (l+r)>0 ? clamp((r-l)/((l+r)*0.6),-1,1) : 0;
+    ctx.save(); ctx.translate(cx+cw/2,by); ctx.rotate(tilt*0.20);
+    ctx.strokeStyle = bal>0.86?"#7d9a8a" : bal>0.6?"#d8b45f" : "#d5643a";
+    ctx.lineWidth=4; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(-bw2/2,0); ctx.lineTo(bw2/2,0); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle="#bd9d5f"; ctx.beginPath(); ctx.moveTo(cx+cw/2,by-7); ctx.lineTo(cx+cw/2-5,by+1); ctx.lineTo(cx+cw/2+5,by+1); ctx.fill();
     ctx.fillStyle="rgba(216,189,132,.85)"; ctx.textAlign="center"; ctx.font='700 12px "Noto Sans",sans-serif';
-    ctx.fillText(`packed ${usedCells()}/${cols*rows} cells — tap a supply below, then tap the case`, W/2, cy+ch+16);
+    const balTxt = !placed.length ? "nothing packed yet"
+      : bal>0.86?"hangs true" : bal>0.6?"pulls a little" : "swings badly — even it out";
+    ctx.fillText(`packed ${usedCells()}/${cols*rows} cells  ·  ${balTxt}`, W/2, cy+ch+44);
     stashBtn=craftBtn(ctx,W,H,"Close the case", placed.length>0);
-    craftAnim=requestAnimationFrame(draw);
+    craftAnim=craftFrame(gen,draw);
   };
   draw();
   const finish=()=>{
     if(done) return; done=true;
-    const frac=clamp(usedCells()/(cols*rows*0.75),0,1);
-    const q=craftScore(clamp(frac*heatMult(),0,1));
+    grade();
+    const q=rubBuildScore();
     craftAddTrait("recover", clamp(Math.round(counts.bandage*0.5+counts.tonic*1.1+counts.salve*0.3),0,5));
     craftAddTrait("protect", Math.round(counts.splint*0.7));
     craftAddTrait("speed", -Math.round(usedCells()/8));
-    craftSetMeta({packed:Object.assign({},counts), cells:usedCells(), heatCracked:craftHeat.cracked});
+    // WHAT you packed decides how Mend actually behaves on the road: a case of
+    // bandages is many small recoveries, a case of tonics is few and strong
+    craftSetMeta({packed:Object.assign({},counts), cells:usedCells(),
+                  balance:Math.round(balance()*100), heatCracked:craftHeat.cracked});
     craftHit(sp,cx+cw/2,cy+ch/2,"#bd9d5f");
-    setCraftQ(q); finishBuild(q);
+    finishBuild(q);
   };
   bindPointer(cv,{
     down:(x,y)=>{
@@ -6247,19 +6720,45 @@ function craftPack(cv,ctx){
    alternating left and right strands. A missed beat leaves a real weak
    spot AT THAT POSITION in the finished rope, visible as a scar, not just
    a lower number. */
+/* ROPE — The Braid Rhythm, and then the SEAT.
+   Tapping on the beat was one dimension, so a player either had rhythm or
+   didn't and there was nothing to think about. Each beat is now tap AND hold:
+   you strike the strand on the beat, then hold to seat it home. Let go early
+   and the strand is loose; grind on past it and you overwork the fibre. Two
+   different mistakes, two different scars, and the fast tempo makes both
+   windows tighter — which is what the tempo choice is now actually buying. */
 function craftWeave(cv,ctx){
-  const W=cv.width,H=cv.height, sp=[]; const ry=H*0.42;
-  const TEMPOS=[{k:"slow",label:"Slow braid — safest, least value",bpm:76,val:0.78},
-                {k:"standard",label:"Standard braid",bpm:104,val:1.0},
-                {k:"fast",label:"Fast braid — best value, hardest to hold",bpm:138,val:1.3}];
+  const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen(); const ry=H*0.42;
+  const TEMPOS=[{k:"slow",label:"Slow braid — safest, least value",bpm:76,val:0.78,seat:0.46},
+                {k:"standard",label:"Standard braid",bpm:104,val:1.0,seat:0.34},
+                {k:"fast",label:"Fast braid — best value, hardest to hold",bpm:138,val:1.3,seat:0.24}];
   let phase="choose", tempo=null, chooseBtns=[];
   const totalBeats=8; let beatIdx=0, results=[], beatT=0, resolved=false, done=false, lastT=null;
+  let holding=false, holdT=0, struckOn=0;
+  rubInit([
+    {k:"rhythm",label:"Rhythm",hint:"strands struck on the beat", w:1.15},
+    {k:"seat",  label:"Seat",  hint:"strands held home — not loose, not overworked", w:1.15},
+    {k:"temper",label:"Temper",hint:"time worked inside the heat band", w:0.85}
+  ]);
+  /* Both rows are scaled by the tempo's value, and the rows fill against the FULL
+     eight beats rather than the beats so far — so they climb as you braid instead
+     of jittering. The consequence is the honest one: a slow braid tops out around
+     78% and can never be a masterwork. Choosing the safe tempo is choosing not to
+     be perfect, and the rubric says so out loud from the first beat. */
+  const grade=()=>{
+    const val = tempo?tempo.val:1;
+    const hits=results.filter(r=>r.hit).length;
+    rubSet("rhythm", clamp((hits/totalBeats)*val,0,1));
+    rubSet("seat", clamp((results.reduce((a,r)=>a+(r.seat||0),0)/totalBeats)*val,0,1));
+    craftPulse();
+  };
   const draw=()=>{
+    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
     craftBg(ctx,W,H);
     const now=performance.now(); const dt = lastT!=null?Math.min(0.08,(now-lastT)/1000):0.016; lastT=now;
-    heatTick(phase==="braid"); drawHeat(ctx,W,H,H*0.09);
+    heatTick(phase==="braid"); grade(); drawHeat(ctx,W,H,H*0.09);
     if(phase==="choose"){
-      craftLabel(ctx,W,H,"Choose the braid tempo","faster finishes stronger but is harder to hold on the beat");
+      craftLabel(ctx,W,H,"Choose the braid tempo","faster pays more but tightens BOTH windows — the beat you strike on and the hold that seats it");
       const bw=W*0.62,bh=32; let by=H*0.32;
       chooseBtns = TEMPOS.map(t=>{ const b={x:W*0.5-bw/2,y:by,w:bw,h:bh,t};
         ctx.fillStyle="#6a4a2a"; ctx.beginPath(); (ctx.roundRect?ctx.roundRect(b.x,b.y,b.w,b.h,8):ctx.rect(b.x,b.y,b.w,b.h)); ctx.fill();
@@ -6268,15 +6767,22 @@ function craftWeave(cv,ctx){
         by+=bh+11; return {...b, hit:(px,py)=>px>b.x&&px<b.x+b.w&&py>b.y&&py<b.y+b.h}; });
     } else if(phase==="braid"){
       const period=60/tempo.bpm*2.1;
-      if(!resolved){ beatT+=dt;
-        if(beatT>=period){ results.push({hit:false, idx:beatIdx}); resolved=true; Audio2.sfx.snap&&Audio2.sfx.snap(); setTimeout(advanceBeat,180); } }
+      if(holding) holdT+=dt;
+      else if(!resolved){ beatT+=dt;
+        if(beatT>=period){ results.push({hit:false, seat:0, idx:beatIdx, why:"missed"}); resolved=true;
+          Audio2.sfx.snap&&Audio2.sfx.snap(); setTimeout(advanceBeat,180); } }
       ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=20; ctx.lineCap="round";
       ctx.beginPath(); ctx.moveTo(W*0.08,ry); ctx.lineTo(W*0.92,ry); ctx.stroke();
       ctx.strokeStyle="rgba(0,0,0,.2)"; ctx.lineWidth=2;
       for(let x=W*0.08;x<W*0.92;x+=16){ ctx.beginPath(); ctx.moveTo(x,ry-9); ctx.lineTo(x+9,ry+9); ctx.stroke(); }
-      results.forEach(r=>{ if(!r.hit){ const sx=W*0.08+(r.idx+0.5)*(W*0.84/totalBeats);
-        ctx.strokeStyle="#b5322b"; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.moveTo(sx-6,ry-14); ctx.lineTo(sx+6,ry+14); ctx.stroke(); } });
+      // the finished rope carries its own history: a missed strike scars it, a
+      // badly seated one thins it — two different marks you can point at
+      results.forEach(r=>{ const sx=W*0.08+(r.idx+0.5)*(W*0.84/totalBeats);
+        if(!r.hit){ ctx.strokeStyle="#b5322b"; ctx.lineWidth=3;
+          ctx.beginPath(); ctx.moveTo(sx-6,ry-14); ctx.lineTo(sx+6,ry+14); ctx.stroke(); }
+        else if(r.seat<0.55){ ctx.strokeStyle="#d5643a"; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.arc(sx,ry,8,0,6.28); ctx.stroke(); }
+        else { ctx.fillStyle="rgba(125,154,138,.75)"; ctx.beginPath(); ctx.arc(sx,ry,3.5,0,6.28); ctx.fill(); } });
       ctx.strokeStyle="rgba(255,255,255,.4)"; ctx.setLineDash([4,4]); ctx.lineWidth=2;
       ctx.beginPath(); ctx.moveTo(W*0.5,ry-40); ctx.lineTo(W*0.5,ry+40); ctx.stroke(); ctx.setLineDash([]);
       const side = beatIdx%2===0?"L":"R";
@@ -6285,38 +6791,84 @@ function craftWeave(cv,ctx){
       const mx=startX+(W*0.5-startX)*frac;
       ctx.fillStyle= side==="L"?"#7d9a8a":"#d8b45f";
       ctx.beginPath(); ctx.arc(mx,ry,10,0,6.28); ctx.fill();
+      // THE SEAT GAUGE — only up while you are holding, so the second half of
+      // each beat has its own read and its own way to fail
+      if(holding){
+        const target=tempo.seat, gy=ry+58, gw=W*0.5, gx=W*0.5-gw/2;
+        const fillF=clamp(holdT/(target*2),0,1);
+        ctx.fillStyle="rgba(0,0,0,.4)"; ctx.fillRect(gx-2,gy-2,gw+4,14);
+        ctx.fillStyle="rgba(125,154,138,.30)"; ctx.fillRect(gx+gw*0.38,gy,gw*0.24,10);
+        const good=Math.abs(holdT-target)<target*0.34;
+        ctx.fillStyle= good?"#7d9a8a" : holdT>target ? "#d5643a" : "#d8b45f";
+        ctx.fillRect(gx,gy,gw*fillF,10);
+        ctx.strokeStyle="rgba(255,255,255,.8)"; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(gx+gw*0.5,gy-3); ctx.lineTo(gx+gw*0.5,gy+13); ctx.stroke();
+        ctx.fillStyle= good?"#7d9a8a":"rgba(236,226,203,.8)"; ctx.font='700 11px "Noto Sans",sans-serif'; ctx.textAlign="center";
+        ctx.fillText(good?"seated — let go":holdT>target?"overworking the fibre!":"seating…", W*0.5, gy-8);
+        if(good) craftSpark(sp,W*0.5,ry,"#7d9a8a",1);
+      }
       stepSparks(sp); drawSparks(ctx,sp);
-      craftLabel(ctx,W,H,`Beat ${beatIdx+1}/${totalBeats} — tap the ${side==="L"?"LEFT":"RIGHT"} side on the beat`,
-        "alternate strands on the beat; a missed beat leaves a weak spot at that point in the rope");
+      craftLabel(ctx,W,H,
+        holding ? `Beat ${beatIdx+1}/${totalBeats} — HOLD to seat the strand, release at the mark`
+                : `Beat ${beatIdx+1}/${totalBeats} — strike the ${side==="L"?"LEFT":"RIGHT"} strand on the beat`,
+        holding ? "release too soon and it sits loose; hold too long and you overwork it"
+                : "then keep holding — the strike is only half of it");
     }
-    craftAnim=requestAnimationFrame(draw);
+    craftAnim=craftFrame(gen,draw);
   };
-  const advanceBeat=()=>{ beatIdx++; beatT=0; resolved=false; if(beatIdx>=totalBeats) finish(); };
+  const advanceBeat=()=>{ beatIdx++; beatT=0; resolved=false; holding=false; holdT=0;
+    if(beatIdx>=totalBeats) finish(); };
   draw();
   const finish=()=>{
     if(done) return; done=true;
-    const hits=results.filter(r=>r.hit).length;
-    const acc=hits/totalBeats;
-    const q=craftScore(clamp(acc*tempo.val*heatMult(),0,1));
+    grade();
+    const q=rubBuildScore();
+    const acc=results.filter(r=>r.hit).length/totalBeats;
     craftAddTrait("protect", Math.round(acc*tempo.val*2));
     if(tempo.k==="fast") craftAddTrait("reach", 1);
-    craftSetMeta({tempo:tempo.k, weakSpots:results.filter(r=>!r.hit).map(r=>r.idx), heatCracked:craftHeat.cracked});
-    setCraftQ(q); finishBuild(q);
+    // weakSpots was recorded and then never read by anything. It now reaches the
+    // road: each one is a real chance the rope slips on a descent.
+    craftSetMeta({tempo:tempo.k,
+                  weakSpots:results.filter(r=>!r.hit).map(r=>r.idx),
+                  looseSpots:results.filter(r=>r.hit && r.seat<0.55).map(r=>r.idx),
+                  heatCracked:craftHeat.cracked});
+    finishBuild(q);
+  };
+  const releaseStrand=()=>{
+    if(!holding) return;
+    holding=false;
+    const target=tempo.seat;
+    // one bell curve around the seat time: loose below it, overworked above it
+    const seat=clamp(1-Math.abs(holdT-target)/(target*1.15),0,1);
+    results.push({hit:true, seat, idx:beatIdx, on:struckOn,
+                  why: seat>=0.55?"seated" : holdT>target?"overworked":"loose"});
+    resolved=true;
+    if(seat>=0.75){ craftHit(sp, W*0.5, ry, "#7d9a8a"); }
+    else if(seat>=0.55){ Audio2.sfx.clink(); craftSpark(sp,W*0.5,ry,"#d8b45f",6); }
+    else { Audio2.sfx.bad(); FX.buzz(12); craftSpark(sp,W*0.5,ry,"#d5643a",8); }
+    setTimeout(advanceBeat,180);
   };
   bindPointer(cv,{
     down:(x,y)=>{
       if(phase==="choose"){ const b=chooseBtns.find(b=>b.hit(x,y)); if(!b) return;
         tempo=b.t; phase="braid"; Audio2.sfx.clink(); return; }
-      if(phase!=="braid" || resolved || done) return;
+      if(phase!=="braid" || resolved || done || holding) return;
       const side = beatIdx%2===0?"L":"R";
       const clickSide = x<W*0.5?"L":"R";
       const period=60/tempo.bpm*2.1; const frac=beatT/period;
       const onTime = frac>=0.55 && frac<=1.15;
-      const hit = clickSide===side && onTime;
-      results.push({hit, idx:beatIdx}); resolved=true;
-      if(hit){ craftHit(sp, x, ry, "#7d9a8a"); } else { Audio2.sfx.bad(); FX.buzz(12); }
-      setTimeout(advanceBeat,180);
-    }, move:()=>{}, up:()=>{}
+      if(clickSide!==side || !onTime){
+        // a mis-struck strand is spent: no seating phase, a scar at this position
+        results.push({hit:false, seat:0, idx:beatIdx, why: clickSide!==side?"wrong strand":"off the beat"});
+        resolved=true; Audio2.sfx.bad(); FX.buzz(12);
+        setTimeout(advanceBeat,180); return;
+      }
+      // struck clean — now the hold decides how well it seats
+      struckOn=frac; holding=true; holdT=0;
+      Audio2.sfx.tick&&Audio2.sfx.tick(); craftSpark(sp,x,ry,"#d8b45f",4);
+    },
+    move:()=>{},
+    up:()=>{ if(phase==="braid" && holding) releaseStrand(); }
   });
 }
 
@@ -6327,9 +6879,15 @@ function bindPointer(cv, handlers){
   const pt=(e)=>{ const r=rect(); const sx=cv.width/r.width, sy=cv.height/r.height;
     const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
     return {x:(cx-r.left)*sx, y:(cy-r.top)*sy}; };
-  const down=(e)=>{ e.preventDefault(); const p=pt(e); handlers.down&&handlers.down(p.x,p.y); };
-  const move=(e)=>{ if(!handlers.move) return; const p=pt(e); handlers.move(p.x,p.y); };
-  const up=(e)=>{ if(!handlers.up) return; let p={x:0,y:0}; try{ p=pt(e.changedTouches?{touches:e.changedTouches}:e);}catch(_){}
+  // the scrap apron gets first refusal on every tap: a smash must never also
+  // register as a stray stroke on the piece you are working
+  let aproned=false;
+  const down=(e)=>{ e.preventDefault(); const p=pt(e);
+    if(scrapTap(cv,p.x,p.y)){ aproned=true; return; }
+    aproned=false; handlers.down&&handlers.down(p.x,p.y); };
+  const move=(e)=>{ if(aproned||!handlers.move) return; const p=pt(e); handlers.move(p.x,p.y); };
+  const up=(e)=>{ if(aproned){ aproned=false; return; }
+    if(!handlers.up) return; let p={x:0,y:0}; try{ p=pt(e.changedTouches?{touches:e.changedTouches}:e);}catch(_){}
     handlers.up(p.x,p.y); };
   // each craft stage rebinds a fresh canvas — remove the previous stage's window-level
   // pointerup listener first so they don't silently pile up across a session.
@@ -6350,14 +6908,25 @@ function stepTest(){
   // final quality = decode quality * build quality (both matter, no floor)
   const q = clamp(W.cur.quality*0.45 + W.cur.buildQ*0.55, 0, 1);
   W.cur.finalQ=q;
-  // FOUR tiers now. A careless build can be RUINED — it never leaves the bench.
-  // Relax mode keeps the old three-tier behaviour for players who need it.
+  // FIVE tiers now. A careless build can be RUINED — it never leaves the bench.
+  // Relax mode keeps the softer behaviour for players who need it.
   const relax=S().settings.timerRelax;
-  const qtier = q>=0.82?"fine" : q>=0.58?"ok" : (q>=0.34||relax)?"flawed" : "ruined";
+  const rub=W.cur.rubric;
+  /* A MASTERWORK IS NOT AN AVERAGE.
+     It demands three things at once, and any one of them alone is not enough:
+       · every rubric row past the bar (no weak hand anywhere in the build)
+       · a piece that was never cracked by heat
+       · a clean DECODE — you understood the word the commission asked for
+     That last clause is the point of the whole game: you cannot hammer your way
+     to a perfect tool without knowing the term it was ordered against. */
+  const decodeClean = W.cur.quality >= 0.85;
+  const isMaster = !!(rub && rub.master && !rub.cracked && decodeClean && q>=0.88);
+  const qtier = isMaster ? "masterwork"
+              : q>=0.82?"fine" : q>=0.58?"ok" : (q>=0.34||relax)?"flawed" : "ruined";
   W.cur.qtier=qtier;
   // quality reaches all the way through to the road: fine work is genuinely
   // stronger, flawed work is genuinely worse — the grade is not cosmetic
-  const QMULT={fine:1.25, ok:1.0, flawed:0.55, ruined:0};
+  const QMULT={masterwork:1.5, fine:1.25, ok:1.0, flawed:0.55, ruined:0};
   const traits={}; AXES.forEach(a=>traits[a]=0);
   Object.keys(W.cur.traits).forEach(k=>{ if(traits[k]==null) traits[k]=0;
     let v=W.cur.traits[k];
@@ -6375,13 +6944,17 @@ function stepTest(){
 
   const ctx=cv.getContext('2d');
   runTestAnim(bp.test, ctx, cv, q, ()=>{
-    const gradeLabel = qtier==="fine"?"Fine work." : qtier==="ok"?"It'll serve."
+    const gradeLabel = qtier==="masterwork"?"A masterwork." : qtier==="fine"?"Fine work." : qtier==="ok"?"It'll serve."
                      : qtier==="flawed"?"Flawed — but usable." : "Ruined.";
     const gradeCls = qtier==="ruined"?"ruined":qtier;
     const why = testWhy(bp, qtier, W.cur.material);
     verdict.innerHTML=`<span class="tv-grade ${gradeCls}">${gradeLabel}</span>${why}`;
+    // THE SPEC SHEET — the build you actually made, translated into what it will
+    // do on the road, plus the one thing that would have made it perfect
+    stage.appendChild(buildSpecSheet(bp, W.cur, qtier, isMaster, decodeClean));
     const bad = (qtier==="flawed"||qtier==="ruined");
     (bad?Audio2.sfx.bad():Audio2.sfx.great()); FX.buzz(qtier==="ruined"?36:bad?24:18);
+    if(qtier==="masterwork"){ Audio2.sfx.great(); FX.buzz(34); spawnShards(); }
     // Tempering technique: one bad build per visit may be re-worked before it ships
     const canTemper = bad && hasTech("tempering") && !W.temperUsed;
     if(canTemper){
@@ -6490,10 +7063,142 @@ function finishTest(qtier, verdict, stage){
 }
 function testWhy(bp, qtier, mat){
   const m = mat? mat.flavor : "basic stock";
+  if(qtier==="masterwork") return `The <b>${bp.name.toLowerCase()}</b> is ${m} — and there is not a weak hand anywhere in it. Every measure clean, the heat held, the word read true. It will do things on the road an ordinary piece cannot.`;
   if(qtier==="fine") return `The <b>${bp.name.toLowerCase()}</b> is ${m}. In the cavern it will perform at its best — and may reveal something hidden.`;
   if(qtier==="ok")   return `The <b>${bp.name.toLowerCase()}</b> is ${m}. It will do the job the mission asks of it.`;
   if(qtier==="flawed") return `The <b>${bp.name.toLowerCase()}</b> is ${m}, but the rough build shows: it carries barely half the edge it should, and it may slip or fade on the road. Still, it works.`;
   return `The <b>${bp.name.toLowerCase()}</b> came apart under the test. The join never took. There is nothing here to hand a traveler — only a lesson about hurrying.`;
+}
+
+/* ==================================================================
+   THE SPEC — the bridge from HOW you built a piece to WHAT it does.
+
+   Every craft already recorded its build decisions in `craftMeta` — folds,
+   pleats, tempo, weak spots, bite angle, what went in the case. Almost none
+   of it was ever read again: a rope's `weakSpots` were logged and then
+   silently discarded, so a shaky braid and a perfect one behaved identically
+   on the road. That is what made the bench feel like a scoring minigame
+   attached to the game rather than part of it.
+
+   craftSpec() is the single place that reads those decisions and turns them
+   into road numbers. Two blades of the same grade now behave differently
+   because they were forged differently — five folds sweeps a wider corridor
+   than two, a six-pleat shell hangs smoke twice as long as a three, a rope
+   with two missed beats really can slip on a descent.
+
+   It also returns the plain-language lines the spec sheet prints, so the
+   player is told the consequence at the bench instead of discovering it.
+   ================================================================== */
+const SPEC_BASE={ strikeSpan:0.62, strikeMomentum:0, momentumFloor:0, phaseSec:5.0,
+                  mendPer:1, mendCharges:0, slipChance:0, gateLeadMult:1,
+                  hazardShrug:0, ledgeSpeed:0 };
+function craftSpec(item){
+  const sp=Object.assign({}, SPEC_BASE, {notes:[]});
+  if(!item) return sp;
+  const m=item.craftMeta||{}, craft=item.craft;
+  const n=(v,d)=>(typeof v==="number"&&isFinite(v))?v:d;
+  if(craft==="trace"){
+    const folds=clamp(n(m.folds,1),1,5);
+    sp.strikeSpan = 0.40+folds*0.055;
+    sp.momentumFloor = 1.20+folds*0.10;
+    sp.notes.push({ic:"🗡", txt:`Folded <b>${folds}×</b> — Strike sweeps <b>${Math.round(sp.strikeSpan*100)}%</b> of the road ahead, and momentum can never fall below <b>×${sp.momentumFloor.toFixed(2)}</b>.`});
+    if(n(m.worstFold,100)<60) sp.notes.push({ic:"⚠️", txt:`Its sloppiest fold graded <b>${m.worstFold}%</b> — that pass is the weak line in the edge.`});
+  } else if(craft==="align"){
+    const read=clamp(n(m.balanceRead,60),0,100)/100;
+    if(m.balanceLean==="reach"){
+      sp.gateLeadMult = 1+(0.18+read*0.30);
+      sp.notes.push({ic:"🪝", txt:`Balanced for <b>reach</b> — thrown ahead, it buys <b>${Math.round((sp.gateLeadMult-1)*100)}%</b> more road to read each rune gate over.`});
+    } else {
+      sp.hazardShrug = 0.10+read*0.22;
+      sp.notes.push({ic:"🪝", txt:`Balanced for <b>stability</b> — it anchors the line, and <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards glance off the squad.`});
+    }
+    if(n(m.probesUsed,5)<=2) sp.notes.push({ic:"👂", txt:`Found on <b>${m.probesUsed} probe${m.probesUsed===1?"":"s"}</b> — a smith's ear.`});
+  } else if(craft==="tension"){
+    const best=m.bestDraw||"power";
+    if(best==="power"){ sp.strikeSpan+=0.10;
+      sp.notes.push({ic:"🏹", txt:`Tuned for <b>power</b> — Strike reaches <b>${Math.round(sp.strikeSpan*100)}%</b> of the road.`}); }
+    else if(best==="control"){ sp.strikeMomentum=0.45;
+      sp.notes.push({ic:"🏹", txt:`Tuned for <b>accuracy</b> — every Strike also surges momentum by <b>+0.45</b>.`}); }
+    else { sp.extraStrike=1;
+      sp.notes.push({ic:"🏹", txt:`Tuned for <b>speed</b> — the limb recovers fast enough for <b>one extra Strike</b> per road.`}); }
+  } else if(craft==="fold"){
+    const pleats=clamp(n(m.pleats,4),3,6), leaks=Math.max(0,n(m.leaks,0));
+    sp.phaseSec = clamp(2.0+pleats*0.68-leaks*0.55, 1.2, 7.0);
+    sp.notes.push({ic:"☁", txt:`<b>${pleats} pleats</b> — Vanish holds the squad untouchable for <b>${sp.phaseSec.toFixed(1)}s</b>.`});
+    if(leaks) sp.notes.push({ic:"⚠️", txt:`<b>${leaks} pleat${leaks>1?"s":""} folded out of order</b> — the shell leaks, and the haze thins ${(leaks*0.55).toFixed(1)}s early.`});
+  } else if(craft==="fit"){
+    const cons=clamp(n(m.consistency,60),0,100)/100;
+    if(m.angle==="steep"){ sp.hazardShrug=0.08+cons*0.14;
+      sp.notes.push({ic:"🧗", txt:`<b>Steep bite</b> — deep grip on rock; <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards fail to land.`}); }
+    else if(m.angle==="shallow"){ sp.ledgeSpeed=0.10+cons*0.14;
+      sp.notes.push({ic:"🧗", txt:`<b>Shallow bite</b> — the upper ledge is walked <b>${Math.round(sp.ledgeSpeed*100)}%</b> faster.`}); }
+    else { sp.hazardShrug=0.05+cons*0.08; sp.ledgeSpeed=0.05+cons*0.08;
+      sp.notes.push({ic:"🧗", txt:`<b>Balanced bite</b> — a little of both: some grip, some speed on the ledge.`}); }
+    if(cons<0.6){ sp.slipChance=0.16;
+      sp.notes.push({ic:"⚠️", txt:`The three claws don't agree with each other — the set can skate on a climb.`}); }
+  } else if(craft==="pack"){
+    const p=m.packed||{};
+    const band=n(p.bandage,0), tonic=n(p.tonic,0), salve=n(p.salve,0), splint=n(p.splint,0);
+    if(tonic>=2 && tonic>=band){ sp.mendPer=1.0+tonic*0.20;
+      sp.notes.push({ic:"✚", txt:`<b>${tonic} tonics</b> — Mend is used less often but restores <b>${Math.round(sp.mendPer*100)}%</b> of the usual.`}); }
+    else if(band>=3){ sp.mendCharges=Math.floor(band/2); sp.mendPer=0.72;
+      sp.notes.push({ic:"✚", txt:`<b>${band} bandages</b> — <b>+${sp.mendCharges} extra Mend${sp.mendCharges>1?"s":""}</b>, each a smaller recovery.`}); }
+    else sp.notes.push({ic:"✚", txt:`A plain case — Mend restores the standard amount.`});
+    if(salve) sp.notes.push({ic:"·", txt:`${salve} salve${salve>1?"s":""} tucked in the gaps.`});
+    if(splint){ sp.hazardShrug+=Math.min(0.15,splint*0.05);
+      sp.notes.push({ic:"🩹", txt:`<b>${splint} splint${splint>1?"s":""}</b> — <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards are shrugged off.`}); }
+    if(n(m.balance,100)<62) sp.notes.push({ic:"⚠️", txt:`The case hangs badly (<b>${m.balance}%</b> balance) — it rattles, and the squad walks a touch slower for it.`});
+  } else if(craft==="weave"){
+    const weak=(m.weakSpots||[]).length, loose=(m.looseSpots||[]).length;
+    sp.slipChance = clamp(weak*0.10+loose*0.05, 0, 0.6);
+    if(!weak && !loose) sp.notes.push({ic:"🪢", txt:`<b>Not one weak spot</b> — this rope will not slip, on any descent.`});
+    else sp.notes.push({ic:"⚠️", txt:`<b>${weak} scar${weak===1?"":"s"}${loose?` and ${loose} loose turn${loose===1?"":"s"}`:""}</b> — a <b>${Math.round(sp.slipChance*100)}%</b> chance the rope gives on a climb or descent.`});
+    if(m.tempo==="fast") sp.notes.push({ic:"⚡", txt:`Braided at the <b>fast</b> tempo — the only tempo that can reach a masterwork.`});
+    else if(m.tempo==="slow") sp.notes.push({ic:"·", txt:`Braided <b>slow</b> — safe hands, but a slow braid is capped short of perfect.`});
+  }
+  // a masterwork is not merely a bigger number: it removes the failure mode
+  if(item.qtier==="masterwork"){
+    sp.slipChance=0;
+    sp.notes.push({ic:"★", txt:`<b>Masterwork</b> — it cannot slip, fade, or catch. Whatever it does, it does at <b>150%</b>.`});
+  } else if(item.qtier==="flawed"){
+    sp.slipChance=Math.max(sp.slipChance,0.22);
+    sp.notes.push({ic:"⚠️", txt:`The flaw in the build shows: it does <b>60%</b> of what it should, and it can fail outright.`});
+  }
+  return sp;
+}
+
+/* THE SPEC SHEET. The rubric said which hand let you down while you worked;
+   this says what that costs on the road, and names the ONE thing that would
+   have made the piece perfect. A player who reads this at the bench walks
+   into the next commission knowing what to do differently — which is the
+   whole difference between a score and a lesson. */
+function buildSpecSheet(bp, cur, qtier, isMaster, decodeClean){
+  const wrap=el("div","spec-sheet");
+  const spec=craftSpec({craft:bp.craft, craftMeta:cur.craftMeta||{}, qtier});
+  const rub=cur.rubric;
+  let html=`<div class="ss-title">what you built · on the road</div><ul>`;
+  if(rub){
+    html += rub.rows.map(r=>{
+      const mark = r.v>=masterBar()?"★" : r.v>=PAR_BAR?"✓" : "○";
+      return `<li><span class="ss-ic">${mark}</span><span><b>${r.label} ${Math.round(r.v*100)}%</b> — ${r.hint}</span></li>`;
+    }).join("");
+  }
+  html += (spec.notes.length?spec.notes:[{ic:"·",txt:"A plain piece — it does what the blueprint promises, no more."}])
+    .map(nt=>`<li><span class="ss-ic">${nt.ic}</span><span>${nt.txt}</span></li>`).join("");
+  html += `</ul>`;
+  // the lesson: exactly one actionable thing, chosen in priority order
+  let lesson=null;
+  if(isMaster) lesson=`<b>Nothing to fix.</b> Every row clear, the heat held, the word read true — this is the ceiling.`;
+  else if(qtier==="ruined") lesson=`<b>Next time:</b> the piece was ruined before the test. Work slower, and smash the apron scrap to keep the heat off the danger line.`;
+  else if(rub && rub.cracked) lesson=`<b>One thing away:</b> the piece cracked. A cracked piece can never be perfect no matter how well the rest goes — smash the apron scrap to vent heat instead of pushing through the red.`;
+  else if(!decodeClean) lesson=`<b>One thing away:</b> the build was there, but the <b>decode</b> was not. A masterwork needs the word read cleanly too — knowing the term is part of the craft, not a gate in front of it.`;
+  else if(rub && rub.weakest){
+    const w=rub.rows.find(r=>r.k===rub.weakest);
+    if(w) lesson=`<b>One thing away:</b> <b>${w.label}</b> came in at ${Math.round(w.v*100)}% and every row needs ${Math.round(masterBar()*100)}%. ${w.hint.charAt(0).toUpperCase()+w.hint.slice(1)} — that's the row to win next time.`;
+  }
+  if(lesson) html+=`<div class="ss-lesson${isMaster?" perfect":""}">${lesson}</div>`;
+  wrap.innerHTML=html;
+  return wrap;
 }
 function commitItem(){
   const f=E.getFlow(); const c=W.cur;
@@ -6510,13 +7215,16 @@ function commitItem(){
     quality:c.finalQ, qtier:c.qtier, traits:c.scaledTraits, assignedTo:null,
     genName: genItemName(c.bp, c.scaledTraits, c.qtier),
     makerMark: c.makerMark||null, craftMeta: c.craftMeta||null,
+    // the craft type and the graded rubric travel WITH the item, so the road can
+    // ask how this specific piece was built rather than only how well
+    craft: c.bp.craft, rubric: c.rubric||null,
     tally:{}, wear:0 };
   f.forged.push(item);
   // bench mastery: fine crafts unlock variants next visit, and eventually Tempering
   const s=S(); s.benchMastery=s.benchMastery||{};
   const bm=s.benchMastery[c.bp.id]=s.benchMastery[c.bp.id]||{forged:0,fine:0};
   bm.forged++;
-  if(c.qtier==="fine"){
+  if(c.qtier==="fine"||c.qtier==="masterwork"){
     // fine work carries an extra use of whatever it grants — visible on the road
     const extra = grants.includes("smoke")?{vanish:1} : (grants.includes("heal")?{mend:1} : {strike:1});
     item.bonus = Object.assign({}, item.bonus||{}, extra);
@@ -6671,7 +7379,7 @@ function renderRack(){
   f.forged.forEach(it=>{
     const assigned=!!it.assignedTo;
     const row=el("div","rack-item"+(assigned?" assigned":"")+(selectedGear===it.id?" selected":""));
-    const qtxt = it.qtier==="fine"?'<span style="color:var(--jade-deep)">fine</span>': it.qtier==="ok"?"serviceable":'<span class="q-flawed">flawed</span>';
+    const qtxt = it.qtier==="masterwork"?'<span style="color:#bd9d5f;font-weight:700">★ masterwork</span>': it.qtier==="fine"?'<span style="color:var(--jade-deep)">fine</span>': it.qtier==="ok"?"serviceable":'<span class="q-flawed">flawed</span>';
     const topTraits=Object.keys(it.traits).filter(k=>it.traits[k]>0.4).sort((a,b)=>it.traits[b]-it.traits[a]).slice(0,2).join(", ")||"basic";
     row.innerHTML=`<div class="rack-ico">${GEAR_ICON[it.icon]||""}</div>
       <div class="rack-meta"><div class="rm-name">${it.name}</div>
@@ -6731,8 +7439,16 @@ function renderForecast(){
   // quality warnings
   const flawed=f.forged.filter(it=>it.qtier==="flawed");
   if(flawed.length) lines.push({ic:"⚠️", txt:`${flawed.length} tool${flawed.length>1?'s are':' is'} <b>flawed</b> — ${flawed.map(x=>x.name.toLowerCase()).join(", ")} may slip, break, or fade in the cavern.`});
-  const fine=f.forged.filter(it=>it.qtier==="fine");
+  const fine=f.forged.filter(it=>it.qtier==="fine"||it.qtier==="masterwork");
   if(fine.length) lines.push({ic:"✨", txt:`${fine.length} <b>fine</b> tool${fine.length>1?'s':''} may reveal a <b>hidden shortcut or Lexicon fragment</b>.`});
+  // THE SPEC, CARRIED FORWARD. The forecast now names what each piece's BUILD does
+  // on this road — the same lines the bench printed, so the promise is kept in view
+  // right up to the moment the squad walks out of the gate.
+  const SPEC=window.__RD_PREP&&window.__RD_PREP.craftSpec;
+  if(SPEC) f.forged.filter(it=>it.qtier!=="ruined"&&it.craftMeta).forEach(it=>{
+    const sc=SPEC(it); const key=(sc.notes||[])[0];
+    if(key) lines.push({ic:it.qtier==="masterwork"?"★":"⚒", txt:`<b>${it.genName}</b> · ${key.txt}`});
+  });
   // gaps
   if(!caps.climb) lines.push({ic:"▲", txt:`No climbing gear — the <b>high routes stay closed</b>, and you'll take the low path.`});
   if(!f.forged.length) lines.push({ic:"▲", txt:`Nothing forged — the squad enters light and every hazard bites harder.`});
@@ -6788,7 +7504,7 @@ function depart(){
   if(caps.heal) prep+=0.08;
   // penalize flawed gear
   const flawed=(f.forged||[]).filter(it=>it.qtier==="flawed").length;
-  const fine=(f.forged||[]).filter(it=>it.qtier==="fine").length;
+  const fine=(f.forged||[]).filter(it=>it.qtier==="fine"||it.qtier==="masterwork").length;
   prep += fine*0.05 - flawed*0.06;
   prep=clamp(prep,0.15,1);
 
@@ -6828,13 +7544,22 @@ function shortfallsFrom(caps){
 }
 
 window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, hasTech,
+  craftSpec,                       // the road asks HOW a piece was built, not just how well
   _dbg:()=>W, _finishBuild:(q)=>finishBuild(q),
+  _craftRub:()=>craftRub, _craftScrap:()=>craftScrap, _craftHeat:()=>craftHeat,
+  _rubIsMaster:()=>rubIsMaster(), _rubBuildScore:()=>rubBuildScore(), _masterBar:()=>masterBar(),
+  _scrapTap:(cv,x,y)=>scrapTap(cv,x,y), _heatTemper:()=>heatTemper(), APRON,
   _testCraft:(type)=>{ // test-only: set up a minimal build + run one craft interaction
     W = W || {}; W.cur = { bp:{craft:type, id:'t', name:'Test', gear:type, grants:[], base:{}}, traits:{}, buildQ:0 };
     W.f = E.getFlow() || {}; W.embers = W.embers!=null?W.embers:5; W.maxItems = W.maxItems!=null?W.maxItems:5; W.pool = W.pool||[];
-    const cv=document.createElement('canvas'); cv.id='craftCanvas'; cv.width=560; cv.height=360;
+    const cv=document.createElement('canvas'); cv.id='craftCanvas'; cv.width=560; cv.height=360+APRON;
     document.body.appendChild(cv); const ctx=cv.getContext('2d');
-    heatInit();
+    // the rubric and quality readouts the craft writes into
+    if(!$('#craft-rubric')){ const r=el("div","craft-rubric"); r.id="craft-rubric"; document.body.appendChild(r); }
+    if(!$('#cq-fill')){ const q=el("div","craft-quality");
+      q.innerHTML=`<div class="cq-bar"><i id="cq-fill"></i></div><span class="cq-pct" id="cq-pct">0%</span>`;
+      document.body.appendChild(q); }
+    heatInit(); scrapInit(cv);
     const fn={trace:craftTrace,align:craftAlign,tension:craftTension,fold:craftFold,fit:craftFit,pack:craftPack,weave:craftWeave}[type];
     if(fn) fn(cv,ctx); return !!fn;
   },
@@ -6852,7 +7577,7 @@ window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, has
   _gearIcon:(k)=>GEAR_ICON[k]||"",
   _reagents:()=>REAGENTS,
   _heat:()=>craftHeat,
-  _heatTick:(active,ms)=>{ if(!craftHeat) return; craftHeatLastT = performance.now()-(ms||16); heatTick(active); },
+  _heatTick:(active,ms,frozen)=>{ if(!craftHeat) return; craftHeatLastT = performance.now()-(ms||16); heatTick(active,frozen); },
   _skipMark:()=>{ const skip=document.querySelector('.maker-mark .btn.ghost'); if(skip){ skip.click(); return true; } return false; },
   _pickMark:(partId)=>{ const btn=$$('.mm-opt').find(b=>b.dataset.part===partId); if(btn){ btn.click(); return true; } return false; } };
 window.__RD_PLAN = { openPlan: openAssign };  // legacy alias — plan step folded into assign
@@ -7124,18 +7849,57 @@ function computeForgePassives(f){
       heal: pickItemByGrant(f,["heal"])
     }
   };
-  // a keen edge keeps the pace: momentum can't collapse below ×1.6
-  if(P.cutClear){ P.momentumFloor=1.6;
-    const it=P.itemFor.cut;
-    P.chips.push({ic:"🗡",label:it?it.genName:"Keen edge",desc:"clears snags · momentum never drops below ×1.6", itemId:it&&it.id}); }
-  if(P.climbFast){ const it=P.itemFor.climb;
-    P.chips.push({ic:"🧗",label:it?it.genName:"Climbing gear",desc:"opens the swift upper ledge", itemId:it&&it.id}); }
+  /* HOW each piece was built, not only how well. spec() reads the build decisions
+     recorded at the bench (folds, pleats, bite angle, weak spots) and hands back
+     the road numbers they earn — so the chip text describes THIS blade rather than
+     blades in general, and two pieces of the same grade genuinely differ. */
+  const SPEC=(window.__RD_PREP&&window.__RD_PREP.craftSpec)||null;
+  const spec=(it)=>SPEC?SPEC(it):null;
+  P.specFor={};
+  ["cut","climb","smoke","heal","shoot","descend"].forEach(k=>{ P.specFor[k]=spec(P.itemFor[k]); });
+  // a keen edge keeps the pace — and how far it holds it up is set by its folds
+  if(P.cutClear){
+    const it=P.itemFor.cut, sc=P.specFor.cut;
+    P.momentumFloor = (sc && sc.momentumFloor) ? sc.momentumFloor : 1.6;
+    const folds=it&&it.craftMeta&&it.craftMeta.folds;
+    P.chips.push({ic:"🗡",label:it?it.genName:"Keen edge",
+      desc:`clears snags · momentum never drops below ×${P.momentumFloor.toFixed(2)}${folds?` (${folds} folds)`:""}`, itemId:it&&it.id}); }
+  if(P.climbFast){ const it=P.itemFor.climb, sc=P.specFor.climb;
+    P.ledgeSpeed=(sc&&sc.ledgeSpeed)||0;
+    P.chips.push({ic:"🧗",label:it?it.genName:"Climbing gear",
+      desc:P.ledgeSpeed>0.02?`opens the swift upper ledge · ${Math.round(P.ledgeSpeed*100)}% faster along it`:"opens the swift upper ledge", itemId:it&&it.id}); }
   if(P.surefoot){ const it=P.itemFor.climb;
     P.chips.push({ic:"👣",label:it?it.genName:"Sure-foot",desc:"scree & mud can't slow the squad", itemId:it&&it.id}); }
-  if(P.heal){ P.healMult=1.6; const it=P.itemFor.heal;
+  if(P.heal){ const it=P.itemFor.heal, sc=P.specFor.heal;
+    P.healMult=1.6*((sc&&sc.mendPer)||1);
     P.chips.push({ic:"✚",label:it?it.genName:"Field kit",desc:"terms heal the squad far more", itemId:it&&it.id}); }
-  if(P.smoke){ const it=P.itemFor.smoke;
-    P.chips.push({ic:"☁",label:it?it.genName:"Smoke shell",desc:"saves you from one wrong gate", itemId:it&&it.id}); }
+  if(P.smoke){ const it=P.itemFor.smoke, sc=P.specFor.smoke;
+    P.phaseSec=(sc&&sc.phaseSec)||5.0;
+    const pl=it&&it.craftMeta&&it.craftMeta.pleats;
+    P.chips.push({ic:"☁",label:it?it.genName:"Smoke shell",
+      desc:`saves you from one wrong gate · ${P.phaseSec.toFixed(1)}s phase${pl?` (${pl} pleats)`:""}`, itemId:it&&it.id}); }
+  /* THE FAILURE MODES ARE REAL NOW. A rope with missed beats, or a claw set that
+     doesn't agree with itself, carries a live chance of giving out — the number
+     the bench warned about, applied. A masterwork zeroes it; a flaw raises it. */
+  P.slipChance = ["climb","descend"].reduce((mx,k)=>{
+    const sc=P.specFor[k]; return Math.max(mx, (sc&&sc.slipChance)||0); }, 0);
+  if(P.slipChance>0.01){
+    const it=P.itemFor.climb||P.itemFor.descend;
+    P.chips.push({ic:"⚠️",label:"Untrustworthy line",
+      desc:`${Math.round(P.slipChance*100)}% chance the ${it&&it.bpId==="rope"?"rope":"gear"} gives on a climb`, itemId:it&&it.id}); }
+  // hazards that simply fail to land, bought with a steep bite or a stable join
+  P.hazardShrug = clamp(Object.keys(P.specFor).reduce((a,k)=>{
+    const sc=P.specFor[k]; return a+((sc&&sc.hazardShrug)||0); }, 0), 0, 0.55);
+  if(P.hazardShrug>0.03) P.chips.push({ic:"🛡",label:"Braced",desc:`${Math.round(P.hazardShrug*100)}% of hazards glance off`});
+  // a hook thrown for reach buys time to READ a gate rather than guess at it
+  P.gateLeadMult = Object.keys(P.specFor).reduce((mx,k)=>{
+    const sc=P.specFor[k]; return Math.max(mx,(sc&&sc.gateLeadMult)||1); }, 1);
+  if(P.gateLeadMult>1.02) P.chips.push({ic:"🪝",label:"Long line",desc:`${Math.round((P.gateLeadMult-1)*100)}% more road to read each gate over`});
+  // a masterwork on the bench is felt on every step of the road
+  const masters=forged.filter(it=>it.qtier==="masterwork");
+  if(masters.length){ P.gainMult*=1+0.12*masters.length;
+    P.chips.push({ic:"★",label:masters.length===1?masters[0].genName:`${masters.length} masterworks`,
+      desc:`flawless work — momentum builds ${Math.round(12*masters.length)}% faster`, itemId:masters[0].id}); }
   // control/reach traits sharpen the scholar's eye — momentum builds faster
   const focus=(tr.control||0)+(tr.reach||0);
   if(focus>=2){ P.gainMult=1.35; P.chips.push({ic:"🔎",label:"Scholar's poise",desc:"terms build momentum 35% faster"}); }
@@ -7154,7 +7918,7 @@ function computeForgePassives(f){
 function flashItem(item, verb, txt){
   if(!item) return txt;
   item.tally=item.tally||{}; item.tally[verb]=(item.tally[verb]||0)+1;
-  M.actFlash={itemId:item.id, wid:item.assignedTo, t:item.qtier==="fine"?1.15:0.9, tier:item.qtier};
+  M.actFlash={itemId:item.id, wid:item.assignedTo, t:item.qtier==="masterwork"?1.35:item.qtier==="fine"?1.15:0.9, tier:item.qtier};
   const row=document.querySelector(`.forge-chip[data-item="${item.id}"]`);
   if(row){
     // the strip stays collapsed while walking, so the chip that just DID something
@@ -7581,6 +8345,15 @@ function computeAbilities(f){
   };
   // blueprint variants can carry bonus charges (e.g. a Long-burn shell = +1 vanish)
   forged.forEach(it=>{ if(it.bonus) Object.keys(it.bonus).forEach(k=>{ if(out[k]!=null) out[k]+=it.bonus[k]; }); });
+  // charges the BUILD earned: a bow tuned for speed recovers fast enough for an
+  // extra Strike, a case of bandages is more Mends than a case of tonics
+  const SPEC=(window.__RD_PREP&&window.__RD_PREP.craftSpec)||null;
+  if(SPEC) forged.forEach(it=>{
+    if(it.qtier==="ruined") return;
+    const sc=SPEC(it);
+    if(sc.extraStrike && (it.grants||[]).includes("shoot")) out.strike+=sc.extraStrike;
+    if(sc.mendCharges && (it.grants||[]).includes("heal"))  out.mend+=sc.mendCharges;
+  });
   return out;
 }
 /* EVERY BUTTON HAS A JOB, ALWAYS.
@@ -7642,48 +8415,74 @@ function hazardsAhead(){
 /* QUALITY YOU CAN SEE. The same ability does visibly less with a flawed tool
    and visibly more with a fine one — the ruined/flawed/ok/fine ladder finally
    pays off in the moment, not just as a number on a card (DEPTH_PLAN §4.4). */
-function tierMult(item){ if(!item) return 1; return item.qtier==="fine"?1.25 : item.qtier==="flawed"?0.6 : 1; }
-function tierNote(item){ if(!item) return ""; if(item.qtier==="fine") return " — a clean, decisive strike of fine work."; if(item.qtier==="flawed") return ", though the flaw in it shows — it catches, and does less than it should."; return ""; }
+function tierMult(item){ if(!item) return 1;
+  return item.qtier==="masterwork"?1.5 : item.qtier==="fine"?1.25 : item.qtier==="flawed"?0.6 : 1; }
+function tierNote(item){ if(!item) return "";
+  if(item.qtier==="masterwork") return " — masterwork, and it shows in every part of the motion.";
+  if(item.qtier==="fine") return " — a clean, decisive strike of fine work.";
+  if(item.qtier==="flawed") return ", though the flaw in it shows — it catches, and does less than it should."; return ""; }
+/* the piece's own build spec, cached per road so the ability path stays cheap */
+function specOf(item){
+  if(!item) return null;
+  if(item._spec) return item._spec;
+  const SPEC=(window.__RD_PREP&&window.__RD_PREP.craftSpec);
+  return SPEC ? (item._spec=SPEC(item)) : null;
+}
 function useAbility(kind){
   if(!M||M.done) return;
   const left=M.abilities[kind]||0; if(left<=0){ Audio2.sfx.bad(); return; }
   if(kind==="mend"){
     M.abilities.mend--;
     const it=M.forge.itemFor && M.forge.itemFor.heal;
-    const tm=tierMult(it);
-    statGain({stamina:Math.round(20*tm),morale:Math.round(12*tm),safety:Math.round(4*tm)});
-    caption(flashItem(it,"mended",`opens — bindings, warm broth, a steadier breath. The squad recovers${tierNote(it)}`));
-    pop(M.cv.width*0.30,M.laneY-70,tm>1?"mended well":"mended"); (tm>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(tm>1?22:16); refreshAbilityReady(); return;
+    const tm=tierMult(it), sc=specOf(it);
+    // WHAT went in the case decides the shape of the recovery: a tonic case mends
+    // hard and rarely, a bandage case mends often and lightly. Same button, and
+    // the number that comes out is the one the bench told you to expect.
+    const per=tm*((sc&&sc.mendPer)||1);
+    statGain({stamina:Math.round(20*per),morale:Math.round(12*per),safety:Math.round(4*per)});
+    const shape=(sc&&sc.mendPer>1.15)?"deeply" : (sc&&sc.mendPer<0.85)?"quickly":"";
+    caption(flashItem(it,"mended",`opens — bindings, warm broth, a steadier breath. The squad recovers ${shape}${tierNote(it)}`));
+    pop(M.cv.width*0.30,M.laneY-70,per>1.15?"mended deep":per<0.85?"patched":"mended");
+    (per>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(per>1?22:16); refreshAbilityReady(); return;
   }
   // OUTSIDE a raid, Strike and Vanish still do real work on the road
   if(!M.raid || M.raid.resolved){
     const sx=M.cv.width*0.30;
     if(kind==="strike"){
       const it=(M.forge.itemFor && (M.forge.itemFor.cut||M.forge.itemFor.shoot));
-      const tm=tierMult(it);
-      // a flawed edge doesn't reliably clear the whole corridor — it can miss the back of the pack
+      const tm=tierMult(it), sc=specOf(it);
+      // HOW MANY TIMES YOU FOLDED IT decides how much road the strike reaches. A
+      // two-fold blade sweeps a short corridor; five folds sweeps most of the
+      // screen. The corridor is drawn from the piece, not from a constant.
+      const span=(sc&&sc.strikeSpan)||0.62;
       const corridor=M.hazards.filter(h=>{ if(h.hit||h.passed) return false;
-        const hx=screenX(h.p); return hx>sx && hx<sx+M.cv.width*0.62; });
+        const hx=screenX(h.p); return hx>sx && hx<sx+M.cv.width*span; });
       if(!corridor.length){ caption("Nothing on the road worth drawing steel for — save the charge."); Audio2.sfx.bad(); return; }
       M.abilities.strike--;
       const clearFrac = tm<1 ? 0.6 : 1;
       const toClear = tm<1 ? corridor.slice(0, Math.max(1,Math.round(corridor.length*clearFrac))) : corridor;
       toClear.forEach(h=>{ h.hit=true; h.passed=true; });
-      bumpMomentum(0.35*M.forge.gainMult*tm); statGain({morale:Math.round(6*tm),safety:Math.round(4*tm)});
+      // a bow tuned for accuracy surges momentum on top of clearing the road
+      bumpMomentum((0.35+((sc&&sc.strikeMomentum)||0))*M.forge.gainMult*tm);
+      statGain({morale:Math.round(6*tm),safety:Math.round(4*tm)});
       const cleared=toClear.length;
       caption(flashItem(it,"struck",`goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road${cleared<corridor.length?", though one further back slips through":""}${tierNote(it)}`));
       pop(sx+120, M.laneY-70, cleared<corridor.length?"road half-cleared":"road cleared!"); (tm>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(tm>1?28:20);
-      M.sweepT=0.6; refreshAbilityReady(); return;
+      M.sweepT=Math.max(0.6, span);  // the sweep VFX reaches exactly as far as the blade did
+      M.sweepSpan=span; refreshAbilityReady(); return;
     }
     // vanish: a phase window — hazards pass through them, and loose parts are drawn in.
     // a flawed shell thins early: the window is real, but shorter.
     M.abilities.vanish--;
     const it=M.forge.itemFor && M.forge.itemFor.smoke;
-    const tm=tierMult(it);
-    M.phaseT=clamp(5.0*tm,2.0,6.5);
+    const tm=tierMult(it), sc=specOf(it);
+    // HOW MANY PLEATS YOU FOLDED is the phase window, minus a slice for every
+    // pleat you folded out of order. The shell you made is the shell you get.
+    const base=(sc&&sc.phaseSec)||5.0;
+    M.phaseT=clamp(base*tm,1.2,8.0);
     statGain({safety:Math.round(6*tm)});
-    caption(flashItem(it,"phased",`blooms early — for a few strides nothing can touch them, and stray word-parts drift into reaching hands${tierNote(it)}`));
-    pop(sx, M.laneY-70, "phased!"); Audio2.sfx.clink(); FX.buzz(18);
+    caption(flashItem(it,"phased",`blooms early — for <b>${M.phaseT.toFixed(1)}s</b> nothing can touch them, and stray word-parts drift into reaching hands${tierNote(it)}`));
+    pop(sx, M.laneY-70, `phased ${M.phaseT.toFixed(1)}s!`); Audio2.sfx.clink(); FX.buzz(18);
     refreshAbilityReady(); return;
   }
   if(kind==="strike"){
@@ -8285,7 +9084,8 @@ function tick(t){
     coolMomentum(dt);
     const weatherPenalty = (M.weather!=="clear") ? clamp(1-(M.weatherProt/140),0.4,1) : 1;
     const tired = M.stats.stamina<15 ? 0.55 : clamp(0.5+M.stats.stamina/140,0.5,1.1);
-    const laneSpd = LANES[M.lane].spd;
+    // a shallow claw bite is bought precisely for this: the upper ledge, walked faster
+    const laneSpd = LANES[M.lane].spd * ((M.lane===0 && M.forge.ledgeSpeed) ? (1+M.forge.ledgeSpeed) : 1);
     const slowPen = M.slowT>0?0.55:1;
     const forkPace = M.paceT>0 ? M.paceMult : 1;
     // MOMENTUM drives the pace: a full chain of terms makes the squad fly (up to ~2.2×)
@@ -8343,6 +9143,29 @@ function tick(t){
       Audio2.sfx.bad && Audio2.sfx.bad();
     } else if(M.stats.stamina>34 && M._staminaWarned){ M._staminaWarned=false; }
 
+    /* THE LINE GIVES. A rope braided with missed beats, or a claw set whose three
+       angles disagree, carries a real chance of failing — the exact percentage the
+       spec sheet quoted at the bench. Checked on the upper ledge, where the gear is
+       actually load-bearing, and never more than once every few seconds so it reads
+       as an event rather than as noise. A masterwork zeroes this out entirely. */
+    if(M.forge.slipChance>0 && M.lane===0 && !M.done){
+      M.slipT=(M.slipT||0)-dt;
+      if(M.slipT<=0){
+        M.slipT=4.5;
+        if(Math.random()<M.forge.slipChance){
+          const it=(M.forge.itemFor&&(M.forge.itemFor.climb||M.forge.itemFor.descend));
+          statGain({stamina:-8,morale:-5});
+          caption(it ? flashItem(it,"slipped",`gives out on the ledge — the weak spot you braided into it, found at the worst moment. They scramble back onto the rock.`)
+                     : "The line gives out on the ledge — they scramble back onto the rock.");
+          pop(M.cv.width*0.30, M.laneY-70, "the line slips!"); Audio2.sfx.bad(); FX.buzz(24);
+          M.slowT=Math.max(M.slowT||0, 1.6);
+          // the pace pays for it, but the answer streak does NOT — this is the
+          // gear failing, not the player misreading a word
+          brakePace();
+        }
+      }
+    }
+
     // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
     // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
     M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.1+Math.random()*1.0; spawnPickup(); }
@@ -8369,6 +9192,11 @@ function tick(t){
             M.abilities.vanish--; refreshAbilityReady();
             caption("A smoke shell blooms — the torch patrol gropes through haze and finds nothing.");
             statGain({morale:5}); pop(sx,M.laneY-70,"smoke!"); Audio2.sfx.clink();
+          } else if(M.forge.hazardShrug>0 && Math.random()<M.forge.hazardShrug){
+            // BRACED. A steep claw bite or a stable hook join buys a real chance
+            // that a hazard simply fails to land — the percentage the bench quoted.
+            caption("Braced hard on forged gear — the hazard glances off and the line does not break stride.");
+            statGain({morale:2}); pop(sx,M.laneY-70,"glanced off"); Audio2.sfx.clink(); FX.buzz(9);
           } else {
             const counter=hazardCounter(h.kind);
             if(counter && counter.negate){
@@ -8696,7 +9524,10 @@ const GATE_CLEAR_BEFORE=0.17, GATE_CLEAR_AFTER=0.04;
    is time to think; Demanding puts them close, which is the difference between
    recall and fluency. The cleared corridor scales with it so the approach to a
    gate is never stacked with a reflex dodge (Design Rule 2). */
-function gateLead(){ return GATE_LEAD * ((M && M.diff) ? M.diff.gateLead : 1); }
+/* a hook balanced for reach throws the line further ahead, which literally buys
+   more road to read the gate over — the bench choice paying out in thinking time */
+function gateLead(){ return GATE_LEAD * ((M && M.diff) ? M.diff.gateLead : 1)
+                            * ((M && M.forge && M.forge.gateLeadMult) || 1); }
 function gateClearBefore(){ return GATE_CLEAR_BEFORE * ((M && M.diff) ? M.diff.gateLead : 1); }
 function inGateCorridor(p){
   if(!M || !M.gate || M.gate.resolved) return false;
@@ -9233,10 +10064,13 @@ function draw(t){
   if(M.sweepT>0){
     M.sweepT=Math.max(0,M.sweepT-0.016);
     ctx.save(); ctx.globalAlpha=clamp(M.sweepT*1.6,0,0.6);
-    const gsw=ctx.createLinearGradient(sx,0,sx+W*0.62,0);
+    // the arc reaches exactly as far as the blade you forged does — a five-fold
+    // edge visibly sweeps most of the screen where a two-fold one barely clears
+    const span=M.sweepSpan||0.62, far=sx+W*span;
+    const gsw=ctx.createLinearGradient(sx,0,far,0);
     gsw.addColorStop(0,"rgba(243,236,216,0)"); gsw.addColorStop(0.5,"rgba(243,236,216,.9)"); gsw.addColorStop(1,"rgba(243,236,216,0)");
     ctx.strokeStyle=gsw; ctx.lineWidth=4;
-    ctx.beginPath(); ctx.moveTo(sx, M.laneY-30); ctx.lineTo(sx+W*0.62, M.laneY-50); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx, M.laneY-30); ctx.lineTo(far, M.laneY-50); ctx.stroke();
     ctx.restore();
   }
   // the gate corridor burning clear
@@ -9833,8 +10667,8 @@ function consequenceLines(f,grade,st){
   // forged gear and who carried it
   (f.forged||[]).forEach(it=>{
     const carrier = it.assignedTo && TRAVELERS[it.assignedTo] ? TRAVELERS[it.assignedTo].name : null;
-    const q = it.qtier==="fine"?"performed at its best":it.qtier==="ok"?"did its job":"held together, flaws and all";
-    lines.push({ ic: it.qtier==="fine"?"✨":it.qtier==="flawed"?"⚠":"🛠",
+    const q = it.qtier==="masterwork"?"was flawless from the first step":it.qtier==="fine"?"performed at its best":it.qtier==="ok"?"did its job":"held together, flaws and all";
+    lines.push({ ic: it.qtier==="masterwork"?"★":it.qtier==="fine"?"✨":it.qtier==="flawed"?"⚠":"🛠",
       txt: carrier? `The <b>${it.name.toLowerCase()}</b> carried by <b>${carrier}</b> ${q}.` : `The <b>${it.name.toLowerCase()}</b> went unused — no one was armed with it.` });
   });
   // escorts who weren't term-builders still contributed
@@ -9871,7 +10705,7 @@ function consequenceLines(f,grade,st){
 /* one tool may be carried onward to the next expedition — it wears a quality
    tier per journey, so an heirloom is a decaying legacy, not a free head start */
 function renderHeirloomPick(f, host){
-  const candidates=(f.forged||[]).filter(it=>it.qtier==="fine"||it.qtier==="ok");
+  const candidates=(f.forged||[]).filter(it=>it.qtier==="masterwork"||it.qtier==="fine"||it.qtier==="ok");
   if(!candidates.length) return;
   const wrap=el("div","heir-pick");
   wrap.innerHTML=`<div class="hp-title">Carry one tool onward? It will arrive at the next bench <b>one tier more worn</b>.</div>`;

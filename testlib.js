@@ -7,7 +7,7 @@ function mockCtx() {
   const grad = { addColorStop() {} };
   return new Proxy({}, {
     get(t, k) {
-      if (k === 'canvas') return { width: 560, height: 360 };
+      if (k === 'canvas') return { width: 560, height: 414 };  // 360 work area + 54px scrap apron
       if (k === 'createLinearGradient' || k === 'createRadialGradient' || k === 'createPattern') return () => grad;
       if (k === 'measureText') return () => ({ width: 10 });
       if (k === 'getImageData') return () => ({ data: new Uint8ClampedArray(4) });
