@@ -16,7 +16,7 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
     support: { hint: 3, consult: 2, recall: 3 }, finished: false
   }));
   const migrated = E.Save.read();
-  assert(migrated && migrated.ver === 6, 'v3 save migrates to ver 6');
+  assert(migrated && migrated.ver === 7, 'v3 save migrates to ver 7');
   assert(Array.isArray(migrated.techniques) && typeof migrated.benchMastery === 'object'
     && typeof migrated.reagents === 'object' && migrated.heirloom === null
     && typeof migrated.cachesMarked === 'number', 'v5 fields backfilled');
@@ -27,7 +27,7 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
 
   /* ---- fresh state + synthetic flow ---- */
   const S = E.newGame();
-  assert(S.ver === 6, 'newGame is ver 6');
+  assert(S.ver === 7, 'newGame is ver 7');
   assert(S.unlockedBps.length === 1 && S.unlockedBps[0] === 'kit',
     'a new game opens with exactly ONE pattern on the board');
   E.setS(S); E.applySettings();
