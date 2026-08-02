@@ -2477,7 +2477,29 @@ const PARTS = {
   "ectasis":  {kind:"suffix", text:"-ectasis", mean:"dilation, expansion", pron:"EK-tah-sis", vowelStart:true, sense:"enlargement"},
   "ant":      {kind:"suffix", text:"-ant", mean:"forming, an agent that does", pron:"ant", vowelStart:true},
   "puncture": {kind:"suffix", text:"-puncture", mean:"to pierce", pron:"punk-cher", vowelStart:false, sense:"puncture"},
-  "oma":      {kind:"suffix", text:"-oma", mean:"tumor, mass", pron:"OH-mah", vowelStart:true}
+  "oma":      {kind:"suffix", text:"-oma", mean:"tumor, mass", pron:"OH-mah", vowelStart:true},
+
+  /* ---- THE SECOND TONGUE, AND THE MISSING WEEK-TWO SUFFIXES ----
+     Two holes were measurable. The Two Tongues pillar rested on three Greek/Latin
+     twin pairs, because the corpus carried sixty-three Greek parts against ten
+     Latin ones — so a whole question type had six distinct items in it and became
+     recognition of six cards after two sessions. And the game could teach -logy
+     but had no word for the person who does it, could teach -tomy and -ectomy but
+     not the other half of the surgical family, and had no way at all to say
+     "pertaining to" except the Latin -ous, so it could not build gastric, renal
+     or pulmonary — three of the first adjectives any course covers.
+     Every part added here earns its place in at least one real term below. */
+  "al":       {kind:"suffix", text:"-al", mean:"pertaining to", pron:"al", vowelStart:true, sense:"pertaining to"},
+  "ic":       {kind:"suffix", text:"-ic", mean:"pertaining to", pron:"ik", vowelStart:true, sense:"pertaining to"},
+  "ary":      {kind:"suffix", text:"-ary", mean:"pertaining to", pron:"air-ee", vowelStart:true, sense:"pertaining to"},
+  "logist":   {kind:"suffix", text:"-logist", mean:"one who specialises in the study of", pron:"LOH-jist", vowelStart:false},
+  "plasty":   {kind:"suffix", text:"-plasty", mean:"surgical repair, reshaping", pron:"PLAS-tee", vowelStart:false},
+  "stomy":    {kind:"suffix", text:"-stomy", mean:"surgical opening", pron:"STOH-mee", vowelStart:false},
+  "ren":      {kind:"root", text:"ren/o", stem:"ren", cv:"o", mean:"kidney", pron:"REE-noh"},
+  "nas":      {kind:"root", text:"nas/o", stem:"nas", cv:"o", mean:"nose", pron:"NAY-zoh"},
+  "aur":      {kind:"root", text:"aur/i", stem:"aur", cv:"i", mean:"ear", pron:"AW-rih"},
+  "pulmon":   {kind:"root", text:"pulmon/o", stem:"pulmon", cv:"o", mean:"lung", pron:"PUL-moh-noh"},
+  "pneumon":  {kind:"root", text:"pneumon/o", stem:"pneumon", cv:"o", mean:"lung", pron:"NOO-moh-noh"}
 };
 
 /* Directional / positional terms (verified) — used in the Lexicon */
@@ -2632,6 +2654,36 @@ const TERMS = {
   "arthrocentesis": {build:["arthr","centesis"], spell:"arthrocentesis", system:"Musculoskeletal",
     def:"surgical puncture of a joint to draw off fluid", plain:"drawing fluid out of a swollen joint with a needle",
     note:"arthr/o + -centesis; keep the o since -centesis begins with a consonant (c). Compare -tomy (cutting in) and -ectomy (taking out): -centesis only taps."},
+  /* The nine terms that put the new parts to work. Each one is a word a first-year
+     student meets, and each one exercises the combining-vowel rule the game
+     teaches: a vowel suffix eats the o, a consonant suffix keeps it. */
+  "renal": {build:["ren","al"], spell:"renal", system:"Urinary",
+    def:"pertaining to the kidney", plain:"to do with the kidneys",
+    note:"ren/o + -al; drop the o before a vowel suffix. Latin ren/o and Greek nephr/o both mean kidney — English kept both, which is why a patient has renal failure but sees a nephrologist."},
+  "nasal": {build:["nas","al"], spell:"nasal", system:"Respiratory",
+    def:"pertaining to the nose", plain:"to do with the nose",
+    note:"nas/o + -al; drop the o. Latin nas/o beside Greek rhin/o — nasal spray, but rhinoplasty."},
+  "aural": {build:["aur","al"], spell:"aural", system:"Sensory (ear)",
+    def:"pertaining to the ear or to hearing", plain:"to do with the ear",
+    note:"aur/i + -al; the i is dropped before a vowel suffix. Latin aur/i beside Greek ot/o. Careful with the homophone: aural is the ear, oral is the mouth."},
+  "pulmonary": {build:["pulmon","ary"], spell:"pulmonary", system:"Respiratory",
+    def:"pertaining to the lungs", plain:"to do with the lungs",
+    note:"pulmon/o + -ary; drop the o before a vowel suffix. Latin pulmon/o beside Greek pneumon/o — pulmonary artery, but pneumonia."},
+  "pneumonia": {build:["pneumon","ia"], spell:"pneumonia", system:"Respiratory",
+    def:"a condition of the lungs in which the air sacs fill with fluid", plain:"an infection that floods the lungs&rsquo; air sacs",
+    note:"pneumon/o + -ia; drop the o. The p is silent in English but was pronounced in Greek, which is why the spelling keeps it."},
+  "gastric": {build:["gastr","ic"], spell:"gastric", system:"Digestive",
+    def:"pertaining to the stomach", plain:"to do with the stomach",
+    note:"gastr/o + -ic; drop the o. Compare gastritis (inflammation) and gastroscopy (looking in) — same root, three different jobs."},
+  "cardiologist": {build:["cardi","logist"], spell:"cardiologist", system:"Cardiovascular",
+    def:"a physician who specialises in the heart", plain:"a heart doctor",
+    note:"cardi/o + -logist; keep the o since -logist begins with a consonant. -logy is the study, -logist is the person who does it."},
+  "rhinoplasty": {build:["rhin","plasty"], spell:"rhinoplasty", system:"Respiratory",
+    def:"surgical repair or reshaping of the nose", plain:"surgery to reshape the nose",
+    note:"rhin/o + -plasty; keep the o since -plasty begins with a consonant. The surgical family: -tomy cuts in, -ectomy takes out, -stomy makes an opening, -plasty rebuilds."},
+  "gastrostomy": {build:["gastr","stomy"], spell:"gastrostomy", system:"Digestive",
+    def:"surgical creation of an opening into the stomach", plain:"an opening made into the stomach, usually for feeding",
+    note:"gastr/o + -stomy; keep the o since -stomy begins with a consonant. Contrast gastrectomy (removing it) and gastrotomy (only cutting in)."},
   "phlebotomy": {build:["phleb","tomy"], spell:"phlebotomy", system:"Cardiovascular",
     def:"incision into a vein (the practice of drawing blood)", plain:"the practice of drawing blood from a vein",
     note:"phleb/o + -tomy; keep the o since -tomy begins with a consonant (t)."},
@@ -2708,6 +2760,9 @@ const TERMS = {
 
 const TERM_PRON = {
   arthrocentesis:"ar-throh-sen-TEE-sis",
+  renal:"REE-nal", nasal:"NAY-zal", aural:"AW-ral", pulmonary:"PUL-moh-nair-ee",
+  pneumonia:"noo-MOH-nyah", gastric:"GAS-trik", cardiologist:"kar-dee-OL-oh-jist",
+  rhinoplasty:"RYE-noh-plas-tee", gastrostomy:"gas-TROS-toh-mee",
   gastritis:"gas-TRY-tis", arthritis:"ar-THRY-tis", arthralgia:"ar-THRAL-jah",
   dermatitis:"der-mah-TY-tis", carditis:"kar-DY-tis", neuralgia:"noo-RAL-jah",
   myalgia:"my-AL-jah", hepatitis:"hep-ah-TY-tis", nephritis:"neh-FRY-tis",
@@ -3361,7 +3416,18 @@ const ORIGINS = {
   ectasis: {lang:"Gk", src:"ektasis — a stretching out"},
   ant:     {lang:"L",  src:"-ans, -antis — doing, performing"},
   puncture:{lang:"L",  src:"punctura — a pricking"},
-  oma:     {lang:"Gk", src:"-oma — swelling, tumour"}
+  oma:     {lang:"Gk", src:"-oma — swelling, tumour"},
+  al:      {lang:"L",  src:"-alis — of, belonging to"},
+  ic:      {lang:"Gk", src:"-ikos — of, in the manner of"},
+  ary:     {lang:"L",  src:"-arius — connected with"},
+  logist:  {lang:"Gk", src:"logos — word, reason, study"},
+  plasty:  {lang:"Gk", src:"plassein — to mould, to shape"},
+  stomy:   {lang:"Gk", src:"stoma — mouth, opening"},
+  ren:     {lang:"L",  src:"renes — the kidneys"},
+  nas:     {lang:"L",  src:"nasus — nose"},
+  aur:     {lang:"L",  src:"auris — ear"},
+  pulmon:  {lang:"L",  src:"pulmo — lung"},
+  pneumon: {lang:"Gk", src:"pneumon — lung (from pneuma, breath)"}
 };
 Object.keys(ORIGINS).forEach(id=>{ if(PARTS[id]) Object.assign(PARTS[id], ORIGINS[id]); });
 const LANG_NAME = {Gk:"Greek", L:"Latin"};
@@ -5276,9 +5342,32 @@ window.__RD_QE = (function(){
      a swapped vowel. Never touches the first letter (that produced nonsense
      like "aarthritis", which nobody would ever pick). Returns up to n distinct
      wrong spellings, all of them close enough to hurt. */
-  function misspellings(w, n){
+  /* A spelling distractor is only worth anything if it is a mistake a learner
+     would actually make. The old tail generator appended "is" to the answer,
+     which reached 19 of the 67 terms and produced carditisis, tachycardiais,
+     hemiplegiais — 31% of generated spelling questions carried a distractor that
+     was simply longer than the answer and could be eliminated without reading a
+     single letter. The generators below are all real failure modes: the combining
+     vowel left in when it should have gone (the single commonest error in the
+     subject, and the exact rule the game teaches), the silent Greek digraphs
+     rrh/ph/rh flattened, a transposition, a doubled consonant, a dropped letter.
+     T is optional and lets the combining-vowel error be built from the actual
+     junction rather than guessed from the spelling. */
+  function misspellings(w, n, T){
     const out=[], mid=(s)=>s.length>4;
     const add=(v)=>{ if(v && v!==w && v.length>3 && !out.includes(v)) out.push(v); };
+    // the combining vowel that SHOULD have been dropped, left in: carditis → cardioitis
+    if(T && T.build){
+      for(let i=0;i<T.build.length-1;i++){
+        const L=PARTS[T.build[i]], R=PARTS[T.build[i+1]];
+        if(L && R && L.kind==="root" && L.cv && R.kind==="suffix" && R.vowelStart){
+          add(w.replace(L.stem, L.stem+L.cv)); break;
+        }
+      }
+    }
+    add(w.replace(/rrh/, "r"));                       // haemorrhage → hemorage
+    add(w.replace(/ph/, "f"));                        // phlebotomy → flebotomy
+    if(!/rrh/.test(w)) add(w.replace(/rh/, "r"));     // rhinitis → rinitis
     add(w.replace(/o([a-z])/, "$1"));                 // combining vowel dropped
     const j=w.search(/[bcdfghjklmnprstvwz](?=[a-z]{2,})/);
     if(j>0) add(w.slice(0,j+1)+w[j]+w.slice(j+1));    // doubled consonant
@@ -5288,7 +5377,7 @@ window.__RD_QE = (function(){
     add(w.replace(/([b-df-hj-np-tv-z])o([b-df-hj-np-tv-z])/, "$1a$2"));  // o→a
     add(w.replace(/ea/, "ae").replace(/^(.)/, "$1"));                     // ea→ae
     if(mid(w)) add(w.slice(0, Math.floor(w.length/2)) + w.slice(Math.floor(w.length/2)+1)); // dropped letter
-    add(w+"is"); add(w.replace(/y/,"i"));
+    add(w.replace(/y/,"i")); add(w.replace(/c/,"k")); add(w.replace(/([aeiou])/, "$1$1"));
     return out.slice(0, n||3);
   }
   function misspell(w){ return misspellings(w,1)[0] || (w+"a"); }
@@ -5410,8 +5499,15 @@ window.__RD_QE = (function(){
       /* Every distractor is a MISSPELLING of the answer. Offering other real
          terms turned this into a meaning question with a free giveaway — the
          player never had to look at the letters. */
-      let wrongs=misspellings(T.spell, nWrong);
-      while(wrongs.length<nWrong) wrongs.push(T.spell+"s".repeat(wrongs.length+1));
+      let wrongs=misspellings(T.spell, nWrong, T);
+      // last resort, still a real slip: swap a vowel rather than bolt letters on the end
+      const vows="aeiou";
+      for(let k=1; wrongs.length<nWrong && k<T.spell.length-1; k++){
+        const c=T.spell[k]; if(vows.indexOf(c)<0) continue;
+        const alt=vows[(vows.indexOf(c)+1+wrongs.length)%5];
+        const cand=T.spell.slice(0,k)+alt+T.spell.slice(k+1);
+        if(cand!==T.spell && !wrongs.includes(cand)) wrongs.push(cand);
+      }
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`Which spelling of the term meaning <b>${T.def}</b> is correct?`,
         options:opts(T.spell, wrongs),
@@ -5478,7 +5574,16 @@ window.__RD_QE = (function(){
        useful thing a beginner can know about medical vocabulary.
        ============================================================== */
     if(type==="originId"){
-      const ids=Object.keys(PARTS).filter(p=>PARTS[p].lang);
+      /* The corpus is 63 Greek parts to 10 Latin, and this type drew from it flat,
+         so the answer was Greek 86% of the time — measured over 6,000 draws. A
+         player who never read the prompt and always tapped "Greek" scored 86%,
+         on a question type that sits on the road, in the forge, and in the Daily
+         Trial. Pick the tongue first, then a part that speaks it, and the coin is
+         honest again. */
+      const byLang={Gk:[],L:[]};
+      Object.keys(PARTS).forEach(p=>{ if(PARTS[p].lang && byLang[PARTS[p].lang]) byLang[PARTS[p].lang].push(p); });
+      const want = (byLang.L.length && Math.random()<0.5) ? "L" : "Gk";
+      const ids = byLang[want].length ? byLang[want] : Object.keys(PARTS).filter(p=>PARTS[p].lang);
       const id=weightedPick(freshFilter(ids)); noteRecent(id);
       const p=PARTS[id];
       return norm({ type, conceptIds:[id],
@@ -5549,7 +5654,11 @@ window.__RD_QE = (function(){
       const ids=D.FIGURE_ORDER, id=pick(ids), F=D.FIGURES[id];
       const wrongs=shuffle(ids.filter(x=>x!==id)).slice(0,Math.max(1,nWrong)).map(x=>D.FIGURES[x].name);
       return norm({ type, figureId:id, conceptIds:(F.parts||[]).slice(),
-        prompt:`Who ${F.deed.split(",")[0]}?`,
+        /* This used to cut the deed at its first comma, which for Lister produced
+           the question "Who read Pasteur?" — 7% of generated items truncated to
+           something degenerate or unanswerable. The whole deed is longer to read
+           and always answerable. */
+        prompt:`Who ${F.deed}?`,
         options:opts(F.name, wrongs),
         explanation:`<b>${F.name}</b> (${F.era}, ${F.place}) — ${F.deed}. What it left us: ${F.gift}.` });
     }
