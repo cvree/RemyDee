@@ -75,6 +75,39 @@ const { boot, assert, summary } = require('./testlib');
   const w = QE._partWeight ? QE._partWeight(probe) : null;
   if (w != null) assert(w > 0.18, 'a part dropped twelve times is not rested out of the pool: ' + w);
 
+  /* ---------- the scheduler actually chases what you are bad at ----------
+     Simulated before the fix, a player failing three quarters of their weak
+     items saw those items only 1.38x as often as everything else — which is
+     barely a preference at all. This runs the same simulation and holds the
+     line at a real multiple. */
+  {
+    const st = E.S();
+    Object.keys(st.mastery.parts).forEach(id => {
+      const m = st.mastery.parts[id];
+      m.seen = 1; m.correct = 0; m.wrong = 0; m.ef = 2.5; m.reps = 0; m.ivl = 0; m.due = 0; m.lapses = 0; m.fast = false;
+    });
+    const weak = ['itis', 'algia', 'emia', 'penia', 'stasis', 'lysis', 'poiesis', 'crit', 'globin', 'ectasis'];
+    const asks = {};
+    for (let run = 0; run < 30; run++) {
+      st.runCount = run;
+      for (let n = 0; n < 25; n++) {
+        const Q = QE.generate({ types: ['partMeaning', 'meaningPart', 'trueFalse'] });
+        if (!Q || !Q.conceptIds) continue;
+        Q.conceptIds.forEach(id => {
+          asks[id] = (asks[id] || 0) + 1;
+          E.markPartResult(id, Math.random() < (weak.indexOf(id) >= 0 ? 0.25 : 0.92), false);
+        });
+      }
+    }
+    const wAvg = weak.reduce((a, id) => a + (asks[id] || 0), 0) / weak.length;
+    const rest = Object.keys(asks).filter(id => weak.indexOf(id) < 0);
+    const oAvg = rest.reduce((a, id) => a + asks[id], 0) / Math.max(1, rest.length);
+    const ratio = wAvg / Math.max(0.01, oAvg);
+    assert(ratio >= 2.2,
+      'a player failing their weak items sees them far more often than the rest — ratio ' +
+      ratio.toFixed(2) + 'x (measured 1.38x before the scheduler was fixed)');
+  }
+
   /* ---------- generated questions ---------- */
   const senseOf = (id) => PARTS[id].sense || PARTS[id].mean;
   let twoCorrect = 0, appended = 0, degenerate = 0, gk = 0, la = 0, total = 0;
