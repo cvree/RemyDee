@@ -11865,9 +11865,22 @@ function resolveGate(){
     M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
     scoreWrong();
     M.stats.morale=clamp(M.stats.morale-7,0,100); M.stats.stamina=clamp(M.stats.stamina-5,0,100);
+    /* A wrong gate used to name the right answer and nothing else, which tells
+       the player what they should have done but not what they actually did.
+       Naming the part they walked into, beside the one they wanted, is the
+       contrast that makes the confusion visible — and it costs nothing, because
+       the gate already knows what was standing in every lane. The banner is the
+       game's existing "the reward is the lesson" surface and it does not pause
+       the road, so a fast beat stays a fast beat. */
+    const tookId = G.laneIds && G.laneIds[G.flareLane];
+    const took = (tookId && tookId!==G.targetId && PARTS[tookId])
+      ? `You took <b>${PARTS[tookId].text}</b> (${PARTS[tookId].mean}) — ` : "";
     caption(G.completion
-      ? `Wrong gate — <b>${G.completion.spell}</b> needed ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`
-      : `Wrong gate — the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
+      ? `${took}<b>${G.completion.spell}</b> needed ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`
+      : `${took}the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
+    showTermBanner(PARTS[G.targetId].text,
+      took ? `not ${PARTS[tookId].text} — ${PARTS[tookId].mean}` : "the gate wanted this one",
+      PARTS[G.targetId].mean, false);
     pop(M.cv.width*0.30,M.laneY-88,"wrong gate",true); Audio2.sfx.bad(); FX.buzz(24);
     pushDebt(G.conceptId);
   }
