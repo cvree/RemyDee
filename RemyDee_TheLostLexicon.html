@@ -8585,10 +8585,15 @@ const LEXEME_STYLE={
 /* pick a word-part to place on the road, biased toward parts the player hasn't mastered yet.
    An optional kindFilter restricts the pool — used by the final boss's Stripping phase,
    which asks only after suffixes. */
-function pickRoadPart(kindFilter){
+function pickRoadPart(kindFilter, langFilter){
   const weak=new Set(weakParts()); const seen=new Set(seenParts());
   let ids=Object.keys(PARTS);
   if(kindFilter) ids=ids.filter(id=>PARTS[id].kind===kindFilter);
+  // Bilingua's gates: only parts from the tongue she is demanding this time
+  if(langFilter){
+    const byLang=ids.filter(id=>PARTS[id].lang===langFilter);
+    if(byLang.length>=3) ids=byLang;
+  }
   if(!ids.length) ids=Object.keys(PARTS);
   const sorted=ids.slice().sort((a,b)=>{
     const sa=(weak.has(a)?2:0)+(seen.has(a)?0:1);
@@ -8820,6 +8825,121 @@ function flashItem(item, verb, txt){
                                        campaign step forward and offer
                                        their part first.
    ================================================================== */
+/* ==================================================================
+   THE LIEUTENANTS — three mid-campaign bosses, one per pressure.
+   The finale was the only boss in the game, which left five chapters
+   with nothing to build toward. Each lieutenant is a knowledge check
+   wearing an action costume, exactly like Radicida, but each attacks a
+   DIFFERENT part of what the player has learned — so beating one proves
+   something the others do not.
+
+     Chapter Two   PRAEFIXA, the Prefix-Thief — takes the front off
+                   every word. Gates ask only for PREFIXES.
+     Chapter Four  TERMINUS, the Suffix-Warden — seals the ends, so
+                   nothing can be finished. Gates ask only for SUFFIXES.
+     Chapter Six   BILINGUA, the Tongue-Cutter — insists one language is
+                   enough and tries to erase the other. Gates alternate
+                   between demanding a GREEK part and a LATIN one.
+
+   Each runs one phase across the whole road: a pressure meter that
+   climbs on its own and falls when the player names something real. Push
+   it to nothing and the lieutenant reels — a real win beat, not merely
+   survival. Let it fill and the squad is hurt but never dead: these are
+   losable fights that cannot end a run outright.
+   ================================================================== */
+const LIEUTENANTS = {
+  ch2:{ id:"praefixa", name:"Sable Wu", title:"PRAEFIXA, THE PREFIX-THIEF",
+    mode:"prefix",
+    open:`A figure keeps pace with the caravan, just off the road. "They call me <b>Praefixa</b>. I take only the first syllable. <i>Bradycardia</i> — take away <b>brady-</b> and what is left tells you nothing about how slow the heart runs."`,
+    onset:`<b>The Thieving.</b> Every gate ahead asks for a <b>prefix</b>. Name it true and she loses her grip.`,
+    meter:"Praefixa picks at the front of every word",
+    strike:`A prefix goes missing mid-sentence — the squad argues about what was meant and loses the thread.`,
+    reel:`Sable Wu drops back, empty-handed. "You keep giving them <i>back</i>," she spits. Every word you have named holds.`,
+    hurt:{stamina:-11, morale:-9} },
+  ch4:{ id:"terminus", name:"Warden Mo", title:"TERMINUS, THE SUFFIX-WARDEN",
+    mode:"suffix",
+    open:`A warden steps into the ford and does not move. "<b>Terminus</b>. I hold the ends of words. Without me you may say <i>cardi-</i> all day and never say what is <b>wrong</b> with it."`,
+    onset:`<b>The Sealing.</b> Every gate ahead asks for a <b>suffix</b> — the part that says what is happening. Name it and the ford opens.`,
+    meter:"Terminus seals the end of every word",
+    strike:`A word stops halfway. The squad knows the organ and not the affliction, and wastes the crossing arguing.`,
+    reel:`Warden Mo steps aside. "You finish what you start," he says, almost approving. The ford runs clear.`,
+    hurt:{stamina:-10, safety:-11} },
+  ch6:{ id:"bilingua", name:"Silent Ke", title:"BILINGUA, THE TONGUE-CUTTER",
+    mode:"origin",
+    open:`She does not speak at first. Then: "<b>Bilingua</b>. Two tongues for one vein is waste. <i>Phleb-</i> or <i>ven-</i>, choose, and I will burn the other." — She does not understand that keeping both is why the meaning survived at all.`,
+    onset:`<b>The Cutting.</b> She names a tongue and demands a part from it — Greek, then Latin, then Greek again. Give her the wrong language and she takes the word.`,
+    meter:"Bilingua cuts one tongue away",
+    strike:`She severs a root mid-step. The squad reaches for the other tongue's word and finds a gap where it should have been.`,
+    reel:`Silent Ke goes still. Both words are still standing, and she has no argument left. She turns back toward the Archive.`,
+    hurt:{stamina:-12, morale:-8} }
+};
+function lieutenantFor(f){
+  if(!f || !f.chapter) return null;
+  return LIEUTENANTS[f.chapter.id] || null;
+}
+/* the tongue Bilingua is demanding right now — she alternates, and the caption
+   always says which, so this is a knowledge test and never a guessing game */
+function bilinguaWants(B){ return (B.cuts%2===0) ? "Gk" : "L"; }
+
+/* One tick of a lieutenant fight. Mirrors updateBossPhase's contract: climbs on
+   its own, falls when the player is right, and never hard-fails the run. */
+function updateLieutenant(dt){
+  const B=M.boss; if(!B || !B.lt) return;
+  const L=B.lt;
+  if(!B.opened && M.progress>0.05){
+    B.opened=true;
+    caption(L.onset);
+    Audio2.sfx.page && Audio2.sfx.page();
+  }
+  const be=$('#boss-erosion');
+  if(B.felled){
+    if(be) be.classList.remove('show');
+    return;
+  }
+  // pressure scales with the difficulty tier, so a lieutenant is a real fight
+  // at Unforgiving and a teachable one at Gentle
+  B.erosion=clamp(B.erosion + dt*(0.017+0.016*M.diff.tier), 0, 1);
+  if(be){
+    be.classList.add('show');
+    const lab=$('.be-lab',be);
+    if(lab && lab.textContent!==L.meter){
+      lab.textContent = L.mode==="origin"
+        ? L.meter+" — she wants "+(bilinguaWants(B)==="Gk"?"GREEK":"LATIN")
+        : L.meter;
+    }
+    const f=$('#be-fill'); if(f) f.style.width=(B.erosion*100)+"%";
+  }
+  if(B.erosion>=1){
+    B.erosion=0.45;
+    B.hits=(B.hits||0)+1;
+    M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
+    statGain(L.hurt);
+    caption(L.strike);
+    Audio2.sfx.bad(); FX.buzz(30); pulseMomentum();
+  }
+}
+/* Called whenever the player gets something right against a lieutenant. Correct
+   answers are the only weapon in the fight. */
+function pressLieutenant(amount, wasReal){
+  const B=M.boss; if(!B || !B.lt || B.felled) return;
+  B.erosion=clamp(B.erosion - amount, 0, 1);
+  B.cuts=(B.cuts||0)+1;
+  if(B.erosion<=0 && (B.cuts>=6 || wasReal)){
+    B.felled=true;
+    const L=B.lt;
+    caption(L.reel);
+    Audio2.sfx.great && Audio2.sfx.great();
+    Audio2.sfx.chime && Audio2.sfx.chime();
+    FX.buzz(60);
+    // felling a lieutenant is worth something the player can feel immediately
+    statGain({morale:14, safety:10});
+    M.inkFound=(M.inkFound||0)+18;
+    M.lieutenantFelled=L.id;
+    const be=$('#boss-erosion'); if(be) be.classList.remove('show');
+    if(window.__RD_META) window.__RD_META.note("boss",{lieutenant:L.id});
+  }
+}
+
 const BOSS_TERM_ID="electrocardiogram";       // electr/o + cardi/o + -gram — a record that cannot be argued with
 const BOSS_P1_END=0.34, BOSS_CHORUS_AT=0.90;
 function isBossRoad(f){ return !!(f && f.chapter && f.chapter.id==="ch7"); }
@@ -8968,7 +9088,10 @@ function resolveChorus(){
 }
 
 function runMission(){
-  const f=E.getFlow(); const r=f.route;
+  const f=E.getFlow();
+  // the route is chosen at the bench; any path that reaches the road without one
+  // gets the chapter's own weather rather than throwing mid-transition
+  const r=f.route || {weather:(f.chapter&&f.chapter.weather)||"clear"};
   M=null;   // clear any previous mission's state immediately — the transition
             // animates before onShow rebuilds it, and nothing should read the
             // outgoing mission's state as if it were the new one
@@ -8980,7 +9103,12 @@ function runMission(){
       return { id, t, color:t.color, pace:t.pace||1, weapon:travWeapon(id),
         gear, gearKind: gear.length?gear[0].gear:null, base:i, phase:Math.random()*6.28,
         lag:i*40, laneY:0 }; });
-    const tot=f.stats.tot;
+    // A missing prep snapshot used to throw here, mid screen-transition, which
+    // leaves the player on a half-swapped screen with no way forward. Any entry
+    // path that skips the bench (a resumed run, a debug jump) now gets a neutral
+    // baseline instead of a soft-lock.
+    const tot=(f.stats && f.stats.tot) ? f.stats.tot
+      : { stamina:3, safety:2, speed:3, morale:3, weather:2, health:2 };
     // ONE SNAPSHOT PER RUN. The difficulty is read once when the squad sets out, so
     // an adaptive road can never shift its own rules underneath a walk in progress.
     const DIFF=E.diffTune();
@@ -9033,7 +9161,13 @@ function runMission(){
         scaffold:E.affinity().n, scaffoldUsed:0,      // Lexicon Affinity levels = mercy charges for Phase II
         chorusShown:false, chorusDone:false };
       const be=$('#boss-erosion'); if(be) be.classList.remove('show');
-    } else { M.boss=null; }
+    } else {
+      // a mid-campaign chapter may still field one of the Silent Archive's
+      // lieutenants — same machinery, one phase, a different thing to prove
+      const lt=lieutenantFor(f);
+      M.boss = lt ? { active:true, lt, phase:1, erosion:0, cuts:0, hits:0,
+                      opened:false, felled:false } : null;
+    }
     $('#mission-who').textContent = `${f.chapter.name} — ${size} traveler${size>1?'s':''} bound for ${f.chapter.dest}`;
     renderPrepBars();
     renderAbilityBar();
@@ -9043,6 +9177,8 @@ function runMission(){
       : "Without climbing gear the upper ledges stay closed — the trail and the river floor are yours.";   // the hint pill teaches the controls; the caption stays flavour
     if(isBossRoad(f)){
       caption(`He steps from the archive's shadow. "Radix — the root. Caedere — to slay. I am <b>Jian Radicida, the Root-Slayer</b>."`);
+    } else if(M.boss && M.boss.lt){
+      caption(M.boss.lt.open);
     } else {
       caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. ${routeOpen}`);
     }
@@ -9974,15 +10110,25 @@ function tick(t){
     const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * finalStretch * M.paceLive * 1.55;
     // the final boss holds the road at the Archive's threshold until the Chorus is sung;
     // the Endless Road has no destination at all, so progress simply never caps
-    const progressCap = M.endless ? Infinity : ((M.boss && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1);
+    // The road holds at 0.90 so Radicida's Chorus can play before the waystation.
+    // Only the FINAL boss does that — a lieutenant road runs the full distance,
+    // and keying this on `M.boss` alone capped chapters two, four and six short
+    // of arrival forever.
+    const holdForChorus = M.boss && !M.boss.lt && !M.boss.chorusDone;
+    const progressCap = M.endless ? Infinity : (holdForChorus ? BOSS_CHORUS_AT : 1);
     M.progress = clamp(M.progress + dt*spd, 0, progressCap);
-    if(M.boss) updateBossPhase(dt);
+    if(M.boss){ if(M.boss.lt) updateLieutenant(dt); else updateBossPhase(dt); }
     if(M.gate) updateGate(dt);
 
     // passive drains — prep cushions, lanes shift the cost; momentum eases them.
     // The difficulty setting scales the whole clock: on Gentle the squad can afford
     // to explore, on Demanding stamina is the thing you are really fighting.
-    const cushion = clamp(M.f.stats.prepScore,0.2,1);
+    // A missing prepScore made every drain NaN, and NaN<=0 is false — so the
+    // collapse check below could never fire and the run became unendable. Guard
+    // the input rather than the six expressions downstream of it.
+    const prep = (M.f.stats && typeof M.f.stats.prepScore==="number" && isFinite(M.f.stats.prepScore))
+               ? M.f.stats.prepScore : 0.45;
+    const cushion = clamp(prep,0.2,1);
     const momoEase = 0.8 + M.momentum*0.2;   // ×1 → 1.0, ×5 → 1.8 less drain
     // flow buys its rewards with a faster clock — that is the whole gamble
     const drainMul = M.diff.drain * (M.flow?1.35:1);
@@ -9992,6 +10138,11 @@ function tick(t){
     M.stats.stamina = clamp(M.stats.stamina - dt*stamDrain,0,100);
     if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5)*drainMul/momoEase,0,100);
     M.stats.safety = clamp(M.stats.safety - dt*Math.max(0.2,safeDrain),0,100);
+    // belt and braces: the run's clock must always be a real number, because a
+    // NaN here silently disables the collapse and the arrival alike
+    ["stamina","morale","safety"].forEach(k=>{
+      if(!isFinite(M.stats[k])) M.stats[k]=0;
+    });
     updatePrepBars();
     updateMomentumMeter();
     // STAMINA IS THE CLOCK ON EVERY ROAD. When it breaks the party goes down where
@@ -10358,7 +10509,8 @@ function completeTerm(){
   }
   // Phase I (The Stripping): a real, complete word — root and all — is proof
   // Radicida hasn't won. It pushes the erasure back harder than a gate does.
-  if(M.boss && M.boss.phase===1 && realId) M.boss.erosion=clamp(M.boss.erosion-0.45,0,1);
+  if(M.boss && !M.boss.lt && M.boss.phase===1 && realId) M.boss.erosion=clamp(M.boss.erosion-0.45,0,1);
+  if(M.boss && M.boss.lt && realId) pressLieutenant(0.42, true);
   pop(M.cv.width*0.30, M.laneY-88, `×${M.momentum.toFixed(1)}  +${ink} ink`);
   Audio2.sfx.great(); FX.buzz(22);
   M.combo=[]; updateWordHud();
@@ -10436,7 +10588,12 @@ function openGate(){
   // Phase I of the final boss (The Stripping) — Radicida slays ROOTS, the part
   // that carries a term's actual meaning. Every gate here asks you to prove you
   // still know one, under real pressure (see updateBossPhase).
-  const forceKind = (M.boss && M.boss.phase===1) ? "root" : null;
+  const B0=M.boss;
+  const ltMode = (B0 && B0.lt && !B0.felled) ? B0.lt.mode : null;
+  const forceKind = (B0 && !B0.lt && B0.phase===1) ? "root"
+                  : (ltMode==="prefix" || ltMode==="suffix") ? ltMode : null;
+  // Bilingua does not care which KIND of part it is — she cares which tongue
+  const forceLang = (ltMode==="origin") ? bilinguaWants(B0) : null;
   // A demanding road starts asking you to FINISH words rather than just name parts
   const completion = (!forceKind && M.diff.tier>=0.55 && Math.random() < (M.diff.tier-0.45)*1.1)
     ? pickCompletionGate() : null;
@@ -10445,9 +10602,9 @@ function openGate(){
   // of a gate that's pure structure, not personalization — is seed-deterministic
   // the re-ask loop reaches the gates as well: a part you just missed is the part
   // the next arch is most likely to ask you for
-  const reaskId = (!completion && !forceKind) ? takeReask() : null;
+  const reaskId = (!completion && !forceKind && !forceLang) ? takeReask() : null;
   const targetId = completion ? completion.targetId
-                 : (reaskId && PARTS[reaskId] ? reaskId : pickRoadPart(forceKind));
+                 : (reaskId && PARTS[reaskId] ? reaskId : pickRoadPart(forceKind, forceLang));
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
   const gateRoll = withRoadSeed(()=>{
@@ -10513,7 +10670,8 @@ function resolveGate(){
     }
     pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
     // Phase I (The Stripping): naming a root correctly pushes the erasure back
-    if(M.boss && M.boss.phase===1) M.boss.erosion=clamp(M.boss.erosion-0.3,0,1);
+    if(M.boss && !M.boss.lt && M.boss.phase===1) M.boss.erosion=clamp(M.boss.erosion-0.3,0,1);
+    if(M.boss && M.boss.lt) pressLieutenant(0.30, false);
   } else if(M.forge.smokeSaves>0){
     M.forge.smokeSaves--; renderForgeStrip();
     caption(`Smoke covers a wrong read — no cost this once. The path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}).`);
@@ -11509,9 +11667,13 @@ function showResult(){
       /* A chest for every arrival, but the RANK is bought with the walk: an
          excellent road opens reliquaries, a poor one opens a travelling case. */
       if(META && META.grantChest){
-        const why = grade==="excellent" ? "The waystation keeper owed you a favour"
+        const felled = M && M.lieutenantFelled;
+        const why = felled ? "Taken from a lieutenant of the Silent Archive"
+                  : grade==="excellent" ? "The waystation keeper owed you a favour"
                   : grade==="poor" ? "Salvaged from the road" : "Payment at the waystation";
-        META.grantChest(overall, why, after);
+        // driving off a lieutenant is the single best thing you can do on a road,
+        // and the chest it leaves behind says so
+        META.grantChest(felled ? Math.min(1, overall+0.35) : overall, why, after);
       } else after();
     };
   }});
@@ -11582,6 +11744,16 @@ function consequenceLines(f,grade,st){
       lines.push({ic:"⚗", txt:`<b>${nm}</b> joined the school's stores — the bench can fold it into a future build.`});
     });
     if(M.cachesMarked) lines.push({ic:"◈", txt:`<b>${M.cachesMarked} cache${M.cachesMarked>1?"s":""}</b> marked for the Reed Guild — honest maps, paid in reputation.`});
+  }
+  if(M && M.lieutenantFelled){
+    const L=Object.keys(LIEUTENANTS).map(k=>LIEUTENANTS[k]).find(x=>x.id===M.lieutenantFelled);
+    if(L) lines.push({ic:"⚑", txt:`<b>${L.name}</b> — ${L.title.toLowerCase()} — was driven off the road. `
+      + `Nothing the squad could still name could be taken from them.`});
+  } else if(M && M.boss && M.boss.lt){
+    const want={prefix:"the front of a word", suffix:"the end of a word",
+                origin:"a part from the tongue being demanded"}[M.boss.lt.mode];
+    lines.push({ic:"⚑", txt:`<b>${M.boss.lt.name}</b> shadowed the caravan the whole way and was `
+      + `still there at the waystation. Naming ${want} at more of the gates is what breaks the grip.`});
   }
   if(st.shortfalls.length) lines.push({ic:"▲", txt:`For next time: the bench lacked <b>${st.shortfalls.join(" and ")}</b>.`});
   else lines.push({ic:"★", txt:`Your forging matched the road well — a workshop-master's eye.`});
@@ -11684,6 +11856,9 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _hazardsAhead:()=>hazardsAhead(),
   /* --- final boss hooks (headless tests) --- */
   isBossRoad, BOSS_TERM_ID, BOSS_P1_END, BOSS_CHORUS_AT,
+  LIEUTENANTS, lieutenantFor, bilinguaWants,
+  _updateLieutenant:(dt)=>{ if(M&&M.boss&&M.boss.lt) updateLieutenant(dt||0.03); return M&&M.boss; },
+  _pressLieutenant:(a,r)=>{ pressLieutenant(a==null?0.5:a, !!r); return M&&M.boss; },
   _boss:()=>M&&M.boss,
   _setProgress:(p)=>{ if(M) M.progress=p; },
   _updateBossPhase:(dt)=>{ if(M&&M.boss) updateBossPhase(dt||0.03); return M.boss; },
