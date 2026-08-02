@@ -45,9 +45,19 @@
   --wash-mid:#9aa79c;
   --wash-near:#6a7a6f;
 
-  --font-cal:"Noto Serif SC","Songti SC","STSong",serif;   /* calligraphic display */
-  --font-orn:"Cormorant Garamond",Georgia,serif;           /* ornamental latin */
-  --font-read:"Noto Sans","Helvetica Neue",Arial,sans-serif;/* highly readable */
+  /* The whole calligraphic identity used to hang on one Google Fonts request. Block
+     the CDN — a school firewall, a plane, a locked-down clinic laptop — and every
+     display line in the game fell straight through to Times, which is the one serif
+     that reads as "unstyled webpage". These stacks now walk the good system serifs
+     on each platform first (Songti/STSong on macOS, SimSun/Noto CJK on Windows and
+     Linux, then the Palatino family, which is the closest thing to a brush-drawn
+     Latin serif that ships everywhere) before they ever reach Times. */
+  --font-cal:"Noto Serif SC","Source Han Serif SC","Noto Serif CJK SC","Songti SC","STSong","SimSun",
+             "Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Hoefler Text",Georgia,serif;
+  --font-orn:"Cormorant Garamond","Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,
+             "Hoefler Text",Georgia,"Times New Roman",serif;
+  --font-read:"Noto Sans","Segoe UI Variable Text","Segoe UI",-apple-system,BlinkMacSystemFont,
+             "Helvetica Neue","Liberation Sans",Arial,sans-serif;
 
   --r-sm:6px; --r-md:12px; --r-lg:22px;
   --ease:cubic-bezier(.22,.61,.36,1);
@@ -61,6 +71,20 @@ html[data-contrast="high"]{
   --cinnabar:#c21a12; --jade:#3d5c4b; --jade-deep:#1f3d2b; --gold:#8a6a1f;
   --ink-line:#2a2015;
 }
+
+/* When the display faces never arrive, the fallback serif is set rather than left
+   at its browser defaults: display lines get tighter tracking and a heavier stroke
+   so they still read as a chosen typeface instead of "this page failed to load".
+   `.fontcdn` is added by the boot script only once a display face really resolves. */
+html:not(.fontcdn) .game-title,
+html:not(.fontcdn) h1,
+html:not(.fontcdn) h2,
+html:not(.fontcdn) .reveal-cal,
+html:not(.fontcdn) .title-seal span{ letter-spacing:-.015em; font-weight:900; }
+html:not(.fontcdn) .ornate,
+html:not(.fontcdn) .intro-text,
+html:not(.fontcdn) .brief-intro{ letter-spacing:.005em; }
+html:not(.fontcdn) .eyebrow{ letter-spacing:.24em; }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;}
@@ -2340,6 +2364,25 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
    ================================================================== */
 (function(){
 "use strict";
+
+/* ---------- webfont reality check ----------
+   The display faces come from a CDN that is not always reachable. When they do
+   arrive the page is marked, and the CSS that compensates for a system-serif
+   fallback (tighter tracking, heavier display weight) switches itself off. The
+   guard matters: jsdom has no document.fonts at all, and Safari has resolved
+   fonts.ready before load in the past, so the check is repeated on window load. */
+function markFonts(){
+  try{
+    if(!document.fonts || !document.fonts.check) return;
+    if(document.fonts.check('700 24px "Noto Serif SC"') || document.fonts.check('600 24px "Cormorant Garamond"'))
+      document.documentElement.classList.add("fontcdn");
+  }catch(e){}
+}
+try{
+  if(document.fonts && document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(markFonts);
+  window.addEventListener("load", markFonts);
+  markFonts();
+}catch(e){}
 
 /* ---------- tiny DOM helpers ---------- */
 const $  = (s,r)=> (r||document).querySelector(s);
