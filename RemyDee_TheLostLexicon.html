@@ -1260,8 +1260,19 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   .ability-btn .ab-hint,.pace-btn .pb-hint{display:none;}
   .ability-btn,.pace-btn{padding:6px 10px;}
   .mission-caption{height:3.9em;font-size:13px;}
-  .mission-hint{top:150px;font-size:.66rem;max-width:92vw;}
+  /* Three panels used to occupy the same strip of a 390px sky — the combo
+     readout at 64px, the gate prompt at 118px and the control hint at 150px, all
+     of them wrapping to two or three lines at this width. They stacked into an
+     unreadable pile with the gate prompt, the one thing you must read, at the
+     bottom of it. Each gets its own lane, and the gate outranks the hint. */
+  .word-hud{top:56px;max-width:94vw;}
+  .gate-prompt{top:126px;max-width:94vw;font-size:.92rem;}
+  .mission-hint{top:196px;font-size:.66rem;max-width:92vw;}
+  .gate-prompt.show ~ .mission-hint{opacity:0;}
   .term-banner{max-width:96%;padding:6px 12px 7px;}
+  /* a thumb needs somewhere to press that is not the steering surface */
+  .pace-btn{min-height:44px;} .ability-btn{min-height:44px;}
+  .mission-pause-btn{width:44px;height:44px;}
 }
 /* ACCELERATION, MADE LEGIBLE — the gauge that tells you a right answer just put
    the caravan into a higher gear, and stays lit while the burst holds */
@@ -10185,8 +10196,11 @@ function runMission(){
        game were wrong for the device reading them. It is written per input now. */
     const hint=$('#mission-hint');
     if(hint){
+      /* Kept to two lines on touch. The long version wrapped to three or four at
+         390px and spilled out of the sky and onto the road itself, which is the
+         one thing the markup comment above it promises never to do. */
       hint.innerHTML = FX.isTouch
-        ? `<b>Drag</b> up and down to lead the squad &mdash; gather word-parts and chain them into real terms. Hold <b>Surge</b> for a burst of speed. The pack button shows your gear.`
+        ? `<b>Drag</b> up and down to lead the squad. Gather word-parts; chain them into real terms.`
         : `Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.`;
       hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500);
     }
@@ -11783,6 +11797,11 @@ function openGate(){
   }
   sweepGateCorridor();
   const gp=$('#gate-prompt'); if(gp){ gp.innerHTML=M.gate.prompt; gp.classList.add('show'); }
+  /* On a phone the control hint, the combo readout and this prompt all live in
+     the same 390px of sky, and the hint sat on top of the gate — so the single
+     most important instruction on the road was unreadable behind advice the
+     player had already had eight seconds to read. A gate retires the hint. */
+  const mh=$('#mission-hint'); if(mh) mh.classList.add('fade');
   caption("A rune gate spans the road — move to the right path before you reach it. The road ahead is clear; only the choice matters.");
   Audio2.sfx.page();
 }
