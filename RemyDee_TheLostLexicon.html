@@ -3657,6 +3657,11 @@ function migrate(st){
     if(!st.srs   || typeof st.srs!=="object")   st.srs   = {};
     if(!st.lore  || typeof st.lore!=="object")  st.lore  = {seen:[], correct:{}};
     if(!Array.isArray(st.reask)) st.reask = [];
+    if(typeof st.runCount!=="number") st.runCount = (st.skill&&st.skill.runs)||0;
+    if(st.mastery && st.mastery.parts){
+      Object.keys(st.mastery.parts).forEach(id=>{ const m=st.mastery.parts[id];
+        if(m && m.ef==null){ m.ef=2.5; m.reps=0; m.ivl=0; m.due=0; m.lapses=0; } });
+    }
     if(typeof st.lifetime!=="object" || !st.lifetime) st.lifetime = m8.lifetime;
     st.ver=8;
     // backfill mastery entries for any PARTS/TERMS added since this save was written,
@@ -3687,7 +3692,12 @@ function migrate(st){
 /* ================= STATE ================= */
 function freshMastery(){
   const terms={}; Object.keys(TERMS).forEach(t=>terms[t]={recognition:false,construction:false,definition:false,application:false});
-  const parts={}; Object.keys(PARTS).forEach(p=>parts[p]={seen:0,correct:0,wrong:0});
+  // seen/correct/wrong are the lifetime tally; ef/reps/ivl/due/lapses are the
+  // review schedule (SM-2, measured in RUNS rather than days — this is a
+  // session game, and a player who comes back after a month should not be
+  // punished with every card at once).
+  const parts={}; Object.keys(PARTS).forEach(p=>parts[p]={seen:0,correct:0,wrong:0,
+    ef:2.5, reps:0, ivl:0, due:0, lapses:0});
   return {terms, parts};
 }
 /* ==================================================================
@@ -3748,6 +3758,7 @@ function noteSkillRun(outcome){
   const w=0.22;
   sk.rating = clamp(sk.rating*(1-w) + evidence*w, 0.02, 0.98);
   sk.runs=(sk.runs||0)+1;
+  S.runCount=(S.runCount||0)+1;   // the clock the review scheduler counts in
 }
 /* rating → tier. Deliberately compressed: even a struggling player still
    meets hazards, and even a fluent one is never given an unsurvivable road. */
@@ -3827,6 +3838,7 @@ function newGame(){
     cachesMarked:0,            // caches marked for the Reed Guild across the campaign
     arcade:{ slice:{best:0, plays:0}, match:{best:0, plays:0} },  // Training Hall records
     reask:[],                  // word-parts missed on the road — carried into the NEXT run
+    runCount:0,                // completed runs — the tick the review scheduler uses
     /* ---- v8: the meta layer ---- */
     ach:{},                    // achievement id → {at:epochMs, seen:bool}
     daily:{ date:null, seed:0, score:0, best:0, done:false, streak:0, bestStreak:0, lastDone:null, medals:{} },
@@ -3856,7 +3868,31 @@ function persist(){ Save.write(S); refreshTopbars(); }
 
 /* mastery helpers (adaptive) */
 function markPartSeen(id){ const m=S.mastery.parts[id]; if(m) m.seen++; }
-function markPartResult(id, ok){ const m=S.mastery.parts[id]; if(!m)return; if(ok)m.correct++; else m.wrong++; }
+/* SM-2, trimmed to what this game needs. A right answer pushes the part further
+   out; a wrong one resets the interval and raises its lapse count for good, so a
+   part you keep dropping keeps coming back. `fast` is passed by the timed
+   surfaces (the road, the Trial) and earns a slightly longer interval. */
+function markPartResult(id, ok, fast){
+  const m=S.mastery.parts[id]; if(!m)return;
+  if(ok)m.correct++; else m.wrong++;
+  if(m.ef==null){ m.ef=2.5; m.reps=0; m.ivl=0; m.due=0; m.lapses=0; }
+  const q = ok ? (fast?5:4) : 2;
+  m.ef = Math.max(1.3, Math.min(3.2, m.ef + (0.1 - (5-q)*(0.08+(5-q)*0.02))));
+  if(!ok){ m.reps=0; m.ivl=1; m.lapses=(m.lapses||0)+1; }
+  else { m.reps=(m.reps||0)+1;
+         // capped at 24 runs: nothing should ever fall out of the rotation for good
+         m.ivl = m.reps===1 ? 1 : m.reps===2 ? 3
+               : Math.min(24, Math.max(1, Math.round((m.ivl||1)*m.ef))); }
+  m.due = (S.runCount||0) + m.ivl;
+}
+/* how many parts are due for review right now — surfaced on the hub */
+function dueParts(){
+  const run=S.runCount||0;
+  return Object.keys(S.mastery.parts).filter(id=>{
+    const m=S.mastery.parts[id];
+    return m && m.seen>0 && (!m.reps || (m.due||0)<=run);
+  });
+}
 function seenParts(){ return Object.keys(S.mastery.parts).filter(id=>S.mastery.parts[id].seen>0); }
 function weakParts(){ return Object.keys(S.mastery.parts).filter(id=>{ const m=S.mastery.parts[id]; return m.wrong>m.correct; }); }
 
@@ -4137,7 +4173,7 @@ window.__RD_ENG = {
   applySettings, persist, go, refreshTopbars,
   DIFFS, DIFF_BY_KEY, diffKey, diffTier, diffTune, tierBandName,
   skillState, noteSkillAnswer, noteSkillRun, adaptiveTier,
-  markPartSeen, markPartResult, seenParts, weakParts,
+  markPartSeen, markPartResult, seenParts, weakParts, dueParts,
   portraitSVG, remySVG, radixSVG, walkerSVG, buildBackdrop,
   travNeed, travWeapon, travRoleName,
   current:()=>current, chapterForToday,
@@ -4164,13 +4200,65 @@ window.__RD_QE = (function(){
 
   /* ---- adaptive weighting (reads existing mastery counts, no schema change) ---- */
   function pstat(id){ const m=E.S().mastery.parts[id]; return m||{seen:0,correct:0,wrong:0}; }
+  /* SCHEDULE-AWARE WEIGHTING. The old version was error-biased sampling, not
+     scheduling: a part answered wrong once in chapter one carried that weight
+     forever, and a part answered right three times was retired for good. Now a
+     part that is not yet due is suppressed rather than banned, an overdue part
+     climbs steadily, and a part you have dropped repeatedly keeps a permanent
+     claim on your attention. */
   function partWeight(id){
-    const m=pstat(id); let w=1;
-    if(m.wrong>m.correct)      w+=2.6;      // struggling → surface far more often
-    if(m.seen===0)             w+=1.3;      // never introduced → gently prioritise
-    const net=m.correct-m.wrong;
-    if(net>=3)                 w=Math.max(0.25, w-1.3);  // confident → fold back in rarely
-    return w;
+    const m=pstat(id), run=E.S().runCount||0;
+    if(m.seen===0) return 1.9;                          // never introduced — teach it
+    if(m.ef==null){                                     // pre-v8 save, no schedule yet
+      let w=1;
+      if(m.wrong>m.correct) w+=2.6;
+      if(m.correct-m.wrong>=3) w=Math.max(0.25,w-1.3);
+      return w;
+    }
+    // THE LEARNING QUEUE. A part you have just dropped has not been scheduled
+    // out — it has not been learned yet. SM-2 keeps those in front of you inside
+    // the session rather than deferring them to a future run, which is exactly
+    // what a struggling player needs and what the brief asks for: a wrong answer
+    // buys more practice on that concept, not less.
+    if(!m.reps) return 2.8 + Math.min(2, (m.lapses||0)*0.5);
+    const overdue = run - (m.due||0);
+    if(overdue < 0) return 0.18;                        // resting — do not drill it
+    return 1 + Math.min(3, overdue*0.65) + Math.min(2, (m.lapses||0)*0.5);
+  }
+  /* the same schedule, for whole terms. Six of the nine question types used to
+     call bare pick(terms) — uniform random — so most of the game was drill,
+     not review. */
+  function tstat(id){
+    const t=E.S().mastery.terms[id];
+    return t || {recognition:false,construction:false,definition:false,application:false};
+  }
+  function termWeight(id){
+    const T=TERMS[id]; if(!T) return 1;
+    // a term is as due as the parts that build it, plus a nudge for the
+    // cognitive modes it has never been tested in
+    const parts=(T.build||[]).filter(p=>PARTS[p]);
+    const pw = parts.length ? parts.reduce((a,p)=>a+partWeight(p),0)/parts.length : 1;
+    const t=tstat(id);
+    const modes=["recognition","construction","definition","application"];
+    const untested=modes.filter(k=>!t[k]).length;
+    return pw * (1 + untested*0.14);
+  }
+  function weightedTermPick(ids){
+    if(!ids || !ids.length) return null;
+    const wts=ids.map(termWeight), tot=wts.reduce((a,b)=>a+b,0);
+    if(!(tot>0)) return pick(ids);
+    let r=Math.random()*tot;
+    for(let i=0;i<ids.length;i++){ r-=wts[i]; if(r<=0) return ids[i]; }
+    return ids[ids.length-1];
+  }
+  /* honour a recency buffer for terms too, so review never feels like a stutter */
+  let recentTerms=[];
+  function pickTerm(ids){
+    if(!ids || !ids.length) return null;
+    const fresh=ids.filter(i=>!recentTerms.includes(i));
+    const id=weightedTermPick(fresh.length?fresh:ids);
+    if(id){ recentTerms.push(id); if(recentTerms.length>6) recentTerms.shift(); }
+    return id;
   }
   function weightedPick(ids){
     if(!ids.length) return null;
@@ -4217,8 +4305,8 @@ window.__RD_QE = (function(){
       && PARTS[x].lang && PARTS[x].lang!==p.lang) || null;
   }
   /* write results back into the shared mastery model */
-  function record(conceptIds, ok){
-    (conceptIds||[]).forEach(id=>{ if(PARTS[id]){ E.markPartSeen(id); E.markPartResult(id, ok); }});
+  function record(conceptIds, ok, fast){
+    (conceptIds||[]).forEach(id=>{ if(PARTS[id]){ E.markPartSeen(id); E.markPartResult(id, ok, fast); }});
     // THE ROAD THAT LEARNS reads every answer the player gives, anywhere in the
     // game — the bench, the forge, the road, the Training Hall all feed one number
     if(E.noteSkillAnswer) E.noteSkillAnswer(!!ok);
@@ -4344,21 +4432,21 @@ window.__RD_QE = (function(){
     /* -------- TERM-based forms -------- */
     const terms=learnedTerms();
     if(type==="termDef"){
-      const t=pick(terms); const T=TERMS[t];
+      const t=pickTerm(terms); const T=TERMS[t];
       const wrongs=shuffle(terms.filter(x=>x!==t && TERMS[x].def!==T.def)).slice(0,nWrong).map(x=>TERMS[x].def);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`What does <b>${T.spell}</b> mean?`, options:opts(T.def, wrongs),
         explanation:`<b>${T.spell}</b> — ${T.def}. ${T.note||""}` });
     }
     if(type==="defTerm"){
-      const t=pick(terms); const T=TERMS[t];
+      const t=pickTerm(terms); const T=TERMS[t];
       const wrongs=shuffle(terms.filter(x=>x!==t && TERMS[x].spell!==T.spell)).slice(0,nWrong).map(x=>TERMS[x].spell);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
         prompt:`Which term means &ldquo;${T.def}&rdquo;?`, options:opts(T.spell, wrongs),
         explanation:`It is <b>${T.spell}</b>. ${T.note||""}` });
     }
     if(type==="spelling"){
-      const t=pick(terms); const T=TERMS[t];
+      const t=pickTerm(terms); const T=TERMS[t];
       /* Every distractor is a MISSPELLING of the answer. Offering other real
          terms turned this into a meaning question with a free giveaway — the
          player never had to look at the letters. */
@@ -4370,7 +4458,7 @@ window.__RD_QE = (function(){
         explanation:`It is <b>${T.spell}</b> — ${T.note||"apply the combining-vowel rule."}` });
     }
     if(type==="bodySystem"){
-      const t=pick(terms); const T=TERMS[t];
+      const t=pickTerm(terms); const T=TERMS[t];
       const systems=[...new Set(Object.keys(TERMS).map(x=>TERMS[x].system))];
       const wrongs=shuffle(systems.filter(s=>s!==T.system)).slice(0,nWrong);
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
@@ -4384,7 +4472,7 @@ window.__RD_QE = (function(){
          backwards and then printed a note proving the player right. */
       const pool=multiTerms.filter(x=>cvJunctions(TERMS[x]).length);
       if(!pool.length) return generate({types:["partMeaning"], prefer:kind});
-      const t=pick(pool); const T=TERMS[t]; const J=pick(cvJunctions(T));
+      const t=pickTerm(pool); const T=TERMS[t]; const J=pick(cvJunctions(T));
       const L=PARTS[J.left], R=PARTS[J.right], v=L.cv;
       const why = J.rootToRoot
         ? `Root to root <b>always</b> keeps the combining vowel — even before another vowel. That is why it is <b>${T.spell}</b> and not oste-arthritis.`.replace("oste-arthritis", L.stem+"-"+R.stem)
@@ -4589,7 +4677,7 @@ window.__RD_QE = (function(){
     return { total:ids.length, seen, strong, weak };
   }
 
-  return { generate, pickPart, distractParts, record, matchPairs, partWeight, snapshot,
+  return { generate, pickPart, pickTerm, distractParts, record, matchPairs, partWeight, termWeight, snapshot,
            cvJunctions, misspellings, ALL_TYPES, LORE_TYPES };
 })();
 </script>
