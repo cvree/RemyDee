@@ -1461,6 +1461,235 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 @media(max-width:560px){ .arcade-menu{grid-template-columns:1fr;} }
 
 </style>
+
+<style>
+/* ==================================================================
+   THE META LAYER — achievements, chests, relics, the Daily Trial,
+   and the Hall of Records. Same ink-wash grammar as the rest of the
+   game: lacquer, seal-red, gold leaf, parchment, lantern glow.
+   ================================================================== */
+
+/* ---------- the achievement banner: a seal pressed into the corner ---------- */
+#ach-rail{position:absolute;right:14px;top:64px;width:296px;z-index:70;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.ach-pop{
+  display:flex;gap:11px;align-items:center;
+  background:linear-gradient(100deg,rgba(25,21,16,.96),rgba(43,36,28,.96));
+  border:1px solid var(--gold);border-left:3px solid var(--cinnabar);
+  border-radius:var(--r-sm);padding:10px 13px;color:var(--rice);
+  box-shadow:0 14px 34px rgba(0,0,0,.55), 0 0 0 1px rgba(189,157,95,.16) inset;
+  transform:translateX(120%);opacity:0;
+  animation:achIn .58s var(--ease-back) forwards, achOut .5s var(--ease) 4.4s forwards;
+}
+@keyframes achIn{to{transform:none;opacity:1;}}
+@keyframes achOut{to{transform:translateX(120%);opacity:0;}}
+html[data-motion="reduced"] .ach-pop{animation:none;transform:none;opacity:1;}
+.ach-pop .apg{
+  flex:0 0 40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-cal);font-size:19px;font-weight:700;color:#1b150e;
+  background:radial-gradient(circle at 34% 30%,var(--gold-soft),var(--gold) 62%,#8e7233);
+  box-shadow:0 0 16px rgba(189,157,95,.5);
+}
+.ach-pop.t-jade .apg{background:radial-gradient(circle at 34% 30%,#a8ccb6,var(--jade) 62%,#22402f);color:#eef6f0;}
+.ach-pop.t-gold .apg{background:radial-gradient(circle at 34% 30%,#f0dba6,var(--gold) 60%,#7d631f);}
+.ach-pop.t-silver .apg{background:radial-gradient(circle at 34% 30%,#f2f2ee,#b9b7ac 62%,#6f6d64);}
+.ach-pop.t-bronze .apg{background:radial-gradient(circle at 34% 30%,#e0b58a,#a9724a 62%,#5f3c24);}
+.ach-pop .apt{font-family:var(--font-cal);font-weight:700;font-size:.92rem;line-height:1.25;}
+.ach-pop .apd{font-size:.75rem;opacity:.8;line-height:1.35;margin-top:2px;}
+.ach-pop .ape{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold-soft);opacity:.9;}
+
+/* ---------- the trophy hall ---------- */
+.ach-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+.ach-stat{background:var(--parch);border:1px solid var(--ink-line);border-radius:var(--r-sm);
+  padding:10px 12px;text-align:center;}
+.ach-stat .v{font-family:var(--font-cal);font-size:1.5rem;font-weight:700;color:var(--cinnabar);line-height:1;}
+.ach-stat .l{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--jade-deep);margin-top:5px;}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:11px;}
+.ach-card{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;text-align:left;
+  background:var(--parch);border:1px solid var(--ink-line);border-radius:var(--r-sm);
+  position:relative;overflow:hidden;transition:transform .22s var(--ease),box-shadow .22s var(--ease);}
+.ach-card.got{border-color:var(--gold);
+  background:linear-gradient(150deg,var(--parch),rgba(189,157,95,.15));
+  box-shadow:0 3px 0 rgba(189,157,95,.28) inset;}
+.ach-card.got:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(20,14,8,.2);}
+.ach-card.locked{opacity:.58;filter:grayscale(.72);}
+.ach-card .ag{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-cal);font-size:17px;font-weight:700;color:#1b150e;
+  background:radial-gradient(circle at 34% 30%,var(--gold-soft),var(--gold) 62%,#8e7233);}
+.ach-card.locked .ag{background:var(--rice-3);color:var(--ink-line);}
+.ach-card.t-jade.got .ag{background:radial-gradient(circle at 34% 30%,#a8ccb6,var(--jade) 62%,#22402f);color:#eef6f0;}
+.ach-card.t-silver.got .ag{background:radial-gradient(circle at 34% 30%,#f2f2ee,#b9b7ac 62%,#6f6d64);}
+.ach-card.t-bronze.got .ag{background:radial-gradient(circle at 34% 30%,#e0b58a,#a9724a 62%,#5f3c24);}
+.ach-card .an{font-family:var(--font-cal);font-weight:700;font-size:.9rem;line-height:1.25;}
+.ach-card .ad{font-size:.76rem;color:var(--ink-soft);opacity:.85;margin-top:3px;line-height:1.4;}
+.ach-card .abar{height:3px;background:var(--rice-3);border-radius:2px;margin-top:7px;overflow:hidden;}
+.ach-card .abar i{display:block;height:100%;background:var(--jade);border-radius:2px;transition:width .5s var(--ease);}
+.ach-card .apr{font-size:.68rem;color:var(--jade-deep);margin-top:4px;}
+.ach-sect{font-family:var(--font-cal);font-weight:700;font-size:1rem;margin:18px 0 9px;
+  padding-bottom:5px;border-bottom:1px solid var(--ink-line);display:flex;
+  justify-content:space-between;align-items:baseline;}
+.ach-sect span{font-size:.74rem;font-weight:400;color:var(--jade-deep);letter-spacing:.08em;}
+
+/* ---------- the chest ceremony ---------- */
+#chest-veil{position:absolute;inset:0;z-index:120;display:none;
+  align-items:center;justify-content:center;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 46%,rgba(38,30,20,.82),rgba(8,6,4,.96));
+  backdrop-filter:blur(3px);}
+#chest-veil.show{display:flex;}
+.chest-rays{position:absolute;width:150%;height:150%;pointer-events:none;opacity:0;
+  background:conic-gradient(from 0deg,
+    transparent 0deg,rgba(232,205,140,.2) 5deg,transparent 11deg,
+    transparent 26deg,rgba(232,205,140,.15) 31deg,transparent 37deg,
+    transparent 55deg,rgba(232,205,140,.22) 60deg,transparent 66deg,
+    transparent 88deg,rgba(232,205,140,.13) 93deg,transparent 99deg,
+    transparent 124deg,rgba(232,205,140,.2) 129deg,transparent 135deg,
+    transparent 160deg,rgba(232,205,140,.15) 165deg,transparent 171deg,
+    transparent 200deg,rgba(232,205,140,.2) 205deg,transparent 211deg,
+    transparent 240deg,rgba(232,205,140,.14) 245deg,transparent 251deg,
+    transparent 280deg,rgba(232,205,140,.21) 285deg,transparent 291deg,
+    transparent 320deg,rgba(232,205,140,.16) 325deg,transparent 331deg,
+    transparent 360deg);
+  animation:rayspin 26s linear infinite;}
+#chest-veil.opened .chest-rays{opacity:1;transition:opacity 1s var(--ease);}
+@keyframes rayspin{to{transform:rotate(360deg);}}
+html[data-motion="reduced"] .chest-rays{animation:none;}
+.chest-box{position:relative;width:210px;height:168px;cursor:pointer;
+  filter:drop-shadow(0 18px 34px rgba(0,0,0,.6));}
+.chest-box svg{width:100%;height:100%;overflow:visible;}
+.chest-lid{transform-origin:50% 78%;transition:transform .62s var(--ease-back);}
+#chest-veil.opened .chest-lid{transform:rotate(-104deg) translateY(-4px);}
+.chest-box.shake{animation:chestShake .34s var(--ease) 3;}
+@keyframes chestShake{
+  0%,100%{transform:none;} 22%{transform:translateX(-6px) rotate(-1.6deg);}
+  62%{transform:translateX(6px) rotate(1.6deg);}}
+.chest-hint{margin-top:20px;color:var(--gold-soft);letter-spacing:.2em;
+  text-transform:uppercase;font-size:.72rem;animation:hintPulse 1.7s ease-in-out infinite;}
+@keyframes hintPulse{0%,100%{opacity:.45;}50%{opacity:1;}}
+#chest-veil.opened .chest-hint{display:none;}
+.chest-eyebrow{color:var(--gold);letter-spacing:.26em;text-transform:uppercase;
+  font-size:.72rem;margin-bottom:6px;}
+.chest-rank{font-family:var(--font-cal);font-size:2rem;font-weight:700;
+  color:var(--rice);margin-bottom:18px;text-shadow:0 3px 18px rgba(0,0,0,.7);}
+.chest-rank.r-legendary{color:#f2d78e;text-shadow:0 0 26px rgba(232,205,140,.7);}
+.chest-rank.r-rare{color:#b6d4c2;}
+.chest-rank.r-uncommon{color:#d9cbaa;}
+.chest-loot{display:none;flex-direction:column;gap:9px;margin-top:22px;
+  width:min(430px,84%);}
+#chest-veil.opened .chest-loot{display:flex;}
+.loot-row{display:flex;gap:11px;align-items:center;padding:10px 13px;
+  background:linear-gradient(100deg,rgba(243,236,216,.96),rgba(226,213,184,.94));
+  border:1px solid var(--gold);border-radius:var(--r-sm);
+  opacity:0;transform:translateY(14px) scale(.96);
+  animation:lootIn .5s var(--ease-back) forwards;}
+@keyframes lootIn{to{opacity:1;transform:none;}}
+html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
+.loot-row.rare{border-color:var(--cinnabar);box-shadow:0 0 22px rgba(181,50,43,.32);}
+.loot-row .lg{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-cal);font-size:16px;font-weight:700;
+  background:radial-gradient(circle at 34% 30%,var(--gold-soft),var(--gold) 64%,#8e7233);color:#1b150e;}
+.loot-row .ln{font-family:var(--font-cal);font-weight:700;font-size:.92rem;}
+.loot-row .ll{font-size:.74rem;color:var(--jade-deep);margin-top:2px;line-height:1.35;}
+.chest-done{margin-top:20px;display:none;}
+#chest-veil.opened .chest-done{display:block;animation:achIn .5s var(--ease) .9s backwards;}
+
+/* ---------- relics ---------- */
+.relic-sets{display:flex;flex-direction:column;gap:16px;}
+.relic-set{border:1px solid var(--ink-line);border-radius:var(--r-md);
+  padding:13px 14px;background:var(--parch);}
+.relic-set.complete{border-color:var(--gold);
+  background:linear-gradient(150deg,var(--parch),rgba(189,157,95,.16));}
+.rs-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:9px;}
+.rs-name{font-family:var(--font-cal);font-weight:700;}
+.rs-bonus{font-size:.74rem;color:var(--jade-deep);text-align:right;max-width:58%;}
+.relic-set.complete .rs-bonus{color:var(--cinnabar-deep);font-weight:600;}
+.rs-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+.relic{display:flex;gap:9px;align-items:center;padding:8px 9px;border-radius:var(--r-sm);
+  background:var(--rice);border:1px solid var(--ink-line);}
+.relic.have{border-color:var(--gold);background:var(--rice-2);}
+.relic.miss{opacity:.5;filter:grayscale(.8);}
+.relic .rg{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-cal);font-size:13px;background:var(--rice-3);color:var(--ink);}
+.relic.have .rg{background:radial-gradient(circle at 34% 30%,var(--gold-soft),var(--gold) 64%,#8e7233);}
+.relic .rn{font-size:.78rem;font-weight:600;line-height:1.2;}
+.relic .re{font-size:.68rem;color:var(--jade-deep);margin-top:1px;}
+
+/* ---------- the Daily Trial ---------- */
+.daily-card{position:relative;overflow:hidden;text-align:left;}
+.daily-card .dc-seal{position:absolute;right:-14px;top:-14px;width:78px;height:78px;
+  border-radius:50%;display:grid;place-items:center;font-family:var(--font-cal);
+  font-size:26px;color:rgba(181,50,43,.2);border:2px solid rgba(181,50,43,.16);
+  transform:rotate(-12deg);pointer-events:none;}
+.daily-card.done .dc-seal{color:var(--cinnabar);border-color:var(--cinnabar);}
+.dc-streak{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;
+  color:var(--cinnabar-deep);font-weight:600;}
+.dc-flames{letter-spacing:1px;}
+.dc-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:.74rem;color:var(--jade-deep);margin:6px 0 10px;}
+.medal{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  font-size:11px;font-family:var(--font-cal);font-weight:700;color:#1b150e;}
+.medal.m-gold{background:radial-gradient(circle at 34% 30%,#f0dba6,var(--gold) 60%,#7d631f);}
+.medal.m-silver{background:radial-gradient(circle at 34% 30%,#f2f2ee,#b9b7ac 62%,#6f6d64);}
+.medal.m-bronze{background:radial-gradient(circle at 34% 30%,#e0b58a,#a9724a 62%,#5f3c24);}
+.medal.m-none{background:var(--rice-3);color:var(--ink-line);}
+
+.trial-wrap{max-width:720px;margin:0 auto;}
+.trial-hud{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:9px 13px;background:var(--parch);border:1px solid var(--ink-line);
+  border-radius:var(--r-sm);margin-bottom:14px;}
+.trial-hud .th-k{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--jade-deep);}
+.trial-hud .th-v{font-family:var(--font-cal);font-weight:700;font-size:1.15rem;line-height:1;}
+.trial-lives{letter-spacing:3px;color:var(--cinnabar);font-size:1.05rem;}
+.trial-lives .spent{opacity:.22;}
+.trial-clock{height:5px;background:var(--rice-3);border-radius:3px;overflow:hidden;margin-bottom:16px;}
+.trial-clock i{display:block;height:100%;background:linear-gradient(90deg,var(--jade),var(--gold));
+  transition:width .1s linear;}
+.trial-clock.hot i{background:linear-gradient(90deg,var(--gold),var(--cinnabar));}
+.trial-q{background:var(--parch);border:1px solid var(--ink-line);border-radius:var(--r-md);
+  padding:20px 18px;text-align:center;margin-bottom:14px;}
+.trial-q .tq-type{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--jade-deep);margin-bottom:8px;}
+.trial-q .tq-text{font-family:var(--font-cal);font-size:clamp(17px,2.5vw,25px);
+  font-weight:700;line-height:1.35;}
+.trial-q .tq-sub{font-size:.8rem;color:var(--jade-deep);margin-top:7px;}
+.trial-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.trial-opt{padding:14px 13px;text-align:center;background:var(--rice);
+  border:1px solid var(--ink-line);border-radius:var(--r-sm);font-size:.94rem;
+  transition:transform .16s var(--ease),background .16s var(--ease),border-color .16s var(--ease);}
+.trial-opt:hover:not(:disabled){transform:translateY(-2px);background:var(--rice-2);border-color:var(--gold);}
+.trial-opt.right{background:rgba(79,114,97,.24);border-color:var(--jade);animation:optRight .4s var(--ease-back);}
+.trial-opt.wrong{background:rgba(181,50,43,.2);border-color:var(--cinnabar);animation:optWrong .38s var(--ease);}
+@keyframes optRight{50%{transform:scale(1.05);}}
+@keyframes optWrong{0%,100%{transform:none;}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+.trial-teach{margin-top:14px;padding:13px 15px;text-align:left;
+  background:linear-gradient(100deg,rgba(79,114,97,.14),rgba(79,114,97,.05));
+  border-left:3px solid var(--jade);border-radius:var(--r-sm);
+  animation:achIn .38s var(--ease);}
+.trial-teach.miss{background:linear-gradient(100deg,rgba(181,50,43,.13),rgba(181,50,43,.04));
+  border-left-color:var(--cinnabar);}
+.trial-teach .tt-h{font-family:var(--font-cal);font-weight:700;font-size:.9rem;margin-bottom:4px;}
+.trial-teach .tt-b{font-size:.82rem;line-height:1.5;}
+.trial-pips{display:flex;gap:4px;justify-content:center;margin-bottom:12px;}
+.trial-pips i{width:16px;height:4px;border-radius:2px;background:var(--rice-3);}
+.trial-pips i.ok{background:var(--jade);}
+.trial-pips i.no{background:var(--cinnabar);}
+.trial-pips i.now{background:var(--gold);box-shadow:0 0 8px rgba(189,157,95,.7);}
+
+/* ---------- the Hall of Records ---------- */
+.rec-tabs{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
+.rec-tab{padding:7px 15px;border:1px solid var(--ink-line);border-radius:100px;
+  background:var(--rice);font-size:.82rem;transition:all .18s var(--ease);}
+.rec-tab.on{background:var(--ink);color:var(--rice);border-color:var(--ink);}
+.rec-list{display:flex;flex-direction:column;gap:6px;max-width:620px;margin:0 auto;}
+.rec-row{display:grid;grid-template-columns:34px 1fr auto;gap:11px;align-items:center;
+  padding:10px 13px;background:var(--parch);border:1px solid var(--ink-line);
+  border-radius:var(--r-sm);}
+.rec-row.top{border-color:var(--gold);background:linear-gradient(100deg,var(--parch),rgba(189,157,95,.16));}
+.rec-row .rk{font-family:var(--font-cal);font-weight:700;font-size:1.05rem;text-align:center;color:var(--jade-deep);}
+.rec-row.top .rk{color:var(--cinnabar);}
+.rec-row .rd{font-size:.72rem;color:var(--jade-deep);margin-top:2px;}
+.rec-row .rv{font-family:var(--font-cal);font-weight:700;font-size:1.15rem;color:var(--ink);}
+.rec-empty{text-align:center;color:var(--jade-deep);padding:26px 12px;font-size:.88rem;}
+</style>
 </head>
 <body>
 <div id="loader">
@@ -1547,6 +1776,7 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
         <span class="stat"><span class="k">Pages</span> <span id="hub-pages">0</span>/8</span>
         <span class="spacer"></span>
         <button class="icon-btn" id="hub-arcade" title="Training Hall" aria-label="Open Training Hall">練</button>
+        <button class="icon-btn" id="hub-hall" title="The Hall of Records" aria-label="Open the Hall of Records">殿</button>
         <button class="icon-btn" id="hub-gloss" title="Lexicon" aria-label="Open lexicon">冊</button>
         <button class="icon-btn" id="hub-settings" title="Settings" aria-label="Open settings">⚙</button>
       </header>
@@ -1567,6 +1797,8 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
             <div class="order-list" id="order-list"></div>
           </div>
           <aside>
+            <!-- THE DAILY TRIAL — mounted by the meta layer -->
+            <div id="daily-mount"></div>
             <!-- THE PROGRESSION PANEL: what you're doing, what it earns, what's next -->
             <div class="panel aside-card path-card spotlight" data-spot id="path-card">
               <h3>The Path of the Reed</h3>
@@ -3573,7 +3805,30 @@ const Audio2 = (function(){
     coin(){ tone(1047,0.08,"square",0.2); setTimeout(()=>tone(1568,0.12,"square",0.18),70); },
     page(){ noise(0.4,0.13,2200); setTimeout(()=>tone(784,0.3,"sine",0.2),120); },
     chime(){ tone(784,0.2,"sine",0.22); setTimeout(()=>tone(1047,0.3,"sine",0.2),120); setTimeout(()=>tone(1318,0.4,"sine",0.16),260); },
-    whoosh(){ noise(0.4,0.12,500); }
+    whoosh(){ noise(0.4,0.12,500); },
+    /* ---- the meta layer's cues ---- */
+    // a trophy: a struck bell, then the fifth above it, then the octave —
+    // rising and settled, so it reads as an arrival rather than a ping
+    trophy(){ tone(659,0.16,"triangle",0.26);
+      setTimeout(()=>tone(988,0.20,"triangle",0.24),110);
+      setTimeout(()=>tone(1319,0.42,"sine",0.20),240);
+      setTimeout(()=>noise(0.5,0.05,3200),240); },
+    // a chest straining before it gives: low wood-grind under a rattle
+    chestRattle(){ noise(0.34,0.20,240); tone(74,0.30,"sawtooth",0.16);
+      setTimeout(()=>noise(0.14,0.13,520),150); },
+    // the lid: a hinge shriek, a bright bloom, and air moving out of the box
+    chestOpen(){ noise(0.20,0.16,1500);
+      setTimeout(()=>{ tone(523,0.5,"sine",0.22); tone(784,0.5,"sine",0.16);
+                       tone(1047,0.6,"sine",0.13); },90);
+      setTimeout(()=>noise(0.7,0.08,900),120);
+      setTimeout(()=>tone(1568,0.5,"triangle",0.10),320); },
+    // a relic surfacing — deliberately unlike everything else in the game
+    relic(){ tone(196,0.7,"sine",0.20);
+      setTimeout(()=>tone(294,0.6,"sine",0.17),120);
+      setTimeout(()=>tone(440,0.55,"triangle",0.15),240);
+      setTimeout(()=>tone(880,0.9,"sine",0.11),380); },
+    // the Trial clock in its last seconds
+    tock(){ tone(1200,0.04,"square",0.09); }
   };
   const scale=[392,440,523,587,659,784];
   function startMusic(){
@@ -3794,17 +4049,27 @@ function diffTune(){
   const t=diffTier();
   const lerp=(a,b)=>a+(b-a)*t;
   const relax = S.settings && S.settings.timerRelax;   // accessibility, on top of difficulty
+  /* RELICS ARE REAL. Every collectible's effect is summed here and folded into
+     the same tuning table difficulty uses, so a recovered relic changes the road
+     the player actually walks rather than decorating a menu. Relics only ever
+     help, and they are capped so no collection can trivialise the walk. */
+  const M2=window.__RD_META;
+  const rb=(k,cap)=>{ if(!M2||!M2.bonus) return 0;
+    const v=M2.bonus(k)||0; return Math.max(-cap, Math.min(cap, v)); };
+  const rGate=rb("gateLead",0.45), rDrain=rb("drain",0.40),
+        rStart=rb("startMul",0.25), rHeal=rb("heal",0.60), rDecay=rb("momentumDecay",0.45);
   return {
     tier:t, key:diffKey(), band:tierBandName(t),
+    relics:{gateLead:rGate, drain:rDrain, startMul:rStart, heal:rHeal, momentumDecay:rDecay},
     density:  lerp(0.62, 1.55),   // hazard spawn rate
     dmg:      lerp(0.45, 1.40),   // hazard bite
-    drain:    lerp(0.55, 1.50),   // stamina/morale/safety clock — the run's real timer
-    startMul: lerp(1.22, 0.86),   // how much the squad sets out with
-    gateLead: lerp(1.55, 0.72),   // how much road you get to read a gate over
+    drain:    lerp(0.55, 1.50) * (1+rDrain),  // the run's real timer
+    startMul: lerp(1.22, 0.86) * (1+rStart),  // how much the squad sets out with
+    gateLead: lerp(1.55, 0.72) * (1+rGate),   // how much road you get to read a gate over
     choices:  t>=0.72 ? 4 : 3,    // answers offered per question
     mercyDim: t<0.28,             // one wrong door dimmed at every gate
-    momentumDecay: lerp(0.18, 0.46),
-    healMul:  lerp(1.35, 0.85),   // what a completed term restores
+    momentumDecay: lerp(0.18, 0.46) * (1+rDecay),
+    healMul:  lerp(1.35, 0.85) * (1+rHeal),   // what a completed term restores
     relax:    !!relax
   };
 }
@@ -4206,7 +4471,21 @@ window.__RD_QE = (function(){
      part that is not yet due is suppressed rather than banned, an overdue part
      climbs steadily, and a part you have dropped repeatedly keeps a permanent
      claim on your attention. */
+  /* UNIFORM MODE. The Daily Trial must hand every player the same twelve
+     questions, so for its duration adaptive weighting is switched off — with a
+     seeded Math.random that makes the draw fully reproducible from the date
+     alone, which is what makes the day's score comparable. */
+  let uniform=false;
+  function setUniform(v){
+    uniform=!!v;
+    // The recency buffers are live state that carries between calls, so two
+    // builds of the same day's Trial would diverge on the very first draw.
+    // Entering or leaving uniform mode clears them, which is what makes the
+    // day's twelve reproducible from the date alone.
+    recent=[]; recentTerms=[];
+  }
   function partWeight(id){
+    if(uniform) return 1;
     const m=pstat(id), run=E.S().runCount||0;
     if(m.seen===0) return 1.9;                          // never introduced — teach it
     if(m.ef==null){                                     // pre-v8 save, no schedule yet
@@ -4233,6 +4512,7 @@ window.__RD_QE = (function(){
     return t || {recognition:false,construction:false,definition:false,application:false};
   }
   function termWeight(id){
+    if(uniform) return 1;
     const T=TERMS[id]; if(!T) return 1;
     // a term is as due as the parts that build it, plus a nudge for the
     // cognitive modes it has never been tested in
@@ -4305,11 +4585,24 @@ window.__RD_QE = (function(){
       && PARTS[x].lang && PARTS[x].lang!==p.lang) || null;
   }
   /* write results back into the shared mastery model */
-  function record(conceptIds, ok, fast){
+  function record(conceptIds, ok, fast, q){
     (conceptIds||[]).forEach(id=>{ if(PARTS[id]){ E.markPartSeen(id); E.markPartResult(id, ok, fast); }});
     // THE ROAD THAT LEARNS reads every answer the player gives, anywhere in the
     // game — the bench, the forge, the road, the Training Hall all feed one number
     if(E.noteSkillAnswer) E.noteSkillAnswer(!!ok);
+    // ...and so does the trophy case. Pass the question itself where the caller
+    // has it and the origin/Chronicle counters fill in too.
+    const M2=window.__RD_META;
+    if(M2 && M2.note){
+      const d={ok:!!ok};
+      if(q){
+        d.qtype=q.type; d.figureId=q.figureId;
+        if(q.type==="mythBuster") d.wasLie=/is lying/i.test(String(q.correctLabel||""));
+        if(q.type==="originPair" && q.conceptIds && PARTS[q.conceptIds[0]])
+          d.twinMean=PARTS[q.conceptIds[0]].mean.split(",")[0].trim().toLowerCase();
+      }
+      M2.note("answer", d);
+    }
   }
 
   /* ---- misspelling generator for spelling items ---- */
@@ -4677,7 +4970,7 @@ window.__RD_QE = (function(){
     return { total:ids.length, seen, strong, weak };
   }
 
-  return { generate, pickPart, pickTerm, distractParts, record, matchPairs, partWeight, termWeight, snapshot,
+  return { generate, pickPart, pickTerm, distractParts, record, matchPairs, partWeight, termWeight, snapshot, setUniform,
            cvJunctions, misspellings, ALL_TYPES, LORE_TYPES };
 })();
 </script>
@@ -4843,6 +5136,11 @@ function showHub(){
     $('#radix-note').textContent = ch
       ? "Radix sniffs the air — a root-seal calls from "+ch.dest+"."
       : "Radix dozes by the tea kettle, the roads all walked.";
+    // the meta layer paints its own hub card and owns everything inside it
+    const dm=$('#daily-mount');
+    if(dm && window.__RD_META){ dm.innerHTML=""; window.__RD_META.renderHubCard(dm); }
+    const hh=$('#hub-hall');
+    if(hh) hh.onclick=()=>{ Audio2.sfx.paper(); if(window.__RD_META) window.__RD_META.open(); };
     const eb=$('#endless-best');
     if(eb) eb.textContent = S().endlessBest ? `Best distance: ${(S().endlessBest).toFixed(1)} · ${S().endlessTerms||0} terms` : "No runs yet.";
     const es=$('#endless-start');
@@ -7461,6 +7759,7 @@ function stepTest(){
   const qtier = isMaster ? "masterwork"
               : q>=0.82?"fine" : q>=0.58?"ok" : (q>=0.34||relax)?"flawed" : "ruined";
   W.cur.qtier=qtier;
+  if(window.__RD_META) window.__RD_META.note("craft", {perfect:isMaster, tier:qtier});
   // quality reaches all the way through to the road: fine work is genuinely
   // stronger, flawed work is genuinely worse — the grade is not cosmetic
   const QMULT={masterwork:1.5, fine:1.25, ok:1.0, flawed:0.55, ruined:0};
@@ -9182,6 +9481,8 @@ function endEndlessRoad(){
   const s=S();
   const isNewBest = scoreVal > (s.endlessScore||0);
   if(isNewBest){ s.endlessScore=scoreVal; s.endlessBest=distance; s.endlessTerms=terms; }
+  if(window.__RD_META) window.__RD_META.recordScore("endless", scoreVal,
+    {label:`${distance} distance · ${terms} terms`, depth:distance});
   persist();
   Audio2.sfx.bad(); FX.buzz(30);
   const dEl=$('#er-dist'), bEl=$('#er-body'), panel=$('#endless-result');
@@ -10359,7 +10660,7 @@ function answer(correct, btn, correctText, battle, flavor, q){
   const box=$('#mini-challenge');
   M.questionOpen=false;
   // feed the shared mastery model, and remember weak concepts to re-ask this run
-  if(q && q.conceptIds){ window.__RD_QE.record(q.conceptIds, correct);
+  if(q && q.conceptIds){ window.__RD_QE.record(q.conceptIds, correct, false, q);
     if(!correct){ pushDebt(q.conceptIds); } }
   $$('#mini-opts .btn').forEach(b=>{ b.disabled=true; if(b.textContent===correctText) b.classList.add("jade"); });
   if(correct){
@@ -11185,9 +11486,34 @@ function showResult(){
     // advance to next chapter
     if(!alreadyDone) S().chapter=Math.min(CHAPTERS.length, (CHAPTERS.findIndex(c=>c.id===chapter.id))+1);
     persist();
+    /* THE META LAYER READS THE RUN. Trophies, lifetime counters and the
+       expedition leaderboard all take their numbers from the same arrival the
+       player just earned — nothing here is a participation award. */
+    const META=window.__RD_META;
+    if(META){
+      const wrongsOnRoad = M ? ((M.challengesDone||0)-(M.challengesWon||0)) : 0;
+      META.note("run", {
+        clean: wrongsOnRoad===0 && (M?(M.challengesDone||0)>=3:false),
+        whole: arrivalHealth>=0.92,
+        flow: M?(M.flowEntered||0):0,
+        momentum: M?M.bestMomentum:0,
+        heirloom: !!S().heirloom
+      });
+      if(chapter.id==="ch7" && grade!=="poor") META.note("boss",{});
+      META.recordScore("road", Math.round(overall*1000),
+        {label:`${chapter.dest} · ${gInfo[grade].ch}`});
+    }
     $('#result-continue').textContent = isFinal ? "See how the tale ends →" : "Back to the school →";
     $('#result-continue').onclick=()=>{ Audio2.sfx.paper();
-      if(isFinal){ showEnding(); } else window.__RD_SCREENS.showHub(); };
+      const after=()=>{ if(isFinal){ showEnding(); } else window.__RD_SCREENS.showHub(); };
+      /* A chest for every arrival, but the RANK is bought with the walk: an
+         excellent road opens reliquaries, a poor one opens a travelling case. */
+      if(META && META.grantChest){
+        const why = grade==="excellent" ? "The waystation keeper owed you a favour"
+                  : grade==="poor" ? "Salvaged from the road" : "Payment at the waystation";
+        META.grantChest(overall, why, after);
+      } else after();
+    };
   }});
 }
 /* THE UNLOCK CARD — progression the player cannot miss. One new pattern per
@@ -11448,6 +11774,7 @@ function boot(){
   E.applySettings();
   FX.bindClickSpark();
   bindPauseMenu();
+  if(window.__RD_META) window.__RD_META.init();
   // hide loader
   const loader=$('#loader'); if(loader){ setTimeout(()=>{ loader.classList.add("hide");
     setTimeout(()=>loader.remove(),600); }, 380); }
@@ -11558,6 +11885,8 @@ function stageMode(mode){
 }
 function endCard(stage, mode, score, breakdownHTML){
   const nb=saveBest(mode, score);
+  if(window.__RD_META) window.__RD_META.recordScore(mode, score,
+    {label: mode==="slice"?"Reed Slice":"Seal Match"});
   if(nb) Audio2.sfx.chime(); else Audio2.sfx.page();
   const snap=QE.snapshot();
   const card=el("div","ar-endcard");
@@ -11916,6 +12245,1019 @@ function startMatch(){
 }
 
 window.__RD_ARCADE = { open };
+})();
+</script>
+
+<script>
+/* ==================================================================
+   THE META LAYER — reasons to come back.
+
+   Four systems that all pay out for the same thing: knowing words.
+     · TROPHIES  — 37 achievements, weighted toward learning over grinding
+     · RELICS    — 16 collectible pieces in 4 sets, with real road effects
+     · CHESTS    — the reward ceremony; rank earned by how you played
+     · THE DAILY TRIAL — twelve questions, the same twelve for everyone,
+                   seeded off the UTC date, with a streak worth protecting
+   ================================================================== */
+window.__RD_META = (function(){
+"use strict";
+const D = window.__RD_DATA;
+const E = window.__RD_ENG;
+const { $, $$, el, clamp, shuffle, pick, toast, PARTS, TERMS } = D;
+const S = () => E.S();
+const Audio2 = E.Audio2;
+const FX = window.FX;
+
+/* ==================================================================
+   1. RELICS — collectible equipment, found in chests, worn forever.
+   Every effect is read by a live system; none of them is a label.
+   ================================================================== */
+const RELIC_SETS = {
+  scribe:{ id:"scribe", name:"The Scribe's Hand", glyph:"筆",
+    lore:"Tools for setting a word down before it can be taken away.",
+    bonus:{ gateLead:0.20 }, bonusText:"Rune gates arrive 20% earlier — more road to read them over." },
+  walker:{ id:"walker", name:"The Walker's Road", glyph:"路",
+    lore:"What a company carries when the waystation is still two days off.",
+    bonus:{ drain:-0.15 }, bonusText:"The squad tires 15% more slowly on every road." },
+  physician:{ id:"physician", name:"The Physician's Case", glyph:"醫",
+    lore:"Nine needles, a moxa cup, and the patience to use them.",
+    bonus:{ heal:0.25 }, bonusText:"A completed term restores 25% more to the party." },
+  shadow:{ id:"shadow", name:"The Archive's Shadow", glyph:"影",
+    lore:"Taken from the Keepers themselves. They do not know it is gone.",
+    bonus:{ momentumDecay:-0.22 }, bonusText:"Momentum bleeds away 22% more slowly." }
+};
+const RELICS = {
+  /* -- The Scribe's Hand -- */
+  seal:    { id:"seal",    set:"scribe", name:"Cinnabar seal",     glyph:"印", rarity:"uncommon",
+             eff:{gateLead:0.05}, effText:"+5% gate lead",
+             lore:"Pressed once, it makes a claim nobody can quietly edit." },
+  brush:   { id:"brush",   set:"scribe", name:"Split-reed brush",  glyph:"毫", rarity:"common",
+             eff:{ink:0.08}, effText:"+8% ink earned",
+             lore:"Worn to a fork. It writes two strokes at once, if you let it." },
+  stone:   { id:"stone",   set:"scribe", name:"Ox-horn inkstone",  glyph:"硯", rarity:"rare",
+             eff:{gateLead:0.07, ink:0.05}, effText:"+7% gate lead, +5% ink",
+             lore:"Cold to the touch in any weather. The ink never thickens." },
+  sleeve:  { id:"sleeve",  set:"scribe", name:"Silk sleeve-scroll", glyph:"卷", rarity:"uncommon",
+             eff:{hintPlus:1}, effText:"+1 hint charge each mission",
+             lore:"A whole lexicon, rolled thin enough to hide in a cuff." },
+  /* -- The Walker's Road -- */
+  cape:    { id:"cape",    set:"walker", name:"Straw rain-cape",   glyph:"蓑", rarity:"common",
+             eff:{drain:-0.04}, effText:"-4% stamina drain",
+             lore:"Smells of three wet autumns. Has outlasted all of them." },
+  sandals: { id:"sandals", set:"walker", name:"Iron-shod sandals", glyph:"履", rarity:"uncommon",
+             eff:{drain:-0.05, radius:6}, effText:"-5% drain, wider reach",
+             lore:"Heavy going uphill. Nothing on the scree can throw you." },
+  bell:    { id:"bell",    set:"walker", name:"Bronze road-bell",  glyph:"鈴", rarity:"rare",
+             eff:{startMul:0.08}, effText:"+8% starting condition",
+             lore:"Rung at each waystation, so the next one knows you are coming." },
+  gourd:   { id:"gourd",   set:"walker", name:"Lacquered gourd",   glyph:"壺", rarity:"common",
+             eff:{heal:0.08}, effText:"+8% recovery from terms",
+             lore:"Holds more than it looks like it should. Nobody asks why." },
+  /* -- The Physician's Case -- */
+  needles: { id:"needles", set:"physician", name:"Nine-needle roll", glyph:"針", rarity:"rare",
+             eff:{heal:0.12}, effText:"+12% recovery from terms",
+             lore:"Nine gauges, nine uses. The ninth is never explained to apprentices." },
+  moxa:    { id:"moxa",    set:"physician", name:"Copper moxa cup", glyph:"灸", rarity:"common",
+             eff:{heal:0.06}, effText:"+6% recovery from terms",
+             lore:"Warmth driven inward, where the cold got in." },
+  ring:    { id:"ring",    set:"physician", name:"Jade pulse-ring", glyph:"脈", rarity:"uncommon",
+             eff:{drain:-0.05}, effText:"-5% stamina drain",
+             lore:"Worn on the reading hand. You feel the count before you take it." },
+  phial:   { id:"phial",   set:"physician", name:"Bitter-root phial", glyph:"藥", rarity:"uncommon",
+             eff:{emberPlus:1}, effText:"+1 ember at the bench",
+             lore:"Foul enough that whoever drinks it believes it is working." },
+  /* -- The Archive's Shadow -- */
+  veil:    { id:"veil",    set:"shadow", name:"Ash-grey veil",     glyph:"紗", rarity:"uncommon",
+             eff:{momentumDecay:-0.06}, effText:"-6% momentum decay",
+             lore:"Keeper's issue. In the right light you are simply not there." },
+  tally:   { id:"tally",   set:"shadow", name:"Blank tally-slip",  glyph:"籤", rarity:"common",
+             eff:{chestLuck:0.10}, effText:"+10% chest fortune",
+             lore:"Unfilled, and therefore able to say anything." },
+  nametag: { id:"nametag", set:"shadow", name:"Erased name-tag",   glyph:"名", rarity:"rare",
+             eff:{momentumDecay:-0.08, chestLuck:0.08}, effText:"-8% momentum decay, +8% fortune",
+             lore:"Someone walked out of the Archive and left this behind. Or was left behind by it." },
+  lens:    { id:"lens",    set:"shadow", name:"Keeper's cracked lens", glyph:"鏡", rarity:"legendary",
+             eff:{gateLead:0.08, momentumDecay:-0.06, ink:0.06},
+             effText:"+8% gate lead, -6% decay, +6% ink",
+             lore:"The crack runs through the centre. Everything read through it is doubled — and both readings are true." }
+};
+const RELIC_IDS = Object.keys(RELICS);
+const RARITY_RANK = {common:0, uncommon:1, rare:2, legendary:3};
+
+function haveRelic(id){ const r=S().relics; return !!(r && r[id]); }
+function relicCount(){ return Object.keys(S().relics||{}).length; }
+function setComplete(setId){
+  return RELIC_IDS.filter(id=>RELICS[id].set===setId).every(haveRelic);
+}
+function completeSets(){ return Object.keys(RELIC_SETS).filter(setComplete); }
+
+/* THE ONE READ POINT. Every relic effect and every completed-set bonus is
+   summed here, and the engine's tuning table asks this before it hands the
+   road its numbers — so a relic is a real modifier, not a line of text. */
+function bonus(key){
+  let v=0;
+  const owned=S().relics||{};
+  Object.keys(owned).forEach(id=>{
+    const r=RELICS[id]; if(r && r.eff && r.eff[key]!=null) v+=r.eff[key];
+  });
+  completeSets().forEach(sid=>{
+    const b=RELIC_SETS[sid].bonus; if(b && b[key]!=null) v+=b[key];
+  });
+  return v;
+}
+
+/* ==================================================================
+   2. TROPHIES — 37 achievements. The heavy rewards sit on LEARNING
+   (terms known, parts mastered, tongues told apart, myths caught),
+   not on hours logged. Anything reachable by grinding is bronze.
+   ================================================================== */
+function partsWith(fn){ const m=S().mastery.parts; return Object.keys(m).filter(id=>fn(m[id])); }
+function lt(k){ return (S().lifetime||{})[k]||0; }
+
+const GROUPS=[
+  {id:"lexicon",  name:"The Lexicon",      glyph:"冊"},
+  {id:"tongues",  name:"The Two Tongues",  glyph:"舌"},
+  {id:"chronicle",name:"The Chronicle",    glyph:"史"},
+  {id:"bench",    name:"The Bench",        glyph:"鍛"},
+  {id:"road",     name:"The Road",         glyph:"路"},
+  {id:"long",     name:"The Long Game",    glyph:"歲"}
+];
+/* prog() returns [have, need]. An achievement with need 1 renders as a plain
+   seal; anything larger renders a progress bar, because a trophy you cannot
+   see yourself approaching is not motivating, it is a surprise. */
+const ACH=[
+  /* ---- the Lexicon ---- */
+  {id:"term1",   g:"lexicon", t:"bronze", glyph:"一", n:"First Naming",
+   d:"Build your first term correctly.", prog:()=>[S().completedTerms.length,1]},
+  {id:"term10",  g:"lexicon", t:"bronze", glyph:"十", n:"Ten Names Kept",
+   d:"Build ten different terms.", prog:()=>[S().completedTerms.length,10]},
+  {id:"term30",  g:"lexicon", t:"silver", glyph:"卅", n:"A Working Vocabulary",
+   d:"Build thirty different terms.", prog:()=>[S().completedTerms.length,30]},
+  {id:"termAll", g:"lexicon", t:"jade",   glyph:"全", n:"The Lexicon Restored",
+   d:"Build every term in the book.", prog:()=>[S().completedTerms.length,Object.keys(TERMS).length]},
+  {id:"seenAll", g:"lexicon", t:"silver", glyph:"見", n:"Nothing Unread",
+   d:"Encounter every word-part at least once.",
+   prog:()=>[partsWith(m=>m.seen>0).length, Object.keys(PARTS).length]},
+  {id:"mast20",  g:"lexicon", t:"silver", glyph:"熟", n:"Twenty Held Fast",
+   d:"Carry twenty word-parts to a third correct recall.",
+   prog:()=>[partsWith(m=>(m.reps||0)>=3).length,20]},
+  {id:"mast50",  g:"lexicon", t:"gold",   glyph:"精", n:"Fifty Held Fast",
+   d:"Carry fifty word-parts to a third correct recall.",
+   prog:()=>[partsWith(m=>(m.reps||0)>=3).length,50]},
+  {id:"clean",   g:"lexicon", t:"gold",   glyph:"淨", n:"Not One Dropped",
+   d:"Finish a road without a single wrong answer.", prog:()=>[lt("cleanRuns")?1:0,1]},
+  {id:"debtfree",g:"lexicon", t:"silver", glyph:"償", n:"Debt Paid",
+   d:"Clear a review debt of five parts back down to nothing.",
+   prog:()=>[lt("debtCleared")?1:0,1]},
+  /* ---- the two tongues ---- */
+  {id:"orig1",   g:"tongues", t:"bronze", glyph:"源", n:"Where It Came From",
+   d:"Name a word-part's source language correctly.", prog:()=>[lt("origin"),1]},
+  {id:"orig25",  g:"tongues", t:"silver", glyph:"辨", n:"Ear for Both",
+   d:"Answer twenty-five origin questions correctly.", prog:()=>[lt("origin"),25]},
+  {id:"twins",   g:"tongues", t:"gold",   glyph:"雙", n:"Two Words, One Vein",
+   d:"Match every Greek root to its Latin twin.",
+   prog:()=>[Object.keys(S().lore.correct||{}).filter(k=>k.indexOf("twin:")===0).length,
+             (D.TWIN_ROOTS||[]).length]},
+  {id:"orig100", g:"tongues", t:"jade",   glyph:"通", n:"Fluent in Both Tongues",
+   d:"Answer a hundred origin questions correctly.", prog:()=>[lt("origin"),100]},
+  /* ---- the Chronicle ---- */
+  {id:"fig1",    g:"chronicle", t:"bronze", glyph:"初", n:"An Older Hand",
+   d:"Recognise a figure from the history of medicine.",
+   prog:()=>[(S().lore.seen||[]).length,1]},
+  {id:"fig8",    g:"chronicle", t:"silver", glyph:"半", n:"Half the Chronicle",
+   d:"Answer correctly on eight different figures.",
+   prog:()=>[Object.keys(S().lore.correct||{}).filter(k=>k.indexOf("fig:")===0).length,8]},
+  {id:"figAll",  g:"chronicle", t:"jade",   glyph:"史", n:"The Whole Chronicle",
+   d:"Answer correctly on every figure in the Chronicle.",
+   prog:()=>[Object.keys(S().lore.correct||{}).filter(k=>k.indexOf("fig:")===0).length,
+             D.FIGURE_ORDER.length]},
+  {id:"liar",    g:"chronicle", t:"gold",   glyph:"謊", n:"Caught in the Margin",
+   d:"Catch Radicida in ten lies.", prog:()=>[lt("liesCaught"),10]},
+  /* ---- the bench ---- */
+  {id:"craft1",  g:"bench", t:"bronze", glyph:"鍛", n:"First Piece",
+   d:"Forge anything at all.", prog:()=>[lt("crafts"),1]},
+  {id:"master1", g:"bench", t:"silver", glyph:"名", n:"Masterwork",
+   d:"Forge a piece that meets every rubric criterion.", prog:()=>[lt("perfectCrafts"),1]},
+  {id:"master5", g:"bench", t:"gold",   glyph:"匠", n:"The Maker's Eye",
+   d:"Forge five masterworks.", prog:()=>[lt("perfectCrafts"),5]},
+  {id:"bpAll",   g:"bench", t:"gold",   glyph:"圖", n:"Every Pattern Known",
+   d:"Unlock all eight commission patterns.", prog:()=>[(S().unlockedBps||[]).length,8]},
+  {id:"heir3",   g:"bench", t:"silver", glyph:"傳", n:"Handed Down",
+   d:"Carry an heirloom through three expeditions.", prog:()=>[lt("heirloomTrips"),3]},
+  /* ---- the road ---- */
+  {id:"mo5",     g:"road", t:"bronze", glyph:"勢", n:"Momentum",
+   d:"Drive the caravan to ×5 momentum.", prog:()=>[lt("bestMomentum")>=5?1:0,1]},
+  {id:"mo8",     g:"road", t:"gold",   glyph:"疾", n:"Unstoppable",
+   d:"Drive the caravan to ×8 momentum.", prog:()=>[lt("bestMomentum")>=8?1:0,1]},
+  {id:"flow3",   g:"road", t:"silver", glyph:"流", n:"In the Flow",
+   d:"Enter flow three times in a single road.", prog:()=>[lt("flow3")?1:0,1]},
+  {id:"whole",   g:"road", t:"gold",   glyph:"全", n:"Not a Scratch",
+   d:"Reach a waystation with the squad near full strength.", prog:()=>[lt("wholeArrivals"),1]},
+  {id:"end1000", g:"road", t:"silver", glyph:"遠", n:"A Thousand Paces",
+   d:"Reach 1,000 on the Endless Road.", prog:()=>[bestOf("endless"),1000]},
+  {id:"end2500", g:"road", t:"jade",   glyph:"無", n:"The Road Without End",
+   d:"Reach 2,500 on the Endless Road.", prog:()=>[bestOf("endless"),2500]},
+  {id:"boss",    g:"road", t:"gold",   glyph:"斬", n:"The Erasure Undone",
+   d:"Bring down what waits in the Great Archive.", prog:()=>[lt("bossesFelled"),1]},
+  /* ---- the long game ---- */
+  {id:"daily1",  g:"long", t:"bronze", glyph:"日", n:"Today's Twelve",
+   d:"Finish a Daily Trial.", prog:()=>[lt("dailies"),1]},
+  {id:"streak3", g:"long", t:"silver", glyph:"三", n:"Three Days Running",
+   d:"Hold a three-day Trial streak.", prog:()=>[S().daily.bestStreak||0,3]},
+  {id:"streak7", g:"long", t:"gold",   glyph:"七", n:"A Week of Mornings",
+   d:"Hold a seven-day Trial streak.", prog:()=>[S().daily.bestStreak||0,7]},
+  {id:"streak30",g:"long", t:"jade",   glyph:"月", n:"A Month of Mornings",
+   d:"Hold a thirty-day Trial streak.", prog:()=>[S().daily.bestStreak||0,30]},
+  {id:"gold1",   g:"long", t:"gold",   glyph:"金", n:"Gold Seal",
+   d:"Take a gold medal in the Daily Trial.",
+   prog:()=>[Object.values(S().daily.medals||{}).filter(m=>m==="gold").length,1]},
+  {id:"chest10", g:"long", t:"bronze", glyph:"箱", n:"Ten Lids Lifted",
+   d:"Open ten chests.", prog:()=>[S().chests||0,10]},
+  {id:"set1",    g:"long", t:"gold",   glyph:"套", n:"A Matched Set",
+   d:"Complete any relic set.", prog:()=>[completeSets().length,1]},
+  {id:"relicAll",g:"long", t:"jade",   glyph:"藏", n:"The Whole Collection",
+   d:"Recover all sixteen relics.", prog:()=>[relicCount(),RELIC_IDS.length]},
+  {id:"finish",  g:"long", t:"jade",   glyph:"終", n:"The Lost Lexicon",
+   d:"See the tale through to its end.", prog:()=>[S().finished?1:0,1]}
+];
+const ACH_BY_ID={}; ACH.forEach(a=>ACH_BY_ID[a.id]=a);
+
+function achDone(a){ try{ const [h,n]=a.prog(); return h>=n; }catch(e){ return false; } }
+function achCount(){ return Object.keys(S().ach||{}).length; }
+
+/* ---- the unlock banner ---- */
+let rail=null;
+function railHost(){
+  if(rail && rail.isConnected) return rail;
+  rail=document.createElement("div"); rail.id="ach-rail";
+  rail.setAttribute("role","status"); rail.setAttribute("aria-live","polite");
+  const f=$('#frame')||document.body; f.appendChild(rail);
+  return rail;
+}
+function announce(a){
+  const host=railHost();
+  const pop=el("div","ach-pop t-"+a.t);
+  pop.innerHTML=`<div class="apg">${a.glyph}</div>
+    <div><div class="ape">Trophy earned</div>
+      <div class="apt">${a.n}</div><div class="apd">${a.d}</div></div>`;
+  host.appendChild(pop);
+  setTimeout(()=>{ if(pop.parentNode) pop.parentNode.removeChild(pop); }, 5400);
+  Audio2.sfx.trophy ? Audio2.sfx.trophy() : Audio2.sfx.great();
+  FX && FX.buzz && FX.buzz(30);
+}
+/* Called after anything that could plausibly move a counter. Cheap: 37 small
+   predicates. Never awards twice, and never announces on the very first
+   evaluation of a migrated save (a returning player should not be buried). */
+let bootEval=true;
+function evaluate(){
+  const st=S(); if(!st.ach) st.ach={};
+  const fresh=[];
+  ACH.forEach(a=>{
+    if(st.ach[a.id]) return;
+    if(!achDone(a)) return;
+    st.ach[a.id]={at:Date.now()};
+    fresh.push(a);
+  });
+  if(fresh.length){
+    if(!bootEval) fresh.slice(0,3).forEach((a,i)=>setTimeout(()=>announce(a), i*520));
+    E.persist();
+  }
+  bootEval=false;
+  return fresh;
+}
+
+/* ==================================================================
+   3. LIFETIME COUNTERS — the spine every trophy reads.
+   note() is the single event hook the rest of the game calls.
+   ================================================================== */
+function note(evt, data){
+  const st=S();
+  if(!st.lifetime) st.lifetime={};
+  const L=st.lifetime;
+  const inc=(k,by)=>{ L[k]=(L[k]||0)+(by==null?1:by); };
+  data=data||{};
+  switch(evt){
+    case "answer":
+      inc("answers"); if(data.ok) inc("correct");
+      if(data.ok && /^origin/.test(data.qtype||"")) inc("origin");
+      if(data.ok && data.qtype==="mythBuster" && data.wasLie) inc("liesCaught");
+      if(data.figureId){
+        if(!st.lore.seen.includes(data.figureId)) st.lore.seen.push(data.figureId);
+        if(data.ok) st.lore.correct["fig:"+data.figureId]=1;
+      }
+      if(data.ok && data.qtype==="originPair" && data.twinMean)
+        st.lore.correct["twin:"+data.twinMean]=1;
+      break;
+    case "craft":       inc("crafts"); if(data.perfect) inc("perfectCrafts"); break;
+    case "run":
+      inc("runs");
+      if(data.clean) inc("cleanRuns");
+      if(data.whole) inc("wholeArrivals");
+      if(data.flow>=3) L.flow3=1;
+      if(data.momentum>(L.bestMomentum||0)) L.bestMomentum=data.momentum;
+      if(data.heirloom) inc("heirloomTrips");
+      break;
+    case "boss":        inc("bossesFelled"); break;
+    case "daily":       inc("dailies"); break;
+    case "debtCleared": L.debtCleared=1; break;
+  }
+  evaluate();
+}
+
+/* ==================================================================
+   4. CHESTS — the ceremony. Rank is earned, not rolled from nothing:
+   how well the road went sets the floor, relic fortune nudges the roll.
+   ================================================================== */
+const RANKS=[
+  {id:"common",    name:"A travelling case", glyph:"木", lid:"#6f5a3c", body:"#4a3a26"},
+  {id:"uncommon",  name:"A merchant's chest",glyph:"銅", lid:"#8a6a3a", body:"#5d4526"},
+  {id:"rare",      name:"A lacquered coffer",glyph:"銀", lid:"#7d9a8a", body:"#3f5a4b"},
+  {id:"legendary", name:"An Archive reliquary", glyph:"金", lid:"#bd9d5f", body:"#7d631f"}
+];
+function rollRank(quality){
+  // quality 0..1 — a poor road can still turn up something, but the good stuff
+  // is bought with a good walk, not with patience
+  const luck=bonus("chestLuck");
+  const r=Math.random()*(1+luck) + clamp(quality,0,1)*0.85;
+  if(r>1.62) return RANKS[3];
+  if(r>1.18) return RANKS[2];
+  if(r>0.66) return RANKS[1];
+  return RANKS[0];
+}
+function rollLoot(rank){
+  const loot=[];
+  const rk=RARITY_RANK[rank.id];
+  /* ink, always — scaled to rank */
+  const ink=[14,26,44,80][rk] + Math.floor(Math.random()*[8,14,22,40][rk]);
+  loot.push({kind:"ink", glyph:"墨", name:`${ink} ink`, note:"Struck for the school's coffers.", ink});
+  /* a relic, chance and quality by rank */
+  const missing=RELIC_IDS.filter(id=>!haveRelic(id));
+  const relicChance=[0.22,0.42,0.72,1][rk];
+  if(missing.length && Math.random()<relicChance){
+    // prefer relics at or below the chest's rank, but a legendary chest can
+    // always produce the best thing left
+    let pool=missing.filter(id=>RARITY_RANK[RELICS[id].rarity]<=rk);
+    if(rk===3) pool=missing.filter(id=>RARITY_RANK[RELICS[id].rarity]>=2);
+    if(!pool.length) pool=missing;
+    const id=pick(pool), R=RELICS[id];
+    loot.push({kind:"relic", id, glyph:R.glyph, name:R.name, rare:RARITY_RANK[R.rarity]>=2,
+      note:`${RELIC_SETS[R.set].name} · ${R.effText}. ${R.lore}`});
+  }
+  /* a support charge or a reagent */
+  if(rk>=1 && Math.random()<0.6){
+    const kinds=[["hint","提","A hint charge","Whispered at the bench when you need it."],
+                 ["consult","問","A consult charge","Someone who has seen this term before."],
+                 ["recall","憶","A recall charge","One part, handed back to you."]];
+    const [k,g,n,note2]=pick(kinds);
+    loot.push({kind:"support", id:k, glyph:g, name:n, note:note2});
+  }
+  if(rk>=2){
+    const rg=window.__RD_REAGENTS||{};
+    const ids=Object.keys(rg);
+    if(ids.length){ const id=pick(ids);
+      loot.push({kind:"reagent", id, glyph:"⚗", name:rg[id].name, note:rg[id].note}); }
+  }
+  return loot;
+}
+function applyLoot(loot){
+  const st=S();
+  loot.forEach(it=>{
+    if(it.kind==="ink") st.coin+=it.ink;
+    else if(it.kind==="relic"){ st.relics[it.id]={at:Date.now()}; }
+    else if(it.kind==="support"){ st.support[it.id]=(st.support[it.id]||0)+1; }
+    else if(it.kind==="reagent"){ st.reagents[it.id]=(st.reagents[it.id]||0)+1; }
+  });
+  st.chests=(st.chests||0)+1;
+  E.persist();
+  evaluate();
+}
+/* the veil is built once and reused — a chest is opened often */
+let veil=null;
+function chestVeil(){
+  if(veil && veil.isConnected) return veil;
+  veil=el("div"); veil.id="chest-veil";
+  veil.setAttribute("role","dialog"); veil.setAttribute("aria-modal","true");
+  veil.setAttribute("aria-label","A chest");
+  ($('#frame')||document.body).appendChild(veil);
+  return veil;
+}
+function chestSVG(rank){
+  return `<svg viewBox="0 0 200 160" aria-hidden="true">
+    <defs>
+      <linearGradient id="cbody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${rank.lid}"/><stop offset="1" stop-color="${rank.body}"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="100" cy="150" rx="72" ry="9" fill="rgba(0,0,0,.45)"/>
+    <g class="chest-lid">
+      <path d="M22 74 Q100 12 178 74 L178 84 L22 84 Z" fill="url(#cbody)" stroke="#1d1710" stroke-width="2.5"/>
+      <path d="M22 74 Q100 12 178 74" fill="none" stroke="${rank.lid}" stroke-width="3" opacity=".75"/>
+      <rect x="92" y="60" width="16" height="26" rx="3" fill="var(--gold)" stroke="#1d1710" stroke-width="2"/>
+    </g>
+    <rect x="22" y="84" width="156" height="56" rx="5" fill="url(#cbody)" stroke="#1d1710" stroke-width="2.5"/>
+    <rect x="22" y="98" width="156" height="7" fill="rgba(0,0,0,.28)"/>
+    <rect x="88" y="92" width="24" height="30" rx="4" fill="var(--gold)" stroke="#1d1710" stroke-width="2"/>
+    <circle cx="100" cy="108" r="5" fill="#2b241c"/>
+    <text x="100" y="134" text-anchor="middle" font-size="15" font-weight="700"
+      fill="rgba(255,255,255,.5)" font-family="var(--font-cal)">${rank.glyph}</text>
+  </svg>`;
+}
+/* Open a chest. Returns immediately; onDone fires when the player dismisses it. */
+function grantChest(quality, reason, onDone){
+  const rank=rollRank(quality==null?0.5:quality);
+  const loot=rollLoot(rank);
+  const v=chestVeil();
+  v.className=""; v.innerHTML="";
+  v.classList.add("show");
+  const rays=el("div","chest-rays"); v.appendChild(rays);
+  const eyebrow=el("div","chest-eyebrow"); eyebrow.textContent=reason||"Found on the road";
+  const title=el("div","chest-rank r-"+rank.id); title.textContent=rank.name;
+  const box=el("div","chest-box"); box.innerHTML=chestSVG(rank);
+  box.setAttribute("role","button"); box.setAttribute("tabindex","0");
+  box.setAttribute("aria-label","Open the chest");
+  const hint=el("div","chest-hint"); hint.textContent="Press to open";
+  const lootBox=el("div","chest-loot");
+  const done=el("div","chest-done");
+  const btn=el("button","btn"); btn.textContent="Take it all →";
+  done.appendChild(btn);
+  v.appendChild(eyebrow); v.appendChild(title); v.appendChild(box);
+  v.appendChild(hint); v.appendChild(lootBox); v.appendChild(done);
+
+  let opened=false;
+  function open(){
+    if(opened) return; opened=true;
+    box.classList.add("shake");
+    Audio2.sfx.chestRattle ? Audio2.sfx.chestRattle() : Audio2.sfx.grind();
+    setTimeout(()=>{
+      box.classList.remove("shake");
+      v.classList.add("opened");
+      Audio2.sfx.chestOpen ? Audio2.sfx.chestOpen() : Audio2.sfx.chime();
+      FX && FX.buzz && FX.buzz(RARITY_RANK[rank.id]>=2?60:34);
+      loot.forEach((it,i)=>{
+        const row=el("div","loot-row"+(it.rare?" rare":""));
+        row.style.animationDelay=(i*0.14)+"s";
+        row.innerHTML=`<div class="lg">${it.glyph}</div>
+          <div><div class="ln">${it.name}</div><div class="ll">${it.note}</div></div>`;
+        lootBox.appendChild(row);
+        setTimeout(()=>{ if(it.rare) (Audio2.sfx.great&&Audio2.sfx.great());
+                         else (Audio2.sfx.clink&&Audio2.sfx.clink()); }, 340+i*140);
+      });
+      applyLoot(loot);
+      setTimeout(()=>btn.focus(), 900);
+    }, 900);
+  }
+  box.onclick=open;
+  box.onkeydown=(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(); } };
+  btn.onclick=()=>{ v.classList.remove("show"); v.innerHTML=""; if(onDone) onDone(loot); };
+  v.onkeydown=(e)=>{ if(e.key==="Escape" && opened){ btn.click(); } };
+  setTimeout(()=>box.focus(), 120);
+  return {rank, loot};
+}
+function bestOf(mode){
+  const rows=(S().records&&S().records[mode])||[];
+  return rows.length?rows[0].score:0;
+}
+
+/* ==================================================================
+   5. THE DAILY TRIAL — twelve questions, the same twelve for everyone,
+   drawn from the UTC date. Three lives, a clock, and a streak that is
+   genuinely annoying to lose. Adaptive weighting is switched off for
+   the duration so the day's score means the same thing for two players.
+   ================================================================== */
+const TRIAL_N = 12;
+function utcDay(d){
+  d=d||new Date();
+  return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")
+        +"-"+String(d.getUTCDate()).padStart(2,"0");
+}
+function dayNumber(key){
+  return Math.floor(Date.parse(key+"T00:00:00Z")/86400000);
+}
+function seedFor(key){
+  let h=2166136261>>>0;
+  for(let i=0;i<key.length;i++){ h^=key.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+  return h>>>0;
+}
+/* run fn with Math.random driven by the day's seed, then put it back */
+function withSeed(seed, fn){
+  const rng=E.mulberry32(seed);
+  const real=Math.random;
+  Math.random=rng;
+  try{ return fn(); } finally{ Math.random=real; }
+}
+/* The day's twelve. A fixed shape — every Trial has the same MIX, so no day is
+   a freebie: four part questions, three term questions, two on the tongues,
+   two from the Chronicle, one construction. Within each slot the seed decides. */
+const TRIAL_SHAPE=[
+  ["partMeaning","meaningPart"], ["termDef","defTerm"], ["originId","originPair"],
+  ["cvRule"], ["figureDeed","figureGift"], ["spelling"],
+  ["partMeaning","similar"], ["originRule","originPair"], ["bodySystem","termDef"],
+  ["mythBuster","chronology"], ["meaningPart","cvRule"], ["defTerm","similar"]
+];
+function buildTrial(key){
+  const QE=window.__RD_QE;
+  const seed=seedFor(key);
+  QE.setUniform(true);
+  try{
+    return withSeed(seed, ()=>{
+      const out=[];
+      for(let i=0;i<TRIAL_N;i++){
+        const slot=TRIAL_SHAPE[i%TRIAL_SHAPE.length];
+        const type=slot[Math.floor(Math.random()*slot.length)];
+        let q=null;
+        try{ q=QE.generate({types:[type], nWrong:3, choices:4}); }catch(e){ q=null; }
+        if(!q) q=QE.generate({types:["partMeaning"], nWrong:3});
+        out.push(q);
+      }
+      return out;
+    });
+  } finally { QE.setUniform(false); }
+}
+const MEDALS=[{id:"gold",need:1300,glyph:"金"},{id:"silver",need:1000,glyph:"銀"},
+              {id:"bronze",need:700,glyph:"銅"}];
+function medalFor(score){ return (MEDALS.find(m=>score>=m.need)||{id:"none",glyph:"—"}); }
+
+let T=null;   // live trial state
+let trialGen=0;  // bumped on every open, so a stale timeout cannot paint over a new Trial
+function openTrial(){
+  const key=utcDay();
+  const st=S();
+  ensureScreens();
+  if(T && T.raf) cancelAnimationFrame(T.raf);
+  const gen=++trialGen;
+  T={ key, gen, qs:buildTrial(key), i:0, score:0, lives:3, streak:0, best:0,
+      marks:[], t0:0, clock:0, locked:false, extra:null, raf:0, done:false,
+      limit: (st.settings&&st.settings.timerRelax)?24:15 };
+  E.go("s-trial",{transition:"seal", onShow:()=>{ E.buildBackdrop($('#trial-bg'),"valley"); renderTrial(); }});
+}
+function trialHud(){
+  const done=T.marks.length;
+  return `<div><div class="th-k">Question</div><div class="th-v">${Math.min(T.i+1,TRIAL_N)} / ${TRIAL_N}</div></div>
+    <div><div class="th-k">Score</div><div class="th-v" id="trial-score">${T.score}</div></div>
+    <div><div class="th-k">Streak</div><div class="th-v">${T.streak>0?"×"+(1+Math.min(T.streak,6)*0.15).toFixed(2):"—"}</div></div>
+    <div><div class="th-k">Lives</div><div class="trial-lives" aria-label="${T.lives} of 3 lives left">${
+      [0,1,2].map(i=>`<span class="${i<T.lives?"":"spent"}">✦</span>`).join("")}</div></div>`;
+}
+function renderTrial(){
+  const wrap=$('#trial-body'); if(!wrap) return;
+  if(T.done) return renderTrialEnd();
+  const q = T.extra || T.qs[T.i];
+  const isExtra=!!T.extra;
+  wrap.innerHTML=`
+    <div class="trial-hud">${trialHud()}</div>
+    <div class="trial-pips" aria-hidden="true">${
+      T.qs.map((_,i)=>`<i class="${T.marks[i]===true?"ok":T.marks[i]===false?"no":(i===T.i?"now":"")}"></i>`).join("")}</div>
+    <div class="trial-clock${T.clock<0.34?" hot":""}"><i style="width:${Math.round(T.clock*100)}%"></i></div>
+    <div class="trial-q">
+      <div class="tq-type">${isExtra?"Reinforcement · no score, no life":labelFor(q.type)}</div>
+      <div class="tq-text">${q.prompt}</div>
+      ${q.pron?`<div class="tq-sub">${q.pron}</div>`:""}
+    </div>
+    <div class="trial-opts" id="trial-opts" role="group" aria-label="Answers"></div>
+    <div id="trial-teach"></div>`;
+  const host=$('#trial-opts');
+  q.options.forEach((o,idx)=>{
+    const b=el("button","trial-opt"); b.innerHTML=o.label;
+    b.setAttribute("data-i",idx);
+    b.onclick=()=>answer(idx);
+    host.appendChild(b);
+  });
+  startClock();
+}
+const TYPE_LABEL={ partMeaning:"What the part means", meaningPart:"Find the part",
+  termDef:"What the term means", defTerm:"Name the term", spelling:"Spell it",
+  cvRule:"The combining vowel", bodySystem:"Which system", similar:"Same root",
+  trueFalse:"True or false", originId:"Which tongue", originPair:"The other tongue",
+  originRule:"Greek and Latin", figureDeed:"The Chronicle", figureGift:"The Chronicle",
+  mythBuster:"Radicida's margin", chronology:"Who came first" };
+function labelFor(t){ return TYPE_LABEL[t]||"Question"; }
+
+function startClock(){
+  cancelAnimationFrame(T.raf);
+  T.t0=performance.now(); T.clock=1; T.locked=false;
+  const bar=()=>$('#trial-body .trial-clock i');
+  const gen=T.gen;
+  const step=()=>{
+    if(!T || T.gen!==gen || T.done || T.locked) return;
+    const el2=bar(); if(!el2) return;
+    const dt=(performance.now()-T.t0)/1000;
+    T.clock=clamp(1-dt/T.limit,0,1);
+    el2.style.width=(T.clock*100)+"%";
+    const wrapc=$('#trial-body .trial-clock');
+    if(wrapc) wrapc.classList.toggle("hot", T.clock<0.34);
+    if(T.clock<=0){ answer(-1); return; }
+    T.raf=requestAnimationFrame(step);
+  };
+  T.raf=requestAnimationFrame(step);
+}
+function answer(idx){
+  if(!T || T.locked) return;
+  T.locked=true; cancelAnimationFrame(T.raf);
+  const isExtra=!!T.extra;
+  const q=isExtra?T.extra:T.qs[T.i];
+  const chosen=idx>=0?q.options[idx]:null;
+  const ok=!!(chosen && chosen.ok);
+  const QE=window.__RD_QE;
+  const fast=T.clock>0.55;
+
+  $$('#trial-opts .trial-opt').forEach((b,i)=>{
+    b.disabled=true;
+    if(q.options[i].ok) b.classList.add("right");
+    else if(i===idx) b.classList.add("wrong");
+  });
+  // record() already forwards the question to the trophy counters — noting it
+  // again here would double-count every answer in the Trial
+  QE.record(q.conceptIds, ok, fast, q);
+
+  let gained=0;
+  if(!isExtra){
+    if(ok){
+      const speed=Math.round(T.clock*60);
+      const mult=1+Math.min(T.streak,6)*0.15;
+      gained=Math.round((100+speed)*mult);
+      T.score+=gained; T.streak++;
+    } else {
+      T.streak=0; T.lives--;
+    }
+    T.marks[T.i]=ok;
+  }
+  Audio2.sfx[ok?"good":"bad"] && Audio2.sfx[ok?"good":"bad"]();
+  if(ok) FX && FX.buzz && FX.buzz(fast?26:16); else FX && FX.buzz && FX.buzz(60);
+
+  /* THE TEACHING BEAT. A wrong answer always explains itself, and then buys
+     ONE extra practice item aimed at the same concept — free, no life, no
+     score. Getting it wrong should hand you more of the thing you missed, not
+     move you along. */
+  const teach=$('#trial-teach');
+  const timeout = idx<0;
+  teach.innerHTML=`<div class="trial-teach${ok?"":" miss"}">
+    <div class="tt-h">${ok?(fast?"Clean and quick.":"Correct."):(timeout?"Out of time.":"Not that one.")}
+      ${gained?`<span style="color:var(--cinnabar-deep)"> +${gained}</span>`:""}</div>
+    <div class="tt-b">${q.explanation||""}</div></div>`;
+
+  const wantExtra = !ok && !isExtra && q.conceptIds && q.conceptIds.length
+                    && PARTS[q.conceptIds[0]];
+  const gen=T.gen;
+  setTimeout(()=>{
+    if(!T || T.gen!==gen) return;
+    if(T.lives<=0){ finishTrial(); return; }
+    if(wantExtra){
+      let ex=null;
+      try{ ex=QE.generate({ focus:q.conceptIds[0], nWrong:3,
+        types:["partMeaning","meaningPart","originId"] }); }catch(e){}
+      if(ex){ T.extra=ex; renderTrial(); return; }
+    }
+    T.extra=null;
+    if(!isExtra) T.i++;
+    if(T.i>=TRIAL_N){ finishTrial(); return; }
+    renderTrial();
+  }, ok?1050:2100);
+}
+function finishTrial(){
+  if(!T || T.done) return;
+  T.done=true; cancelAnimationFrame(T.raf);
+  const st=S(), d=st.daily;
+  const first = d.lastDone!==T.key;
+  const medal=medalFor(T.score);
+  if(first){
+    const prev=d.lastDone?dayNumber(d.lastDone):null;
+    const today=dayNumber(T.key);
+    d.streak = (prev!=null && today-prev===1) ? (d.streak||0)+1 : 1;
+    d.bestStreak=Math.max(d.bestStreak||0, d.streak);
+    d.lastDone=T.key; d.date=T.key; d.done=true;
+    note("daily",{});
+  }
+  d.score=T.score;
+  if(T.score>(d.best||0)) d.best=T.score;
+  d.medals=d.medals||{};
+  const prevMedal=d.medals[T.key];
+  if(!prevMedal || MEDALS.findIndex(m=>m.id===medal.id) < MEDALS.findIndex(m=>m.id===prevMedal))
+    d.medals[T.key]=medal.id;
+  recordScore("daily", T.score, {label:T.key, medal:medal.id, lives:T.lives});
+  E.persist(); evaluate();
+  renderTrialEnd(first, medal);
+}
+function renderTrialEnd(first, medal){
+  const wrap=$('#trial-body'); if(!wrap) return;
+  medal=medal||medalFor(T.score);
+  const st=S(), d=st.daily;
+  const right=T.marks.filter(Boolean).length;
+  const collapsed=T.lives<=0;
+  wrap.innerHTML=`
+    <div class="trial-q" style="padding:26px 20px;">
+      <div class="tq-type">${T.key} · the day's twelve</div>
+      <div class="grade-seal g-${medal.id==="none"?"fair":"excellent"} struck"
+           style="margin:6px auto 12px;">${medal.glyph}</div>
+      <div class="tq-text">${collapsed?"The Trial broke you today"
+        :medal.id==="gold"?"A gold seal":medal.id==="silver"?"A silver seal"
+        :medal.id==="bronze"?"A bronze seal":"Finished"}</div>
+      <div class="tq-sub">${right} of ${TRIAL_N} answered right${
+        collapsed?" before the third mistake":""} · <b>${T.score}</b> points</div>
+      ${first?`<div class="dc-streak" style="margin-top:10px;justify-content:center;">
+        <span class="dc-flames">${"火".repeat(Math.min(d.streak,5))}</span>
+        <span>${d.streak}-day streak${d.streak===d.bestStreak&&d.streak>1?" — your best":""}</span></div>`
+       :`<div class="tq-sub" style="margin-top:10px;">Already logged today. Come back tomorrow for a new twelve.</div>`}
+    </div>
+    <div class="rec-list" id="trial-board"></div>
+    <div class="build-controls mt" style="justify-content:center;">
+      <button class="btn ghost" id="trial-hall">The Hall</button>
+      <button class="btn" id="trial-done">Back to the school →</button>
+    </div>`;
+  renderRecordList($('#trial-board'), "daily", 5);
+  $('#trial-done').onclick=()=>{ const q=clamp(T.score/1400,0,1); const fresh=first;
+    T=null;
+    if(fresh) grantChest(q, "The Trial pays out", ()=>window.__RD_SCREENS.showHub());
+    else window.__RD_SCREENS.showHub(); };
+  $('#trial-hall').onclick=()=>{ T=null; open("records"); };
+  Audio2.sfx.stamp && Audio2.sfx.stamp();
+}
+
+/* ==================================================================
+   6. THE HALL OF RECORDS — local leaderboards. No server, so these are
+   personal bests kept honestly, and the Trial's seed is printed beside
+   each row so two players can compare the same day's twelve.
+   ================================================================== */
+const MODES=[
+  {id:"daily",  name:"Daily Trial",   unit:"pts"},
+  {id:"endless",name:"Endless Road",  unit:""},
+  {id:"road",   name:"Expeditions",   unit:"pts"},
+  {id:"slice",  name:"Reed Slice",    unit:""},
+  {id:"match",  name:"Seal Match",    unit:""}
+];
+function recordScore(mode, score, detail){
+  const st=S();
+  if(!st.records) st.records={};
+  const rows=st.records[mode]=st.records[mode]||[];
+  rows.push(Object.assign({score:Math.round(score), at:Date.now()}, detail||{}));
+  rows.sort((a,b)=>b.score-a.score);
+  st.records[mode]=rows.slice(0,10);
+  E.persist(); evaluate();
+  return st.records[mode].findIndex(r=>r.at===rows[0].at);
+}
+function fmtDate(ms){
+  try{ const d=new Date(ms);
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }catch(e){ return ""; }
+}
+function renderRecordList(host, mode, limit){
+  if(!host) return;
+  const rows=((S().records||{})[mode]||[]).slice(0, limit||10);
+  host.innerHTML="";
+  if(!rows.length){
+    host.innerHTML=`<div class="rec-empty">Nothing set here yet. The first score you post is the one to beat.</div>`;
+    return;
+  }
+  rows.forEach((r,i)=>{
+    const row=el("div","rec-row"+(i===0?" top":""));
+    const m=r.medal?`<span class="medal m-${r.medal}">${
+      (MEDALS.find(x=>x.id===r.medal)||{glyph:"—"}).glyph}</span> `:"";
+    row.innerHTML=`<div class="rk">${i+1}</div>
+      <div><div>${m}${r.label||MODES.find(x=>x.id===mode).name}</div>
+        <div class="rd">${fmtDate(r.at)}${r.seed?" · seed "+r.seed:""}${
+          r.lives!=null?" · "+r.lives+" lives left":""}${r.depth?" · depth "+r.depth:""}</div></div>
+      <div class="rv">${r.score}</div>`;
+    host.appendChild(row);
+  });
+}
+
+/* ==================================================================
+   7. THE HALL — one screen, four tabs.
+   ================================================================== */
+let hallTab="trophies";
+function open(tab){
+  ensureScreens();
+  hallTab=tab||hallTab;
+  E.go("s-hall",{transition:"scroll", onShow:()=>{ E.buildBackdrop($('#hall-bg'),"valley"); renderHall(); }});
+}
+function renderHall(){
+  const tabs=$('#hall-tabs'), body=$('#hall-body');
+  if(!tabs||!body) return;
+  const list=[["trophies","Trophies"],["relics","Relics"],["records","Records"],["chronicle","Chronicle"]];
+  tabs.innerHTML="";
+  list.forEach(([id,name])=>{
+    const b=el("button","rec-tab"+(hallTab===id?" on":""));
+    b.textContent=name; b.setAttribute("aria-pressed", hallTab===id?"true":"false");
+    b.onclick=()=>{ hallTab=id; Audio2.sfx.paper&&Audio2.sfx.paper(); renderHall(); };
+    tabs.appendChild(b);
+  });
+  body.innerHTML="";
+  if(hallTab==="trophies")  renderTrophies(body);
+  if(hallTab==="relics")    renderRelics(body);
+  if(hallTab==="records")   renderRecords(body);
+  if(hallTab==="chronicle") renderChronicle(body);
+  if(FX && FX.stagger) FX.stagger($$('.ach-card,.relic-set,.rec-row,.chron-card',body),{stagger:26,y:8});
+}
+function renderTrophies(host){
+  const st=S(), got=achCount();
+  const stats=el("div","ach-stats");
+  const pctParts=Math.round(partsWith(m=>(m.reps||0)>=3).length/Object.keys(PARTS).length*100);
+  stats.innerHTML=`
+    <div class="ach-stat"><div class="v">${got}/${ACH.length}</div><div class="l">Trophies</div></div>
+    <div class="ach-stat"><div class="v">${st.completedTerms.length}</div><div class="l">Terms built</div></div>
+    <div class="ach-stat"><div class="v">${pctParts}%</div><div class="l">Parts held fast</div></div>
+    <div class="ach-stat"><div class="v">${lt("correct")}</div><div class="l">Right answers</div></div>
+    <div class="ach-stat"><div class="v">${st.daily.bestStreak||0}</div><div class="l">Best streak</div></div>`;
+  host.appendChild(stats);
+  GROUPS.forEach(g=>{
+    const items=ACH.filter(a=>a.g===g.id);
+    const done=items.filter(a=>st.ach[a.id]).length;
+    const h=el("div","ach-sect");
+    h.innerHTML=`<span>${g.glyph} ${g.name}</span><span>${done} of ${items.length}</span>`;
+    host.appendChild(h);
+    const grid=el("div","ach-grid");
+    items.forEach(a=>{
+      let have=0,need=1;
+      try{ [have,need]=a.prog(); }catch(e){}
+      const unlocked=!!st.ach[a.id];
+      const card=el("div","ach-card t-"+a.t+(unlocked?" got":" locked"));
+      const showBar = need>1 && !unlocked;
+      card.innerHTML=`<div class="ag">${unlocked?a.glyph:"？"}</div>
+        <div style="flex:1">
+          <div class="an">${a.n}</div>
+          <div class="ad">${a.d}</div>
+          ${showBar?`<div class="abar"><i style="width:${clamp(have/need,0,1)*100}%"></i></div>
+            <div class="apr">${Math.min(have,need)} / ${need}</div>`:""}
+          ${unlocked?`<div class="apr">Earned ${fmtDate(st.ach[a.id].at)}</div>`:""}
+        </div>`;
+      grid.appendChild(card);
+    });
+    host.appendChild(grid);
+  });
+}
+function renderRelics(host){
+  const intro=el("p","small muted");
+  intro.style.cssText="max-width:640px;margin:0 auto 16px;text-align:center;";
+  intro.innerHTML=`Found in chests, kept forever. Every relic changes a number the road
+    actually reads — and a completed set changes a bigger one. <b>${relicCount()} of ${RELIC_IDS.length}</b> recovered.`;
+  host.appendChild(intro);
+  const wrap=el("div","relic-sets");
+  Object.keys(RELIC_SETS).forEach(sid=>{
+    const set=RELIC_SETS[sid], done=setComplete(sid);
+    const box=el("div","relic-set"+(done?" complete":""));
+    const ids=RELIC_IDS.filter(id=>RELICS[id].set===sid);
+    const have=ids.filter(haveRelic).length;
+    box.innerHTML=`<div class="rs-head">
+        <div><div class="rs-name">${set.glyph} ${set.name}</div>
+          <div class="small muted">${set.lore}</div></div>
+        <div class="rs-bonus">${have}/${ids.length} · ${done?"ACTIVE — ":"Full set: "}${set.bonusText}</div>
+      </div>`;
+    const row=el("div","rs-row");
+    ids.forEach(id=>{
+      const R=RELICS[id], mine=haveRelic(id);
+      const r=el("div","relic "+(mine?"have":"miss"));
+      r.innerHTML=`<div class="rg">${mine?R.glyph:"？"}</div>
+        <div><div class="rn">${mine?R.name:"Not yet found"}</div>
+          <div class="re">${mine?R.effText:R.rarity}</div></div>`;
+      if(mine) r.title=R.lore;
+      row.appendChild(r);
+    });
+    box.appendChild(row);
+    wrap.appendChild(box);
+  });
+  host.appendChild(wrap);
+}
+function renderRecords(host){
+  const st=S();
+  const head=el("div","ach-stats");
+  head.innerHTML=`
+    <div class="ach-stat"><div class="v">${st.daily.streak||0}</div><div class="l">Trial streak</div></div>
+    <div class="ach-stat"><div class="v">${st.daily.best||0}</div><div class="l">Best Trial</div></div>
+    <div class="ach-stat"><div class="v">${bestOf("endless")}</div><div class="l">Endless best</div></div>
+    <div class="ach-stat"><div class="v">${st.chests||0}</div><div class="l">Chests opened</div></div>`;
+  host.appendChild(head);
+  MODES.forEach(m=>{
+    const h=el("div","ach-sect"); h.innerHTML=`<span>${m.name}</span><span>top ten</span>`;
+    host.appendChild(h);
+    const list=el("div","rec-list");
+    renderRecordList(list, m.id, 10);
+    host.appendChild(list);
+  });
+}
+function renderChronicle(host){
+  const st=S();
+  const known=Object.keys(st.lore.correct||{}).filter(k=>k.indexOf("fig:")===0)
+    .map(k=>k.slice(4));
+  const intro=el("p","small muted");
+  intro.style.cssText="max-width:660px;margin:0 auto 16px;text-align:center;";
+  intro.innerHTML=`Sixteen people who changed what medicine could do — and the
+    convenient falsehoods Radicida writes about them. <b>${known.length} of ${D.FIGURE_ORDER.length}</b>
+    recovered. A figure opens here once you have answered on them correctly.`;
+  host.appendChild(intro);
+  const grid=el("div","ach-grid"); grid.style.gridTemplateColumns="repeat(auto-fill,minmax(290px,1fr))";
+  D.FIGURE_ORDER.forEach(id=>{
+    const F=D.FIGURES[id], open2=known.includes(id);
+    const card=el("div","ach-card chron-card "+(open2?"got t-gold":"locked t-bronze"));
+    card.innerHTML=`<div class="ag">${open2?(D.FIGURE_RANK[id]+1):"？"}</div>
+      <div style="flex:1">
+        <div class="an">${open2?F.name:"Not yet recovered"}</div>
+        <div class="ad">${open2?`<b>${F.era}</b> · ${F.place}<br>${F.deed}.
+          <br><span style="color:var(--jade-deep)">What it left us:</span> ${F.gift}.
+          <br><span style="color:var(--cinnabar-deep)">Radicida claims:</span> &ldquo;${F.myth}&rdquo;
+          <br><span style="color:var(--jade-deep)">In truth:</span> ${F.truth}`
+          :`Answer a Chronicle question about this figure to recover their page.`}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  host.appendChild(grid);
+}
+
+/* ==================================================================
+   8. SCREENS — built once, in JS, so the whole meta layer stays in one
+   place instead of being sprinkled through the markup.
+   ================================================================== */
+let built=false;
+function ensureScreens(){
+  if(built) return; built=true;
+  const frame=$('#frame'); if(!frame) return;
+  const hall=el("section","screen"); hall.id="s-hall";
+  hall.innerHTML=`
+    <div class="backdrop" id="hall-bg"></div>
+    <header class="topbar">
+      <button class="icon-btn" id="hall-back" aria-label="Back to the workshop">&larr;</button>
+      <span class="brand">殿 The Hall of Records</span>
+      <span class="spacer"></span>
+    </header>
+    <div class="content">
+      <div class="section-head">
+        <span class="eyebrow">What you have earned, kept, and recovered</span>
+        <h2>The Hall</h2><span class="divider"></span>
+      </div>
+      <div class="rec-tabs" id="hall-tabs" role="group" aria-label="Hall sections"></div>
+      <div id="hall-body"></div>
+    </div>`;
+  frame.appendChild(hall);
+
+  const trial=el("section","screen"); trial.id="s-trial";
+  trial.innerHTML=`
+    <div class="backdrop" id="trial-bg"></div>
+    <header class="topbar">
+      <button class="icon-btn" id="trial-back" aria-label="Leave the Trial">&larr;</button>
+      <span class="brand">試 The Daily Trial</span>
+      <span class="spacer"></span>
+    </header>
+    <div class="content"><div class="trial-wrap" id="trial-body"></div></div>`;
+  frame.appendChild(trial);
+
+  $('#hall-back').onclick=()=>{ Audio2.sfx.paper&&Audio2.sfx.paper(); window.__RD_SCREENS.showHub(); };
+  $('#trial-back').onclick=()=>{
+    if(T && !T.done && T.i>0){
+      if(!window.confirm("Leave the Trial? Today's attempt is abandoned and the streak is not credited.")) return;
+    }
+    if(T){ cancelAnimationFrame(T.raf); T=null; }
+    window.__RD_SCREENS.showHub();
+  };
+}
+
+/* the hub card — the thing that actually brings a player back */
+function renderHubCard(host){
+  if(!host) return;
+  const st=S(), key=utcDay();
+  const doneToday = st.daily.lastDone===key;
+  const medal = (st.daily.medals||{})[key];
+  const card=el("div","panel aside-card daily-card"+(doneToday?" done":""));
+  const due=(E.dueParts?E.dueParts():[]).length;
+  card.innerHTML=`
+    <div class="dc-seal">試</div>
+    <span class="eyebrow">Today &middot; ${key}</span>
+    <h3 style="margin:2px 0 4px;">The Daily Trial</h3>
+    <div class="dc-meta">
+      <span>Twelve questions</span><span>Three lives</span>
+      <span>${st.daily.bestStreak?`Best streak ${st.daily.bestStreak}`:"Same twelve for everyone"}</span>
+    </div>
+    ${st.daily.streak?`<div class="dc-streak"><span class="dc-flames">${"火".repeat(Math.min(st.daily.streak,5))}</span>
+      <span>${st.daily.streak}-day streak${doneToday?" — held":" — walk it today or lose it"}</span></div>`:""}
+    ${doneToday?`<p class="small muted" style="margin:8px 0 10px;">
+        Logged today${medal&&medal!=="none"?` for a <b>${medal}</b> seal`:""} at <b>${st.daily.score}</b> points.
+        A fresh twelve arrives at midnight UTC.</p>`
+      :`<p class="small muted" style="margin:8px 0 10px;">
+        Drawn from today's date, so every player gets the same twelve.
+        ${due?`<b>${due}</b> word-part${due===1?" is":"s are"} due for review.`:""}</p>`}
+    <div class="flex gap wrap">
+      <button class="btn${doneToday?" ghost":""}" id="daily-go" type="button">${
+        doneToday?"Walk it again (unscored)":"Begin the Trial →"}</button>
+      <button class="btn ghost sm" id="daily-hall" type="button">The Hall</button>
+    </div>`;
+  host.appendChild(card);
+  $('#daily-go',card).onclick=()=>{ Audio2.resume(); Audio2.sfx.stamp&&Audio2.sfx.stamp(); openTrial(); };
+  $('#daily-hall',card).onclick=()=>{ Audio2.sfx.paper&&Audio2.sfx.paper(); open("trophies"); };
+}
+
+function init(){
+  const st=S();
+  if(!st.ach) st.ach={};
+  if(!st.lore) st.lore={seen:[],correct:{}};
+  if(!st.lifetime) st.lifetime={};
+  if(!st.records) st.records={};
+  if(!st.relics) st.relics={};
+  ensureScreens();
+  evaluate();          // silent on the first pass — backfills a returning player
+}
+
+return { init, open, openTrial, renderHubCard, note, evaluate, grantChest, bonus,
+         recordScore, renderRecordList, achCount, relicCount, completeSets,
+         utcDay, buildTrial, medalFor, dueLabel:()=>utcDay(),
+         _ach:ACH, _relics:RELICS, _sets:RELIC_SETS, _ranks:RANKS,
+         _rollLoot:rollLoot, _rollRank:rollRank, _trial:()=>T };
 })();
 </script>
 </body>
