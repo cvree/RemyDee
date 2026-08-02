@@ -12923,10 +12923,18 @@ function renderUnlockCard(bpId, nextChapter){
   host.classList.remove("uc-in"); void host.offsetWidth; host.classList.add("uc-in");
   setTimeout(()=>{ Audio2.sfx.great && Audio2.sfx.great(); }, 500);
 }
+/* Every field the result screen reads comes from the departure step, which is
+   the only place that builds them — so any road that reaches an arrival by some
+   other route (a debug entry, a future mode, a save restored mid-flow) threw
+   here and took the whole run with it. A result screen that is missing a line
+   is a much smaller loss than a run that vanishes, so the reads are defensive.
+   `stats` is not a schema anyone should have to keep in their head. */
 function summaryLine(f,grade,st){
   const dest=f.chapter.dest;
-  const short = st.shortfalls.length ? ` What the bench lacked: <b>${st.shortfalls[0]}</b>.` : " The bench answered every need on the road.";
-  const term = st.termScore>=0.8 ? "Your naming was precise" : st.termScore>=0.55 ? "Your naming held up" : "Your naming was shaky in places";
+  const shortfalls=(st && st.shortfalls) || [];
+  const short = shortfalls.length ? ` What the bench lacked: <b>${shortfalls[0]}</b>.` : " The bench answered every need on the road.";
+  const ts=(st && st.termScore)||0;
+  const term = ts>=0.8 ? "Your naming was precise" : ts>=0.55 ? "Your naming held up" : "Your naming was shaky in places";
   return `${term}, and the whole squad reached ${dest} ${grade==="excellent"?"in fine order":grade==="poor"?"battered but whole":"in good time"}.${short}`;
 }
 function consequenceLines(f,grade,st){
@@ -12980,7 +12988,8 @@ function consequenceLines(f,grade,st){
     lines.push({ic:"⚑", txt:`<b>${M.boss.lt.name}</b> shadowed the caravan the whole way and was `
       + `still there at the waystation. Naming ${want} at more of the gates is what breaks the grip.`});
   }
-  if(st.shortfalls.length) lines.push({ic:"▲", txt:`For next time: the bench lacked <b>${st.shortfalls.join(" and ")}</b>.`});
+  const sf=(st && st.shortfalls) || [];
+  if(sf.length) lines.push({ic:"▲", txt:`For next time: the bench lacked <b>${sf.join(" and ")}</b>.`});
   else lines.push({ic:"★", txt:`Your forging matched the road well — a workshop-master's eye.`});
   return lines;
 }
