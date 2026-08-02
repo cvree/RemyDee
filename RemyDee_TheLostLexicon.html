@@ -7,7 +7,21 @@
 <title>Remy Dee: The Lost Lexicon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<!-- THE FONT LINK USED TO HOLD THE WHOLE GAME HOSTAGE.
+     A render-blocking stylesheet also blocks every inline script after it —
+     the browser will not run a script that might read computed styles while a
+     sheet is still pending. Measured in a browser on a network that cannot
+     reach fonts.googleapis.com, the last module did not parse for 12.8 seconds
+     and the title screen appeared at 12.9. A school firewall, a corporate
+     proxy, a plane, or simply a slow first byte turned "Grinding the ink…"
+     into thirteen seconds of nothing.
+     Loading it as a preload and promoting it to a stylesheet on arrival takes
+     it off the critical path entirely: the game boots on its fallback stack
+     and the calligraphic faces swap in whenever — or never. -->
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&display=swap"></noscript>
 
 <!-- External FX libraries. The game is fully playable if ANY or ALL of these fail to load;
      the FX layer feature-detects each one and falls back to CSS/canvas equivalents. -->
@@ -10868,8 +10882,19 @@ function renderPrepBars(){
     wrap.appendChild(pb);
   });
 }
+/* THE ROAD'S HUD NODES, LOOKED UP ONCE.
+   These three functions run every frame and between them did eleven
+   document.querySelector calls per frame — for elements that are created when
+   the mission opens and do not move. The cache is keyed on the mission object
+   so it cannot outlive the run it belongs to. */
+function hudNode(id){
+  if(!M) return null;
+  const c = M._hud || (M._hud={});
+  if(!(id in c)) c[id]=$('#'+id);
+  return c[id];
+}
 function updatePrepBars(){
-  ["stamina","morale","safety"].forEach(k=>{ const i=$('#pb-'+k); if(i){ i.style.width=M.stats[k]+"%";
+  ["stamina","morale","safety"].forEach(k=>{ const i=hudNode('pb-'+k); if(i){ i.style.width=M.stats[k]+"%";
     i.style.background = M.stats[k]<34?"var(--cinnabar)":M.stats[k]<60?"var(--gold)":"var(--jade-soft)";
     // stamina is the run's clock: it gets a visible warning state of its own
     if(k==="stamina" && i.parentElement && i.parentElement.parentElement)
@@ -10887,7 +10912,7 @@ function rush(pow, kind){
   M.rushPow=Math.min(1.6, (M.rushT>0?M.rushPow*0.55:0) + (pow||0.5));
   M.rushT=Math.max(M.rushT, 1.05 + (pow||0.5)*0.8);
   M.rushKind=kind||"answer";
-  const g=$('#pace-gauge'); if(g && !FX.reduced()){ g.classList.remove('accel'); void g.offsetWidth; g.classList.add('accel'); }
+  const g=hudNode('pace-gauge'); if(g && !FX.reduced()){ g.classList.remove('accel'); void g.offsetWidth; g.classList.add('accel'); }
   Audio2.sfx.whoosh && Audio2.sfx.whoosh();
 }
 function brakePace(){
@@ -10903,7 +10928,7 @@ function rushBoost(){
   return 1 + M.rushPow*0.85*(a*a);
 }
 function updatePaceGauge(force){
-  const v=$('#pg-val'), g=$('#pace-gauge'); if(!v||!M) return;
+  const v=hudNode('pg-val'), g=hudNode('pace-gauge'); if(!v||!M) return;
   const txt="×"+(M.paceLive||M.paceNow||1).toFixed(2);
   if(force || v.textContent!==txt) v.textContent=txt;
   if(g && M.rushT<=0) g.classList.remove('accel');
@@ -10992,7 +11017,7 @@ function statGain(gains,x,y){
 function pulseMomentum(){ const mo=$('#momentum'); if(mo && !FX.reduced()){ mo.classList.remove('surge'); void mo.offsetWidth; mo.classList.add('surge'); } }
 /* cheap per-frame meter refresh — no DOM churn */
 function updateMomentumMeter(){
-  const mx=$('#mo-x'), fill=$('#mo-fill'), lab=$('#mo-lab'), mo=$('#momentum');
+  const mx=hudNode('mo-x'), fill=hudNode('mo-fill'), lab=hudNode('mo-lab'), mo=hudNode('momentum');
   const v=M.momentum.toFixed(1);
   if(mx && mx.textContent!=="×"+v) mx.textContent="×"+v;
   if(fill) fill.style.width=clamp((M.momentum-1)/(MOMENTUM_MAX-1)*100,0,100)+"%";
@@ -12105,8 +12130,15 @@ function draw(t){
   else if(M.weather==="rain"){ sky1="#9aa6a8"; sky2="#c2c9c4"; }
   else if(M.weather==="mist"){ sky1="#c3c8bd"; sky2="#dfe2d6"; }
   else { sky1="#bcd0c6"; sky2="#eae0c8"; }
-  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,sky1); g.addColorStop(1,sky2);
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  /* The sky is one gradient with two stops and it was rebuilt sixty times a
+     second for a value that only changes when the weather turns or the canvas
+     resizes. Cached on those two things, which is what actually varies. */
+  if(!M._sky || M._sky.h!==H || M._sky.a!==sky1 || M._sky.b!==sky2){
+    const grad=ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,sky1); grad.addColorStop(1,sky2);
+    M._sky={h:H, a:sky1, b:sky2, grad};
+  }
+  ctx.fillStyle=M._sky.grad; ctx.fillRect(0,0,W,H);
   const scroll=M.progress*1400;
   const bTop=bandTopPx(), bBot=bandBotPx(), bH=bandH();
   const hills=[{c:"#9fb0a4",amp:60,base:bTop*0.62,sp:0.25},{c:"#7f958a",amp:80,base:bTop*0.82,sp:0.45},
@@ -13228,8 +13260,21 @@ function boot(){
     }
   });
 }
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
-else boot();
+/* DOMContentLoaded waits for every deferred script, including four CDN
+   libraries the game is designed to run without. On a network where those are
+   slow rather than absent, the game would sit behind them for no reason. boot()
+   only needs the inline modules, and the last of those is __RD_META — so it
+   starts the moment that exists, with DOMContentLoaded kept as a backstop in
+   case anything about that assumption ever changes. */
+let booted=false;
+function kickoff(){ if(booted) return; booted=true; boot(); }
+(function waitForModules(){
+  if(booted) return;
+  if(window.__RD_META && window.__RD_ARCADE){ kickoff(); return; }
+  if(document.readyState!=="loading"){ kickoff(); return; }
+  setTimeout(waitForModules, 12);
+})();
+document.addEventListener("DOMContentLoaded",kickoff);
 })();
 </script>
 <script>
