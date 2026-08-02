@@ -37,7 +37,7 @@ async function boot(file) {
       window.AudioContext = window.webkitAudioContext = function () {
         const node = { connect() { return node; }, disconnect() {}, start() {}, stop() {},
           gain: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {}, setTargetAtTime() {}, cancelScheduledValues() {} },
-          frequency: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} },
+          frequency: { value: 0, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {}, setTargetAtTime() {}, cancelScheduledValues() {} },
           playbackRate: { value: 1 }, buffer: null, type: '', Q: { value: 0 }, detune: { value: 0 } };
         return { state: 'running', currentTime: 0, destination: node, sampleRate: 44100,
           resume: () => Promise.resolve(), suspend: () => Promise.resolve(), close: () => Promise.resolve(),
