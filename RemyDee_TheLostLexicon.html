@@ -2144,7 +2144,7 @@ const TERMS = {
   "nephrology": {build:["nephr","logy"], spell:"nephrology", system:"Urinary",
     def:"the study of the kidneys", plain:"the medical study of kidneys",
     note:"Keep the o before -logy: -logy begins with a consonant, so nephr/o + -logy = nephrology."},
-  "hematology": {build:["hemat","logy"], spell:"hematology", system:"Hematology (blood)",
+  "hematology": {build:["hemat","logy"], spell:"hematology", system:"Blood and Lymph",
     def:"the study of blood", plain:"the medical study of blood",
     note:"Keep the o before -logy (a consonant suffix): hemat/o + -logy = hematology."},
   "cardiology": {build:["cardi","logy"], spell:"cardiology", system:"Cardiovascular",
@@ -2238,81 +2238,82 @@ const TERMS = {
     def:"paralysis of one side of the body", plain:"one side of the body cannot move",
     note:"hemi- (half) + -plegia (paralysis) = hemiplegia. No combining vowel is needed between a prefix and a suffix."},
   "osteoarthritis": {build:["oste","arthr","itis"], spell:"osteoarthritis", system:"Musculoskeletal",
-    def:"inflammation of the bone and joint", plain:"joint inflammation involving the bone surface",
-    note:"oste/o + arthr/o keeps the o (root-to-root always keeps the combining vowel, even before another vowel), then + -itis drops it: osteoarthritis."},
+    def:"degenerative joint disease that wears away cartilage and the bone beneath it",
+    plain:"wear-and-tear joint disease, not primarily an inflamed joint",
+    note:"oste/o + arthr/o keeps the o (root-to-root always keeps the combining vowel, even before another vowel), then + -itis drops it: osteoarthritis. Careful — the parts read &lsquo;inflammation of bone and joint&rsquo;, but osteoarthritis is degenerative, not inflammatory. It is one of the few terms whose parts do not hand you the modern meaning; contrast rheumatoid arthritis, which truly is inflammatory."},
   "arthroscopy": {build:["arthr","scopy"], spell:"arthroscopy", system:"Musculoskeletal",
     def:"visual examination of the inside of a joint", plain:"looking inside a joint with a scope",
     note:"arthr/o + -scopy; keep the o since -scopy begins with a consonant (s)."},
-  "phlebotomy": {build:["phleb","tomy"], spell:"phlebotomy", system:"Circulatory",
+  "phlebotomy": {build:["phleb","tomy"], spell:"phlebotomy", system:"Cardiovascular",
     def:"incision into a vein (the practice of drawing blood)", plain:"the practice of drawing blood from a vein",
     note:"phleb/o + -tomy; keep the o since -tomy begins with a consonant (t)."},
-  "phlebitis": {build:["phleb","itis"], spell:"phlebitis", system:"Circulatory",
+  "phlebitis": {build:["phleb","itis"], spell:"phlebitis", system:"Cardiovascular",
     def:"inflammation of a vein", plain:"an inflamed, tender vein",
     note:"phleb/o + -itis; drop the o before the vowel suffix."},
-  "phlebectasis": {build:["phleb","ectasis"], spell:"phlebectasis", system:"Circulatory",
+  "phlebectasis": {build:["phleb","ectasis"], spell:"phlebectasis", system:"Cardiovascular",
     def:"dilation (widening) of a vein", plain:"an abnormally widened vein",
     note:"phleb/o + -ectasis; drop the o since -ectasis begins with a vowel (e)."},
-  "venipuncture": {build:["ven","puncture"], spell:"venipuncture", system:"Circulatory",
+  "venipuncture": {build:["ven","puncture"], spell:"venipuncture", system:"Cardiovascular",
     def:"the puncture of a vein, typically to draw blood or start an IV", plain:"piercing a vein with a needle",
     note:"ven/i + -puncture; keep the i since -puncture begins with a consonant (p). This root's combining vowel is i, not o — not every root uses the same vowel."},
-  "venous": {build:["ven","ous"], spell:"venous", system:"Circulatory",
+  "venous": {build:["ven","ous"], spell:"venous", system:"Cardiovascular",
     def:"pertaining to a vein", plain:"having to do with veins",
     note:"ven/i + -ous; drop the i since -ous begins with a vowel (o)."},
-  "intravenous": {build:["intra","ven","ous"], spell:"intravenous", system:"Circulatory",
+  "intravenous": {build:["intra","ven","ous"], spell:"intravenous", system:"Cardiovascular",
     def:"within or into a vein", plain:"directly into a vein",
     note:"intra- (within) + ven/i + -ous; drop the i before the vowel suffix, same as venous. No combining vowel is needed between the prefix and the root."},
-  "arteritis": {build:["arteri","itis"], spell:"arteritis", system:"Circulatory",
+  "arteritis": {build:["arteri","itis"], spell:"arteritis", system:"Cardiovascular",
     def:"inflammation of an artery", plain:"an inflamed artery",
     note:"arteri/o + -itis; drop the o before the vowel suffix."},
-  "angiogram": {build:["angi","gram"], spell:"angiogram", system:"Circulatory",
+  "angiogram": {build:["angi","gram"], spell:"angiogram", system:"Cardiovascular",
     def:"a record or image of a blood vessel", plain:"an imaging picture of a blood vessel",
     note:"angi/o + -gram; keep the o since -gram begins with a consonant (g)."},
-  "erythrocyte": {build:["erythr","cyte"], spell:"erythrocyte", system:"Hematology (blood)",
+  "erythrocyte": {build:["erythr","cyte"], spell:"erythrocyte", system:"Blood and Lymph",
     def:"a red blood cell", plain:"a red blood cell",
     note:"erythr/o + -cyte; keep the o since -cyte begins with a consonant (c)."},
-  "leukocyte": {build:["leuk","cyte"], spell:"leukocyte", system:"Hematology (blood)",
+  "leukocyte": {build:["leuk","cyte"], spell:"leukocyte", system:"Blood and Lymph",
     def:"a white blood cell", plain:"a white blood cell",
     note:"leuk/o + -cyte; keep the o since -cyte begins with a consonant (c)."},
-  "thrombocyte": {build:["thromb","cyte"], spell:"thrombocyte", system:"Hematology (blood)",
+  "thrombocyte": {build:["thromb","cyte"], spell:"thrombocyte", system:"Blood and Lymph",
     def:"a blood platelet (a clotting cell)", plain:"a platelet, the blood's clotting cell",
     note:"thromb/o + -cyte; keep the o since -cyte begins with a consonant (c)."},
-  "leukopenia": {build:["leuk","penia"], spell:"leukopenia", system:"Hematology (blood)",
+  "leukopenia": {build:["leuk","penia"], spell:"leukopenia", system:"Blood and Lymph",
     def:"a deficiency of white blood cells", plain:"too few white blood cells",
     note:"leuk/o + -penia; keep the o since -penia begins with a consonant (p)."},
-  "thrombosis": {build:["thromb","osis"], spell:"thrombosis", system:"Hematology (blood)",
+  "thrombosis": {build:["thromb","osis"], spell:"thrombosis", system:"Blood and Lymph",
     def:"an abnormal condition of clot formation inside a vessel", plain:"a blood clot forming where it shouldn't",
     note:"thromb/o + -osis; drop the o before the vowel suffix (the visible o in the final word belongs to -osis itself)."},
-  "hemostasis": {build:["hem","stasis"], spell:"hemostasis", system:"Hematology (blood)",
+  "hemostasis": {build:["hem","stasis"], spell:"hemostasis", system:"Blood and Lymph",
     def:"the stopping or controlling of blood flow", plain:"the body's process of stopping bleeding",
     note:"hem/o + -stasis; keep the o since -stasis begins with a consonant (s). Note hem/o is a shorter alternate form of hemat/o — both mean blood."},
-  "hemolysis": {build:["hem","lysis"], spell:"hemolysis", system:"Hematology (blood)",
+  "hemolysis": {build:["hem","lysis"], spell:"hemolysis", system:"Blood and Lymph",
     def:"the breakdown or destruction of red blood cells", plain:"red blood cells breaking apart",
     note:"hem/o + -lysis; keep the o since -lysis begins with a consonant (l)."},
-  "hematopoiesis": {build:["hemat","poiesis"], spell:"hematopoiesis", system:"Hematology (blood)",
+  "hematopoiesis": {build:["hemat","poiesis"], spell:"hematopoiesis", system:"Blood and Lymph",
     def:"the formation of blood cells", plain:"the body's process of making new blood cells",
     note:"hemat/o + -poiesis; keep the o since -poiesis begins with a consonant (p)."},
-  "hematocrit": {build:["hemat","crit"], spell:"hematocrit", system:"Hematology (blood)",
+  "hematocrit": {build:["hemat","crit"], spell:"hematocrit", system:"Blood and Lymph",
     def:"the proportion of red blood cells in a blood sample, separated and measured", plain:"the percentage of a blood sample that is red blood cells",
     note:"hemat/o + -crit; keep the o since -crit begins with a consonant (c). A lab test run directly on drawn blood."},
-  "hemoglobin": {build:["hem","globin"], spell:"hemoglobin", system:"Hematology (blood)",
+  "hemoglobin": {build:["hem","globin"], spell:"hemoglobin", system:"Blood and Lymph",
     def:"the oxygen-carrying protein of red blood cells", plain:"the protein in blood that carries oxygen",
     note:"hem/o + -globin; keep the o since -globin begins with a consonant (g)."},
-  "hemorrhage": {build:["hem","rrhage"], spell:"hemorrhage", system:"Hematology (blood)",
+  "hemorrhage": {build:["hem","rrhage"], spell:"hemorrhage", system:"Blood and Lymph",
     def:"a bursting forth of blood; excessive or uncontrolled bleeding", plain:"heavy, uncontrolled bleeding",
     note:"hem/o + -rrhage; keep the o since -rrhage begins with a consonant (r)."},
-  "hematoma": {build:["hemat","oma"], spell:"hematoma", system:"Hematology (blood)",
+  "hematoma": {build:["hemat","oma"], spell:"hematoma", system:"Blood and Lymph",
     def:"a localized collection of clotted blood outside a vessel", plain:"a bruise-like pooling of blood beneath the skin",
     note:"hemat/o + -oma; drop the o before the vowel suffix. A common, usually minor, complication of a blood draw."},
-  "lymphocyte": {build:["lymph","cyte"], spell:"lymphocyte", system:"Hematology (blood)",
+  "lymphocyte": {build:["lymph","cyte"], spell:"lymphocyte", system:"Blood and Lymph",
     def:"a type of white blood cell of the lymphatic system", plain:"a lymph-system white blood cell",
     note:"lymph/o + -cyte; keep the o since -cyte begins with a consonant (c)."},
   "subcutaneous": {build:["sub","cutane","ous"], spell:"subcutaneous", system:"Integumentary (skin)",
     def:"beneath the skin", plain:"just under the skin",
     note:"sub- (under) + cutane/o + -ous; drop the o before the vowel suffix, giving cutaneous, then add sub-. The layer a needle passes through before reaching a vein."},
-  "anticoagulant": {build:["anti","coagul","ant"], spell:"anticoagulant", system:"Hematology (blood)",
+  "anticoagulant": {build:["anti","coagul","ant"], spell:"anticoagulant", system:"Blood and Lymph",
     def:"a substance that prevents or slows blood clotting", plain:"something that keeps blood from clotting",
     note:"anti- (against) + coagul/o + -ant; drop the o before the vowel suffix -ant, then add anti-. The additive in most blood-draw collection tubes."},
-  "coagulopathy": {build:["coagul","pathy"], spell:"coagulopathy", system:"Hematology (blood)",
+  "coagulopathy": {build:["coagul","pathy"], spell:"coagulopathy", system:"Blood and Lymph",
     def:"a disorder affecting the blood's ability to clot", plain:"a blood-clotting disorder",
     note:"coagul/o + -pathy; keep the o since -pathy begins with a consonant (p)."}
 };
@@ -3398,7 +3399,7 @@ const Save = {
 /* Bring any older save up to the v3 schema (chapter-based). Safe, non-destructive. */
 function migrate(st){
   if(!st || typeof st!=="object") return null;
-  if(st.ver>=3 && st.ver<=7){
+  if(st.ver>=3 && st.ver<=8){
     if(!Array.isArray(st.foundMats)) st.foundMats=[];
     if(!st.arcade) st.arcade={ slice:{best:0,plays:0}, match:{best:0,plays:0} };  // v3 → v4 backfill
     // v4 → v5 backfill: bench progression + road economy
@@ -3423,7 +3424,17 @@ function migrate(st){
       st.settings.difficulty = "steady";
     }
     if(!st.skill || typeof st.skill!=="object") st.skill={rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null};
-    st.ver=7;
+    // v7 → v8 backfill: the meta layer (achievements, dailies, records, relics, SRS)
+    const m8=newGame();
+    if(!st.ach   || typeof st.ach!=="object")   st.ach   = {};
+    if(!st.daily || typeof st.daily!=="object") st.daily = m8.daily;
+    if(!st.records|| typeof st.records!=="object") st.records = m8.records;
+    if(!st.relics|| typeof st.relics!=="object") st.relics = {};
+    if(typeof st.chests!=="number") st.chests = 0;
+    if(!st.srs   || typeof st.srs!=="object")   st.srs   = {};
+    if(!st.lore  || typeof st.lore!=="object")  st.lore  = {seen:[], correct:{}};
+    if(typeof st.lifetime!=="object" || !st.lifetime) st.lifetime = m8.lifetime;
+    st.ver=8;
     // backfill mastery entries for any PARTS/TERMS added since this save was written,
     // so returning players' weak/seen tracking covers the newly learnable content
     if(st.mastery){
@@ -3565,7 +3576,7 @@ function diffTune(){
 
 function newGame(){
   return {
-    ver:7,
+    ver:8,
     chapter:0,                 // index into CHAPTERS
     rep:0, coin:0, pages:0,
     servedChapterIds:[],       // chapter ids completed
@@ -3591,6 +3602,15 @@ function newGame(){
     heirloom:null,             // one tool carried between missions; wears a tier per journey
     cachesMarked:0,            // caches marked for the Reed Guild across the campaign
     arcade:{ slice:{best:0, plays:0}, match:{best:0, plays:0} },  // Training Hall records
+    /* ---- v8: the meta layer ---- */
+    ach:{},                    // achievement id → {at:epochMs, seen:bool}
+    daily:{ date:null, seed:0, score:0, best:0, done:false, streak:0, bestStreak:0, lastDone:null, medals:{} },
+    records:{ endless:[], daily:[], slice:[], match:[], road:[] },  // Hall of Records (local leaderboards)
+    relics:{},                 // relic id → {count, at} — collectible equipment found in chests
+    chests:0,                  // lifetime chests opened
+    srs:{},                    // part id → {ease, reps, due, lapses} — the review scheduler
+    lore:{ seen:[], correct:{} },  // history-of-medicine cards encountered
+    lifetime:{ answers:0, correct:0, terms:0, runs:0, perfectCrafts:0, bestMomentum:0, bossesFelled:0 },
     finished:false
   };
 }
@@ -3963,10 +3983,44 @@ window.__RD_QE = (function(){
   }
 
   /* ---- misspelling generator for spelling items ---- */
-  function misspell(w){
-    const variants=[ w.replace(/o(?=[a-z])/,''), w.replace(/([a-z])\1?/,'$1$1'),
-                     w.replace(/i(?=[a-z])/,''), w.replace(/([bcdfghjklmnpqrstvwxyz])([aeiou])/,'$2$1') ];
-    return variants.find(v=>v!==w && v.length>3) || (w+"a");
+  /* Plausible medical misspellings — the mistakes a learner actually makes:
+     a combining vowel added or dropped, a doubled consonant, a transposition,
+     a swapped vowel. Never touches the first letter (that produced nonsense
+     like "aarthritis", which nobody would ever pick). Returns up to n distinct
+     wrong spellings, all of them close enough to hurt. */
+  function misspellings(w, n){
+    const out=[], mid=(s)=>s.length>4;
+    const add=(v)=>{ if(v && v!==w && v.length>3 && !out.includes(v)) out.push(v); };
+    add(w.replace(/o([a-z])/, "$1"));                 // combining vowel dropped
+    const j=w.search(/[bcdfghjklmnprstvwz](?=[a-z]{2,})/);
+    if(j>0) add(w.slice(0,j+1)+w[j]+w.slice(j+1));    // doubled consonant
+    for(let i=2;i<w.length-2;i++){                    // transposition
+      if(w[i]!==w[i+1]){ add(w.slice(0,i)+w[i+1]+w[i]+w.slice(i+2)); break; }
+    }
+    add(w.replace(/([b-df-hj-np-tv-z])o([b-df-hj-np-tv-z])/, "$1a$2"));  // o→a
+    add(w.replace(/ea/, "ae").replace(/^(.)/, "$1"));                     // ea→ae
+    if(mid(w)) add(w.slice(0, Math.floor(w.length/2)) + w.slice(Math.floor(w.length/2)+1)); // dropped letter
+    add(w+"is"); add(w.replace(/y/,"i"));
+    return out.slice(0, n||3);
+  }
+  function misspell(w){ return misspellings(w,1)[0] || (w+"a"); }
+
+  /* ---- the combining-vowel rule, evaluated from the data ----
+     Every place in the game that asks about the o must agree with the same
+     two clauses: root→root always keeps it; root→suffix keeps it only when the
+     suffix begins with a consonant. Terms with no root junction (tachy- + -pnea)
+     have no combining vowel to ask about and are excluded at the source. */
+  function cvJunctions(T){
+    const out=[];
+    if(!T || !T.build) return out;
+    for(let i=0;i<T.build.length-1;i++){
+      const L=PARTS[T.build[i]], R=PARTS[T.build[i+1]];
+      if(!L || !R || L.kind!=="root" || !L.cv) continue;
+      const rootToRoot = R.kind==="root";
+      out.push({ left:T.build[i], right:T.build[i+1], rootToRoot,
+                 keep: rootToRoot ? true : !R.vowelStart });
+    }
+    return out;
   }
 
   /* helper: assemble a shuffled option list with exactly one correct */
@@ -4050,11 +4104,14 @@ window.__RD_QE = (function(){
     }
     if(type==="spelling"){
       const t=pick(terms); const T=TERMS[t];
-      const wrongs=[ misspell(T.spell) ];
-      const other=shuffle(terms.filter(x=>x!==t)).slice(0,Math.max(1,nWrong-1)).map(x=>TERMS[x].spell);
+      /* Every distractor is a MISSPELLING of the answer. Offering other real
+         terms turned this into a meaning question with a free giveaway — the
+         player never had to look at the letters. */
+      let wrongs=misspellings(T.spell, nWrong);
+      while(wrongs.length<nWrong) wrongs.push(T.spell+"s".repeat(wrongs.length+1));
       return norm({ type, termIds:[t], conceptIds:T.build.slice(), bodySystem:T.system,
-        prompt:`Spelled correctly, the term meaning <b>${T.def}</b> is:`,
-        options:opts(T.spell, wrongs.concat(other)),
+        prompt:`Which spelling of the term meaning <b>${T.def}</b> is correct?`,
+        options:opts(T.spell, wrongs),
         explanation:`It is <b>${T.spell}</b> — ${T.note||"apply the combining-vowel rule."}` });
     }
     if(type==="bodySystem"){
@@ -4066,12 +4123,23 @@ window.__RD_QE = (function(){
         explanation:`<b>${T.spell}</b> — ${T.def} — is classified under <b>${T.system}</b>.` });
     }
     if(type==="cvRule"){
-      const t=pick(multiTerms); const T=TERMS[t];
-      const keepsO = /logy|gram/.test(T.spell);
-      return norm({ type, termIds:[t], conceptIds:T.build.slice(),
-        prompt:`In <b>${T.spell}</b>, is the combining vowel <b>o</b> kept or dropped?`,
-        options:shuffle([{label:"Keep the o",ok:keepsO},{label:"Drop the o",ok:!keepsO}]),
-        explanation:`${T.note||(keepsO?"The o is kept before a consonant suffix.":"The o is dropped before a vowel suffix.")}` });
+      /* Ask about ONE named junction, and read the answer off the rule itself
+         rather than off the spelling. A term like cardiomegaly keeps its o and
+         a term like carditis drops it; the old spelling sniff got 20 terms
+         backwards and then printed a note proving the player right. */
+      const pool=multiTerms.filter(x=>cvJunctions(TERMS[x]).length);
+      if(!pool.length) return generate({types:["partMeaning"], prefer:kind});
+      const t=pick(pool); const T=TERMS[t]; const J=pick(cvJunctions(T));
+      const L=PARTS[J.left], R=PARTS[J.right], v=L.cv;
+      const why = J.rootToRoot
+        ? `Root to root <b>always</b> keeps the combining vowel — even before another vowel. That is why it is <b>${T.spell}</b> and not oste-arthritis.`.replace("oste-arthritis", L.stem+"-"+R.stem)
+        : R.vowelStart
+          ? `<b>${R.text}</b> begins with a vowel (${R.text.replace('-','').charAt(0)}), so the <b>${v}</b> is dropped.`
+          : `<b>${R.text}</b> begins with a consonant (${R.text.replace('-','').charAt(0)}), so the <b>${v}</b> is kept.`;
+      return norm({ type, termIds:[t], conceptIds:[J.left,J.right],
+        prompt:`Joining <b>${L.text}</b> to <b>${R.text}</b> to build <b>${T.spell}</b> — is the combining vowel <b>${v}</b> kept or dropped?`,
+        options:shuffle([{label:"Keep the "+v,ok:J.keep},{label:"Drop the "+v,ok:!J.keep}]),
+        explanation:`${why} ${T.note||""}` });
     }
     if(type==="similar"){
       // pick two terms that share a root but differ (e.g. arthritis vs arthralgia)
@@ -4080,12 +4148,23 @@ window.__RD_QE = (function(){
         if(root){ (byRoot[root]=byRoot[root]||[]).push(t); }});
       const pairsRoots=Object.keys(byRoot).filter(r=>byRoot[r].length>=2);
       if(pairsRoots.length){
-        const r=pick(pairsRoots); const two=shuffle(byRoot[r]).slice(0,2);
-        const t=two[0], T=TERMS[t];
-        return norm({ type, termIds:two, conceptIds:T.build.slice(), bodySystem:T.system,
+        /* The whole point of this type is that every wrong answer SHARES the
+           root, so the player has to read the suffix. Fill all nWrong slots
+           from the same family first; only top up from elsewhere if the family
+           is too small. It used to hand out a flat 50/50 coin flip. */
+        const r=pick(pairsRoots); const fam=shuffle(byRoot[r]);
+        const t=fam[0], T=TERMS[t];
+        let sibs=fam.slice(1, nWrong+1).filter(x=>TERMS[x].def!==T.def);
+        if(sibs.length<nWrong){
+          const extra=shuffle(terms.filter(x=>x!==t && !sibs.includes(x) &&
+            TERMS[x].def!==T.def && TERMS[x].build.some(p=>PARTS[p]&&PARTS[p].kind==="suffix"
+              && T.build.indexOf(p)<0)));
+          sibs=sibs.concat(extra.slice(0, nWrong-sibs.length));
+        }
+        return norm({ type, termIds:[t].concat(sibs), conceptIds:T.build.slice(), bodySystem:T.system,
           prompt:`Which term means &ldquo;${T.def}&rdquo;?`,
-          options:opts(T.spell, [TERMS[two[1]].spell]),
-          explanation:`<b>${T.spell}</b> = ${T.def}; <b>${TERMS[two[1]].spell}</b> = ${TERMS[two[1]].def}. Same root, different suffix.` });
+          options:opts(T.spell, sibs.map(x=>TERMS[x].spell)),
+          explanation:`<b>${T.spell}</b> = ${T.def}. ${sibs.slice(0,2).map(x=>`<b>${TERMS[x].spell}</b> = ${TERMS[x].def}`).join("; ")}. Same root — the suffix is what changes the meaning.` });
       }
       return generate({types:["termDef"], prefer:kind});
     }
