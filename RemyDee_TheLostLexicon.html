@@ -1065,11 +1065,23 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   animation:tokPop .3s var(--ease-back);}
 @keyframes tokPop{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
 [data-motion="reduced"] .combo-tok{animation:none;}
+/* the meaning that would finish a real word — a slot waiting to be filled, not a
+   label, so it reads as part of the word being assembled */
+.combo-want{display:inline-flex;align-items:center;padding:3px 10px;border-radius:7px;
+  font-family:var(--font-read);font-size:.72rem;font-weight:700;color:#f7f1e2;
+  background:rgba(20,14,8,.55);border:1px dashed var(--gold-soft);letter-spacing:.01em;
+  animation:wantPulse 1.6s ease-in-out infinite;}
+@keyframes wantPulse{0%,100%{border-color:rgba(216,189,132,.55);}50%{border-color:rgba(216,189,132,1);}}
+[data-motion="reduced"] .combo-want{animation:none;border-color:var(--gold-soft);}
 .combo-tok.k-prefix{background:linear-gradient(180deg,#c8564e,#a3322b);}
 .combo-tok.k-root{background:linear-gradient(180deg,#4f7261,#33513f);}
 .combo-tok.k-suffix{background:linear-gradient(180deg,#c39a3f,#8a6a2b);}
 .combo-join{color:rgba(243,236,216,.55);font-weight:700;font-size:.8rem;}
-.combo-hint{font-size:.66rem;color:rgba(243,236,216,.6);font-style:italic;letter-spacing:.02em;}
+/* This sat as near-white italic directly on a near-white sky and was, in
+   practice, invisible — which is unhelpful for the one line telling a new player
+   what the road is for. It gets ink behind it, like everything else up there. */
+.combo-hint{font-size:.7rem;color:#f7f1e2;font-style:italic;letter-spacing:.02em;
+  background:rgba(20,14,8,.62);padding:3px 10px;border-radius:7px;display:inline-block;}
 .combo-pending{flex-basis:100%;text-align:center;font-size:.66rem;color:var(--gold-soft,#d8b45f);
   letter-spacing:.02em;margin-top:1px;}
 /* HOVER TO STUDY — the definition card that follows the cursor on the road */
@@ -1159,7 +1171,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   font-family:var(--font-read);user-select:none;touch-action:none;}
 .pace-btn .pb-glyph{font-size:1rem;line-height:1;}
 .pace-btn .pb-name{font-weight:700;font-size:.76rem;letter-spacing:.03em;}
-.pace-btn .pb-hint{font-size:.6rem;color:rgba(243,236,216,.75);max-width:130px;overflow:hidden;
+.pace-btn .pb-hint{font-size:.62rem;color:rgba(247,241,226,.95);max-width:130px;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap;}
 .pace-btn:hover{transform:translateY(-2px);}
 .pace-btn.active{background:linear-gradient(180deg,rgba(216,189,132,.9),rgba(181,50,43,.55));
@@ -1180,17 +1192,23 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .mission-top{position:absolute;top:0;left:0;right:0;z-index:6;padding:8px 14px;display:flex;
   justify-content:space-between;align-items:center;color:var(--rice);gap:10px;flex-wrap:nowrap;
   pointer-events:none;
-  background:linear-gradient(180deg,rgba(20,14,8,.66),transparent);}
+  /* This gradient used to reach transparent by the middle of its own content, so
+     the labels underneath it were pale gold on a pale sky and could not be read
+     at all. It now holds its ink for the full height of the text and only
+     feathers out below it, and the text carries a shadow for the frames where
+     the sky behind it goes bright. */
+  background:linear-gradient(180deg,rgba(20,14,8,.90) 0%,rgba(20,14,8,.84) 58%,rgba(20,14,8,.42) 84%,rgba(20,14,8,0) 100%);
+  text-shadow:0 1px 3px rgba(0,0,0,.85);}
 .mission-top .who{font-family:var(--font-cal);font-weight:700;font-size:.82rem;opacity:.9;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:34vw;}
 .mission-top .icon-btn{pointer-events:auto;}
-.mission-pause-btn{flex:none;font-size:.7rem;letter-spacing:.02em;background:rgba(255,255,255,.1);
-  color:var(--rice);border-color:rgba(255,255,255,.2);}
-.mission-pause-btn:hover{background:rgba(255,255,255,.18);}
+.mission-pause-btn{flex:none;font-size:.8rem;letter-spacing:.02em;background:rgba(20,14,8,.82);
+  color:#f7f1e2;border:1px solid rgba(216,189,132,.55);}
+.mission-pause-btn:hover{background:rgba(20,14,8,.94);border-color:var(--gold-soft);}
 .mission-top-btns{display:flex;gap:6px;align-items:center;flex:none;}
 .prep-bars{display:flex;gap:9px;font-size:.66rem;flex-wrap:nowrap;}
 .prep-bars .pb{display:flex;flex-direction:column;gap:2px;min-width:52px;}
-.prep-bars .pb .lab{color:var(--gold-soft);letter-spacing:.05em;font-size:.6rem;}
+.prep-bars .pb .lab{color:#f0dcae;letter-spacing:.06em;font-size:.64rem;font-weight:600;}
 .prep-bars .pb .bar{height:6px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden;}
 .prep-bars .pb .bar > i{display:block;height:100%;background:var(--jade-soft);border-radius:5px;transition:width .5s var(--ease);}
 /* stamina is the run's clock — when it runs low the bar says so, loudly */
@@ -1250,7 +1268,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .pace-gauge{display:inline-flex;align-items:center;gap:7px;padding:3px 11px;border-radius:999px;
   background:rgba(20,16,10,.5);border:1px solid rgba(189,157,95,.45);pointer-events:none;
   font-family:var(--font-read);transition:border-color .25s,box-shadow .25s,transform .18s var(--ease-back);}
-.pace-gauge .pg-lab{font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,236,216,.62);}
+.pace-gauge .pg-lab{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,236,216,.92);}
 .pace-gauge .pg-val{font-family:var(--font-cal);font-weight:900;font-size:.92rem;color:var(--gold-soft);min-width:38px;text-align:right;}
 .pace-gauge .pg-arrow{font-size:.76rem;opacity:0;transform:translateY(3px);transition:opacity .2s,transform .2s;color:#8fd38f;}
 .pace-gauge.accel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(216,189,132,.32);transform:scale(1.06);}
@@ -1451,6 +1469,14 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 .tag.risk{background:var(--jade);color:var(--rice);}
 .tag.risk.r2{background:var(--gold);color:var(--ink);}
 .tag.risk.r3{background:var(--cinnabar);color:var(--rice);}
+/* The Lexicon's filter chips rendered 17px tall — well under the 24px WCAG 2.5.8
+   asks for and less than half a comfortable thumb. They are buttons; they are
+   sized like buttons now, and the selected one says so to a screen reader
+   through aria-pressed rather than only through a class. */
+.tag.filter{min-height:32px;padding:.42em .95em;line-height:1.2;cursor:pointer;
+  border:1px solid transparent;}
+.tag.filter[aria-pressed="true"],.tag.filter.on{border-color:var(--gold);}
+@media (pointer:coarse){ .tag.filter{min-height:40px;padding:.55em 1.05em;} }
 .tag.tier{background:var(--rice-3);color:var(--ink-soft);}
 .tag.tier.t2{background:var(--gold-soft);color:var(--ink);}
 .tag.tier.t3{background:var(--cinnabar);color:var(--rice);}
@@ -6592,7 +6618,11 @@ function openGloss(){
   const fwrap=$('#gloss-filter'); fwrap.innerHTML="";
   ["all","prefix","root","suffix","terms","directions"].forEach(k=>{
     const b=el("button","tag filter"+(k==="all"?" on":"")); b.textContent=k; b.dataset.f=k;
-    b.onclick=()=>{ $$('#gloss-filter .filter').forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    // selection was carried as a class only — invisible to anything that is not
+    // looking at the screen
+    b.setAttribute("aria-pressed", k==="all"?"true":"false");
+    b.onclick=()=>{ $$('#gloss-filter .filter').forEach(x=>{ x.classList.remove("on"); x.setAttribute("aria-pressed","false"); });
+      b.classList.add("on"); b.setAttribute("aria-pressed","true");
       renderGloss(search.value.trim().toLowerCase(), k); };
     fwrap.appendChild(b);
   });
@@ -10953,7 +10983,22 @@ function updateComboHud(){
   M.combo.forEach((id,i)=>{ if(i) cb.appendChild(el("span","combo-join","+"));
     const p=PARTS[id]; cb.appendChild(el("span","combo-tok k-"+p.kind, p.text)); });
   if(PARTS[M.combo[M.combo.length-1]].kind!=="suffix"){
-    cb.appendChild(el("span","combo-join","+")); cb.appendChild(el("span","combo-hint","suffix?")); }
+    cb.appendChild(el("span","combo-join","+"));
+    /* "suffix?" told the player the SHAPE of the missing piece, which they can
+       see from the tiles anyway. Naming the MEANING that would finish a real word
+       is the difference between the road testing recognition — grab whatever is
+       legal — and testing recall: which of these three means inflammation. It
+       only appears when a real term is one piece away, so it stays a reward for
+       having built something that goes somewhere. */
+    const need=comboNeeds();
+    const want=need.finishes.map(id=>PARTS[id] && PARTS[id].mean).filter(Boolean);
+    if(want.length){
+      const uniq=[...new Set(want)].slice(0,2);
+      cb.appendChild(el("span","combo-want", uniq.join(" · ")));
+    } else {
+      cb.appendChild(el("span","combo-hint","suffix?"));
+    }
+  }
   const pv=comboPendingValue();
   if(pv){ cb.appendChild(el("span","combo-pending",
     `bank ≈ ${pv.ink} ink · ×${pv.momentum} — a hit now loses it`)); }
@@ -10976,7 +11021,7 @@ function screenX(p){ return M.cv.width*0.30 + (p - M.progress)*VIS; }
 function spawnAheadP(extra){ return M.progress + (M.cv.width*0.78 + (extra||0))/VIS; }
 
 /* ---------- spawning ---------- */
-function spawnPickup(forceLane, forceType, extra){
+function spawnPickup(forceLane, forceType, extra, forcePart){
   withRoadSeed(()=>{
   const lane=forceLane!=null?forceLane:(Math.floor(Math.random()*3));
   let type=forceType;
@@ -10990,11 +11035,70 @@ function spawnPickup(forceLane, forceType, extra){
     else if(lane===2) type = roll<0.02?"shard" : roll<0.04?"reagent" : roll<0.30?"ink" : "lexeme";
     else               type = roll<0.03?"shard" : roll<0.06?"reagent" : roll<0.16?"ink" : "lexeme";
   }
-  const partId = (type==="lexeme") ? pickRoadPart() : null;
+  const partId = (type==="lexeme") ? (forcePart || pickRoadPart()) : null;
   const reagentId = (type==="reagent") ? pick(Object.keys(window.__RD_REAGENTS||{ink:1})) : null;
-  const u = clamp(LANES[lane].u + (Math.random()-0.5)*0.10, 0.02, 0.98);
+  /* The jitter used to be +/-0.05 of the band height, which is enough for two
+     items of the same offer to land close enough to sweep up together — and an
+     offer you can take all of is not a choice. Tightened so bands stay distinct. */
+  const u = clamp(LANES[lane].u + (Math.random()-0.5)*0.055, 0.02, 0.98);
   M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, u, type, partId, reagentId, hover:0, got:false, read:false});
   });
+}
+/* WHAT THE CHAIN IN HAND STILL NEEDS.
+   Reads the combo and answers with the kind of part that would legally extend
+   it — and, when the player is one piece from a real term, which meanings would
+   finish one. That last part is the difference between the road testing
+   recognition ("grab the tile that looks legal") and testing recall ("which of
+   these three means inflammation"). */
+function comboNeeds(){
+  const c=M.combo;
+  if(!c.length) return {kinds:["prefix","root"], finishes:[]};
+  const last=PARTS[c[c.length-1]];
+  const kinds = last.kind==="prefix" ? ["root"] : ["root","suffix"];
+  // every real term that starts with exactly this chain
+  const finishes=[];
+  Object.keys(TERMS).forEach(t=>{
+    const b=TERMS[t].build;
+    if(b.length!==c.length+1) return;
+    for(let i=0;i<c.length;i++) if(b[i]!==c[i]) return;
+    const nxt=b[c.length]; if(PARTS[nxt] && finishes.indexOf(nxt)<0) finishes.push(nxt);
+  });
+  return {kinds, finishes};
+}
+/* An OFFER: two or three word-parts in the air at the same distance, in
+   different bands, at most one of which finishes a real term. The player has to
+   read them and pick — which is the whole game — rather than sweep up whatever
+   drifts past. Hazards are unchanged; this only shapes the word-parts. */
+function spawnOffer(){
+  const need=comboNeeds();
+  const bands=shuffle([0,1,2]);
+  const n = 2 + (Math.random()<0.45 ? 1 : 0);
+  const dist = Math.random()*90;
+  const used=new Set(M.combo);
+  // the piece that would complete a real word, if one is available
+  let winner = need.finishes.filter(id=>!used.has(id));
+  winner = winner.length ? pick(winner) : null;
+  for(let i=0;i<n;i++){
+    const lane=bands[i];
+    // one slot in every offer can be treasure rather than a word, so the bands
+    // keep their identities (DEPTH_PLAN §3.1) without diluting the choice
+    if(i===n-1 && Math.random()<0.22){ spawnPickup(lane, lane===0?"shard":lane===2?"ink":"reagent", dist+i*14); continue; }
+    let partId=null;
+    if(i===0 && winner) partId=winner;
+    else {
+      // a legal continuation that does NOT finish a word — the tempting wrong answer
+      const kind=pick(need.kinds);
+      for(let tries=0;tries<8 && !partId;tries++){
+        const cand=pickRoadPart(kind);
+        if(cand && cand!==winner && !used.has(cand)) partId=cand;
+      }
+    }
+    spawnPickup(lane, "lexeme", dist+i*14, partId);
+  }
+  // when the chain is empty there is nothing to complete, so keep the road honest
+  // by making sure at least one root is on offer to start one
+  if(!M.combo.length && !M.pickups.some(pk=>!pk.got && pk.partId && PARTS[pk.partId].kind==="root"))
+    spawnPickup(bands[2], "lexeme", dist+150, pickRoadPart("root"));   // a band this offer did not use
 }
 /* weighted, weather-aware hazard deck — refilled when empty, rebuilt when weather turns */
 /* run one draw of `fn` through a seed-derived, isolated RNG (swapped in and
@@ -11183,7 +11287,14 @@ function tick(t){
 
     // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
     // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
-    M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.1+Math.random()*1.0; spawnPickup(); }
+    /* THE ROAD IS SUPPOSED TO BE A DECISION, NOT A CONVEYOR.
+       Parts used to drip out one at a time, roughly every 1.6s, each in a random
+       band. Screenshotted mid-run there was frequently exactly ONE word-part on a
+       1320px field, which means there was nothing to decide: you either reached
+       it or you didn't. A choice only exists when two or three parts are in the
+       air at once, in different bands, and only some of them continue the word
+       you are holding. They arrive in offers now. */
+    M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.7+Math.random()*1.1; spawnOffer(); }
     M.spawnHazT-=dt;  if(M.spawnHazT<=0){ M.spawnHazT=(1.9+Math.random()*1.4)/diffCurve.density; spawnHazard(); }
 
     // hazards crossing the squad
