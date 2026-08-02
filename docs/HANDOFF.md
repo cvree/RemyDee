@@ -8,16 +8,19 @@ Paste the block below into a fresh conversation to continue this work.
 
 You are continuing an overhaul of **Remy Dee: The Lost Lexicon**, an educational
 adventure game that teaches real medical terminology. Repo: `cvree/RemyDee`,
-working dir `/home/user/RemyDee`.
+working dir `/home/user/RemyDee`. Live at https://cvree.github.io/RemyDee/ —
+every push to `main` redeploys it via `.github/workflows/pages.yml`.
 
 ### What this project is
 
-One self-contained file: `RemyDee_TheLostLexicon.html` (~800KB, ~13,700 lines).
+One self-contained file: `RemyDee_TheLostLexicon.html` (~850KB, ~14,400 lines).
 CSS in `<style>` blocks, markup in the middle, **9 inline `<script>` blocks**.
 This must stay a single file — no image, font or audio assets can be added.
 Everything visual is CSS, inline SVG and canvas; all sound is procedural
-WebAudio. Four CDN libraries (GSAP, THREE, Vanta, Lenis) are loaded but every
-use is behind a feature detect with a working fallback.
+WebAudio. Four CDN libraries (GSAP, THREE, Vanta, Lenis) plus Google Fonts are
+loaded but **every use is behind a feature detect with a working fallback** —
+and the CDN is blocked in the dev container, so you always test the offline
+path whether you mean to or not.
 
 Modules talk through globals: `window.__RD_DATA`, `__RD_ENG`, `__RD_QE`,
 `__RD_FX`/`window.FX`, `__RD_SCREENS`, `__RD_PREP`, `__RD_MISSION`,
@@ -30,129 +33,107 @@ Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 ### How to verify anything
 
 ```
-node syntaxcheck.js                      # parses all 9 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23; do node test$t.js; done
+npm install jsdom playwright          # node_modules is gitignored
+node syntaxcheck.js                   # parses all 9 script blocks
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28; do node test$t.js | tail -1; done
 ```
 
-18 jsdom suites, **765 assertions, all passing, zero window errors**. `testlib.js`
-is the shared harness (mocks AudioContext, canvas 2d, strips CDN scripts).
-Always run the full suite — several passes here broke a distant test.
+22 jsdom suites, **~840 assertions, all passing, zero window errors**.
+`testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
+scripts, counts window errors). Always run the full suite — several passes here
+broke a distant test.
 
-To see it for real, Playwright + the preinstalled browser:
+**Look at it in a real browser. This is not optional.** Playwright with the
+preinstalled Chromium:
 ```js
 chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 ```
-**Do this.** Two real regressions in the last pass (a focus ring boxing every
-screen title, and props stretched into slabs) were invisible to jsdom and
-obvious in one screenshot.
+Nearly every defect fixed in the last pass was found by taking a screenshot and
+looking at it: the road HUD's labels were invisible, three panels were stacked
+on top of each other on a phone, the road had one word-part on screen at a time.
+jsdom cannot see any of that.
 
 ### What has been done
 
-Merged to `main` (`af1dc05`). Eight passes:
+Two large passes. The first (merged as `af1dc05`) fixed learning correctness,
+built the meta layer, added three lieutenants, hardened saves, and did the art
+and accessibility groundwork — see the git log for detail.
 
-1. **Learning correctness.** `cvRule` decided "keep or drop the combining vowel"
-   by string-matching the spelling for `logy|gram`, so ~20 terms were graded
-   backwards and then shown an explanation proving the player right. Now reads
-   the rule off the data. Also: `spelling` distractors were other real terms;
-   `similar` was a coin flip; `bodySystem` offered Circulatory *and*
-   Cardiovascular; `osteoarthritis` was defined as inflammatory.
-2. **The Two Tongues.** All 73 word-parts carry `lang` (Gk/L) and `src`
-   (ancestor word). `TWIN_ROOTS` derives Greek/Latin pairs from the data.
-   Three new question types.
-3. **The Chronicle.** 16 figures in the history of medicine, each with a deed,
-   a legacy, and a plausible falsehood the villain asserts. Four question types,
-   deliberately kept off survival gates.
-4. **Real spaced repetition.** SM-2 per part and per term, counted in *runs*
-   not days, with a learning queue so a just-missed part stays in front of the
-   player. The re-ask debt persists across runs.
-5. **The meta layer** (`__RD_META`): 38 trophies, 16 relics in 4 sets whose
-   effects are folded into `diffTune()`, chests with an earned rank, the
-   **Daily Trial** (12 questions seeded off the UTC date, identical for every
-   player), and the Hall of Records.
-6. **Three mid-campaign lieutenants** (ch2/ch4/ch6) — Praefixa demands prefixes,
-   Terminus suffixes, Bilingua alternates Greek and Latin.
-7. **Robustness.** Five reproduced bugs: a future-version save wiped the
-   campaign; `mastery:null` crashed the hub; a partial `settings` threw at boot;
-   the Daily Trial kept its clock running after you left the screen and burned
-   all three lives off-screen; chests granted while one was open were silently
-   discarded. Plus: 11 authored travelers could never build their term (now all
-   43 do), a rAF Set that grew one entry per frame forever, and spam-clicking
-   depart leaving 6× render loops.
-8. **Accessibility + art.** Pinch-zoom was disabled; `prefers-reduced-motion`
-   was ignored in CSS; right/wrong was hue-only at 1.00:1 in greyscale; focus
-   was never managed. Then a scene table (every screen used the identical
-   backdrop), seeded brushed ridges with SVG ink filters, an impact layer
-   (`FX.shake/impact/pop` — the game had *no* screen shake at all), and a real
-   music state machine (it was a random-note generator, and the road was silent).
+The second pass, in `main` now:
 
-### What is left — verified findings, not speculation
+1. **Learning integrity.** `completeTerm` recorded every completed chain as
+   correct practice for every part in it — but only 55 of the 1,290 two-part
+   chains the road can produce are real terms. Credit is gated on a real term
+   now; coined chains keep momentum and get told what they built.
+2. **The scheduler.** Measured chasing weak items at only 1.38x; now 3.5–3.9x,
+   asserted in `test24.js`. One lucky guess used to end the learning queue; the
+   resting floor ignored lapses; a 24-run interval cap retired parts for the
+   rest of a campaign nowhere near 24 runs long.
+3. **Distractors.** Parts carry a `sense`; same-sense parts never meet. 57 of
+   4,000 generated true/false items had been graded wrong because the game
+   teaches `endo-`/`intra-` as twins and then marked one of them incorrect.
+4. **Fifteen factual corrections**, worst of which was a combining-vowel note
+   that spells its own example wrong (`cardi/o + -itis` does not give
+   `cardiitis`).
+5. **The corpus grew**: 73 → 84 parts, 67 → 77 terms. Latin partners for
+   `nephr/o`, `rhin/o`, `ot/o`, `pneumon/o` take Greek/Latin twin pairs from 3
+   to 8; `-al`, `-ic`, `-ary`, `-logist`, `-plasty`, `-stomy` arrive with nine
+   real terms. Every one of the 84 parts now appears in at least one term.
+6. **The first minute.** Difficulty chooser off the cold path (new games are
+   `adaptive`; it is offered once after the first road). Seven-panel prologue is
+   one scrolling page. Eleven clicks to the first real decision became three.
+   The page carries a combining-vowel primer the game never had.
+7. **The road is a decision.** Word-parts arrive in *offers* — two or three at
+   once in different bands, at most one finishing a real term. The combo HUD
+   names the *meaning* that would finish the word instead of saying "suffix?".
+8. **Legibility and access.** Road HUD text had no ink behind it; a `main`
+   landmark and skip link were missing entirely; eight map buttons claimed to be
+   list items; Lexicon filter chips were 17px tall.
+9. **The Lexicon teaches.** Every part now shows its tongue, its ancestor word,
+   and the terms that use it — all three were already in the data and none were
+   shown.
 
-Three audits produced these. They are real and were measured; they were not
-reached before the handoff.
+### What is left — verified, not speculation
 
-**First-minute experience (highest priority — the brief asks for a "wow" in the
-first minute and this is the weakest part of the game).**
-- 11 clicks and ~450–600 words of reading before the player does anything
-  skillful. Path: `showTitle 5044` → `showDifficulty 5002` → `startIntro 5091`
-  (7 prose panels, 169 words) → `showHub` → `openChapter` → `openBuilder`.
-- `showDifficulty` asks the player to price "hazard density" and "gate read
-  time" — four nouns that do not exist in their head yet — and already defaults.
-  Recommendation: cut it from the cold path (keep `adaptive`), surface it on the
-  results screen after the first road. Collapse the 7-panel intro to one
-  scrollable page.
-
-**Art (from the art audit, P1/P2 not yet done).**
-- Transitions: `TRANSITION` map omits `s-arcade` and `s-title`; `showTitle`
-  passes `instant:true`, so returning from the ending is a hard cut. No held
-  beat, no letterbox, no camera push. `screenIn` animates `scale(.995)` —
-  imperceptible.
+**Art (from the art audit; P1/P2 not done).**
 - Everything is a rounded web card: `--r-md:12px`, `--r-lg:22px`, `.panel`,
-  `.modal-card`, `.trial-opt`. Proposal: radius 12→3, carved-stone option
-  buttons that press *in*, lacquer buttons (kill the `0 5px 0` Material shadow).
-- Silhouettes are crude: `portraitSVG` is a square `<rect>` inside a round mask
-  with a `<circle>` head; `walkerSVG` legs and arms are literal `<rect>`s;
-  `radixSVG` is a Western cartoon fox (white sclera, pupil highlights) in a Ming
-  ink game.
-- `FX.countUp` exists and is used 4 times. The Trial score never counts up.
+  `.modal-card`. Proposal: radius 12→3, carved-stone option buttons that press
+  *in*, lacquer buttons (kill the `0 5px 0` Material shadow).
+- `screenIn` animates `scale(.995)` — imperceptible.
+- Silhouettes are crude: `portraitSVG` is a square `<rect>` in a round mask,
+  `walkerSVG` limbs are literal `<rect>`s, `radixSVG` is a Western cartoon fox
+  in a Ming ink game.
+- The difficulty screen leaves the bottom half of the frame empty.
 - No `writing-mode` anywhere — no vertical seal text.
-- Without the font CDN the entire calligraphic identity falls back to Times.
 
-**Accessibility (measured contrast ratios).**
-- `.topbar .brand b` cinnabar on ink **2.99**; `.cr-row .cr-pip` **2.48**;
-  `.assembly .placeholder` **3.59**; `.gloss-search:focus` **1.23**.
-- `html[data-contrast="high"]` *regresses* `.btn.gold` from 7.05 to **3.91**.
-- `#sliceCanvas` and `#craftCanvas` are keyboard-unplayable (pointer events
-  only, no tabindex). The road itself is fine — W/S/arrows/Space/1-2-3/G.
-- No `<main>`, no landmarks, no skip link.
-- `.map-node` uses `role="listitem"` on a focusable Enter/Space handler (should
-  be `role="button"`); `.diff-card` carries selection as a class only.
-- WCAG 2.2.1: the Trial's 15s clock extends only to 24s via `timerRelax`, whose
-  settings label never mentions the Trial.
-- `.tile{touch-action:none}` freezes scrolling when a drag starts on a tray tile.
-- Road steering binds `pointerdown` on **`window`**, so tapping the pause button
-  also steers the caravan. `.mission-hint` still says "Lead the squad with the
-  **mouse**".
+**Performance (P2 — nothing is slow enough to hurt yet).**
+- Cache the per-frame `document.querySelector` calls in `updatePrepBars`,
+  `updateMomentumMeter`, `updatePaceGauge` and `rubPaint` at mission/craft start.
+- Road sky, bench felt and `drawHeat` gradients are rebuilt every frame; build
+  once per canvas resize.
 
-**Performance (measured, all P2 — nothing is slow enough to hurt yet).**
-- 11 `document.querySelector` per road frame (`updatePrepBars`,
-  `updateMomentumMeter`, `updatePaceGauge`); 16 per frame on all 7 bench crafts
-  (`rubPaint` builds attribute selectors in a template literal every frame).
-  Cache the nodes at mission/craft start.
-- Gradients rebuilt every frame: road sky, bench felt, `drawHeat`. Build once
-  per canvas resize.
-
-**Never audited.** The gameplay/progression/rewards/replayability agent died on
-a session limit and never reported. Nobody has adversarially reviewed the core
-loop's pacing, the reward curves, or day-3/day-10 replayability.
+**Learning design (from the learning audit; the corpus fixes are done, these
+are not).**
+- The road's rune gates still teach only with a one-line caption that scrolls
+  away — the mini-challenge got a proper lesson beat, gates did not.
+- Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
+- 24 terms and 19 parts are never introduced by a traveler — they exist only as
+  quiz material.
+- `showReveal` presents the breakdown; it would teach harder if it asked "what
+  do you think this means?" before showing it (the pretesting effect).
 
 ### How to work
 
-- Commit in coherent passes with commit messages that explain *why*, in prose.
-  Match the existing history — read `git log` first.
+- Commit in coherent passes with messages that explain *why*, in prose. Match
+  the existing history — read `git log` first.
 - Match the file's voice in code comments: they explain the reasoning and the
   bug that motivated the code, not what the line does.
-- Every behavioural fix gets a regression test. Name assertions as sentences.
+- Every behavioural fix gets a regression test, and assertions are written as
+  sentences describing the guarantee.
 - Don't trust an audit finding without verifying it in the code yourself —
   roughly one in six was wrong or already handled.
+- Preserve save compatibility. `test17.js` and `test28.js` guard it; when you
+  change a default in `newGame().settings`, check the migration reads the
+  *stored* value before merging defaults over it.
 
 Continue making it fantastic. Start by looking at it in a browser.
