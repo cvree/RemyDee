@@ -14428,7 +14428,7 @@ function renderTrialEnd(first, medal){
         :medal.id==="gold"?"A gold seal":medal.id==="silver"?"A silver seal"
         :medal.id==="bronze"?"A bronze seal":"Finished"}</div>
       <div class="tq-sub">${right} of ${TRIAL_N} answered right${
-        collapsed?" before the third mistake":""} · <b>${T.score}</b> points</div>
+        collapsed?" before the third mistake":""} · <b id="trial-final">0</b> points</div>
       ${first?`<div class="dc-streak" style="margin-top:10px;justify-content:center;">
         <span class="dc-flames">${"火".repeat(Math.min(d.streak,5))}</span>
         <span>${d.streak}-day streak${d.streak===d.bestStreak&&d.streak>1?" — your best":""}</span></div>`
@@ -14440,6 +14440,11 @@ function renderTrialEnd(first, medal){
       <button class="btn" id="trial-done">Back to the school →</button>
     </div>`;
   renderRecordList($('#trial-board'), "daily", 5);
+  /* The Trial is the one thing in the game a player comes back to every day, and
+     its final number just appeared, fully formed, in the middle of a sentence.
+     FX.countUp existed and was used in four places, none of them here. Twelve
+     questions deserve to be counted. */
+  const fin=$('#trial-final'); if(fin) FX.countUp(fin, T?T.score:0, {dur:1100});
   $('#trial-done').onclick=()=>{
     if(!T) return;                       // a second click used to read T.score on null
     const q=clamp(T.score/1400,0,1); const fresh=first;
