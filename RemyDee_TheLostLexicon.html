@@ -2878,12 +2878,235 @@ function affinityLevel(count){
 }
 function affinityNext(count){ return AFFINITY_LEVELS.find(l=>count<l.need)||null; }
 
+
+/* ==================================================================
+   THE TWO TONGUES — every word-part's source language.
+   Radicida's thesis is that a root can be killed. The counter-lesson
+   is that the same meaning survives in two independent languages, so
+   no single root-slaying erases it: vein is phleb/o AND ven/i, skin is
+   dermat/o AND cutane/o. That is a real fact about English medical
+   vocabulary and the spine of the game's argument with its villain.
+
+   lang: "Gk" (Greek) | "L" (Latin).  src: the ancestor word, transliterated.
+   Merged into PARTS at load so nothing downstream has to know it is separate.
+   ================================================================== */
+const ORIGINS = {
+  /* -- prefixes -- */
+  brady:{lang:"Gk", src:"bradys — slow"},
+  tachy:{lang:"Gk", src:"tachys — swift"},
+  hyper:{lang:"Gk", src:"hyper — over, above"},
+  hypo: {lang:"Gk", src:"hypo — under"},
+  dys:  {lang:"Gk", src:"dys- — bad, hard"},
+  a:    {lang:"Gk", src:"a-/an- — not (the 'alpha privative')"},
+  poly: {lang:"Gk", src:"polys — many"},
+  hemi: {lang:"Gk", src:"hemi- — half"},
+  peri: {lang:"Gk", src:"peri — around"},
+  endo: {lang:"Gk", src:"endon — within"},
+  intra:{lang:"L",  src:"intra — within"},
+  anti: {lang:"Gk", src:"anti — against"},
+  sub:  {lang:"L",  src:"sub — under"},
+  /* -- roots -- */
+  cardi:   {lang:"Gk", src:"kardia — heart"},
+  gastr:   {lang:"Gk", src:"gaster — stomach, belly"},
+  arthr:   {lang:"Gk", src:"arthron — joint"},
+  dermat:  {lang:"Gk", src:"derma, dermatos — skin"},
+  nephr:   {lang:"Gk", src:"nephros — kidney"},
+  hemat:   {lang:"Gk", src:"haima, haimatos — blood"},
+  neur:    {lang:"Gk", src:"neuron — sinew, nerve"},
+  my:      {lang:"Gk", src:"mys, myos — muscle"},
+  hepat:   {lang:"Gk", src:"hepar, hepatos — liver"},
+  glyc:    {lang:"Gk", src:"glykys — sweet"},
+  electr:  {lang:"Gk", src:"elektron — amber, which sparks when rubbed"},
+  ot:      {lang:"Gk", src:"ous, otos — ear"},
+  ophthalm:{lang:"Gk", src:"ophthalmos — eye"},
+  rhin:    {lang:"Gk", src:"rhis, rhinos — nose"},
+  oste:    {lang:"Gk", src:"osteon — bone"},
+  enter:   {lang:"Gk", src:"enteron — intestine"},
+  cyst:    {lang:"Gk", src:"kystis — bladder, pouch"},
+  encephal:{lang:"Gk", src:"enkephalos — in (en) the head (kephale)"},
+  bronch:  {lang:"Gk", src:"bronchos — windpipe"},
+  phleb:   {lang:"Gk", src:"phleps, phlebos — vein"},
+  ven:     {lang:"L",  src:"vena — vein"},
+  arteri:  {lang:"Gk", src:"arteria — artery (once meaning windpipe)"},
+  angi:    {lang:"Gk", src:"angeion — vessel, container"},
+  erythr:  {lang:"Gk", src:"erythros — red"},
+  leuk:    {lang:"Gk", src:"leukos — white"},
+  thromb:  {lang:"Gk", src:"thrombos — lump, clot"},
+  coagul:  {lang:"L",  src:"coagulare — to curdle"},
+  cutane:  {lang:"L",  src:"cutis — skin"},
+  hem:     {lang:"Gk", src:"haima — blood"},
+  lymph:   {lang:"L",  src:"lympha — clear spring water"},
+  /* -- suffixes -- */
+  itis:    {lang:"Gk", src:"-itis — inflammation"},
+  algia:   {lang:"Gk", src:"algos — pain"},
+  logy:    {lang:"Gk", src:"logos — word, reasoned account"},
+  emia:    {lang:"Gk", src:"haima — blood"},
+  pnea:    {lang:"Gk", src:"pnoia — breath"},
+  gram:    {lang:"Gk", src:"gramma — a thing written"},
+  ia:      {lang:"Gk", src:"-ia — state, condition"},
+  uria:    {lang:"Gk", src:"ouron — urine"},
+  megaly:  {lang:"Gk", src:"megas — great, large"},
+  ectomy:  {lang:"Gk", src:"ektome — a cutting out"},
+  scopy:   {lang:"Gk", src:"skopein — to look at"},
+  plegia:  {lang:"Gk", src:"plege — a stroke, a blow"},
+  osis:    {lang:"Gk", src:"-osis — condition, process"},
+  pathy:   {lang:"Gk", src:"pathos — suffering, disease"},
+  rrhea:   {lang:"Gk", src:"rhoia — a flow"},
+  tomy:    {lang:"Gk", src:"tome — a cutting"},
+  centesis:{lang:"Gk", src:"kentesis — a pricking"},
+  stasis:  {lang:"Gk", src:"stasis — a standing still"},
+  lysis:   {lang:"Gk", src:"lysis — a loosening"},
+  poiesis: {lang:"Gk", src:"poiesis — a making"},
+  crit:    {lang:"Gk", src:"krinein — to separate, to judge"},
+  cyte:    {lang:"Gk", src:"kytos — hollow vessel"},
+  penia:   {lang:"Gk", src:"penia — poverty, lack"},
+  globin:  {lang:"L",  src:"globus — a ball"},
+  ous:     {lang:"L",  src:"-osus — full of"},
+  rrhage:  {lang:"Gk", src:"rhegnynai — to burst"},
+  ectasis: {lang:"Gk", src:"ektasis — a stretching out"},
+  ant:     {lang:"L",  src:"-ans, -antis — doing, performing"},
+  puncture:{lang:"L",  src:"punctura — a pricking"},
+  oma:     {lang:"Gk", src:"-oma — swelling, tumour"}
+};
+Object.keys(ORIGINS).forEach(id=>{ if(PARTS[id]) Object.assign(PARTS[id], ORIGINS[id]); });
+const LANG_NAME = {Gk:"Greek", L:"Latin"};
+
+/* Meanings carried by BOTH a Greek and a Latin part — the minimal pairs that
+   make the lesson concrete rather than a label. Computed, not hand-listed, so
+   it stays true if the corpus grows. */
+const TWIN_ROOTS = (function(){
+  const byMean={};
+  Object.keys(PARTS).forEach(id=>{
+    const p=PARTS[id]; if(!p.lang) return;
+    const key=p.mean.split(",")[0].trim().toLowerCase();
+    (byMean[key]=byMean[key]||[]).push(id);
+  });
+  const twins=[];
+  Object.keys(byMean).forEach(mean=>{
+    const ids=byMean[mean];
+    const gk=ids.filter(i=>PARTS[i].lang==="Gk"), la=ids.filter(i=>PARTS[i].lang==="L");
+    if(gk.length && la.length) twins.push({mean, gk, la});
+  });
+  return twins;
+})();
+
+/* ==================================================================
+   THE CHRONICLE — the history of medicine, as pages the Lexicon lost.
+   Each figure links to word-parts the player already owns, so history
+   is never free-floating trivia: it is the story of where the words
+   came from. `myth` is a plausible falsehood the villain asserts.
+   ================================================================== */
+const FIGURES = {
+  hippocrates:{ id:"hippocrates", name:"Hippocrates", era:"c. 460–370 BCE", place:"Kos, Greece",
+    deed:"insisted that disease has natural causes, and that a physician's job is to observe, record, and predict rather than appease the gods",
+    gift:"the case history and the idea of prognosis — foretelling a disease's course from what you can actually see",
+    myth:"Hippocrates wrote the oath that doctors swear today.",
+    truth:"The oath sworn in most modern ceremonies is a 1964 rewrite by Louis Lasagna. The ancient text is a different document with very different clauses.",
+    parts:["logy","pathy"], termHint:"prognosis — pro- (before) + gnosis (knowing)" },
+  galen:{ id:"galen", name:"Galen of Pergamon", era:"129–c. 216 CE", place:"Pergamon and Rome",
+    deed:"served as physician to gladiators and then to emperors, and wrote an anatomy so complete that Europe stopped checking it",
+    gift:"the demonstration that arteries carry blood, not air — and, unhappily, 1,300 years of unquestioned authority",
+    myth:"Galen learned his anatomy by dissecting human bodies.",
+    truth:"Roman law forbade it. He dissected Barbary macaques and pigs and assumed people were built the same way — which is exactly where his errors came from.",
+    parts:["arteri","angi"], termHint:"arteria once meant windpipe, because Galen's predecessors found them empty in cadavers" },
+  alrazi:{ id:"alrazi", name:"Al-Razi (Rhazes)", era:"c. 854–925", place:"Rayy and Baghdad",
+    deed:"kept meticulous clinical notes on real patients and used them to separate smallpox from measles — two diseases everyone before him had treated as one",
+    gift:"the clinical case series: evidence gathered patient by patient",
+    myth:"Al-Razi's work was lost and had no effect on European medicine.",
+    truth:"His treatises were translated into Latin and printed in Europe well into the 1700s.",
+    parts:["dermat","osis"], termHint:"a rash you can describe precisely is a rash you can name" },
+  ibnsina:{ id:"ibnsina", name:"Ibn Sina (Avicenna)", era:"c. 980–1037", place:"Persia",
+    deed:"compiled the Canon of Medicine, which organised everything Greek, Roman and Persian medicine knew into one searchable system",
+    gift:"a standard reference text taught in European universities into the 1600s",
+    myth:"The Canon of Medicine was a short summary for students.",
+    truth:"It runs to five books and roughly a million words, with a materia medica of some 800 substances.",
+    parts:["logy","ia"], termHint:"a lexicon is only as good as its ordering" },
+  ibnalnafis:{ id:"ibnalnafis", name:"Ibn al-Nafis", era:"c. 1213–1288", place:"Damascus and Cairo",
+    deed:"described the pulmonary circulation — blood passing from the right heart through the lungs — around three centuries before anyone in Europe wrote it down",
+    gift:"the first correct account of how blood reaches the lungs",
+    myth:"Pulmonary circulation was first described by William Harvey.",
+    truth:"Harvey proved the whole circuit in 1628, but Ibn al-Nafis had the lung passage in the 1240s.",
+    parts:["cardi","bronch"], termHint:"cardi/o and pneum- meet in the lungs" },
+  vesalius:{ id:"vesalius", name:"Andreas Vesalius", era:"1514–1564", place:"Brussels and Padua",
+    deed:"dissected human bodies himself, in public, and published what he actually saw — contradicting Galen on hundreds of points",
+    gift:"De humani corporis fabrica (1543): anatomy checked against the body instead of against a book",
+    myth:"Vesalius was celebrated for correcting Galen.",
+    truth:"He was attacked for it. His own teacher argued that human bodies must have changed since Galen's day.",
+    parts:["oste","my"], termHint:"oste/o and my/o — the two systems he redrew most" },
+  pare:{ id:"pare", name:"Ambroise Paré", era:"1510–1590", place:"France",
+    deed:"ran out of boiling oil during a battlefield siege, dressed the wounds with a salve instead, and found in the morning that those men were doing better",
+    gift:"ligature of vessels instead of cauterisation — and the habit of letting the outcome, not the tradition, decide",
+    myth:"Paré was a university-trained physician.",
+    truth:"He was a barber-surgeon, the lower rank, and learned on campaign.",
+    parts:["hem","stasis"], termHint:"hemostasis — stopping the flow, his central problem" },
+  harvey:{ id:"harvey", name:"William Harvey", era:"1578–1657", place:"England",
+    deed:"measured how much blood the heart moves in an hour, found it far exceeded anything the body could manufacture, and concluded the same blood must go round and round",
+    gift:"De Motu Cordis (1628): the heart is a pump and the circulation is a closed circuit",
+    myth:"Harvey discovered circulation by looking through a microscope at capillaries.",
+    truth:"He never saw a capillary — the microscope was not good enough. He deduced they had to exist. Malpighi saw them four years after Harvey died.",
+    parts:["cardi","angi"], termHint:"cardi/o + angi/o = cardiovascular, the circuit he proved" },
+  leeuwenhoek:{ id:"leeuwenhoek", name:"Antonie van Leeuwenhoek", era:"1632–1723", place:"Delft",
+    deed:"ground his own lenses to a quality nobody could match and became the first person to see bacteria, protozoa and red blood cells",
+    gift:"the microscopic world — his 'animalcules'",
+    myth:"Leeuwenhoek was a trained scientist.",
+    truth:"He was a draper who used lenses to count thread, and he never told anyone how he made them.",
+    parts:["scopy","cyte"], termHint:"-scopy is looking; -cyte is what he found when he looked" },
+  jenner:{ id:"jenner", name:"Edward Jenner", era:"1749–1823", place:"Gloucestershire",
+    deed:"noticed that milkmaids who caught cowpox did not catch smallpox, and tested it deliberately in 1796",
+    gift:"vaccination — and the word itself, from Latin vacca, a cow",
+    myth:"Jenner invented the idea of deliberately giving someone a mild infection to prevent a worse one.",
+    truth:"Variolation with smallpox itself was practised for centuries in Asia and Africa and was brought to Britain decades earlier. Jenner's step was using a safer, different disease.",
+    parts:["anti","cutane"], termHint:"vaccine ← vacca (cow). The most literal etymology in medicine." },
+  semmelweis:{ id:"semmelweis", name:"Ignaz Semmelweis", era:"1818–1865", place:"Vienna",
+    deed:"worked out that doctors coming from the dissection room were carrying something deadly to women in childbirth, and cut the death rate by an order of magnitude with chlorinated lime",
+    gift:"handwashing, proved by numbers before anyone knew germs existed",
+    myth:"His colleagues adopted handwashing once he showed them the figures.",
+    truth:"They were insulted by the implication and pushed him out. He died in an asylum; the practice was only vindicated after Pasteur and Lister.",
+    parts:["anti","sub"], termHint:"antisepsis — anti- (against) + sepsis (rot)" },
+  nightingale:{ id:"nightingale", name:"Florence Nightingale", era:"1820–1910", place:"Britain and Scutari",
+    deed:"found that far more soldiers were dying of infection in the wards than of wounds, and rebuilt the sanitation to prove it",
+    gift:"nursing as a trained profession — and medical statistics, argued in diagrams she invented so that generals could not look away",
+    myth:"Nightingale's fame rests on bedside kindness.",
+    truth:"Her lasting contribution is data. She was elected to the Royal Statistical Society and designed the polar-area diagram to make mortality undeniable.",
+    parts:["logy","ia"], termHint:"counting is a clinical skill" },
+  pasteur:{ id:"pasteur", name:"Louis Pasteur", era:"1822–1895", place:"France",
+    deed:"showed that fermentation and spoilage are caused by living organisms, then that disease is too, and built vaccines against anthrax and rabies",
+    gift:"germ theory — the reason antisepsis works at all",
+    myth:"Pasteur was a physician.",
+    truth:"He was a chemist, and never held a medical licence.",
+    parts:["anti","pathy"], termHint:"pathogen — pathos (disease) + -gen (producing)" },
+  lister:{ id:"lister", name:"Joseph Lister", era:"1827–1912", place:"Glasgow and London",
+    deed:"read Pasteur, reasoned that the same invisible organisms must be infecting surgical wounds, and started spraying carbolic acid in the operating theatre",
+    gift:"antiseptic surgery — surgical mortality fell from roughly half to well under a fifth on his wards",
+    myth:"Antiseptic surgery was accepted immediately because the results were obvious.",
+    truth:"It took over a decade and a great deal of argument, and Lister spent years demonstrating it around Europe.",
+    parts:["anti","tomy"], termHint:"every -tomy and -ectomy in the Lexicon is safe because of him" },
+  virchow:{ id:"virchow", name:"Rudolf Virchow", era:"1821–1902", place:"Berlin",
+    deed:"established that disease begins in cells, and that every cell comes from another cell",
+    gift:"cellular pathology — the level at which modern medicine actually explains illness",
+    myth:"Virchow accepted germ theory early.",
+    truth:"He resisted it for years, and argued just as hard that poverty and bad housing cause epidemics — a point he was right about.",
+    parts:["cyte","pathy"], termHint:"-cyte + -pathy: disease, located in the cell" },
+  rontgen:{ id:"rontgen", name:"Wilhelm Röntgen", era:"1845–1923", place:"Würzburg",
+    deed:"noticed a screen glowing across the room from a covered tube in 1895, and within weeks had photographed the bones of his wife's hand",
+    gift:"the X-ray — the first way to see inside a living person without cutting",
+    myth:"Röntgen patented the X-ray and became wealthy from it.",
+    truth:"He refused to patent it, believing it belonged to everyone, and donated his Nobel prize money.",
+    parts:["gram","oste"], termHint:"-gram, a thing written: the radiogram writes bone onto a plate" }
+};
+const FIGURE_ORDER = ["hippocrates","galen","alrazi","ibnsina","ibnalnafis","vesalius","pare",
+  "harvey","leeuwenhoek","jenner","semmelweis","nightingale","pasteur","lister","virchow","rontgen"];
+/* chronological rank, for the "who came first" gate */
+const FIGURE_RANK = {};
+FIGURE_ORDER.forEach((id,i)=>{ FIGURE_RANK[id]=i; });
+
 /* expose */
 window.__RD_DATA = { PARTS, DIRECTIONS, TERMS, TERM_PRON, ROLES, TRAVELERS, SUPPLIES, SUPPLY_ICONS,
   WEAPON_GLYPH, ENEMIES, CHAPTERS, ROUTES, REGIONS, PAGES, INTRO, SAFETY_NOTE,
   PARTY_LADDER, ESCORT_LADDER, BENCH_LADDER, ladderAt,
   BP_UNLOCK, BP_STARTING, blueprintsEarnedBy,
   AFFINITY_LEVELS, affinityLevel, affinityNext,
+  ORIGINS, LANG_NAME, TWIN_ROOTS, FIGURES, FIGURE_ORDER, FIGURE_RANK,
   $, $$, el, clamp, shuffle, pick, toast };
 })();
 </script>
@@ -3433,6 +3656,7 @@ function migrate(st){
     if(typeof st.chests!=="number") st.chests = 0;
     if(!st.srs   || typeof st.srs!=="object")   st.srs   = {};
     if(!st.lore  || typeof st.lore!=="object")  st.lore  = {seen:[], correct:{}};
+    if(!Array.isArray(st.reask)) st.reask = [];
     if(typeof st.lifetime!=="object" || !st.lifetime) st.lifetime = m8.lifetime;
     st.ver=8;
     // backfill mastery entries for any PARTS/TERMS added since this save was written,
@@ -3602,6 +3826,7 @@ function newGame(){
     heirloom:null,             // one tool carried between missions; wears a tier per journey
     cachesMarked:0,            // caches marked for the Reed Guild across the campaign
     arcade:{ slice:{best:0, plays:0}, match:{best:0, plays:0} },  // Training Hall records
+    reask:[],                  // word-parts missed on the road — carried into the NEXT run
     /* ---- v8: the meta layer ---- */
     ach:{},                    // achievement id → {at:epochMs, seen:bool}
     daily:{ date:null, seed:0, score:0, best:0, done:false, streak:0, bestStreak:0, lastDone:null, medals:{} },
@@ -3969,10 +4194,27 @@ window.__RD_QE = (function(){
     const id=weightedPick(ids); noteRecent(id); return id;
   }
   /* distractor PARTS of the same kind with a DISTINCT meaning — never two-correct */
+  /* Distractors of the same kind, each with a DISTINCT meaning — distinct from
+     the answer AND from each other. The corpus now carries Greek/Latin twins
+     (phleb/o and ven/i both mean "vein"; dermat/o and cutane/o both mean
+     "skin"), so without the second check a meaning question could offer the
+     option "vein" twice and grade one of them wrong. */
   function distractParts(id, n){
     const kind=PARTS[id].kind, mean=PARTS[id].mean;
-    const pool=kindOf(kind).filter(p=>p!==id && PARTS[p].mean!==mean);
-    return shuffle(pool).slice(0,n);
+    const pool=shuffle(kindOf(kind).filter(p=>p!==id && PARTS[p].mean!==mean));
+    const out=[], taken=new Set([mean]);
+    for(const p of pool){
+      if(taken.has(PARTS[p].mean)) continue;
+      taken.add(PARTS[p].mean); out.push(p);
+      if(out.length>=n) break;
+    }
+    return out;
+  }
+  /* the other part that carries this meaning in the other tongue, if any */
+  function twinOf(id){
+    const p=PARTS[id]; if(!p || !p.lang) return null;
+    return Object.keys(PARTS).find(x=>x!==id && PARTS[x].mean===p.mean
+      && PARTS[x].lang && PARTS[x].lang!==p.lang) || null;
   }
   /* write results back into the shared mastery model */
   function record(conceptIds, ok){
@@ -4034,7 +4276,12 @@ window.__RD_QE = (function(){
      opts: { types?:[...], conceptBias?:"reach|stealth|power|control|protect|recover",
              prefer?:"prefix|root|suffix", allowTF?:bool }
      ================================================================== */
-  const ALL_TYPES=["partMeaning","meaningPart","termDef","defTerm","spelling","cvRule","bodySystem","similar","trueFalse"];
+  const ALL_TYPES=["partMeaning","meaningPart","termDef","defTerm","spelling","cvRule",
+    "bodySystem","similar","trueFalse","originId","originPair","originRule"];
+  /* History of medicine. Kept OUT of the default pool and off the survival
+     gates: it is offered by scholars, the Training Hall, the Chronicle and
+     the Daily Trial, where curiosity pays instead of costing stamina. */
+  const LORE_TYPES=["figureDeed","figureGift","mythBuster","chronology"];
   const BIAS_KIND={reach:"root",stealth:"prefix",power:"suffix",control:"root",protect:"root",recover:"suffix"};
 
   function generate(o){
@@ -4070,8 +4317,16 @@ window.__RD_QE = (function(){
     if(type==="meaningPart"){
       const id=focus||pickPart(kind); const p=PARTS[id];
       const wrongs=distractParts(id,nWrong).map(w=>PARTS[w].text);
-      return norm({ type, conceptIds:[id], prompt:`Which word part means <b>${p.mean}</b>?`,
-        options:opts(p.text, wrongs), explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`,
+      /* When two tongues share a meaning, name the one being asked for —
+         otherwise "which part means vein?" has two honest answers and the
+         player is punished for knowing both. */
+      const tw=twinOf(id);
+      const ask = tw ? `Which <b>${D.LANG_NAME[p.lang]}</b> word part means <b>${p.mean}</b>?`
+                     : `Which word part means <b>${p.mean}</b>?`;
+      return norm({ type, conceptIds:[id], prompt:ask,
+        options:opts(p.text, wrongs),
+        explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`
+          + (tw?` So does <b>${PARTS[tw].text}</b> — ${D.LANG_NAME[p.lang]} and ${D.LANG_NAME[PARTS[tw].lang]} both gave English a word for it.`:""),
         pron:p.pron });
     }
     if(type==="trueFalse"){
@@ -4168,6 +4423,120 @@ window.__RD_QE = (function(){
       }
       return generate({types:["termDef"], prefer:kind});
     }
+    /* ==============================================================
+       THE TWO TONGUES — Greek vs Latin.
+       Not a labelling exercise: the payoff is understanding WHY English
+       carries two words for one body part, which is the single most
+       useful thing a beginner can know about medical vocabulary.
+       ============================================================== */
+    if(type==="originId"){
+      const ids=Object.keys(PARTS).filter(p=>PARTS[p].lang);
+      const id=weightedPick(freshFilter(ids)); noteRecent(id);
+      const p=PARTS[id];
+      return norm({ type, conceptIds:[id],
+        prompt:`<b>${p.text}</b> means &ldquo;${p.mean}&rdquo;. Which tongue does it come from?`,
+        options:shuffle([{label:"Greek",ok:p.lang==="Gk"},{label:"Latin",ok:p.lang==="L"}]),
+        explanation:`<b>${p.text}</b> is ${D.LANG_NAME[p.lang]}, from <i>${p.src}</i>.` });
+    }
+    if(type==="originPair"){
+      const twins=D.TWIN_ROOTS||[];
+      if(!twins.length) return generate({types:["originId"]});
+      const tw=pick(twins);
+      const askGreek = Math.random()<0.5;
+      const known = askGreek ? pick(tw.la) : pick(tw.gk);
+      const answer = askGreek ? pick(tw.gk) : pick(tw.la);
+      const wantLang = askGreek?"Gk":"L";
+      // distractors: same language, same KIND, different meaning — so the only
+      // way through is knowing which root carries this meaning
+      const pool=Object.keys(PARTS).filter(p=>PARTS[p].lang===wantLang && p!==answer
+        && PARTS[p].kind===PARTS[answer].kind && PARTS[p].mean!==PARTS[answer].mean);
+      const wrongs=shuffle(pool).slice(0,Math.max(1,nWrong)).map(p=>PARTS[p].text);
+      return norm({ type, conceptIds:[answer, known],
+        prompt:`<b>${PARTS[known].text}</b> is the ${D.LANG_NAME[PARTS[known].lang]} for &ldquo;${tw.mean}&rdquo;. `
+             + `Which <b>${D.LANG_NAME[wantLang]}</b> part means the same thing?`,
+        options:opts(PARTS[answer].text, wrongs),
+        explanation:`<b>${PARTS[answer].text}</b> (${D.LANG_NAME[PARTS[answer].lang]}, <i>${PARTS[answer].src}</i>) `
+             + `and <b>${PARTS[known].text}</b> (${D.LANG_NAME[PARTS[known].lang]}, <i>${PARTS[known].src}</i>) both mean ${tw.mean}. `
+             + `English kept both — that is why one body part can answer to two roots.` });
+    }
+    if(type==="originRule"){
+      const items=[
+        { q:"Greek and Latin both gave English a root for &ldquo;vein&rdquo;. Which pair is it?",
+          a:"phleb/o and ven/i", w:["cardi/o and angi/o","arteri/o and my/o","nephr/o and cyst/o"],
+          e:"phleb/o is Greek (phleps), ven/i is Latin (vena). Phlebitis and venipuncture describe the same vessel from two languages." },
+        { q:"Greek and Latin both gave English a root for &ldquo;skin&rdquo;. Which pair is it?",
+          a:"dermat/o and cutane/o", w:["oste/o and my/o","hepat/o and gastr/o","ot/o and rhin/o"],
+          e:"dermat/o is Greek (derma), cutane/o is Latin (cutis). Dermatitis and subcutaneous both point at skin." },
+        { q:"Which prefix pair means the same thing in the two tongues — Greek first?",
+          a:"endo- and intra- (within)", w:["hyper- and poly- (many)","peri- and anti- (against)","brady- and sub- (slow)"],
+          e:"endo- is Greek (endon), intra- is Latin (intra). Both mean within — endoscopy looks inside, intravenous goes inside a vein." },
+        { q:"hypo- and sub- both mean &ldquo;under&rdquo;. Which is the Latin one?",
+          a:"sub-", w:["hypo-","both are Latin","neither — both are Greek"],
+          e:"sub- is Latin, hypo- is Greek. Subcutaneous and hypodermic mean almost exactly the same thing in two languages." },
+        { q:"Most terms for DISEASES and PROCEDURES in medicine are built from which language?",
+          a:"Greek", w:["Latin","Arabic","Old English"],
+          e:"Greek dominates disease and procedure words (-itis, -ectomy, -pathy, -scopy). Latin dominates the names of anatomical structures. Knowing which tongue you are in tells you what kind of word you are looking at." },
+        { q:"Most names of anatomical STRUCTURES in medicine come from which language?",
+          a:"Latin", w:["Greek","Persian","Greek and Latin equally"],
+          e:"Latin supplies structure names, Greek supplies the disease and procedure vocabulary. That division is why a Latin structure so often takes a Greek suffix." },
+        { q:"The word &ldquo;vaccine&rdquo; comes from the Latin <i>vacca</i>. What is a <i>vacca</i>?",
+          a:"a cow", w:["a needle","a blister","a shield"],
+          e:"Jenner used cowpox to protect against smallpox, so the method was named for the cow. It is the most literal etymology in medicine." },
+        { q:"<b>electr/o</b> means electricity. The Greek <i>elektron</i> originally meant what?",
+          a:"amber", w:["lightning","copper","fire"],
+          e:"Amber builds a static charge when rubbed. The Greeks named the effect after the stone; we kept the word for the whole phenomenon." }
+      ];
+      const it=pick(items);
+      return norm({ type, conceptIds:[],
+        prompt:it.q, options:opts(it.a, shuffle(it.w).slice(0,Math.max(1,nWrong))),
+        explanation:it.e });
+    }
+
+    /* ==============================================================
+       THE CHRONICLE — history of medicine. Routed to scholars, the
+       Training Hall and the Daily Trial rather than to survival gates:
+       curiosity should pay, not punish.
+       ============================================================== */
+    if(type==="figureDeed"){
+      const ids=D.FIGURE_ORDER, id=pick(ids), F=D.FIGURES[id];
+      const wrongs=shuffle(ids.filter(x=>x!==id)).slice(0,Math.max(1,nWrong)).map(x=>D.FIGURES[x].name);
+      return norm({ type, figureId:id, conceptIds:(F.parts||[]).slice(),
+        prompt:`Who ${F.deed.split(",")[0]}?`,
+        options:opts(F.name, wrongs),
+        explanation:`<b>${F.name}</b> (${F.era}, ${F.place}) — ${F.deed}. What it left us: ${F.gift}.` });
+    }
+    if(type==="figureGift"){
+      const ids=D.FIGURE_ORDER, id=pick(ids), F=D.FIGURES[id];
+      const wrongs=shuffle(ids.filter(x=>x!==id)).slice(0,Math.max(1,nWrong)).map(x=>D.FIGURES[x].gift);
+      return norm({ type, figureId:id, conceptIds:(F.parts||[]).slice(),
+        prompt:`<b>${F.name}</b> (${F.era}). What did their work leave behind?`,
+        options:opts(F.gift, wrongs),
+        explanation:`${F.name} — ${F.deed}. ${F.termHint?`In the Lexicon: ${F.termHint}.`:""}` });
+    }
+    if(type==="mythBuster"){
+      /* Radicida asserts a plausible falsehood. The villain who owns the
+         definitions is caught misdefining — thematically the right home
+         for a true/false item. */
+      const ids=D.FIGURE_ORDER, id=pick(ids), F=D.FIGURES[id];
+      const tellTruth = Math.random()<0.5;
+      const claim = tellTruth ? `${F.name} ${F.deed}.` : F.myth;
+      return norm({ type, figureId:id, conceptIds:[],
+        prompt:`Radicida writes in the margin: &ldquo;${claim}&rdquo;`,
+        options:shuffle([{label:"He is telling the truth",ok:tellTruth},
+                         {label:"He is lying",ok:!tellTruth}]),
+        explanation: tellTruth
+          ? `True, for once. ${F.name} — ${F.gift}.`
+          : `A lie. ${F.truth}` });
+    }
+    if(type==="chronology"){
+      const ids=shuffle(D.FIGURE_ORDER).slice(0,Math.max(2,Math.min(4,nWrong+1)));
+      const first=ids.slice().sort((a,b)=>D.FIGURE_RANK[a]-D.FIGURE_RANK[b])[0];
+      return norm({ type, figureId:first, conceptIds:[],
+        prompt:`Which of these came <b>first</b>?`,
+        options:shuffle(ids.map(x=>({label:`${D.FIGURES[x].name} — ${D.FIGURES[x].era}`, ok:x===first}))),
+        explanation:`<b>${D.FIGURES[first].name}</b> (${D.FIGURES[first].era}) came first. `
+          + ids.filter(x=>x!==first).map(x=>`${D.FIGURES[x].name}: ${D.FIGURES[x].era}`).join("; ")+"." });
+    }
     // fallback
     return generate({types:["partMeaning"], prefer:kind});
   }
@@ -4220,7 +4589,8 @@ window.__RD_QE = (function(){
     return { total:ids.length, seen, strong, weak };
   }
 
-  return { generate, pickPart, distractParts, record, matchPairs, partWeight, snapshot, ALL_TYPES };
+  return { generate, pickPart, distractParts, record, matchPairs, partWeight, snapshot,
+           cvJunctions, misspellings, ALL_TYPES, LORE_TYPES };
 })();
 </script>
 <script>
@@ -5353,7 +5723,7 @@ function decodeQuestion(concept){
   // this blueprint's concept axis, then map to the forge's expected shape.
   const QE = window.__RD_QE;
   const q = QE.generate({ conceptBias: concept, allowTF:false,
-    types:["partMeaning","meaningPart","spelling","cvRule","bodySystem"] });
+    types:["partMeaning","meaningPart","spelling","cvRule","bodySystem","originId","originPair"] });
   const partId = (q.conceptIds && q.conceptIds[0]) || Object.keys(PARTS)[0];
   markPartSeen(partId);
   return { partId, prompt:q.prompt, opts:q.options, teach:q.explanation };
@@ -7683,18 +8053,40 @@ const S = E.S;
    questions after a mistake come back to the exact part you got wrong, while it is
    still fresh and still costing you. Getting it right clears the debt and says so.
    Being corrected in the moment is worth far more than being told at the end. */
+/* A debt that only lived on mission state died with the mission: miss thromb/o on
+   the last gate before the waystation and the game forgot you ever missed it.
+   The queue now drains into the save, so the road you walk tomorrow opens with
+   the thing you got wrong today. */
+function debtQueue(){
+  const st=S(); if(!st.reask || !Array.isArray(st.reask)) st.reask=[];
+  return st.reask;
+}
+function pushDebt(ids){
+  const q=debtQueue();
+  (Array.isArray(ids)?ids:[ids]).forEach(id=>{
+    if(id && PARTS[id] && !q.includes(id)) q.push(id);
+  });
+  while(q.length>12) q.shift();          // a debt you can never clear is just noise
+  if(M) M.reask=(M.reask||[]).concat(ids);
+}
 function takeReask(){
-  if(!M || !M.reask || !M.reask.length) return null;
+  const live=(M && M.reask && M.reask.length) ? M.reask : debtQueue();
+  if(!live.length) return null;
   if(Math.random()>0.68) return null;
-  const idx=Math.floor(Math.random()*M.reask.length);
-  return M.reask[idx];
+  return live[Math.floor(Math.random()*live.length)];
 }
 function clearReask(ids){
-  if(!M || !M.reask || !M.reask.length) return false;
-  const before=M.reask.length;
   const set=new Set(ids||[]);
-  M.reask=M.reask.filter(id=>!set.has(id));
-  return M.reask.length<before;
+  let cleared=false;
+  if(M && M.reask && M.reask.length){
+    const before=M.reask.length;
+    M.reask=M.reask.filter(id=>!set.has(id));
+    cleared = M.reask.length<before;
+  }
+  const q=debtQueue(), qb=q.length;
+  const kept=q.filter(id=>!set.has(id));
+  if(kept.length<qb){ S().reask=kept; cleared=true; }
+  return cleared;
 }
 function reviewChallenge(){
   // Unified: adaptive question from the shared engine. Returns the mission popup's
@@ -7703,7 +8095,8 @@ function reviewChallenge(){
   const QE = window.__RD_QE;
   const focus = takeReask();
   const q = QE.generate({ allowTF:true, choices:E.diffTune().choices, focus,
-    types:["termDef","defTerm","spelling","similar","partMeaning","meaningPart","trueFalse"] });
+    types:["termDef","defTerm","spelling","similar","partMeaning","meaningPart","trueFalse",
+           "originId","originPair","cvRule"] });
   return { clue:q.prompt, correct:q.correctLabel, options:q.options.map(o=>o.label),
            conceptIds:q.conceptIds, explanation:q.explanation, questionType:q.questionType,
            reask: !!(focus && q.conceptIds.includes(focus)) };
@@ -9744,7 +10137,7 @@ function resolveGate(){
       ? `Wrong gate — <b>${G.completion.spell}</b> needed ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`
       : `Wrong gate — the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
     pop(M.cv.width*0.30,M.laneY-88,"wrong gate",true); Audio2.sfx.bad(); FX.buzz(24);
-    M.reask=(M.reask||[]).concat(G.conceptId);
+    pushDebt(G.conceptId);
   }
   updatePrepBars(); updateWordHud();
 }
@@ -9879,7 +10272,7 @@ function answer(correct, btn, correctText, battle, flavor, q){
   M.questionOpen=false;
   // feed the shared mastery model, and remember weak concepts to re-ask this run
   if(q && q.conceptIds){ window.__RD_QE.record(q.conceptIds, correct);
-    if(!correct){ M.reask=(M.reask||[]).concat(q.conceptIds); } }
+    if(!correct){ pushDebt(q.conceptIds); } }
   $$('#mini-opts .btn').forEach(b=>{ b.disabled=true; if(b.textContent===correctText) b.classList.add("jade"); });
   if(correct){
     if(!flavor) M.challengesWon++;
@@ -10904,8 +11297,8 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _flowAt:()=>FLOW_AT,
   _scoreCorrect:(p)=>{ scoreCorrect(p==null?0.5:p,"test"); return M&&{streak:M.streak, flow:M.flow}; },
   _scoreWrong:()=>{ scoreWrong(); return M&&{streak:M.streak, flow:M.flow}; },
-  _reask:()=>M&&(M.reask||[]).slice(),
-  _pushReask:(id)=>{ if(M){ M.reask=(M.reask||[]).concat(id); } return M&&M.reask.slice(); },
+  _reask:()=>(M&&M.reask&&M.reask.length)?M.reask.slice():debtQueue().slice(),
+  _pushReask:(id)=>{ pushDebt(id); return (M&&M.reask)?M.reask.slice():debtQueue().slice(); },
   _reviewChallenge:()=>reviewChallenge(),
   _pickCompletionGate:()=>pickCompletionGate(),
   _noteRunOutcome:(sc)=>noteRunOutcome(sc),

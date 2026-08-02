@@ -77,8 +77,11 @@ const { boot, assert, summary } = require('./testlib');
   console.log('\n== no question offers two correct answers ==');
   let dupes = 0, total = 0;
   const TYPES = ['partMeaning','meaningPart','termDef','defTerm','spelling','cvRule',
-                 'bodySystem','similar','trueFalse'];
-  for (let i = 0; i < 1600; i++) {
+                 'bodySystem','similar','trueFalse','originId','originPair','originRule',
+                 'figureDeed','figureGift','mythBuster','chronology'];
+  // 20k draws: the Greek/Latin twin-root collision (phleb/o and ven/i both mean
+  // "vein") surfaced only about once in 4,400, so a small sweep missed it.
+  for (let i = 0; i < 20000; i++) {
     const q = QE.generate({ types: TYPES });
     total++;
     const labels = q.options.map(o => String(o.label).trim().toLowerCase());
@@ -91,7 +94,7 @@ const { boot, assert, summary } = require('./testlib');
       if (dupes < 6) console.error('    not exactly one correct in', q.type);
     }
   }
-  assert(total > 1000, `generated ${total} questions across all types`);
+  assert(total > 15000, `generated ${total} questions across all types`);
   assert(dupes === 0, `no duplicate or multi-correct option sets (${dupes} found)`);
 
   console.log('\n== body systems are mutually exclusive ==');
@@ -114,6 +117,44 @@ const { boot, assert, summary } = require('./testlib');
   assert(!/^inflammation of the bone and joint$/.test(TERMS.osteoarthritis.def),
     'osteoarthritis definition corrected');
   assert(/degenerat/i.test(TERMS.osteoarthritis.def), 'osteoarthritis reads as degenerative');
+
+  console.log('\n== Greek/Latin twins never collide in one option set ==');
+  const twins = D.TWIN_ROOTS || [];
+  assert(twins.length >= 3, `twin roots derived from the corpus (${twins.map(t=>t.mean).join(', ')})`);
+  let twinDup = 0;
+  for (let i = 0; i < 4000; i++) {
+    const q = QE.generate({ types: ['partMeaning','meaningPart'], nWrong: 3 });
+    const labels = q.options.map(o => String(o.label));
+    if (new Set(labels).size !== labels.length) twinDup++;
+  }
+  assert(twinDup === 0, `same-meaning parts never double up as options (${twinDup})`);
+
+  console.log('\n== every part carries a source language ==');
+  const noLang = Object.keys(PARTS).filter(p => !PARTS[p].lang);
+  assert(noLang.length === 0, `all ${Object.keys(PARTS).length} parts have lang/src (${noLang.slice(0,4).join(',')})`);
+  const badLang = Object.keys(PARTS).filter(p => !['Gk','L'].includes(PARTS[p].lang));
+  assert(badLang.length === 0, 'lang is only Gk or L');
+  const noSrc = Object.keys(PARTS).filter(p => !PARTS[p].src);
+  assert(noSrc.length === 0, 'every part names its ancestor word');
+
+  console.log('\n== the Chronicle is complete ==');
+  const F = D.FIGURES, ORD = D.FIGURE_ORDER;
+  assert(ORD.length >= 14, `${ORD.length} historical figures`);
+  const missing = ORD.filter(id => !F[id] || !F[id].deed || !F[id].myth || !F[id].truth || !F[id].gift);
+  assert(missing.length === 0, `every figure has deed/gift/myth/truth (${missing.join(',')})`);
+  const ranks = ORD.map(id => D.FIGURE_RANK[id]);
+  assert(ranks.every((r, i) => r === i), 'chronological ranks are dense and ordered');
+
+  console.log('\n== the re-ask debt survives the run ==');
+  const E = window.__RD_ENG;
+  const st = E.S();
+  st.reask = [];
+  window.__RD_MISSION._pushReask('thromb');
+  assert(st.reask.includes('thromb'), 'a missed part is written into the save, not just mission state');
+  window.__RD_MISSION._pushReask('thromb');
+  assert(st.reask.filter(x => x === 'thromb').length === 1, 'the debt queue does not duplicate');
+  for (let i = 0; i < 30; i++) window.__RD_MISSION._pushReask(Object.keys(PARTS)[i]);
+  assert(st.reask.length <= 12, `the debt queue is bounded (${st.reask.length})`);
 
   summary(errors);
 })();
