@@ -2402,7 +2402,7 @@ const PARTS = {
   "brady":  {kind:"prefix", text:"brady-", mean:"slow", pron:"BRAD-ee"},
   "tachy":  {kind:"prefix", text:"tachy-", mean:"fast, rapid", pron:"TAK-ee"},
   "hyper":  {kind:"prefix", text:"hyper-", mean:"above, excessive", pron:"HY-per"},
-  "hypo":   {kind:"prefix", text:"hypo-",  mean:"below, deficient", pron:"HY-po"},
+  "hypo":   {kind:"prefix", text:"hypo-",  mean:"below, deficient", pron:"HY-po", sense:"under"},
   "dys":    {kind:"prefix", text:"dys-",   mean:"difficult, painful, abnormal", pron:"dis"},
   "cardi":  {kind:"root", text:"cardi/o", stem:"cardi", cv:"o", mean:"heart", pron:"KAR-dee-oh"},
   "gastr":  {kind:"root", text:"gastr/o", stem:"gastr", cv:"o", mean:"stomach", pron:"GAS-troh"},
@@ -2421,13 +2421,13 @@ const PARTS = {
   "emia":   {kind:"suffix", text:"-emia", mean:"blood condition", pron:"EE-mee-ah", vowelStart:true},
   "pnea":   {kind:"suffix", text:"-pnea", mean:"breathing", pron:"NEE-ah / p-NEE-ah", vowelStart:false},
   "gram":   {kind:"suffix", text:"-gram", mean:"a record or picture", pron:"gram", vowelStart:false},
-  "ia":     {kind:"suffix", text:"-ia", mean:"condition, state", pron:"EE-ah", vowelStart:true},
+  "ia":     {kind:"suffix", text:"-ia", mean:"condition, state", pron:"EE-ah", vowelStart:true, sense:"condition"},
   /* -- new prefixes -- */
-  "a":      {kind:"prefix", text:"a-", mean:"without, not", pron:"ay"},
+  "a":      {kind:"prefix", text:"a-", mean:"without, not", pron:"ay (or ah)"},
   "poly":   {kind:"prefix", text:"poly-", mean:"many, much", pron:"POL-ee"},
   "hemi":   {kind:"prefix", text:"hemi-", mean:"half", pron:"HEM-ee"},
   "peri":   {kind:"prefix", text:"peri-", mean:"around, surrounding", pron:"PER-ee"},
-  "endo":   {kind:"prefix", text:"endo-", mean:"within, inside", pron:"EN-doh"},
+  "endo":   {kind:"prefix", text:"endo-", mean:"within, inside", pron:"EN-doh", sense:"within"},
   /* -- new roots -- */
   "ot":       {kind:"root", text:"ot/o", stem:"ot", cv:"o", mean:"ear", pron:"OH-toh"},
   "ophthalm": {kind:"root", text:"ophthalm/o", stem:"ophthalm", cv:"o", mean:"eye", pron:"off-THAL-moh"},
@@ -2439,32 +2439,32 @@ const PARTS = {
   "bronch":   {kind:"root", text:"bronch/o", stem:"bronch", cv:"o", mean:"bronchial tube", pron:"BRONG-koh"},
   /* -- new suffixes -- */
   "uria":   {kind:"suffix", text:"-uria", mean:"urine condition", pron:"YOOR-ee-ah", vowelStart:true},
-  "megaly": {kind:"suffix", text:"-megaly", mean:"enlargement", pron:"MEG-ah-lee", vowelStart:false},
+  "megaly": {kind:"suffix", text:"-megaly", mean:"enlargement", pron:"MEG-ah-lee", vowelStart:false, sense:"enlargement"},
   "ectomy": {kind:"suffix", text:"-ectomy", mean:"surgical removal", pron:"EK-toh-mee", vowelStart:true},
   "scopy":  {kind:"suffix", text:"-scopy", mean:"visual examination", pron:"SKOH-pee", vowelStart:false},
   "plegia": {kind:"suffix", text:"-plegia", mean:"paralysis", pron:"PLEE-jah", vowelStart:false},
-  "osis":   {kind:"suffix", text:"-osis", mean:"abnormal condition", pron:"OH-sis", vowelStart:true},
+  "osis":   {kind:"suffix", text:"-osis", mean:"abnormal condition", pron:"OH-sis", vowelStart:true, sense:"condition"},
   "pathy":  {kind:"suffix", text:"-pathy", mean:"disease", pron:"PATH-ee", vowelStart:false},
-  "rrhea":  {kind:"suffix", text:"-rrhea", mean:"discharge, flow", pron:"REE-ah", vowelStart:false},
+  "rrhea":  {kind:"suffix", text:"-rrhea", mean:"discharge, flow", pron:"REE-ah", vowelStart:false, sense:"flow"},
   /* -- phlebotomy: new prefixes -- */
-  "intra":  {kind:"prefix", text:"intra-", mean:"within", pron:"IN-trah"},
+  "intra":  {kind:"prefix", text:"intra-", mean:"within", pron:"IN-trah", sense:"within"},
   "anti":   {kind:"prefix", text:"anti-", mean:"against", pron:"AN-tee"},
-  "sub":    {kind:"prefix", text:"sub-", mean:"under, below", pron:"sub"},
+  "sub":    {kind:"prefix", text:"sub-", mean:"under, below", pron:"sub", sense:"under"},
   /* -- phlebotomy: new roots -- */
   "phleb":  {kind:"root", text:"phleb/o", stem:"phleb", cv:"o", mean:"vein", pron:"FLEB-oh"},
-  "ven":    {kind:"root", text:"ven/i", stem:"ven", cv:"i", mean:"vein", pron:"VEE-nee"},
+  "ven":    {kind:"root", text:"ven/i", stem:"ven", cv:"i", mean:"vein", pron:"VEN-ih", also:"ven/o"},
   "arteri": {kind:"root", text:"arteri/o", stem:"arteri", cv:"o", mean:"artery", pron:"ar-TEER-ee-oh"},
   "angi":   {kind:"root", text:"angi/o", stem:"angi", cv:"o", mean:"vessel", pron:"AN-jee-oh"},
   "erythr": {kind:"root", text:"erythr/o", stem:"erythr", cv:"o", mean:"red", pron:"eh-RITH-roh"},
   "leuk":   {kind:"root", text:"leuk/o", stem:"leuk", cv:"o", mean:"white", pron:"LOO-koh"},
-  "thromb": {kind:"root", text:"thromb/o", stem:"thromb", cv:"o", mean:"clot", pron:"THROM-boh"},
-  "coagul": {kind:"root", text:"coagul/o", stem:"coagul", cv:"o", mean:"clotting", pron:"koh-AG-yoo-loh"},
+  "thromb": {kind:"root", text:"thromb/o", stem:"thromb", cv:"o", mean:"clot", pron:"THROM-boh", sense:"clot"},
+  "coagul": {kind:"root", text:"coagul/o", stem:"coagul", cv:"o", mean:"clotting", pron:"koh-AG-yoo-loh", sense:"clot"},
   "cutane": {kind:"root", text:"cutane/o", stem:"cutane", cv:"o", mean:"skin", pron:"kyoo-TAY-nee-oh"},
   "hem":    {kind:"root", text:"hem/o", stem:"hem", cv:"o", mean:"blood", pron:"HEE-moh"},
-  "lymph":  {kind:"root", text:"lymph/o", stem:"lymph", cv:"o", mean:"lymph", pron:"LIMF-oh"},
+  "lymph":  {kind:"root", text:"lymph/o", stem:"lymph", cv:"o", mean:"lymph, the clear fluid of the lymphatic system", pron:"LIMF-oh"},
   /* -- phlebotomy: new suffixes -- */
   "tomy":     {kind:"suffix", text:"-tomy", mean:"incision, cutting into", pron:"toh-mee", vowelStart:false},
-  "centesis": {kind:"suffix", text:"-centesis", mean:"surgical puncture to remove fluid", pron:"sen-TEE-sis", vowelStart:false},
+  "centesis": {kind:"suffix", text:"-centesis", mean:"surgical puncture to remove fluid", pron:"sen-TEE-sis", vowelStart:false, sense:"puncture"},
   "stasis":   {kind:"suffix", text:"-stasis", mean:"stopping, controlling", pron:"STAY-sis", vowelStart:false},
   "lysis":    {kind:"suffix", text:"-lysis", mean:"breakdown, destruction", pron:"LY-sis", vowelStart:false},
   "poiesis":  {kind:"suffix", text:"-poiesis", mean:"formation", pron:"poy-EE-sis", vowelStart:false},
@@ -2473,10 +2473,10 @@ const PARTS = {
   "penia":    {kind:"suffix", text:"-penia", mean:"deficiency", pron:"PEE-nee-ah", vowelStart:false},
   "globin":   {kind:"suffix", text:"-globin", mean:"protein", pron:"GLOH-bin", vowelStart:false},
   "ous":      {kind:"suffix", text:"-ous", mean:"pertaining to", pron:"us", vowelStart:true},
-  "rrhage":   {kind:"suffix", text:"-rrhage", mean:"bursting forth (excessive flow)", pron:"rij", vowelStart:false},
-  "ectasis":  {kind:"suffix", text:"-ectasis", mean:"dilation, expansion", pron:"ek-TAY-sis", vowelStart:true},
+  "rrhage":   {kind:"suffix", text:"-rrhage", mean:"bursting forth (excessive flow)", pron:"rij", vowelStart:false, sense:"flow"},
+  "ectasis":  {kind:"suffix", text:"-ectasis", mean:"dilation, expansion", pron:"EK-tah-sis", vowelStart:true, sense:"enlargement"},
   "ant":      {kind:"suffix", text:"-ant", mean:"forming, an agent that does", pron:"ant", vowelStart:true},
-  "puncture": {kind:"suffix", text:"-puncture", mean:"to pierce", pron:"punk-cher", vowelStart:false},
+  "puncture": {kind:"suffix", text:"-puncture", mean:"to pierce", pron:"punk-cher", vowelStart:false, sense:"puncture"},
   "oma":      {kind:"suffix", text:"-oma", mean:"tumor, mass", pron:"OH-mah", vowelStart:true}
 };
 
@@ -2510,7 +2510,7 @@ const TERMS = {
     note:"dermat/o + -itis; the o is dropped before the vowel suffix."},
   "carditis": {build:["cardi","itis"], spell:"carditis", system:"Cardiovascular",
     def:"inflammation of the heart", plain:"an inflamed heart",
-    note:"cardi/o + -itis, o dropped before the vowel suffix."},
+    note:"cardi/o + -itis. Drop the o before a vowel suffix &mdash; and cardi- already ends in i, so its i and the i of -itis are the same letter: cardi + itis = carditis, not cardiitis."},
   "neuralgia": {build:["neur","algia"], spell:"neuralgia", system:"Nervous",
     def:"nerve pain", plain:"sharp pain along a nerve",
     note:"neur/o + -algia; drop o before the vowel suffix."},
@@ -2534,10 +2534,10 @@ const TERMS = {
     note:"Keep the o before -logy: cardi/o + -logy = cardiology."},
   "bradycardia": {build:["brady","cardi","ia"], spell:"bradycardia", system:"Cardiovascular",
     def:"an abnormally slow heart rate", plain:"a heart beating slower than normal",
-    note:"brady- (slow) + cardi/o (heart) + -ia (condition). The o is dropped before -ia."},
+    note:"brady- (slow) + cardi/o (heart) + -ia (condition). Drop the o, and cardi-’s final i and the i of -ia collapse into one: bradycardia."},
   "tachycardia": {build:["tachy","cardi","ia"], spell:"tachycardia", system:"Cardiovascular",
     def:"an abnormally fast heart rate", plain:"a heart beating faster than normal",
-    note:"tachy- (fast) + cardi/o + -ia; drop the o before -ia."},
+    note:"tachy- (fast) + cardi/o + -ia. Drop the o, and cardi-’s final i and the i of -ia collapse into one: tachycardia."},
   "tachypnea": {build:["tachy","pnea"], spell:"tachypnea", system:"Respiratory",
     def:"abnormally rapid breathing", plain:"breathing faster than normal",
     note:"tachy- (rapid) + -pnea (breathing). No combining vowel is needed here."},
@@ -2594,10 +2594,10 @@ const TERMS = {
     note:"cardi/o + -megaly; keep the o since -megaly begins with a consonant (m)."},
   "pericarditis": {build:["peri","cardi","itis"], spell:"pericarditis", system:"Cardiovascular",
     def:"inflammation of the sac surrounding the heart", plain:"inflammation of the heart's outer covering",
-    note:"peri- (around) + cardi/o + -itis; drop the o before the vowel suffix. Contrast with endocarditis (the inner lining)."},
+    note:"peri- (around) + cardi/o + -itis. Drop the o, and cardi-’s own i doubles as the i of -itis: pericarditis. Contrast with endocarditis (the inner lining)."},
   "endocarditis": {build:["endo","cardi","itis"], spell:"endocarditis", system:"Cardiovascular",
     def:"inflammation of the inner lining of the heart", plain:"inflammation of the heart's inner lining",
-    note:"endo- (within) + cardi/o + -itis; drop the o before the vowel suffix. Contrast with pericarditis (the outer covering)."},
+    note:"endo- (within) + cardi/o + -itis. Drop the o, and cardi-’s own i doubles as the i of -itis: endocarditis. Contrast with pericarditis (the outer covering)."},
   "hepatomegaly": {build:["hepat","megaly"], spell:"hepatomegaly", system:"Digestive",
     def:"enlargement of the liver", plain:"an enlarged liver",
     note:"hepat/o + -megaly; keep the o since -megaly begins with a consonant (m)."},
@@ -2618,7 +2618,7 @@ const TERMS = {
     note:"encephal/o + -itis; drop the o before the vowel suffix."},
   "hemiplegia": {build:["hemi","plegia"], spell:"hemiplegia", system:"Nervous",
     def:"paralysis of one side of the body", plain:"one side of the body cannot move",
-    note:"hemi- (half) + -plegia (paralysis) = hemiplegia. No combining vowel is needed between a prefix and a suffix."},
+    note:"hemi- (half) + -plegia (paralysis) = hemiplegia. No combining vowel is needed between a prefix and a suffix. In the body, &lsquo;half&rsquo; means one <b>side</b> &mdash; the split runs down the midline, not across the waist."},
   "osteoarthritis": {build:["oste","arthr","itis"], spell:"osteoarthritis", system:"Musculoskeletal",
     def:"degenerative joint disease that wears away cartilage and the bone beneath it",
     plain:"wear-and-tear joint disease, not primarily an inflamed joint",
@@ -2626,6 +2626,12 @@ const TERMS = {
   "arthroscopy": {build:["arthr","scopy"], spell:"arthroscopy", system:"Musculoskeletal",
     def:"visual examination of the inside of a joint", plain:"looking inside a joint with a scope",
     note:"arthr/o + -scopy; keep the o since -scopy begins with a consonant (s)."},
+  /* -centesis was the one part in the Lexicon that appeared in no term at all —
+     the player could be quizzed on it forever and never see it do any work. A part
+     met only in a question is memorised as trivia; a part met in a word is learned. */
+  "arthrocentesis": {build:["arthr","centesis"], spell:"arthrocentesis", system:"Musculoskeletal",
+    def:"surgical puncture of a joint to draw off fluid", plain:"drawing fluid out of a swollen joint with a needle",
+    note:"arthr/o + -centesis; keep the o since -centesis begins with a consonant (c). Compare -tomy (cutting in) and -ectomy (taking out): -centesis only taps."},
   "phlebotomy": {build:["phleb","tomy"], spell:"phlebotomy", system:"Cardiovascular",
     def:"incision into a vein (the practice of drawing blood)", plain:"the practice of drawing blood from a vein",
     note:"phleb/o + -tomy; keep the o since -tomy begins with a consonant (t)."},
@@ -2646,7 +2652,7 @@ const TERMS = {
     note:"intra- (within) + ven/i + -ous; drop the i before the vowel suffix, same as venous. No combining vowel is needed between the prefix and the root."},
   "arteritis": {build:["arteri","itis"], spell:"arteritis", system:"Cardiovascular",
     def:"inflammation of an artery", plain:"an inflamed artery",
-    note:"arteri/o + -itis; drop the o before the vowel suffix."},
+    note:"arteri/o + -itis. Drop the o, and arteri-’s own i doubles as the i of -itis: arteritis, not arteriitis."},
   "angiogram": {build:["angi","gram"], spell:"angiogram", system:"Cardiovascular",
     def:"a record or image of a blood vessel", plain:"an imaging picture of a blood vessel",
     note:"angi/o + -gram; keep the o since -gram begins with a consonant (g)."},
@@ -2701,6 +2707,7 @@ const TERMS = {
 };
 
 const TERM_PRON = {
+  arthrocentesis:"ar-throh-sen-TEE-sis",
   gastritis:"gas-TRY-tis", arthritis:"ar-THRY-tis", arthralgia:"ar-THRAL-jah",
   dermatitis:"der-mah-TY-tis", carditis:"kar-DY-tis", neuralgia:"noo-RAL-jah",
   myalgia:"my-AL-jah", hepatitis:"hep-ah-TY-tis", nephritis:"neh-FRY-tis",
@@ -3304,7 +3311,7 @@ const ORIGINS = {
   my:      {lang:"Gk", src:"mys, myos — muscle"},
   hepat:   {lang:"Gk", src:"hepar, hepatos — liver"},
   glyc:    {lang:"Gk", src:"glykys — sweet"},
-  electr:  {lang:"Gk", src:"elektron — amber, which sparks when rubbed"},
+  electr:  {lang:"Gk", src:"elektron — amber, which pulls light things toward it when rubbed"},
   ot:      {lang:"Gk", src:"ous, otos — ear"},
   ophthalm:{lang:"Gk", src:"ophthalmos — eye"},
   rhin:    {lang:"Gk", src:"rhis, rhinos — nose"},
@@ -3414,7 +3421,7 @@ const FIGURES = {
     gift:"the first correct account of how blood reaches the lungs",
     myth:"Pulmonary circulation was first described by William Harvey.",
     truth:"Harvey proved the whole circuit in 1628, but Ibn al-Nafis had the lung passage in the 1240s.",
-    parts:["cardi","bronch"], termHint:"cardi/o and pneum- meet in the lungs" },
+    parts:["cardi","bronch"], termHint:"cardi/o and bronch/o meet in the lungs" },
   vesalius:{ id:"vesalius", name:"Andreas Vesalius", era:"1514–1564", place:"Brussels and Padua",
     deed:"dissected human bodies himself, in public, and published what he actually saw — contradicting Galen on hundreds of points",
     gift:"De humani corporis fabrica (1543): anatomy checked against the body instead of against a book",
@@ -3434,7 +3441,7 @@ const FIGURES = {
     truth:"He never saw a capillary — the microscope was not good enough. He deduced they had to exist. Malpighi saw them four years after Harvey died.",
     parts:["cardi","angi"], termHint:"cardi/o + angi/o = cardiovascular, the circuit he proved" },
   leeuwenhoek:{ id:"leeuwenhoek", name:"Antonie van Leeuwenhoek", era:"1632–1723", place:"Delft",
-    deed:"ground his own lenses to a quality nobody could match and became the first person to see bacteria, protozoa and red blood cells",
+    deed:"ground his own lenses to a quality nobody could match and became the first to describe bacteria and protozoa, and the first to describe red blood cells accurately",
     gift:"the microscopic world — his 'animalcules'",
     myth:"Leeuwenhoek was a trained scientist.",
     truth:"He was a draper who used lenses to count thread, and he never told anyone how he made them.",
@@ -3450,7 +3457,7 @@ const FIGURES = {
     gift:"handwashing, proved by numbers before anyone knew germs existed",
     myth:"His colleagues adopted handwashing once he showed them the figures.",
     truth:"They were insulted by the implication and pushed him out. He died in an asylum; the practice was only vindicated after Pasteur and Lister.",
-    parts:["anti","sub"], termHint:"antisepsis — anti- (against) + sepsis (rot)" },
+    parts:["anti","stasis"], termHint:"antisepsis — anti- (against) + sepsis (rot)" },
   nightingale:{ id:"nightingale", name:"Florence Nightingale", era:"1820–1910", place:"Britain and Scutari",
     deed:"found that far more soldiers were dying of infection in the wards than of wounds, and rebuilt the sanitation to prove it",
     gift:"nursing as a trained profession — and medical statistics, argued in diagrams she invented so that generals could not look away",
@@ -3530,6 +3537,16 @@ function reduced(){ return reducedForced || prefersReduced() || document.documen
 function setReduced(v){ reducedForced=v; }
 
 const isTouch = (('ontouchstart' in window) || (navigator.maxTouchPoints>0));
+/* isTouch answers "could this device be touched", which is true of every
+   touchscreen laptop — and the road was using it to decide whether hover-to-study
+   was possible at all. On a Surface or a touch-enabled ThinkPad that silently
+   deleted the single most rewarding optional mechanic in the game from a player
+   who had a mouse in their hand the whole time. This asks the question that was
+   actually meant: is there a fine pointer that can hover. */
+function canHover(){
+  try{ return !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches); }
+  catch(e){ return !isTouch; }
+}
 let quality = (function(){
   // 'high' | 'med' | 'low'
   const mem = navigator.deviceMemory || 4;
@@ -3938,7 +3955,7 @@ function pop(host, text, cls){
 }
 
 window.FX = {
-  has, reduced, setReduced, isTouch, quality, qScale, setQuality:(q)=>{quality=q;},
+  has, reduced, setReduced, isTouch, canHover, quality, qScale, setQuality:(q)=>{quality=q;},
   track, cleanup, raf, vanta, killVanta, lenis, killLenis,
   revealText, splitText, stagger, countUp, magnetize, tilt, spotlight, spotlightAll,
   bindClickSpark, clickSpark, inkBloom, transition, to, timeline, buzz, paintBrush,
@@ -4530,11 +4547,18 @@ function markPartResult(id, ok, fast){
   if(m.ef==null){ m.ef=2.5; m.reps=0; m.ivl=0; m.due=0; m.lapses=0; }
   const q = ok ? (fast?5:4) : 2;
   m.ef = Math.max(1.3, Math.min(3.2, m.ef + (0.1 - (5-q)*(0.08+(5-q)*0.02))));
-  if(!ok){ m.reps=0; m.ivl=1; m.lapses=(m.lapses||0)+1; }
+  if(!ok){ m.reps=0; m.ivl=1; m.lapses=(m.lapses||0)+1; m.fast=false; }
   else { m.reps=(m.reps||0)+1;
-         // capped at 24 runs: nothing should ever fall out of the rotation for good
-         m.ivl = m.reps===1 ? 1 : m.reps===2 ? 3
-               : Math.min(24, Math.max(1, Math.round((m.ivl||1)*m.ef))); }
+         if(fast) m.fast=true;              // answered under pressure: not a guess
+         /* The cap was 24 runs, with a comment claiming nothing ever falls out of
+            rotation for good. Traced, the schedule for a player answering well ran
+            due 1 → 4 → 12 → 32 — so five correct answers retired a part until run
+            thirty-two, and a full eight-chapter campaign is nowhere near thirty-two
+            runs. Every part the player got right early was gone for the rest of the
+            game. Runs are not days: a run is about fifteen minutes, so the ceiling
+            belongs at a handful of runs, not two dozen. */
+         m.ivl = m.reps===1 ? 1 : m.reps===2 ? 2
+               : Math.min(7, Math.max(1, Math.round((m.ivl||1)*m.ef))); }
   m.due = (S.runCount||0) + m.ivl;
 }
 /* how many parts are due for review right now — surfaced on the hub */
@@ -4550,9 +4574,15 @@ function weakParts(){ return Object.keys(S.mastery.parts).filter(id=>{ const m=S
 
 /* ================= NAVIGATION (with FX) ================= */
 let current="s-title";
+/* Four screens were missing from this table and silently took the default "ink"
+   iris, which is the wrong gesture for all of them: the title is a curtain
+   closing on a story, the Trial and the Hall are ceremonies, the Training Hall
+   is a side door. Naming them costs nothing and every screen change now reads
+   as a deliberate cut rather than a page swap. */
 const TRANSITION={ "s-build":"ink", "s-forge":"wash", "s-assign":"scroll", "s-mission":"mist",
   "s-result":"seal", "s-hub":"ink", "s-case":"wash", "s-end":"mist", "s-intro":"wash",
-  "s-difficulty":"wash" };
+  "s-difficulty":"wash", "s-title":"seal", "s-trial":"seal", "s-hall":"scroll",
+  "s-arcade":"scroll" };
 function swap(id, onShow){
   const cur=$('#'+current); if(cur) cur.classList.remove('active');
   const nx=$('#'+id); if(nx){ nx.classList.add('active'); nx.scrollTop=0;
@@ -4917,7 +4947,7 @@ function buildBackdrop(host, variant){
     });
     FX.track(drift);
   }
-  if(!FX.reduced() && !FX.isTouch){
+  if(!FX.reduced() && FX.canHover()){
     const onMove=(e)=>{
       px=(e.clientX/window.innerWidth-0.5);
       py=(e.clientY/window.innerHeight-0.5);
@@ -5081,7 +5111,14 @@ window.__RD_QE = (function(){
   function partWeight(id){
     if(uniform) return 1;
     const m=pstat(id), run=E.S().runCount||0;
-    if(m.seen===0) return 1.9;                          // never introduced — teach it
+    /* An unseen part used to weigh 1.9 — higher than almost anything the schedule
+       could produce — so for a player one chapter in, who has met nine of the
+       seventy-three parts, 45% of the questions on the road were about vocabulary
+       the game had never shown them. "Never introduced — teach it" was the
+       intent, but nothing here teaches; it only asks. A new part should be an
+       occasional pleasant surprise, not the modal question, so it now sits just
+       above a well-known part and well below anything actually due. */
+    if(m.seen===0) return 1.15;
     if(m.ef==null){                                     // pre-v8 save, no schedule yet
       let w=1;
       if(m.wrong>m.correct) w+=2.6;
@@ -5093,9 +5130,19 @@ window.__RD_QE = (function(){
     // the session rather than deferring them to a future run, which is exactly
     // what a struggling player needs and what the brief asks for: a wrong answer
     // buys more practice on that concept, not less.
-    if(!m.reps) return 2.8 + Math.min(2, (m.lapses||0)*0.5);
+    /* ONE LUCKY GUESS USED TO END THE LESSON. This branch is the hot one, and a
+       single correct answer set reps=1, which dropped the weight from 2.8 to the
+       0.18 resting floor in one step — at four options, a 25% chance per ask of
+       burying a part the player does not know for the rest of the run. Leaving
+       the learning queue now takes two correct answers, or one answered fast
+       enough that it cannot have been a guess. */
+    if(!m.reps || (m.reps<2 && !m.fast)) return 2.8 + Math.min(2, (m.lapses||0)*0.5);
     const overdue = run - (m.due||0);
-    if(overdue < 0) return 0.18;                        // resting — do not drill it
+    /* Resting was a flat floor that ignored lapses entirely, so a part the player
+       had dropped fifteen times could be rested out of the run on the strength of
+       two lucky answers in a row. A history of failure keeps an item in the pool
+       even while its interval says otherwise. */
+    if(overdue < 0) return 0.18 + Math.min(1.4, (m.lapses||0)*0.14);
     return 1 + Math.min(3, overdue*0.65) + Math.min(2, (m.lapses||0)*0.5);
   }
   /* the same schedule, for whole terms. Six of the nine question types used to
@@ -5161,22 +5208,46 @@ window.__RD_QE = (function(){
      (phleb/o and ven/i both mean "vein"; dermat/o and cutane/o both mean
      "skin"), so without the second check a meaning question could offer the
      option "vein" twice and grade one of them wrong. */
+  /* Exclusion used to be exact string equality on `mean`, which let through every
+     pair that means the same thing in different words: endo-/intra- ("within,
+     inside" vs "within"), hypo-/sub-, thromb/o vs coagul/o, -megaly vs -ectasis,
+     -rrhea vs -rrhage. The game TEACHES endo-/intra- and hypo-/sub- as twin pairs
+     in its own origin-rule questions and then graded one of them wrong when they
+     met on a true/false — 57 of 4,000 generated true/false items were marked
+     incorrectly. `sense` is the shared concept behind different wordings; matching
+     on it removes all of those collisions at once. */
+  const senseOf = (id)=> (PARTS[id] && (PARTS[id].sense || PARTS[id].mean)) || "";
   function distractParts(id, n){
-    const kind=PARTS[id].kind, mean=PARTS[id].mean;
-    const pool=shuffle(kindOf(kind).filter(p=>p!==id && PARTS[p].mean!==mean));
-    const out=[], taken=new Set([mean]);
+    const kind=PARTS[id].kind, mean=PARTS[id].mean, sense=senseOf(id);
+    const pool=shuffle(kindOf(kind).filter(p=>p!==id && PARTS[p].mean!==mean && senseOf(p)!==sense));
+    const out=[], taken=new Set([mean]), takenSense=new Set([sense]);
     for(const p of pool){
-      if(taken.has(PARTS[p].mean)) continue;
-      taken.add(PARTS[p].mean); out.push(p);
+      if(taken.has(PARTS[p].mean) || takenSense.has(senseOf(p))) continue;
+      taken.add(PARTS[p].mean); takenSense.add(senseOf(p)); out.push(p);
       if(out.length>=n) break;
     }
     return out;
   }
-  /* the other part that carries this meaning in the other tongue, if any */
+  /* The other part that carries this meaning — used to add a disambiguating
+     "which GREEK part…" to a prompt that would otherwise have two right answers.
+     It only looked across languages, so hem/o and hemat/o (both Greek, both
+     "blood") produced the bare question "Which word part means blood?" with one
+     of the two answers marked wrong. Any twin counts now; the qualifier just
+     changes depending on whether the languages differ. */
   function twinOf(id){
     const p=PARTS[id]; if(!p || !p.lang) return null;
     return Object.keys(PARTS).find(x=>x!==id && PARTS[x].mean===p.mean
       && PARTS[x].lang && PARTS[x].lang!==p.lang) || null;
+  }
+  /* A part can also share its meaning with another part in the SAME tongue —
+     hem/o and hemat/o are both Greek and both "blood". The Two Tongues framing
+     above does not apply to those and reads as nonsense if it is used ("Greek
+     and Greek both gave English a word for it"), so they get their own sentence.
+     They are already kept out of each other's options by distractParts. */
+  function sameTongueTwin(id){
+    const p=PARTS[id]; if(!p) return null;
+    return Object.keys(PARTS).find(x=>x!==id && PARTS[x].kind===p.kind
+      && PARTS[x].lang===p.lang && PARTS[x].mean===p.mean) || null;
   }
   /* write results back into the shared mastery model */
   function record(conceptIds, ok, fast, q){
@@ -5296,12 +5367,14 @@ window.__RD_QE = (function(){
          otherwise "which part means vein?" has two honest answers and the
          player is punished for knowing both. */
       const tw=twinOf(id);
+      const st=tw?null:sameTongueTwin(id);
       const ask = tw ? `Which <b>${D.LANG_NAME[p.lang]}</b> word part means <b>${p.mean}</b>?`
                      : `Which word part means <b>${p.mean}</b>?`;
       return norm({ type, conceptIds:[id], prompt:ask,
         options:opts(p.text, wrongs),
         explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`
-          + (tw?` So does <b>${PARTS[tw].text}</b> — ${D.LANG_NAME[p.lang]} and ${D.LANG_NAME[PARTS[tw].lang]} both gave English a word for it.`:""),
+          + (tw?` So does <b>${PARTS[tw].text}</b> — ${D.LANG_NAME[p.lang]} and ${D.LANG_NAME[PARTS[tw].lang]} both gave English a word for it.`:"")
+          + (st?` <b>${PARTS[st].text}</b> means the same thing — the same ${D.LANG_NAME[p.lang]} root wore down two ways.`:""),
         pron:p.pron });
     }
     if(type==="trueFalse"){
@@ -5635,8 +5708,13 @@ function showDifficulty(opts){
     };
   }});
 }
-function showTitle(){
-  go("s-title",{instant:true,onShow:()=>{
+/* The title used to be `instant:true` unconditionally, which is right exactly
+   once — on the cold boot, where anything else is a stutter before the game has
+   drawn a frame. Every other route here is a return: from the ending, from a
+   save reset, from the Training Hall. Those were hard cuts mid-story. They get
+   the seal transition now; only boot asks for instant. */
+function showTitle(opts){
+  go("s-title",{instant:!!(opts&&opts.instant),onShow:()=>{
     buildBackdrop($('#title-bg'),"title");
     titleCinematic();
     FX.paintBrush($('#title-brush'));
@@ -9847,7 +9925,17 @@ function runMission(){
     } else {
       caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. ${routeOpen}`);
     }
-    const hint=$('#mission-hint'); if(hint){ hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500); }
+    /* The hint was authored for a desktop mouse and said so, on a phone, where
+       there is no mouse, no hover to read a part with, no Space bar to hold and
+       no G key. Half of the instructions on the most important screen in the
+       game were wrong for the device reading them. It is written per input now. */
+    const hint=$('#mission-hint');
+    if(hint){
+      hint.innerHTML = FX.isTouch
+        ? `<b>Drag</b> up and down to lead the squad &mdash; gather word-parts and chain them into real terms. Hold <b>Surge</b> for a burst of speed. The pack button shows your gear.`
+        : `Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.`;
+      hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500);
+    }
     $('#mini-challenge').classList.remove('show');
     $('#pause-menu').classList.remove('show');
     $('#pause-quit-confirm').classList.remove('show');
@@ -9905,19 +9993,38 @@ function bindMissionPointer(cv){
     const f=clamp((y-edge)/Math.max(1,(H-edge*2)),0,1);
     return top + f*(bot-top);
   };
+  /* Steering listens at the window so the squad keeps following when the cursor
+     slides off the canvas — but that also meant every press anywhere on the page
+     steered. On a phone, tapping Pause yanked the caravan to the top of the
+     screen; answering a rune gate walked them into whatever band the button
+     happened to sit in. A press that lands on a control belongs to that control.
+     A finger that STARTS on a control keeps that exemption for the whole drag,
+     which is why the flag outlives the pointerdown. */
+  const CHROME='button,a,input,select,textarea,[role="button"],.mini-challenge,.pause-menu,'+
+               '.boss-chorus,.gear-strip,.road-collapse,.mission-top,.gate-prompt,.modal';
+  const onChrome=(e)=>!!(e.target && e.target.closest && e.target.closest(CHROME));
+  let gestureOnChrome=false;
   const move=(e)=>{
     if(!M||M.done) return;
     const p=local(e);
     M.pointer.x=p.x; M.pointer.y=p.y;
     M.pointer.over = p.x>=0 && p.x<=M.cv.width && p.y>=0 && p.y<=M.cv.height;
-    // a mouse leads; a finger only leads while it's down
-    if(e.pointerType==="touch" && !(e.buttons&1)) return;
+    // a mouse leads; a finger only leads while it's down, and never while the
+    // drag it belongs to began on a button
+    if(e.pointerType==="touch" && (!(e.buttons&1) || gestureOnChrome)) return;
+    if(e.pointerType!=="touch" && e.buttons===0 && onChrome(e)) return;
     steerTo(bandFromPointer(p.y));
   };
-  const down=(e)=>{ if(!M||M.done) return; const p=local(e);
+  const down=(e)=>{ if(!M||M.done) return;
+    gestureOnChrome = onChrome(e);
+    if(gestureOnChrome) return;
+    const p=local(e);
     M.pointer.x=p.x; M.pointer.y=p.y; M.pointer.over=true; steerTo(bandFromPointer(p.y)); };
+  const up=()=>{ gestureOnChrome=false; };
   const leave=()=>{ if(M) M.pointer.over=false; };
   window.addEventListener('pointerdown',down);
+  window.addEventListener('pointerup',up);
+  window.addEventListener('pointercancel',up);
   window.addEventListener('pointermove',move);
   cv.addEventListener('pointerleave',leave);
   const onResize=()=>{ if(!M||M.done) return; syncRoadInsets();
@@ -9954,6 +10061,7 @@ function bindMissionPointer(cv){
     paceBtn.addEventListener('pointercancel',pdOff);
   }
   M._unbind=()=>{ window.removeEventListener('pointerdown',down); window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up);
     cv.removeEventListener('pointerleave',leave); window.removeEventListener('resize',onResize);
     window.removeEventListener('keydown',key); window.removeEventListener('keyup',keyUp);
     if(paceBtn){ paceBtn.removeEventListener('pointerdown',pdOn); paceBtn.removeEventListener('pointerup',pdOff);
@@ -10932,7 +11040,7 @@ function tick(t){
     // HOVER TO STUDY — hold the cursor over a drifting word-part to read its
     // meaning. A part you READ is worth more than one you merely walk through,
     // and it feeds the Lexicon Affinity track. Curiosity is the strongest build.
-    const canHover = M.pointer.over && !FX.isTouch;
+    const canHover = M.pointer.over && FX.canHover();
     let hovered=null;
     M.pickups.forEach(pk=>{
       if(pk.got) return;
@@ -11152,12 +11260,34 @@ function pushCombo(partId){
   if(shape==="complete") completeTerm();
   else updateWordHud();
 }
+/* What a coined chain WOULD mean, read the way medical terms are read: the
+   suffix first, then back through the roots to the prefix. "hyper- + ot/o +
+   -algia" comes out as "pain — ear — excessive", which is how a clinician
+   actually unpacks a word they have not seen before. */
+function coinedGloss(ids){
+  const parts=ids.map(id=>PARTS[id]).filter(Boolean);
+  if(!parts.length) return "";
+  const suf=parts.filter(p=>p.kind==="suffix").map(p=>p.mean);
+  const rest=parts.filter(p=>p.kind!=="suffix").reverse().map(p=>p.mean);
+  return suf.concat(rest).join(" — ");
+}
 function completeTerm(){
   const ids=M.combo.slice();
   const realId=TERM_BY_SIG[ids.join("+")];
   const n=ids.length;
   FX.shake(realId?5:3,150); FX.impact(realId?"#d8bd84":"#7d9a8a", realId?0.30:0.18, 170);
-  if(window.__RD_QE) window.__RD_QE.record(ids, true);   // building = practice
+  /* MASTERY IS ONLY EVER PAID FOR A REAL WORD.
+     This used to record every completed chain as a correct answer for every part
+     in it. Only 55 of the 1,290 two-part chains the road can produce are real
+     terms, and 12 of 37,800 three-part chains — so the overwhelming majority of
+     the credit the scheduler was handing out was for words that do not exist.
+     Worse, one nonsense chain took three untouched parts from "never seen" to
+     "reviewed, due in five runs" and buried them for the rest of the run. The
+     North Star's first pillar is that no amount of dexterity substitutes for
+     knowing the word; this was the game paying out on exactly that substitution.
+     Coined chains keep their momentum — the hands did the work — but they buy
+     no schedule, and they get told what they built instead. */
+  if(window.__RD_QE && realId) window.__RD_QE.record(ids, true);
   ids.forEach(markPartSeen);
   const gain=(0.5+n*0.26)*M.forge.gainMult*(realId?1.3:1);
   bumpMomentum(gain);
@@ -11175,11 +11305,16 @@ function completeTerm(){
   // THE LESSON AND THE REWARD ARE THE SAME EVENT — the banner names the word,
   // spells out the parts that made it, and gives the meaning, up in clear sky.
   const partTrail=ids.map(id=>`${PARTS[id].text} <span style="opacity:.62">(${PARTS[id].mean})</span>`).join(" + ");
-  showTermBanner(label, partTrail, realId?TERMS[realId].def:"", !!realId);
+  /* A coined chain used to be announced as "Word forged: hyperotalgia", which a
+     learner can fairly read as the game telling them hyperotalgia is a word. It
+     says what the pieces would mean instead, and says plainly that no one uses
+     it — which is a better exercise than silence: the player has just generated
+     a meaning from parts, which is the whole skill, and gets it confirmed. */
+  showTermBanner(label, partTrail, realId?TERMS[realId].def:coinedGloss(ids), !!realId);
   if(realId){ M.realTermsBuilt++;
     caption(`✦ ${TERMS[realId].spell} — ${TERMS[realId].def}. Momentum ×${M.momentum.toFixed(1)}!`);
   } else {
-    caption(`Word forged: ${label} — momentum ×${M.momentum.toFixed(1)}!`);
+    caption(`${label} — not a word anyone uses, but the pieces fit: ${coinedGloss(ids)}. ×${M.momentum.toFixed(1)}`);
   }
   // Phase I (The Stripping): a real, complete word — root and all — is proof
   // Radicida hasn't won. It pushes the erasure back harder than a gate does.
@@ -12627,7 +12762,7 @@ function boot(){
   // hide loader
   const loader=$('#loader'); if(loader){ setTimeout(()=>{ loader.classList.add("hide");
     setTimeout(()=>loader.remove(),600); }, 380); }
-  window.__RD_SCREENS.showTitle();
+  window.__RD_SCREENS.showTitle({instant:true});
   // keyboard: Esc closes any open modal first; on the road with nothing else
   // already claiming the pause (a gate, a raid, the boss Chorus), it toggles
   // the pause menu instead of doing nothing.
@@ -12772,7 +12907,7 @@ function startSlice(){
     </div>
     <div class="ar-prompt" id="sl-prompt"><small>Slice the part that means</small><span id="sl-mean">…</span></div>
     <div class="ar-canvas-wrap slice-wrap"><canvas id="sliceCanvas" width="760" height="620"></canvas></div>
-    <div class="ar-banner" id="sl-banner">${A.relax?"Relaxed: a missed tile just floats back around, no lives lost.":"Read the meaning, then swipe or tap the part that fits. Let the wrong ones fall. Avoid the 卐 bombs."}</div>`;
+    <div class="ar-banner" id="sl-banner">${A.relax?"Relaxed: a missed tile just floats back around, no lives lost.":"Read the meaning, then swipe or tap the part that fits. Let the wrong ones fall. Avoid the &#x7206; bombs."}</div>`;
 
   const cv=$('#sliceCanvas'), ctx=cv.getContext('2d');
   const W=cv.width, H=cv.height;
@@ -12823,7 +12958,7 @@ function startSlice(){
         id:it.id, ok:!!it.ok, bomb:!!it.bomb,
         x, y:H+46, r:56, vx, vy: baseVy - Math.random()*0.8,
         g:gravity, rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.06,
-        sliced:false, gone:false, label: it.bomb?"卐":(PARTS[it.id]?PARTS[it.id].text:"?"),
+        sliced:false, gone:false, label: it.bomb?"\u7206":(PARTS[it.id]?PARTS[it.id].text:"?"),
         color: it.bomb?"#8a241f":( PARTS[it.id]?kindColor(PARTS[it.id].kind):"#4f7261")
       });
     });
