@@ -3095,7 +3095,13 @@ const SAFETY_NOTE = "A learning game. Every medical term here is real and verifi
    single traveler; the ramp after it is gentle on purpose (1 → 3 → 4 …).
    Travelers a capped party can't fit are queued and picked up next chapter,
    so no authored traveler, clue or term is ever skipped. */
-const PARTY_LADDER = [1, 3, 4, 4, 5, 5, 6, 4];
+/* The campaign authors 43 distinct builders. This ladder used to sum to 32,
+   and travelers whose term was already built re-entered the waiting list from
+   later chapters' rosters and ate the caps ahead of new arrivals — so eleven
+   authored travelers could never build at all and sixteen were still queued
+   when the credits rolled. The finale now takes everyone still waiting, which
+   is what it was always supposed to do. */
+const PARTY_LADDER = [1, 3, 5, 6, 7, 7, 7, 99];   // 99 = the finale clears the queue
 /* Escorts ride along on top of the builders — the caravan keeps visibly
    growing even while the number of term-builds stays controlled. */
 const ESCORT_LADDER = [0, 1, 1, 2, 2, 3, 3, 99];   // 99 = the finale takes everyone
@@ -3427,9 +3433,20 @@ function cleanup(){
 }
 /* raf registry */
 let rafs = new Set();
+/* The old version added every frame's id to `rafs` and only ever removed the
+   last one, so the set grew by one entry per frame for the life of a screen —
+   a ten-minute road left ~36,000 dead ids behind and cleanup() then made 36,000
+   no-op cancelAnimationFrame calls. Retire the previous id as each new one is
+   issued: the set now holds exactly one entry per live loop. */
 function raf(fn){
   let id, live=true;
-  const step=(t)=>{ if(!live)return; fn(t); id=requestAnimationFrame(step); rafs.add(id); };
+  const step=(t)=>{
+    if(!live) return;
+    rafs.delete(id);
+    fn(t);
+    if(!live) return;                 // fn may have killed the loop
+    id=requestAnimationFrame(step); rafs.add(id);
+  };
   id=requestAnimationFrame(step); rafs.add(id);
   const h={ kill:()=>{ live=false; cancelAnimationFrame(id); rafs.delete(id); } };
   disposables.push(h); return h;
@@ -3907,7 +3924,20 @@ const Save = {
 /* Bring any older save up to the v3 schema (chapter-based). Safe, non-destructive. */
 function migrate(st){
   if(!st || typeof st!=="object") return null;
+  /* A save written by a NEWER build fell straight through to the v2 legacy
+     path, which keeps rep/coin/pages and rebuilds `chapter` from a field that
+     has not existed for two schemas — so opening an old build after a new one
+     erased the campaign. Read it forward instead: unknown extra fields are
+     harmless, and losing them is infinitely better than losing the save. */
+  if(st.ver>8) return st;
   if(st.ver>=3 && st.ver<=8){
+    // `mastery:null` passed every truthiness guard below and then threw inside
+    // renderHubCard, mid screen-swap, leaving no way forward but a reload.
+    if(!st.mastery || typeof st.mastery!=="object"
+       || !st.mastery.terms || typeof st.mastery.terms!=="object"
+       || !st.mastery.parts || typeof st.mastery.parts!=="object"){
+      st.mastery=freshMastery();
+    }
     if(!Array.isArray(st.foundMats)) st.foundMats=[];
     if(!st.arcade) st.arcade={ slice:{best:0,plays:0}, match:{best:0,plays:0} };  // v3 → v4 backfill
     // v4 → v5 backfill: bench progression + road economy
@@ -3925,10 +3955,19 @@ function migrate(st){
       st.unlockedBps = blueprintsEarnedBy(st.servedChapterIds||[]);
     }
     // v6 → v7 backfill: the difficulty setting and the adaptive skill read
-    if(!st.settings || typeof st.settings!=="object") st.settings=newGame().settings;
-    if(st.settings.difficulty===undefined){
-      // a returning player has already been playing the old fixed curve — that is
-      // Steady, and they keep it rather than being asked mid-campaign
+    /* `settings:{}` and `settings:[]` are objects, so they passed the old guard
+       and applySettings() then read st.vol.master off undefined. Merge over the
+       defaults rather than testing for presence, and merge `vol` too. */
+    const defs=newGame().settings;
+    if(!st.settings || typeof st.settings!=="object" || Array.isArray(st.settings)) st.settings={};
+    const vol=Object.assign({}, defs.vol,
+      (st.settings.vol && typeof st.settings.vol==="object") ? st.settings.vol : {});
+    st.settings=Object.assign({}, defs, st.settings, {vol});
+    if(st.settings.difficulty===undefined || st.settings.difficulty===null){
+      // A returning player has already been walking the old fixed curve — that is
+      // Steady, and they keep it rather than being stopped and asked mid-campaign.
+      // (The defaults this now merges over carry difficulty:null, so the check has
+      // to cover null as well as a missing key.)
       st.settings.difficulty = "steady";
     }
     if(!st.skill || typeof st.skill!=="object") st.skill={rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null};
@@ -4404,8 +4443,13 @@ function partyFor(chapter){
   const num = chapter.num!=null ? chapter.num : CHAPTERS.findIndex(c=>c.id===chapter.id);
   const cap     = ladderAt(PARTY_LADDER, num);
   const escCap  = ladderAt(ESCORT_LADDER, num);
-  const waiting = (S.pending||[]).filter(id=>TRAVELERS[id]);
-  const roster  = chapter.builders.filter(id=>TRAVELERS[id]);
+  // A traveler whose term the player has already built has nothing left to ask
+  // for. They used to be re-queued every time a later chapter listed them,
+  // pushing genuinely new travelers off the end of the campaign.
+  const done=new Set(S.completedTerms||[]);
+  const needsBuild=(id)=>{ const t=TRAVELERS[id]; return !!t && !done.has(t.term); };
+  const waiting = (S.pending||[]).filter(needsBuild);
+  const roster  = chapter.builders.filter(needsBuild);
 
   // builders: the waiting list drains first, then this chapter's own roster
   const builders=[];
@@ -8545,7 +8589,15 @@ function pushDebt(ids){
     if(id && PARTS[id] && !q.includes(id)) q.push(id);
   });
   while(q.length>12) q.shift();          // a debt you can never clear is just noise
-  if(M) M.reask=(M.reask||[]).concat(ids);
+  // the in-run copy needs the same discipline, or a single stubborn part is
+  // pushed once per miss and the queue grows without limit across a long road
+  if(M){
+    const live=M.reask||(M.reask=[]);
+    (Array.isArray(ids)?ids:[ids]).forEach(id=>{
+      if(id && PARTS[id] && !live.includes(id)) live.push(id);
+    });
+    while(live.length>12) live.shift();
+  }
 }
 function takeReask(){
   const live=(M && M.reask && M.reask.length) ? M.reask : debtQueue();
@@ -8582,6 +8634,7 @@ function reviewChallenge(){
 
 /* ---------- mission state ---------- */
 let M=null;
+let roadLoop=null;   // the ONE render loop for the road — see runMission
 let pendingEndless=false;   // ENDLESS ROAD — set true just before runMission() to flag the coming mission
 const VIS=2600;               // px of world per 1.0 progress (visual scroll scale)
 /* Lane positions are BAND-RELATIVE (u: 0 = top of the walkable band, 1 = bottom),
@@ -9304,7 +9357,13 @@ function runMission(){
     // ability row); the walkable band follows it so nothing hides beneath the HUD
     requestAnimationFrame(()=>{ syncRoadInsets(); if(M){ M.laneY=clamp(M.laneY,roadMinY(),roadMaxY()); M.targetY=M.laneY;
       M.caravan.forEach(c=>c.laneY=M.laneY); } });
-    FX.raf((t)=>tick(t));
+    /* Spam-clicking a depart button used to leave one render loop per click
+       running for the whole road — go() calls FX.cleanup() synchronously, but
+       this starts inside the transition's async onShow, so the loops outlived
+       the cleanup that was meant to kill them. Six clicks measured 6x the
+       frames and 6x the DOM queries. Keep exactly one. */
+    if(roadLoop && roadLoop.kill){ try{ roadLoop.kill(); }catch(e){} }
+    roadLoop = FX.raf((t)=>tick(t));
   }});
 }
 function bindMissionPointer(cv){
@@ -12949,7 +13008,16 @@ function chestSVG(rank){
   </svg>`;
 }
 /* Open a chest. Returns immediately; onDone fires when the player dismisses it. */
+const chestQueue=[];
 function grantChest(quality, reason, onDone){
+  // One veil is reused for every chest, and a second call used to wipe the
+  // first one's contents — the earlier roll was discarded unapplied and its
+  // onDone (a navigation callback at both call sites) never fired. Queue
+  // instead, so every chest granted is a chest opened.
+  if(veil && veil.classList.contains("show")){
+    chestQueue.push({quality, reason, onDone});
+    return null;
+  }
   const rank=rollRank(quality==null?0.5:quality);
   const loot=rollLoot(rank);
   const v=chestVeil();
@@ -12994,7 +13062,12 @@ function grantChest(quality, reason, onDone){
   }
   box.onclick=open;
   box.onkeydown=(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(); } };
-  btn.onclick=()=>{ v.classList.remove("show"); v.innerHTML=""; if(onDone) onDone(loot); };
+  btn.onclick=()=>{
+    v.classList.remove("show"); v.innerHTML="";
+    if(onDone) onDone(loot);
+    const next=chestQueue.shift();
+    if(next) setTimeout(()=>grantChest(next.quality, next.reason, next.onDone), 260);
+  };
   v.onkeydown=(e)=>{ if(e.key==="Escape" && opened){ btn.click(); } };
   setTimeout(()=>box.focus(), 120);
   return {rank, loot};
@@ -13134,8 +13207,14 @@ function startClock(){
   T.t0=performance.now(); T.clock=1; T.locked=false;
   const bar=()=>$('#trial-body .trial-clock i');
   const gen=T.gen;
+  const live=()=>{ const sc=document.getElementById('s-trial');
+                   return !!(sc && sc.classList.contains('active')); };
   const step=()=>{
-    if(!T || T.gen!==gen || T.done || T.locked) return;
+    // Screens are hidden with CSS, not removed, so every guard here still
+    // passed after the player walked out of the Trial: the clock kept ticking
+    // off-screen, timed out three questions, burned all three lives and stamped
+    // the day as spent. Leaving the screen stops the clock.
+    if(!T || T.gen!==gen || T.done || T.locked || !live()) return;
     const el2=bar(); if(!el2) return;
     const dt=(performance.now()-T.t0)/1000;
     T.clock=clamp(1-dt/T.limit,0,1);
@@ -13228,8 +13307,10 @@ function finishTrial(){
   if(T.score>(d.best||0)) d.best=T.score;
   d.medals=d.medals||{};
   const prevMedal=d.medals[T.key];
-  if(!prevMedal || MEDALS.findIndex(m=>m.id===medal.id) < MEDALS.findIndex(m=>m.id===prevMedal))
-    d.medals[T.key]=medal.id;
+  // findIndex returns -1 for "none", so `0 < -1` was false and a day once
+  // stamped "none" could never be upgraded no matter how well it was replayed
+  const rank=(id)=>{ const i=MEDALS.findIndex(m=>m.id===id); return i<0 ? MEDALS.length : i; };
+  if(!prevMedal || rank(medal.id) < rank(prevMedal)) d.medals[T.key]=medal.id;
   recordScore("daily", T.score, {label:T.key, medal:medal.id, lives:T.lives});
   E.persist(); evaluate();
   renderTrialEnd(first, medal);
@@ -13261,11 +13342,13 @@ function renderTrialEnd(first, medal){
       <button class="btn" id="trial-done">Back to the school →</button>
     </div>`;
   renderRecordList($('#trial-board'), "daily", 5);
-  $('#trial-done').onclick=()=>{ const q=clamp(T.score/1400,0,1); const fresh=first;
+  $('#trial-done').onclick=()=>{
+    if(!T) return;                       // a second click used to read T.score on null
+    const q=clamp(T.score/1400,0,1); const fresh=first;
     T=null;
     if(fresh) grantChest(q, "The Trial pays out", ()=>window.__RD_SCREENS.showHub());
     else window.__RD_SCREENS.showHub(); };
-  $('#trial-hall').onclick=()=>{ T=null; open("records"); };
+  $('#trial-hall').onclick=()=>{ if(T){ cancelAnimationFrame(T.raf); T=null; } open("records"); };
   Audio2.sfx.stamp && Audio2.sfx.stamp();
 }
 
