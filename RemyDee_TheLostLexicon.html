@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#191510" />
 <title>Remy Dee: The Lost Lexicon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +29,8 @@
   --rice-2:#e2d5b8;
   --rice-3:#d4c39f;
   --parch:#f3ecd8;          /* bright parchment for panels */
-  --jade:#4f7261;           /* desaturated mineral jade */
+  --jade:#456654;           /* desaturated mineral jade — darkened so rice-on-jade
+                               buttons and tier tags clear 4.5:1 (was 4.17) */
   --jade-deep:#33513f;
   --jade-soft:#7d9a8a;
   --cinnabar:#b5322b;       /* crimson seal / red lacquer — THE accent */
@@ -74,9 +75,25 @@ body{
   text-rendering:optimizeLegibility;
 }
 button{font-family:inherit;cursor:pointer;color:inherit;border:none;background:none;font-size:1rem;}
-:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px;}
+/* gold on parchment measured 2.18:1 — below the 3:1 that WCAG 1.4.11 asks of a
+   focus indicator. A dark ring with a gold inner edge reads on every surface
+   this game has, light panel or black topbar. */
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;border-radius:4px;
+  box-shadow:0 0 0 5px var(--gold-soft), 0 0 0 6px rgba(25,21,16,.5);}
+html[data-contrast="high"] :focus-visible{outline-color:#000;box-shadow:0 0 0 5px #ffd76a,0 0 0 7px #000;}
 html[data-motion="reduced"] *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.03s !important;}
 html[data-motion="reduced"] .no-reduce{display:none !important;}
+/* The in-game toggle used to be the ONLY thing the CSS listened to, so a player
+   whose operating system asks for reduced motion still got every looping
+   animation in the game unless they found the setting. The OS is authoritative
+   unless the player has explicitly opted back in (data-motion="full"). */
+@media (prefers-reduced-motion: reduce){
+  html:not([data-motion="full"]) *{
+    animation-duration:.001s !important; animation-iteration-count:1 !important;
+    transition-duration:.03s !important; scroll-behavior:auto !important;
+  }
+  html:not([data-motion="full"]) .no-reduce{display:none !important;}
+}
 
 /* ============================================================
    Stage: fixed cinematic canvas that scales down
@@ -1656,8 +1673,21 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
   border:1px solid var(--ink-line);border-radius:var(--r-sm);font-size:.94rem;
   transition:transform .16s var(--ease),background .16s var(--ease),border-color .16s var(--ease);}
 .trial-opt:hover:not(:disabled){transform:translateY(-2px);background:var(--rice-2);border-color:var(--gold);}
-.trial-opt.right{background:rgba(79,114,97,.24);border-color:var(--jade);animation:optRight .4s var(--ease-back);}
-.trial-opt.wrong{background:rgba(181,50,43,.2);border-color:var(--cinnabar);animation:optWrong .38s var(--ease);}
+/* Right and wrong used to differ only in hue, at effectively identical
+   luminance — indistinguishable in greyscale and to a red-green colourblind
+   player. Each state now carries a glyph, a weight change and a distinct
+   border treatment, so the colour is confirmation rather than the message. */
+.trial-opt.right{background:rgba(79,114,97,.30);border:2px solid var(--jade-deep);
+  font-weight:700;animation:optRight .4s var(--ease-back);}
+.trial-opt.wrong{background:rgba(181,50,43,.14);border:2px dashed var(--cinnabar-deep);
+  text-decoration:line-through;text-decoration-thickness:2px;opacity:.85;
+  animation:optWrong .38s var(--ease);}
+.trial-opt.right::before{content:"✓ ";font-weight:900;color:var(--jade-deep);}
+.trial-opt.wrong::before{content:"✕ ";font-weight:900;color:var(--cinnabar-deep);}
+.trial-opt.right::after,.trial-opt.wrong::after{
+  content:attr(data-state);position:absolute;right:8px;top:6px;
+  font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;opacity:.75;}
+.trial-opt{position:relative;}
 @keyframes optRight{50%{transform:scale(1.05);}}
 @keyframes optWrong{0%,100%{transform:none;}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
 .trial-teach{margin-top:14px;padding:13px 15px;text-align:left;
@@ -4120,10 +4150,17 @@ let S = newGame();
 
 function applySettings(){
   const st=S.settings;
-  document.documentElement.dataset.motion = st.motion?"reduced":"normal";
+  /* Three states, not two: the player's explicit "reduced" wins, then the OS
+     preference, and "full" is the marker that a player has deliberately opted
+     back into motion despite the OS asking for less. */
+  let osReduced=false;
+  try{ osReduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }catch(e){}
+  document.documentElement.dataset.motion = st.motion ? "reduced" : (osReduced ? "reduced" : "full");
   document.documentElement.dataset.contrast = st.contrast?"high":"normal";
   FX.setReduced(!!st.motion);
-  const sizes={sm:0.92,md:1,lg:1.14};
+  // 1.14 was the largest text this game could produce, which is not a text-size
+  // setting so much as a rounding error. Huge is a real accommodation.
+  const sizes={sm:0.92,md:1,lg:1.2,xl:1.45};
   document.documentElement.style.setProperty("--scale", sizes[st.textSize]||1);
   Audio2.setVol("master",st.vol.master); Audio2.setVol("music",st.vol.music);
   Audio2.setVol("sfx",st.vol.sfx); Audio2.setVol("voice",st.vol.voice);
@@ -4171,6 +4208,17 @@ function swap(id, onShow){
   const nx=$('#'+id); if(nx){ nx.classList.add('active'); nx.scrollTop=0;
     const c=$('.content',nx); if(c)c.scrollTop=0; }
   current=id;
+  /* Focus used to fall to <body> on every screen change, so a keyboard player
+     started each screen tabbing in from the very top and a screen-reader user
+     was never told the screen had changed at all. Land on the new screen's
+     heading, which is also what gets announced. */
+  if(nx){
+    const head = nx.querySelector('h1,h2,.brand') || nx;
+    if(head){
+      head.setAttribute('tabindex','-1');
+      setTimeout(()=>{ try{ head.focus({preventScroll:true}); }catch(e){} }, 40);
+    }
+  }
   if(id==="s-mission") Audio2.stopMusic(); else Audio2.startMusic();
   if(onShow) onShow();
 }
@@ -5663,8 +5711,46 @@ function renderBuildSupport(){
 }
 
 /* ================= GLOSSARY ================= */
+/* ==================================================================
+   MODAL FOCUS — a dialog you can Tab out of is a dialog a keyboard
+   player is simply lost behind. Escape already closed these; what was
+   missing was the trap and the return. Both modals share this.
+   ================================================================== */
+const modalReturn=new WeakMap();
+function trapModal(m){
+  if(!m) return;
+  m.setAttribute("role","dialog");
+  m.setAttribute("aria-modal","true");
+  const card=$('.modal-card',m);
+  if(card && !card.hasAttribute("tabindex")) card.setAttribute("tabindex","-1");
+  modalReturn.set(m, document.activeElement);
+  const focusables=()=>$$('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])', m)
+    .filter(e=>!e.disabled && e.offsetParent!==null);
+  if(!m.__trapBound){
+    m.__trapBound=true;
+    m.addEventListener("keydown",(e)=>{
+      if(e.key!=="Tab") return;
+      const list=focusables(); if(!list.length) return;
+      const first=list[0], last=list[list.length-1];
+      if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    });
+  }
+  setTimeout(()=>{ const l=focusables(); (l[0]||card||m).focus(); }, 30);
+}
+function untrapModal(m){
+  if(!m) return;
+  m.classList.remove('show');
+  const back=modalReturn.get(m);
+  modalReturn.delete(m);
+  if(back && back.isConnected && typeof back.focus==="function"){
+    try{ back.focus(); }catch(e){}
+  }
+}
+window.__RD_MODAL={trapModal, untrapModal};
+
 function openGloss(){
-  const m=$('#modal-gloss'); m.classList.add('show');
+  const m=$('#modal-gloss'); m.classList.add('show'); trapModal(m);
   renderGloss("");
   const search=$('#gloss-search'); search.value="";
   search.oninput=()=>renderGloss(search.value.trim().toLowerCase());
@@ -5676,8 +5762,8 @@ function openGloss(){
       renderGloss(search.value.trim().toLowerCase(), k); };
     fwrap.appendChild(b);
   });
-  $('#gloss-close').onclick=()=>m.classList.remove('show');
-  m.onclick=(e)=>{ if(e.target===m) m.classList.remove('show'); };
+  $('#gloss-close').onclick=()=>untrapModal(m);
+  m.onclick=(e)=>{ if(e.target===m) untrapModal(m); };
 }
 function renderGloss(q, filter){
   filter=filter||"all"; q=q||"";
@@ -5727,15 +5813,20 @@ function renderGloss(q, filter){
 
 /* ================= SETTINGS ================= */
 function openSettings(){
-  const m=$('#modal-settings'); m.classList.add('show');
+  const m=$('#modal-settings'); m.classList.add('show'); trapModal(m);
   renderSettings();
-  $('#settings-close').onclick=()=>m.classList.remove('show');
-  m.onclick=(e)=>{ if(e.target===m) m.classList.remove('show'); };
+  $('#settings-close').onclick=()=>untrapModal(m);
+  m.onclick=(e)=>{ if(e.target===m) untrapModal(m); };
 }
 function toggleRow(label, desc, val, onChange){
   const row=el("div","set-row");
-  row.innerHTML=`<div><div class="set-label">${label}</div><div class="small muted">${desc}</div></div>
-    <button class="switch${val?' on':''}" role="switch" aria-checked="${val}"><i></i></button>`;
+  /* The switch's only content was an empty <i>, so every one of these announced
+     as "switch, not checked" with no indication of WHICH setting it was. Point
+     it at its own label. */
+  const uid="sw"+Math.random().toString(36).slice(2,8);
+  row.innerHTML=`<div><div class="set-label" id="${uid}">${label}</div><div class="small muted">${desc}</div></div>
+    <button class="switch${val?' on':''}" role="switch" aria-checked="${val}"
+      aria-labelledby="${uid}"><i></i></button>`;
   const sw=row.querySelector('.switch');
   sw.onclick=()=>{ const nv=!sw.classList.contains('on'); sw.classList.toggle('on',nv); sw.setAttribute('aria-checked',nv);
     onChange(nv); };
@@ -5776,7 +5867,7 @@ function renderSettings(){
   body.appendChild(toggleRow("Relaxed pace","Softens the strength drain during mission questions and gentles hazard damage.",st.timerRelax,v=>{ st.timerRelax=v; persist(); }));
   const tsRow=el("div","set-row");
   tsRow.innerHTML=`<div class="set-label">Text size</div><div class="seg" id="ts-seg"></div>`;
-  ["sm","md","lg"].forEach(sz=>{ const b=el("button","seg-btn"+(st.textSize===sz?" on":""),{sm:"Small",md:"Medium",lg:"Large"}[sz]);
+  ["sm","md","lg","xl"].forEach(sz=>{ const b=el("button","seg-btn"+(st.textSize===sz?" on":""),{sm:"Small",md:"Medium",lg:"Large",xl:"Huge"}[sz]);
     b.onclick=()=>{ st.textSize=sz; $$('#ts-seg .seg-btn').forEach(x=>x.classList.remove("on")); b.classList.add("on"); applySettings(); persist(); };
     tsRow.querySelector('#ts-seg').appendChild(b); });
   body.appendChild(tsRow);
@@ -8537,6 +8628,22 @@ function syncRoadInsets(){
   if(!M || !M.cv) return;
   const rc=M.cv.getBoundingClientRect();
   if(!rc.height){ M.inset={top:0,bot:0}; return; }
+  /* THE BUFFER HAS TO MATCH THE BOX. The canvas was authored at a fixed
+     1280x720 and stretched by CSS to fill #frame. On a desktop that is very
+     nearly right; on a portrait phone #frame becomes 100vw x 100vh, so a 1.78
+     buffer was being squeezed into roughly 0.46 and the whole road rendered
+     about four times too tall. Hold the vertical resolution — every band and
+     lane calculation is expressed against it — and let the width follow the
+     real aspect ratio, so the player sees less road across rather than a
+     stretched one. */
+  const aspect = rc.width/rc.height;
+  if(isFinite(aspect) && aspect>0.2){
+    const wantW = Math.round(clamp(720*aspect, 320, 1920));
+    if(Math.abs(M.cv.width-wantW)>2){
+      M.cv.width=wantW;
+      if(M.cv.height!==720) M.cv.height=720;
+    }
+  }
   const sy=M.cv.height/rc.height;
   const h=(sel)=>{ const n=$(sel); if(!n) return 0; const r=n.getBoundingClientRect(); return (r.height||0)*sy; };
   M.inset={ top: h('.mission-top')+10*sy, bot: h('.mission-hud')+10*sy };
@@ -11960,7 +12067,11 @@ function boot(){
   window.addEventListener("keydown",(e)=>{
     if(e.key!=="Escape") return;
     const openModals=$$('.modal.show');
-    if(openModals.length){ openModals.forEach(m=>m.classList.remove('show')); return; }
+    if(openModals.length){
+      const U=window.__RD_MODAL;
+      openModals.forEach(m=>{ if(U&&U.untrapModal) U.untrapModal(m); else m.classList.remove('show'); });
+      return;
+    }
     if(E.current()==="s-mission" && M && !M.done){
       if(M.pausedByMenu) closePauseMenu();
       else if(!M.paused) openPauseMenu();
@@ -12989,7 +13100,7 @@ function renderTrial(){
       ${q.pron?`<div class="tq-sub">${q.pron}</div>`:""}
     </div>
     <div class="trial-opts" id="trial-opts" role="group" aria-label="Answers"></div>
-    <div id="trial-teach"></div>`;
+    <div id="trial-teach" role="status" aria-live="polite" aria-atomic="true"></div>`;
   const host=$('#trial-opts');
   q.options.forEach((o,idx)=>{
     const b=el("button","trial-opt"); b.innerHTML=o.label;
@@ -12997,6 +13108,17 @@ function renderTrial(){
     b.onclick=()=>answer(idx);
     host.appendChild(b);
   });
+  /* The whole panel is rebuilt for every question, which drops focus to the
+     document body — a keyboard player would have to tab in from the top twelve
+     times. Move focus onto the question itself so the next Tab reaches the
+     answers, and so a screen reader reads the prompt on arrival. */
+  const qEl=$('#trial-body .trial-q');
+  if(qEl){
+    qEl.setAttribute("tabindex","-1");
+    qEl.setAttribute("role","group");
+    qEl.setAttribute("aria-label", (q.prompt||"").replace(/<[^>]+>/g,""));
+    try{ qEl.focus({preventScroll:true}); }catch(e){}
+  }
   startClock();
 }
 const TYPE_LABEL={ partMeaning:"What the part means", meaningPart:"Find the part",
@@ -13037,8 +13159,8 @@ function answer(idx){
 
   $$('#trial-opts .trial-opt').forEach((b,i)=>{
     b.disabled=true;
-    if(q.options[i].ok) b.classList.add("right");
-    else if(i===idx) b.classList.add("wrong");
+    if(q.options[i].ok){ b.classList.add("right"); b.setAttribute("data-state","correct"); }
+    else if(i===idx){ b.classList.add("wrong"); b.setAttribute("data-state","your answer"); }
   });
   // record() already forwards the question to the trophy counters — noting it
   // again here would double-count every answer in the Trial
