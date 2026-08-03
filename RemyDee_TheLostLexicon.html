@@ -73,7 +73,11 @@
   --font-read:"Noto Sans","Segoe UI Variable Text","Segoe UI",-apple-system,BlinkMacSystemFont,
              "Helvetica Neue","Liberation Sans",Arial,sans-serif;
 
-  --r-sm:6px; --r-md:12px; --r-lg:22px;
+  /* An art audit measured this game's material language and it came out as
+     Bootstrap: 12px cards with a glossy inset bevel, 22px pills, and a `0 5px 0`
+     extruded ledge under every button — the Material/Duolingo button, on every
+     screen. Lacquered wood and carved stone do not have 12px corners. */
+  --r-sm:2px; --r-md:3px; --r-lg:4px;
   --ease:cubic-bezier(.22,.61,.36,1);
   --ease-back:cubic-bezier(.34,1.56,.64,1);
   --scale:1;                 /* text-size accessibility multiplier */
@@ -169,8 +173,28 @@ html[data-motion="reduced"] .no-reduce{display:none !important;}
 
 .screen{position:absolute;inset:0;display:none;flex-direction:column;}
 .screen.active{display:flex;}
-.screen.active.plainshow{animation:screenIn .45s var(--ease);}
-@keyframes screenIn{from{opacity:0;transform:scale(.995);}to{opacity:1;transform:none;}}
+/* `plainshow` was written, styled, and then never added to anything — grep for
+   it and the CSS rule below was the only hit in fourteen thousand lines. So the
+   incoming screen had NO entrance at all: the transition overlay wiped, and
+   behind it a fully assembled page had been pasted in. That is precisely why
+   every route read as a page swap rather than a cut. swap() adds it now, and
+   the keyframe moves far enough to be seen — the old one animated scale(.995),
+   which on a 1320px frame is three pixels. */
+.screen.active.plainshow{animation:screenIn .42s var(--ease);}
+@keyframes screenIn{
+  0%  {opacity:0;transform:scale(1.028) translateY(9px);filter:blur(2px);}
+  55% {opacity:1;filter:blur(0);}
+  100%{opacity:1;transform:none;filter:blur(0);}
+}
+/* Panels had the same problem in miniature: .995 on a 520px modal is 2.6px.
+   They overshoot and settle now, which is what a card being set down does. */
+@keyframes panelIn{
+  0%  {opacity:0;transform:scale(.94) translateY(14px);}
+  62% {opacity:1;transform:scale(1.012) translateY(-2px);}
+  100%{opacity:1;transform:none;}
+}
+.reveal.show,.modal.show,.boss-chorus.show{animation:panelIn .34s var(--ease-back);}
+.pause-menu.show{animation:panelIn .2s var(--ease-back);}
 
 .small{font-size:.8rem;} .muted{color:var(--jade-deep);} .center{text-align:center;}
 .mt{margin-top:14px;} .mb{margin-bottom:14px;}
@@ -190,9 +214,17 @@ html[data-motion="reduced"] .no-reduce{display:none !important;}
   background-size:3px 3px;pointer-events:none;z-index:2;}
 .vignette{position:absolute;inset:0;pointer-events:none;z-index:3;
   box-shadow:inset 0 0 160px 30px rgba(30,20,10,.35);}
+/* Every other thing in the backdrop is a seeded brush ridge, and then the mist
+   was a rectangle: a razor-straight edge running the full width of the frame,
+   cutting through the game title on one screen and through the prologue's
+   paragraphs on another. In an ink wash the mist is the softest thing on the
+   page, so it gets feathered ends and a real blur. */
 .mist{position:absolute;left:-20%;width:140%;height:44%;pointer-events:none;z-index:1;
   background:radial-gradient(60% 100% at 50% 100%, rgba(240,235,222,.55), rgba(240,235,222,0) 70%);
-  opacity:.7;animation:drift 26s linear infinite;}
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 22%,#000 76%,transparent);
+          mask-image:linear-gradient(180deg,transparent,#000 22%,#000 76%,transparent);
+  filter:blur(5px);
+  opacity:.62;animation:drift 26s linear infinite;}
 .mist.m2{bottom:8%;height:32%;opacity:.5;animation-duration:38s;animation-direction:reverse;}
 @keyframes drift{0%{transform:translateX(-6%);}50%{transform:translateX(6%);}100%{transform:translateX(-6%);}}
 .motes{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;}
@@ -208,9 +240,10 @@ html[data-motion="reduced"] .no-reduce{display:none !important;}
    ============================================================ */
 .panel{
   position:relative;background:var(--parch);
-  border:1px solid var(--ink-line);border-radius:var(--r-md);
-  box-shadow:0 10px 26px var(--shadow), 0 1px 0 rgba(255,255,255,.4) inset;
-  background-image:linear-gradient(180deg,rgba(255,255,255,.25),rgba(0,0,0,.02));
+  border:1px solid rgba(43,36,28,.55);border-radius:var(--r-md);
+  /* the glossy top bevel is what made these read as plastic cards */
+  box-shadow:0 1px 0 rgba(43,36,28,.26), 0 14px 34px -14px rgba(20,14,8,.5);
+  background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(0,0,0,.03));
 }
 .panel.scroll{border-radius:4px;
   background-image:
@@ -227,30 +260,31 @@ html[data-motion="reduced"] .no-reduce{display:none !important;}
   padding:.7em 1.3em;border-radius:var(--r-sm);position:relative;
   background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));
   color:var(--rice);font-weight:700;letter-spacing:.02em;
-  box-shadow:0 5px 0 var(--cinnabar-deep), 0 8px 16px var(--shadow);
-  transition:transform .12s var(--ease), box-shadow .12s var(--ease), filter .12s;
-  border:1px solid rgba(0,0,0,.15);font-size:1rem;overflow:hidden;
+  /* A lacquer edge and a wet lower rim, instead of an extruded ledge. */
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 -2px 0 rgba(0,0,0,.26),
+             0 2px 0 rgba(25,21,16,.42), 0 10px 20px -10px rgba(20,14,8,.6);
+  transition:transform .09s var(--ease), box-shadow .09s var(--ease), filter .09s;
+  border:1px solid rgba(25,21,16,.5);font-size:1rem;overflow:hidden;
 }
 .btn::before{content:"";position:absolute;inset:0;border-radius:inherit;
   background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 48%,transparent 62%);
   transform:translateX(-120%);transition:transform .5s var(--ease);pointer-events:none;}
 .btn:hover::before{transform:translateX(120%);}
-.btn:hover{filter:brightness(1.06);transform:translateY(-1px);}
-.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--cinnabar-deep),0 3px 8px var(--shadow);}
-.btn.ghost{background:linear-gradient(180deg,var(--rice-2),var(--rice-3));color:var(--ink);
-  box-shadow:0 5px 0 #b3a17e,0 8px 16px var(--shadow);}
-.btn.jade{background:linear-gradient(180deg,var(--jade),var(--jade-deep));color:var(--rice);
-  box-shadow:0 5px 0 var(--jade-deep),0 8px 16px var(--shadow);}
-.btn.gold{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:var(--ink);
-  box-shadow:0 5px 0 #a4842f,0 8px 16px var(--shadow);}
-.btn.sm{padding:.45em .8em;font-size:.85rem;box-shadow:0 3px 0 var(--cinnabar-deep);}
-.btn.ghost.sm{box-shadow:0 3px 0 #b3a17e;}
-.btn.jade.sm{box-shadow:0 3px 0 var(--jade-deep);}
+.btn:hover{filter:brightness(1.06);}
+/* pressing pushes IN — stone and lacquer, not a spring */
+.btn:active{transform:translateY(1px);filter:brightness(.96);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.42), inset 0 -1px 0 rgba(255,255,255,.08),
+             0 1px 0 rgba(25,21,16,.4);}
+.btn.ghost{background:linear-gradient(180deg,var(--rice-2),var(--rice-3));color:var(--ink);}
+.btn.jade{background:linear-gradient(180deg,var(--jade),var(--jade-deep));color:var(--rice);}
+.btn.gold{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:var(--ink);}
+.btn.sm{padding:.45em .8em;font-size:.85rem;}
 .btn:disabled{filter:grayscale(.6) brightness(.9);cursor:not-allowed;transform:none;}
 .btn:disabled::before{display:none;}
 
+/* a carved chop is square; a 5px radius on a 2.4em seal is a rounded icon */
 .seal{display:inline-flex;align-items:center;justify-content:center;
-  width:2.4em;height:2.4em;border-radius:5px;
+  width:2.4em;height:2.4em;border-radius:1px;
   background:var(--cinnabar);color:var(--rice);font-family:var(--font-cal);
   font-weight:700;box-shadow:0 2px 6px var(--shadow);transform:rotate(-3deg);
   border:2px solid rgba(255,255,255,.25);}
@@ -1236,9 +1270,28 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 @keyframes pbCrit{0%,100%{opacity:.45;}50%{opacity:1;}}
 [data-motion="reduced"] .prep-bars .pb.critical .lab{animation:none;}
 /* ===== DIFFICULTY CHOOSER — four honest cards, one of them adaptive ===== */
+/* Measured, this screen left 377 of 810 pixels — 47% of the frame — empty
+   below its own content, with the buttons hanging in the middle of nothing.
+   That is not restraint; restraint is composed emptiness. The stack centres in
+   the frame instead of piling against the top rail. The chapter brief, the
+   Training Hall and the Trial had the same shape of problem (45-52%). */
 .diff-wrap{max-width:920px;margin:0 auto;padding:8px 0 24px;}
+#s-difficulty .content,#s-case .content,#s-arcade .content,#s-trial .content{
+  display:flex;flex-direction:column;justify-content:center;min-height:100%;
+  padding-block:clamp(14px,4vh,48px);}
+/* The hub is one long scroll whose left column runs out after 630px while the
+   right runs 2242 — scroll down and half the screen is empty backdrop. A map
+   should not scroll away from the thing it describes. */
+@media (min-width:900px){
+  .hub-grid{align-items:start;}
+  .hub-grid > div:first-child{position:sticky;top:8px;}
+}
 .diff-lede{max-width:660px;margin:-4px auto 22px;text-align:center;}
-.diff-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
+/* auto-fit dropped the fourth card onto a row of its own, which reads as an
+   afterthought rather than as the option the game actually recommends. Four
+   cards want a square. */
+.diff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+@media (max-width:620px){.diff-grid{grid-template-columns:1fr;}}
 .diff-card{position:relative;text-align:left;padding:16px 16px 14px;border-radius:14px;cursor:pointer;
   background:var(--parch);border:2px solid var(--ink-line);box-shadow:0 6px 16px rgba(0,0,0,.22);
   transition:transform .14s var(--ease-back),box-shadow .18s,border-color .18s;font-family:var(--font-read);}
@@ -1409,7 +1462,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
    RESULT
    ============================================================ */
 .result-wrap{max-width:820px;margin:0 auto;text-align:center;}
-.grade-seal{width:120px;height:120px;margin:0 auto 12px;border-radius:16px;display:flex;align-items:center;
+.grade-seal{width:120px;height:120px;margin:0 auto 12px;border-radius:1px;display:flex;align-items:center;
   justify-content:center;font-family:var(--font-cal);font-size:64px;font-weight:900;color:var(--rice);
   box-shadow:0 12px 30px var(--shadow);transform:rotate(-4deg) scale(0);}
 .grade-seal.struck{animation:gradeStrike .55s var(--ease-back) forwards;}
@@ -1504,6 +1557,22 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
    asks for and less than half a comfortable thumb. They are buttons; they are
    sized like buttons now, and the selected one says so to a screen reader
    through aria-pressed rather than only through a class. */
+/* CARVED STONE, NOT A WEB CHIP. These are the surfaces the player chooses with —
+   Trial answers, difficulty cards, arcade cards. A card that lifts toward the
+   cursor is a webpage; a stone that presses in when you push it is an object. */
+.trial-opt,.diff-card{
+  border-radius:2px;
+  background:linear-gradient(180deg,#efe6cf,#e4d8ba);
+  border:1px solid rgba(43,36,28,.5);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.10);
+  transition:box-shadow .1s var(--ease), transform .1s var(--ease), background .12s;
+}
+.trial-opt:hover:not(:disabled),.diff-card:hover{ transform:none;
+  box-shadow:inset 0 0 0 1px rgba(189,157,95,.75), inset 0 1px 0 rgba(255,255,255,.35); }
+.trial-opt:active:not(:disabled),.diff-card.on{
+  box-shadow:inset 0 3px 7px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.18);
+  background:linear-gradient(180deg,#e0d4b4,#eae0c4); }
+
 .tag.filter{min-height:32px;padding:.42em .95em;line-height:1.2;cursor:pointer;
   border:1px solid transparent;}
 .tag.filter[aria-pressed="true"],.tag.filter.on{border-color:var(--gold);}
@@ -4164,14 +4233,25 @@ const FX = window.FX;
 
 /* ================= AUDIO ================= */
 const Audio2 = (function(){
-  let ctx=null, master=null, musicGain=null, sfxGain=null, voiceEnabled=true;
+  let ctx=null, master=null, musicGain=null, sfxGain=null, comp=null, voiceEnabled=true;
+  let duckUntil=0;
   let vol={master:0.8, music:0.45, sfx:0.8, voice:1};
   let musicTimer=null, muted=false;
   function ensure(){
     if(ctx) return;
     try{
       ctx = new (window.AudioContext||window.webkitAudioContext)();
-      master=ctx.createGain(); master.gain.value=vol.master; master.connect(ctx.destination);
+      master=ctx.createGain(); master.gain.value=vol.master;
+      /* NOTHING SAT BETWEEN THE MIX AND THE SPEAKERS. On a busy road frame — two
+         pickups, a hazard, a drum and a pluck — the summed cues exceed 1.0 and
+         the browser hard-clips, which is the crunch you hear on a good run.
+         A gentle limiter costs one node and catches all of it. */
+      try{
+        comp=ctx.createDynamicsCompressor();
+        comp.threshold.value=-10; comp.knee.value=12; comp.ratio.value=6;
+        comp.attack.value=0.004; comp.release.value=0.16;
+        master.connect(comp); comp.connect(ctx.destination);
+      }catch(e){ comp=null; master.connect(ctx.destination); }
       musicGain=ctx.createGain(); musicGain.gain.value=vol.music; musicGain.connect(master);
       sfxGain=ctx.createGain(); sfxGain.gain.value=vol.sfx; sfxGain.connect(master);
     }catch(e){ ctx=null; }
@@ -4205,14 +4285,34 @@ const Audio2 = (function(){
     n.start();
   }
   const vary=(f)=> f*(0.98+Math.random()*0.04); // subtle pitch variation
+  /* The loud cues used to play straight over the music at full level, so a chest
+     opening and a drone and a pluck all fought for the same air. The big moments
+     lean on the music for a beat instead. */
+  function duck(amount, ms){
+    ensure(); if(!ctx || !musicGain) return;
+    const now=ctx.currentTime; if(now < duckUntil) return;
+    duckUntil = now + (ms||400)/1000;
+    try{
+      musicGain.gain.setTargetAtTime(vol.music*(1-(amount||0.5)), now, 0.03);
+      setTimeout(()=>{ if(ctx&&musicGain) musicGain.gain.setTargetAtTime(muted?0:vol.music, ctx.currentTime, 0.3); }, ms||400);
+    }catch(e){}
+  }
   const sfx={
-    tick(){ tone(vary(880),0.05,"square",0.12); },
+    /* a square wave at 880Hz is the harshest thing the oscillator can make, and
+       this is the bench's generic "something happened" — fired dozens of times
+       in a single craft. It is a wood click now. */
+    tick(){ noise(0.035,0.16,vary(2400)); tone(vary(1180),0.045,"triangle",0.07); },
     good(){ tone(vary(523),0.12,"sine",0.3); setTimeout(()=>tone(vary(784),0.18,"sine",0.28),90); },
-    great(){ tone(523,0.12,"sine",0.3); setTimeout(()=>tone(659,0.12,"sine",0.3),90);
-             setTimeout(()=>tone(1047,0.25,"sine",0.28),190); },
+    /* The most-heard melodic cue in the game — twenty-two call sites — was three
+       fixed pitches with no variation at all, so after ten builds it is a jingle.
+       Four inversions, chosen at random, and it stops repeating itself. */
+    great(){ const V=[[523,659,1047],[587,784,1175],[440,659,880],[523,784,1047]];
+             const v=V[(Math.random()*V.length)|0]; duck(0.45,500);
+             tone(v[0],0.12,"sine",0.3); setTimeout(()=>tone(v[1],0.12,"sine",0.3),90);
+             setTimeout(()=>tone(v[2],0.25,"triangle",0.26),190); },
     bad(){ tone(vary(220),0.18,"sawtooth",0.2); setTimeout(()=>tone(vary(174),0.22,"sawtooth",0.18),90); },
     snap(){ tone(vary(660),0.06,"triangle",0.2); },
-    stamp(){ noise(0.14,0.3,600); tone(120,0.16,"sine",0.25); },
+    stamp(){ duck(0.5,420); noise(0.14,0.3,600); tone(120,0.16,"sine",0.25); },
     paper(){ noise(0.18,0.14,vary(2600)); },
     brush(){ noise(0.3,0.1,vary(1600)); },
     grind(){ noise(0.12,0.16,900); },
@@ -4228,7 +4328,7 @@ const Audio2 = (function(){
     /* ---- the meta layer's cues ---- */
     // a trophy: a struck bell, then the fifth above it, then the octave —
     // rising and settled, so it reads as an arrival rather than a ping
-    trophy(){ tone(659,0.16,"triangle",0.26);
+    trophy(){ duck(0.6,700); tone(659,0.16,"triangle",0.26);
       setTimeout(()=>tone(988,0.20,"triangle",0.24),110);
       setTimeout(()=>tone(1319,0.42,"sine",0.20),240);
       setTimeout(()=>noise(0.5,0.05,3200),240); },
@@ -4236,13 +4336,13 @@ const Audio2 = (function(){
     chestRattle(){ noise(0.34,0.20,240); tone(74,0.30,"sawtooth",0.16);
       setTimeout(()=>noise(0.14,0.13,520),150); },
     // the lid: a hinge shriek, a bright bloom, and air moving out of the box
-    chestOpen(){ noise(0.20,0.16,1500);
+    chestOpen(){ duck(0.7,900); noise(0.20,0.16,1500);
       setTimeout(()=>{ tone(523,0.5,"sine",0.22); tone(784,0.5,"sine",0.16);
                        tone(1047,0.6,"sine",0.13); },90);
       setTimeout(()=>noise(0.7,0.08,900),120);
       setTimeout(()=>tone(1568,0.5,"triangle",0.10),320); },
     // a relic surfacing — deliberately unlike everything else in the game
-    relic(){ tone(196,0.7,"sine",0.20);
+    relic(){ duck(0.75,1100); tone(196,0.7,"sine",0.20);
       setTimeout(()=>tone(294,0.6,"sine",0.17),120);
       setTimeout(()=>tone(440,0.55,"triangle",0.15),240);
       setTimeout(()=>tone(880,0.9,"sine",0.11),380); },
@@ -4781,7 +4881,10 @@ const TRANSITION={ "s-build":"ink", "s-forge":"wash", "s-assign":"scroll", "s-mi
 function swap(id, onShow){
   const cur=$('#'+current); if(cur) cur.classList.remove('active');
   const nx=$('#'+id); if(nx){ nx.classList.add('active'); nx.scrollTop=0;
-    const c=$('.content',nx); if(c)c.scrollTop=0; }
+    const c=$('.content',nx); if(c)c.scrollTop=0;
+    // the entrance the stylesheet has been carrying, unused, since it was written
+    nx.classList.remove('plainshow');
+    if(!FX.reduced()){ void nx.offsetWidth; nx.classList.add('plainshow'); } }
   current=id;
   /* Focus used to fall to <body> on every screen change, so a keyboard player
      started each screen tabbing in from the very top and a screen-reader user
@@ -4824,24 +4927,62 @@ function refreshTopbars(){
 }
 
 /* ================= SPRITES ================= */
+/* THE PARTY WAS SIX FACES.
+   The old portrait was three hats over two eye heights — six possible faces for
+   forty-three travelers — and it was seeded on `t.name.length`, a hash that
+   clusters catastrophically, so a company of four routinely looked like the same
+   man four times. This is an ink bust on a washed horizon: 4 hats x 4 beards x
+   3 collars x 3 head tilts x 2 brows, hashed off the traveler's id. */
 function portraitSVG(color, seed){
-  seed=seed||1;
-  const skin="#e8c9a0", robe=color||"#4f7261";
-  const hats=["M20 34 Q50 8 80 34 L74 40 Q50 24 26 40 Z","M22 36 Q50 18 78 36 L78 40 L22 40 Z","M18 38 Q50 6 82 38 L82 42 Q50 30 18 42 Z"];
-  const hat=hats[seed%hats.length];
-  const eyeY=52+(seed%2?0:1);
+  seed=(function(v){v=(v==null?1:v)+"";let h=2166136261>>>0;for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;})(seed);
+  const robe = color || "#4f7261";
+  const HATS = [
+    '<path d="M14 43 C18 27 27 19 40 19 C53 19 62 27 66 43 C56 37 48 34.6 40 34.6 C32 34.6 24 37 14 43 Z" fill="#2b241c"/>',
+    '<path d="M20 40 C22 29 29 23 40 23 C51 23 58 29 60 40 C52 36.6 46 35 40 35 C34 35 28 36.6 20 40 Z" fill="#2b241c"/><path d="M40 22.4 C40.6 19 41.6 16.6 43 15.2" stroke="#2b241c" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
+    '<path d="M11 42 C16 28 26 20 40 20 C54 20 64 28 69 42 L64 42 C60 32 51 26 40 26 C29 26 20 32 16 42 Z" fill="#3a3128"/><path d="M24 34 C30 30 34 28.6 40 28.6 C46 28.6 50 30 56 34 L56 37 C50 33.6 46 32.4 40 32.4 C34 32.4 30 33.6 24 37 Z" fill="#2b241c"/>',
+    '<path d="M22 39 C22 28 29 22 40 22 C51 22 58 28 58 39 C51 36 46 34.8 40 34.8 C34 34.8 29 36 22 39 Z" fill="#4a3d2c"/><path d="M18 40 C26 35.4 33 33.2 40 33.2 C47 33.2 54 35.4 62 40 L62 42.6 C54 38 47 35.8 40 35.8 C33 35.8 26 38 18 42.6 Z" fill="#2b241c"/>'
+  ];
+  const FACIAL = ['',
+    '<path d="M34 62.4 C36 65.6 38 67 40 67 C42 67 44 65.6 46 62.4 C45 66.2 43 68.2 40 68.2 C37 68.2 35 66.2 34 62.4 Z" fill="#2b241c" opacity=".85"/>',
+    '<path d="M33 57.6 C33.4 63.8 35.6 68.6 40 71 C44.4 68.6 46.6 63.8 47 57.6 C46 62.6 43.6 66.2 40 68.2 C36.4 66.2 34 62.6 33 57.6 Z" fill="#3a3128" opacity=".8"/>',
+    '<path d="M31.6 57.2 C30.6 61.4 31.6 64.6 34.6 66.8 L36 65 C33.8 63.2 33 60.6 33.6 57.4 Z M48.4 57.2 C49.4 61.4 48.4 64.6 45.4 66.8 L44 65 C46.2 63.2 47 60.6 46.4 57.4 Z" fill="#2b241c" opacity=".8"/>'
+  ];
+  const COLLARS = [
+    '<path d="M40 74 L52 78 L47 92 L40 84 L33 92 L28 78 Z" fill="#efe6cf" opacity=".9"/>',
+    '<path d="M40 74 L54 79 L48 88 L40 82 L32 88 L26 79 Z" fill="#1a1613" opacity=".3"/>',
+    '<path d="M28 78 C34 82 46 82 52 78 L50 86 C46 89 34 89 30 86 Z" fill="#efe6cf" opacity=".85"/>'
+  ];
+  const hat = HATS[seed % 4], fac = FACIAL[(seed >> 2) % 4], col = COLLARS[(seed >> 1) % 3];
+  const tilt = ((seed >> 3) % 3) - 1;
+  const bY = 46 + (seed % 2);
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" fill="#efe6cf"/>
-    <path d="M18 100 Q50 70 82 100 Z" fill="${robe}"/>
-    <path d="M30 100 L30 78 Q50 66 70 78 L70 100 Z" fill="${robe}"/>
-    <circle cx="50" cy="52" r="20" fill="${skin}"/>
-    <path d="${hat}" fill="#2b241c"/>
-    <circle cx="42" cy="${eyeY}" r="2.6" fill="#1a1613"/>
-    <circle cx="58" cy="${eyeY}" r="2.6" fill="#1a1613"/>
-    <path d="M44 62 Q50 66 56 62" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M37 46 Q42 43 47 46" stroke="#2b241c" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M53 46 Q58 43 63 46" stroke="#2b241c" stroke-width="2" fill="none" stroke-linecap="round"/>
-  </svg>`;
+  <rect width="100" height="100" fill="#efe6cf"/>
+  <path d="M0 66 C22 58 38 62 54 72 C70 82 86 86 100 81 L100 100 L0 100 Z" fill="#9aa79c" opacity=".22"/>
+  <path d="M0 78 C20 72 36 76 52 84 C68 92 86 94 100 90 L100 100 L0 100 Z" fill="#6a7a6f" opacity=".18"/>
+  <g transform="rotate(${tilt} 50 66)">
+    <path d="M10 100 C12 86 22 78 34 75 L46 75 C58 78 68 86 70 100 Z" fill="${robe}"/>
+    <path d="M10 100 C12 88 18 81 27 77 C22 83 19 90 18 100 Z" fill="#1a1613" opacity=".16"/>
+    <path d="M62 78 C68 82 71 90 72 100 L64 100 C64 91 63 84 60 79 Z" fill="#ffffff" opacity=".13"/>
+    ${col}
+    <path d="M43 63 C46 66 54 66 57 63 L57 76 C52 79 46 79 43 76 Z" fill="#dcb98c"/>
+    <path d="M34 47 C34 34 41 27 50 27 C59 27 66 34 66 47 C66 60 59 69 50 69 C41 69 34 60 34 47 Z" fill="#e8c9a0"/>
+    <path d="M66 47 C69.6 47.4 70.6 52 68 55.6 C67 57 66 56.6 66 55.4 Z" fill="#dcb98c"/>
+    <path d="M34 47 C30.4 47.4 29.4 52 32 55.6 C33 57 34 56.6 34 55.4 Z" fill="#dcb98c"/>
+    ${fac}
+    <g transform="translate(10,0)">${hat}</g>
+    <path d="M38 ${bY} C41 ${bY-3} 45 ${bY-2.4} 47.6 ${bY+0.8} L47 ${bY+1.8} C44.6 ${bY-0.6} 41.2 ${bY-1.2} 38.6 ${bY+1} Z" fill="#2b241c"/>
+    <path d="M62 ${bY} C59 ${bY-3} 55 ${bY-2.4} 52.4 ${bY+0.8} L53 ${bY+1.8} C55.4 ${bY-0.6} 58.8 ${bY-1.2} 61.4 ${bY+1} Z" fill="#2b241c"/>
+    <path d="M39.4 53.4 C41.8 51.4 45.4 51.4 47.8 53.4 C45.4 55.4 41.8 55.4 39.4 53.4 Z" fill="#1a1613"/>
+    <path d="M52.2 53.4 C54.6 51.4 58.2 51.4 60.6 53.4 C58.2 55.4 54.6 55.4 52.2 53.4 Z" fill="#1a1613"/>
+    <path d="M50.6 52.6 C50.2 56.6 49.4 59 48 60.2 C49.2 61 50.6 61.2 52 60.8" fill="none" stroke="#c49a72" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M45.6 65 C48.4 66.8 52 66.8 54.6 65" fill="none" stroke="#8a5a3a" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g opacity=".9">
+    <rect x="79" y="7" width="14" height="16" rx="1" fill="#b5322b"/>
+    <text x="86" y="19" text-anchor="middle" font-size="11" font-weight="700" fill="#f3ecd8"
+          font-family="'Noto Serif SC','Songti SC',STSong,SimSun,serif">${"人義士醫"[seed % 4]}</text>
+  </g>
+</svg>`;
 }
 function remySVG(mood){
   const eyes = mood==="happy" ? `<path d="M38 47 Q42 43 46 47" stroke="#1a1613" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M54 47 Q58 43 62 47" stroke="#1a1613" stroke-width="2.5" fill="none" stroke-linecap="round"/>`
@@ -4862,39 +5003,70 @@ function remySVG(mood){
     <ellipse cx="66" cy="56" rx="4" ry="3" fill="#d98a7a" opacity=".5"/>
   </svg>`;
 }
+/* Radix had white sclera, round black pupils and literal white specular
+   highlight dots — a Pixar mascot standing in a Ming ink painting, on the hub,
+   the forge and the prologue. Dark almond eyes with a reserved pale crescent
+   instead, a broad red-panda head with brushed cheek patches, four paws, and a
+   banded tail drawn in four strokes rather than one crescent. */
 function radixSVG(){
   return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
-    <path class="rx-tail" d="M14 46 Q2 40 8 28 Q10 34 16 34 Q10 42 20 48 Z" fill="#b5623a"/>
-    <path class="rx-tail" d="M12 44 Q6 40 9 33" stroke="#8a4726" stroke-width="2" fill="none"/>
-    <ellipse cx="44" cy="52" rx="20" ry="16" fill="#c56a3d"/>
-    <circle cx="44" cy="34" r="16" fill="#d98a5a"/>
-    <path d="M30 24 Q26 16 34 18 Q34 22 38 24 Z" fill="#b5623a"/>
-    <path d="M58 24 Q62 16 54 18 Q54 22 50 24 Z" fill="#b5623a"/>
-    <ellipse cx="38" cy="34" rx="7" ry="6" fill="#f3ecd8"/>
-    <ellipse cx="52" cy="34" rx="7" ry="6" fill="#f3ecd8"/>
-    <circle cx="39" cy="35" r="3" fill="#1a1613"/>
-    <circle cx="51" cy="35" r="3" fill="#1a1613"/>
-    <circle cx="40" cy="34" r="1" fill="#fff"/>
-    <circle cx="52" cy="34" r="1" fill="#fff"/>
-    <path d="M42 40 L46 40 L44 43 Z" fill="#1a1613"/>
-    <path d="M44 43 Q40 46 37 44 M44 43 Q48 46 51 44" stroke="#8a4726" stroke-width="1.5" fill="none"/>
-    <path d="M30 40 Q24 40 22 44 M58 40 Q64 40 66 44" stroke="#f3ecd8" stroke-width="1.5" fill="none" opacity=".8"/>
-  </svg>`;
+  <g class="rx-tail">
+    <path d="M23 55 C14 57 6 53 3 45 C0.6 38.4 3.4 31.6 9.0 28.4 C7.2 33.0 8.0 36.8 11.4 39.6 C8.6 33.6 10.6 28.6 15.6 26.4 C14.2 31.6 15.6 35.8 19.4 38.8 C20.2 44.0 21.2 49.6 23 55 Z" fill="#b5623a"/>
+    <path d="M4.6 47.4 C7.2 49.6 10.4 51.0 14.2 51.6 L13.6 54.6 C9.4 53.8 5.8 52.0 3.0 49.4 Z" fill="#7d4526" opacity=".75"/>
+    <path d="M1.9 38.0 C3.8 40.4 6.2 42.2 9.2 43.4 L8.4 46.2 C4.9 44.8 2.2 42.6 0.4 39.9 Z" fill="#7d4526" opacity=".6"/>
+    <path d="M6.4 29.6 C7.2 31.9 8.6 33.9 10.6 35.5 L9.4 37.6 C6.9 35.7 5.2 33.4 4.4 30.9 Z" fill="#7d4526" opacity=".45"/>
+  </g>
+  <path d="M42 72 C29 72 21 65 21 55.5 C21 46.5 29 40 42 40 C55 40 63 46.5 63 55.5 C63 65 55 72 42 72 Z" fill="#c56a3d"/>
+  <path d="M28 66 C31 69.4 34.6 71.2 39 71.8 L38 74 C33.2 73.4 29.2 71.4 26 68 Z" fill="#8a4726" opacity=".5"/>
+  <path d="M25.6 68.6 C25.0 71.2 26.2 72.6 29 72.6 C31.4 72.6 32.8 71.4 33 69 Z" fill="#8a4726"/>
+  <path d="M58.4 68.6 C59.0 71.2 57.8 72.6 55 72.6 C52.6 72.6 51.2 71.4 51 69 Z" fill="#8a4726"/>
+  <path d="M27.4 29.0 C24.4 23.4 26.2 19.4 31.4 20.0 C34.6 20.4 36.8 22.4 38.0 26.0 Z" fill="#a5522e"/>
+  <path d="M29.4 27.2 C28.2 24.2 29.0 22.8 31.5 23.2 C33.2 23.4 34.4 24.6 35.2 26.6 Z" fill="#e8b78e" opacity=".85"/>
+  <path d="M56.6 29.0 C59.6 23.4 57.8 19.4 52.6 20.0 C49.4 20.4 47.2 22.4 46.0 26.0 Z" fill="#a5522e"/>
+  <path d="M54.6 27.2 C55.8 24.2 55.0 22.8 52.5 23.2 C50.8 23.4 49.6 24.6 48.8 26.6 Z" fill="#e8b78e" opacity=".85"/>
+  <path d="M42 23 C53.6 23 61 30.4 61 40 C61 49.6 53.6 56 42 56 C30.4 56 23 49.6 23 40 C23 30.4 30.4 23 42 23 Z" fill="#d98a5a"/>
+  <path d="M30.4 30.0 C26.6 33.2 24.8 37.0 24.8 41.4 C24.8 46.0 27.4 49.6 32.2 51.8 C27.4 50.8 24.0 47.2 23.2 42.4 C22.4 37.4 25.0 32.8 30.4 30.0 Z" fill="#f0dcc0" opacity=".8"/>
+  <path d="M53.6 30.0 C57.4 33.2 59.2 37.0 59.2 41.4 C59.2 46.0 56.6 49.6 51.8 51.8 C56.6 50.8 60.0 47.2 60.8 42.4 C61.6 37.4 59.0 32.8 53.6 30.0 Z" fill="#f0dcc0" opacity=".8"/>
+  <path d="M42 43.4 C47.2 43.4 51 46.2 51 49.6 C51 53.2 47.2 55.8 42 55.8 C36.8 55.8 33 53.2 33 49.6 C33 46.2 36.8 43.4 42 43.4 Z" fill="#f3ecd8" opacity=".92"/>
+  <path d="M33.6 34.6 C36.4 33.2 38.8 34.0 39.8 36.8 C40.6 39.2 39.4 41.4 36.8 41.8 C34.0 42.2 32.0 40.4 32.0 37.6 C32.0 36.4 32.6 35.2 33.6 34.6 Z" fill="#22160f"/>
+  <path d="M34.0 35.6 C35.0 34.7 36.2 34.6 37.2 35.2 C35.8 35.2 34.8 35.8 34.2 37.0 Z" fill="#f6efdc" opacity=".9"/>
+  <path d="M50.4 34.6 C47.6 33.2 45.2 34.0 44.2 36.8 C43.4 39.2 44.6 41.4 47.2 41.8 C50.0 42.2 52.0 40.4 52.0 37.6 C52.0 36.4 51.4 35.2 50.4 34.6 Z" fill="#22160f"/>
+  <path d="M50.0 35.6 C49.0 34.7 47.8 34.6 46.8 35.2 C48.2 35.2 49.2 35.8 49.8 37.0 Z" fill="#f6efdc" opacity=".9"/>
+  <path d="M39.2 46.4 C40.2 45.4 43.8 45.4 44.8 46.4 C45.5 47.3 44.0 49.1 42 49.1 C40 49.1 38.5 47.3 39.2 46.4 Z" fill="#22160f"/>
+  <path d="M42 49.3 C41.4 51.4 40 52.4 37.8 52.4 M42 49.3 C42.6 51.4 44 52.4 46.2 52.4" fill="none" stroke="#7d4526" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M28.4 31.4 C31.6 27.8 35.8 25.6 41.0 24.8 C34.6 26.8 30.4 29.6 28.0 33.4 Z" fill="#f3ecd8" opacity=".45"/>
+  <path d="M55.6 31.4 C52.4 27.8 48.2 25.6 43.0 24.8 C49.4 26.8 53.6 29.6 56.0 33.4 Z" fill="#f3ecd8" opacity=".45"/>
+</svg>`;
 }
 /* small standing figure (side view), colored by robe, carrying a role weapon */
+/* The traveler on the road was a circle, a trapezoid, two rounded rects for
+   legs, one rounded rect for an arm in the same colour as the robe (so it was
+   invisible) and a rounded rect pack floating detached beside the body. It also
+   carried .leg.legL/.legR classes that nothing in the stylesheet had ever
+   animated, so it slid down the road without moving. This is a continuous robe
+   stroke flaring into a hem, a conical straw hat in three brush passes, tapered
+   legs with feet, and a slung bundle with a strap across the chest — and the
+   walk cycle those classes were waiting for is in the stylesheet now. */
 function walkerSVG(color, weapon){
-  const glyph = (weapon && WEAPON_GLYPH[weapon]) ? `<g transform="translate(30,40)">${WEAPON_GLYPH[weapon]}</g>` : "";
+  const robe  = color || "#4f7261";
+  const glyph = (weapon && WEAPON_GLYPH[weapon]) ? '<g transform="translate(28.5,38)">'+WEAPON_GLYPH[weapon]+'</g>' : "";
   return `<svg viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg">
-    <ellipse class="shadow" cx="20" cy="57" rx="12" ry="3" fill="#1a1613" opacity=".18"/>
-    <circle cx="20" cy="12" r="7" fill="#e8c9a0"/>
-    <path d="M9 12 Q20 2 31 12 Q20 8 9 12Z" fill="#bd9d5f" stroke="#8a5a2b" stroke-width="0.6"/>
-    <path d="M11 22 Q20 16 29 22 L27 42 L13 42 Z" fill="${color||'#4f7261'}"/>
-    <rect x="6" y="24" width="7" height="10" rx="2" fill="#8a5a2b"/>
-    <rect class="leg legL" x="14" y="41" width="5" height="15" rx="2" fill="#3a3128"/>
-    <rect class="leg legR" x="21" y="41" width="5" height="15" rx="2" fill="#2b241c"/>
-    <rect class="arm" x="26" y="23" width="4" height="15" rx="2" fill="${color||'#4f7261'}"/>
-    ${glyph}
-  </svg>`;
+  <ellipse class="shadow" cx="20" cy="57.2" rx="9.5" ry="2.2" fill="#1a1613" opacity=".16"/>
+  <path class="leg legR" d="M18.6 40.5 C18.2 45 17.9 49.4 17.9 53.4 L21.4 54.6 L21.5 55.9 L16.4 55.9 C15.9 50.6 15.9 45.4 16.3 40.4 Z" fill="#221c15"/>
+  <path d="M12.6 25.4 C10.5 26.8 9.7 29.0 10.4 31.6 C10.8 32.9 12.4 33.3 13.4 32.4 C12.5 30.0 12.6 27.6 13.8 25.6 Z" fill="#7a5a34"/>
+  <path d="M20.2 18.6 C23.4 18.9 25.5 20.6 26.2 23.6 C27.2 28.4 28.3 34.2 29.4 41.0 C29.6 42.3 28.8 43.1 27.5 43.0 C23.0 42.5 18.0 42.4 12.6 42.9 C11.2 43.0 10.4 42.1 10.7 40.8 C12.0 34.4 13.2 28.7 14.2 23.8 C14.8 20.7 16.8 18.9 20.2 18.6 Z" fill="${robe}"/>
+  <path d="M20.2 18.6 C23.4 18.9 25.5 20.6 26.2 23.6 C27.2 28.4 28.3 34.2 29.4 41.0 C29.6 42.3 28.8 43.1 27.5 43.0 L24.4 42.7 C23.6 33.4 22.4 25.4 20.2 18.6 Z" fill="#1a1613" opacity=".16"/>
+  <path class="arm" d="M14.4 24.0 C12.6 28.0 12.1 31.8 12.6 35.4 C12.7 36.4 14.1 36.4 14.2 35.5 C14.0 32.2 14.6 28.8 16.2 25.4 Z" fill="#1a1613" opacity=".22"/>
+  <path d="M13.9 24.2 C16.6 25.8 20.1 26.4 24.2 25.8 C25.9 25.6 27.0 26.9 26.6 28.0 C22.3 29.4 17.9 28.9 13.4 26.8 Z" fill="#1a1613" opacity=".18"/>
+  <path d="M11.3 37.4 C16.6 36.4 22.6 36.6 28.5 37.8 L28.8 39.4 C22.6 38.2 16.5 38.0 11.1 39.0 Z" fill="#1a1613" opacity=".24"/>
+  <path class="leg legL" d="M21.6 40.5 C22.4 45 23.0 49.4 23.2 53.4 L26.9 54.6 L27.0 55.9 L21.7 55.9 C21.0 50.6 20.6 45.4 20.3 40.4 Z" fill="#332b22"/>
+  <path d="M17.4 17.8 C17.2 16.0 18.0 15.0 20.0 15.0 C22.0 15.0 22.8 16.0 22.6 17.8 C22.4 19.2 21.2 19.9 20.0 19.9 C18.8 19.9 17.6 19.2 17.4 17.8 Z" fill="#dcb98c"/>
+  <ellipse cx="20" cy="11.6" rx="4.5" ry="4.9" fill="#e8c9a0"/>
+  <path d="M20 12.4 C16.6 12.4 13.6 11.9 11.2 11.0 C10.2 10.6 10.2 9.7 11.0 9.2 C13.6 7.4 15.6 5.4 17.9 3.5 C19.2 2.5 20.8 2.5 22.1 3.5 C24.4 5.4 26.4 7.4 29.0 9.2 C29.8 9.7 29.8 10.6 28.8 11.0 C26.4 11.9 23.4 12.4 20 12.4 Z" fill="#c8ac72"/>
+  <path d="M10.9 10.2 C14.6 11.6 17.7 12.3 20 12.3 C22.3 12.3 25.4 11.6 29.1 10.2 L29.4 11.2 C25.4 12.7 22.3 13.4 20 13.4 C17.7 13.4 14.6 12.7 10.6 11.2 Z" fill="#8a6f3c"/>
+  <path d="M18.9 3.6 C19.8 5.9 20.4 8.2 20.7 10.7 L19.6 10.8 C19.3 8.4 18.7 6.2 17.9 4.1 Z" fill="#8a6f3c" opacity=".5"/>
+  ${glyph}
+</svg>`;
 }
 /* resolve a traveler's role/weapon/needs (role-derived, with per-traveler override) */
 function travNeed(id){ const t=TRAVELERS[id]; if(!t) return ["stamina"]; if(t.need) return t.need; const r=ROLES[t.role]; return (r&&r.need)||["stamina"]; }
@@ -6247,7 +6419,7 @@ function renderChapters(){
     // show the party the LADDER will actually field, not the raw authored roster
     const party=E.partyFor(c);
     const members=party.members.map(id=>TRAVELERS[id]).filter(Boolean).slice(0,6);
-    const portraits=members.map(m=>`<div class="pp">${portraitSVG(m.color,m.name.length)}</div>`).join("");
+    const portraits=members.map(m=>`<div class="pp">${portraitSVG(m.color, m.id || m.name)}</div>`).join("");
     const enemy = c.enemy? ENEMIES[c.enemy] : null;
     const chips=`<span class="tag tier">${party.members.length} traveler${party.members.length>1?'s':''}</span>`+
       `<span class="tag tier t2">${party.builders.length} term${party.builders.length>1?'s':''}</span>`+
@@ -6314,7 +6486,7 @@ function openChapter(chapter){
       card.innerHTML=`
         <div class="tc-status${isBuilder?'':' ready'}" id="tcs-${id}">${isBuilder?'needs a term':'escort'}</div>
         <div class="tc-hd">
-          <div class="tc-portrait">${portraitSVG(t.color,t.name.length)}</div>
+          <div class="tc-portrait">${portraitSVG(t.color, t.id || t.name)}</div>
           <div><div class="tc-name">${t.name}</div><div class="tc-role">${travRoleName(id)}</div></div>
         </div>
         ${isBuilder?`<div class="tc-quote">&ldquo;${t.clue}&rdquo;</div>`:`<div class="tc-quote">${t.strength?('Skill: '+t.strength+'.'):'Travels with the company.'}</div>`}
@@ -6370,7 +6542,7 @@ function openBuilder(){
     buildBackdrop($('#build-bg'),"workshop");
     $('#build-tier').textContent="Tier "+t.tier;
     $('#build-tier').className="tag tier "+(t.tier===3?'t3':t.tier===2?'t2':'');
-    $('#build-port').innerHTML=portraitSVG(t.color,t.name.length);
+    $('#build-port').innerHTML=portraitSVG(t.color, t.id || t.name);
     $('#build-forname').textContent=t.name;
     $('#build-forrole').textContent=t.role;
     $('#build-progress').textContent=`Term ${f.idx+1} / ${f.builders.length}`;
@@ -6556,7 +6728,11 @@ function onBuildSuccess(){
   renderSlots(); // redraw with connectors drawn + rule notes
   // animate connectors sequentially
   $$('#slotted .connector').forEach((c,i)=> setTimeout(()=>c.classList.add("drawn"),120+i*220));
+  /* FX.shake and FX.impact existed for the art pass and were wired into four
+     places, none of them here — the moment the player's word is sealed, which
+     is the signature beat of the whole game, did not move the frame at all. */
   Audio2.sfx.stamp(); FX.buzz(40);
+  FX.shake(7,200); FX.impact("#b5322b",0.22,240);
   FX.inkBloom($('#assembly'));
   let acc=1-(bAttempts-1)*0.22-bSupportUsed*0.12;
   const accuracy=clamp(acc,0.35,1);
@@ -8805,8 +8981,15 @@ function stepTest(){
     // do on the road, plus the one thing that would have made it perfect
     stage.appendChild(buildSpecSheet(bp, W.cur, qtier, isMaster, decodeClean));
     const bad = (qtier==="flawed"||qtier==="ruined");
+    /* The bench had never once moved the frame — a ruined piece and a masterwork
+       resolved with identical weight, which is the opposite of what NORTH_STAR
+       asks of it ("trying hard and trying lazily must produce visibly different
+       results"). A masterwork now lands like one. */
     (bad?Audio2.sfx.bad():Audio2.sfx.great()); FX.buzz(qtier==="ruined"?36:bad?24:18);
-    if(qtier==="masterwork"){ Audio2.sfx.great(); FX.buzz(34); spawnShards(); }
+    FX.shake(bad?9:5, bad?280:180);
+    FX.impact(bad?"#b5322b":"#d8bd84", bad?0.34:0.20, 200);
+    if(qtier==="masterwork"){ Audio2.sfx.great(); FX.buzz(34); spawnShards();
+      FX.shake(12,340); FX.impact("#d8bd84",0.42,420); }
     // Tempering technique: one bad build per visit may be re-worked before it ships
     const canTemper = bad && hasTech("tempering") && !W.temperUsed;
     if(canTemper){
@@ -9201,7 +9384,7 @@ function renderWarriors(){
       : `<span class="ws-empty">no gear yet — tap a tool, then tap here</span>`;
     card.innerHTML=`
       <div class="warrior-hd">
-        <div class="warrior-port">${portraitSVG(t.color,t.name.length)}${wornIcon}</div>
+        <div class="warrior-port">${portraitSVG(t.color, t.id || t.name)}${wornIcon}</div>
         <div><div class="warrior-name">${t.name}</div><div class="warrior-role">${travRoleName(id)}</div></div>
       </div>
       <div class="warrior-skill">${t.strength?('Skill: '+t.strength+'.'):'A steady hand for the company.'}</div>
@@ -12843,6 +13026,7 @@ function showResult(){
     const seal=$('#grade-seal'); seal.className="grade-seal g-"+grade; seal.textContent=gInfo[grade].ch;
     requestAnimationFrame(()=>seal.classList.add("struck"));
     Audio2.sfx.stamp(); FX.buzz(40);
+    FX.shake(8,240); FX.impact(grade==="excellent"?"#d8bd84":grade==="poor"?"#b5322b":"#7d9a8a",0.26,260);
     $('#result-title').textContent=gInfo[grade].t;
     $('#result-summary').innerHTML = summaryLine(f, grade, st);
     const rg=$('#reward-grid'); rg.innerHTML="";
@@ -13088,8 +13272,17 @@ function showEnding(){
       ? `The Lexicon is whole enough to light the realm again. ${vale?"Master Vale is free, ":""}the Silent Archive is broken, and the recovered pages are shared, not hoarded. Some fragments still ride the wind — but knowledge belongs to everyone now.`
       : `A beginning more than an ending: some pages still scatter on the wind, and some terms still trip the tongue. But every company trusted you with their road, and you proved that learning is meant to be shared — that is its own recovered page.`;
     const rg=$('#end-rewards'); rg.innerHTML="";
-    [["Reputation",rep],["Ink",S().coin],["Pages",pages+"/8"],["Terms",S().completedTerms.length+"/"+Object.keys(TERMS).length]]
-      .forEach(([l,v])=>{ const d=el("div","reward"); d.innerHTML=`<div class="rv">${v}</div><div class="rl">${l}</div>`; rg.appendChild(d); });
+    /* The last screen of the game showed four numbers that were simply there,
+       fully formed, the moment it opened. This is the tally of everything the
+       player did — it should be counted out to them. */
+    [["Reputation",rep,""],["Ink",S().coin,""],["Pages",pages,"/8"],
+     ["Terms",S().completedTerms.length,"/"+Object.keys(TERMS).length]]
+      .forEach(([l,v,suf],i)=>{
+        const d=el("div","reward");
+        d.innerHTML=`<div class="rv">0${suf}</div><div class="rl">${l}</div>`;
+        rg.appendChild(d);
+        setTimeout(()=>FX.countUp(d.querySelector('.rv'), v, {dur:1300, suffix:suf}), 420+i*240);
+      });
     $('#end-continue').textContent="Return to the title";
     $('#end-continue').onclick=()=>{ Audio2.sfx.chime(); window.__RD_SCREENS.showTitle(); };
     Audio2.sfx.chime();
@@ -14183,13 +14376,17 @@ function grantChest(quality, reason, onDone){
       v.classList.add("opened");
       Audio2.sfx.chestOpen ? Audio2.sfx.chestOpen() : Audio2.sfx.chime();
       FX && FX.buzz && FX.buzz(RARITY_RANK[rank.id]>=2?60:34);
+      FX && FX.shake && FX.shake(10,300);
+      FX && FX.impact && FX.impact("#d8bd84",0.40,420);
       loot.forEach((it,i)=>{
         const row=el("div","loot-row"+(it.rare?" rare":""));
         row.style.animationDelay=(i*0.14)+"s";
         row.innerHTML=`<div class="lg">${it.glyph}</div>
           <div><div class="ln">${it.name}</div><div class="ll">${it.note}</div></div>`;
         lootBox.appendChild(row);
-        setTimeout(()=>{ if(it.kind==="relic") (Audio2.sfx.relic&&Audio2.sfx.relic());
+        setTimeout(()=>{ if(it.kind==="relic"){ (Audio2.sfx.relic&&Audio2.sfx.relic());
+                           FX && FX.shake && FX.shake(6,260);
+                           FX && FX.impact && FX.impact("#8a7ad8",0.30,520); }
                          else if(it.rare) (Audio2.sfx.great&&Audio2.sfx.great());
                          else (Audio2.sfx.coin&&Audio2.sfx.coin()); }, 340+i*140);
       });

@@ -10,6 +10,11 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
 
 (async () => {
   const { window, errors } = await boot();
+  // screens carry an entrance class as well as .active, so ask the classList
+  const isActive = (sel) => {
+    const n = window.document.querySelector(sel);
+    return !!(n && n.classList.contains('active'));
+  };
   const E = window.__RD_ENG, D = window.__RD_DATA, SC = window.__RD_SCREENS,
         MI = window.__RD_MISSION, PREP = window.__RD_PREP;
   const CHAPTERS = D.CHAPTERS, TERMS = D.TERMS, TRAVELERS = D.TRAVELERS;
@@ -92,7 +97,7 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
       await until(() => {
         const m = MI._dbg();
         return !m || m.done || m.arriving ||
-          (window.document.querySelector('#s-result') || {}).className === 'screen active';
+          isActive('#s-result');
       }, 9000, 'chapter ' + i + ' to resolve');
       const m2 = MI._dbg();
       if (m2 && m2.arriving && !m2.done) { m2.arriveT = 5; await sleep(600); }
@@ -117,8 +122,8 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   /* The ending exists and can be reached. */
   assert(typeof MI.showEnding === 'function', 'the game has an ending to reach');
   MI.showEnding();
-  await until(() => (window.document.querySelector('#s-end') || {}).className === 'screen active', 6000, 'the ending');
-  assert((window.document.querySelector('#s-end') || {}).className === 'screen active',
+  await until(() => isActive('#s-end'), 6000, 'the ending');
+  assert(isActive('#s-end'),
     'the ending screen opens after the last chapter');
   const endTxt = (window.document.querySelector('#s-end') || { textContent: '' }).textContent;
   assert(endTxt.trim().length > 80, 'the ending has something to say: ' + endTxt.trim().length + ' characters');
