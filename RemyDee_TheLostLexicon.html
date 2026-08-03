@@ -1433,6 +1433,16 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   font-family:var(--font-read);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
   color:#f0dcae;background:rgba(20,14,8,.6);padding:4px 12px;border-radius:2px;white-space:nowrap;}
 [data-motion="reduced"] .road-focus{transition:none;}
+.pause-keys{display:flex;flex-direction:column;gap:5px;margin:12px 0 14px;text-align:left;
+  font-size:.78rem;color:var(--ink-soft);}
+.pause-keys > div{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
+  padding-bottom:5px;border-bottom:1px dashed rgba(74,63,49,.26);}
+.pause-keys > div:last-child{border-bottom:0;}
+.pause-keys kbd{display:inline-flex;align-items:center;justify-content:center;
+  min-width:1.7em;padding:1px 6px;border-radius:2px;font-family:var(--font-read);
+  font-size:.7rem;font-weight:700;color:var(--ink);background:var(--rice-2);
+  border:1px solid rgba(43,36,28,.45);box-shadow:inset 0 -1px 0 rgba(0,0,0,.12);}
+.pause-keys span{flex:1;min-width:0;}
 .timer-bar{height:8px;border-radius:5px;background:var(--rice-3);overflow:hidden;margin-bottom:14px;}
 .timer-bar > i{display:block;height:100%;background:var(--cinnabar);width:100%;}
 /* ---- THE ARCHIVE'S PRESSURE (final boss, Phase I) ---- */
@@ -2434,6 +2444,18 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
         <div class="pause-card">
           <span class="eyebrow">Paused</span>
           <h3>The road waits</h3>
+          <!-- The hint over the sky retires after three roads, so the controls
+               need a home that is always there. A pause menu is where anyone
+               goes looking for them, and it costs nothing while you are walking. -->
+          <div class="pause-keys">
+            <div><kbd>mouse</kbd><span>lead the squad up and down</span></div>
+            <div><kbd>click</kbd><span>lunge &mdash; reach for a part, or shove a hazard aside</span></div>
+            <div><kbd>right-click</kbd><span>focus &mdash; the road slows while you read, and they tire</span></div>
+            <div><kbd>space</kbd><span>surge &mdash; burn stamina for speed</span></div>
+            <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><span>strike, vanish, mend</span></div>
+            <div><kbd>W</kbd><kbd>S</kbd><kbd>shift</kbd><kbd>F</kbd><span>the same, from the keyboard alone</span></div>
+            <div><kbd>G</kbd><span>show what your forged gear is doing</span></div>
+          </div>
           <div class="pause-actions">
             <button class="btn jade" id="pause-resume">Resume</button>
             <button class="btn ghost" id="pause-settings">Settings</button>
@@ -10536,7 +10558,7 @@ function runMission(){
          one thing the markup comment above it promises never to do. */
       hint.innerHTML = FX.isTouch
         ? `<b>Drag</b> up and down to lead the squad. Gather word-parts; chain them into real terms.`
-        : `Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.`;
+        : `Lead the squad with the <b>mouse</b> &mdash; gather word-parts and chain them into real terms. <b>Click</b> to lunge for one, or to shove a hazard aside. <b>Hold right-click</b> to slow the road while you read a gate. <b>Space</b> surges; <b>1&thinsp;2&thinsp;3</b> spend your charges. Everything here is on the keyboard too &mdash; the pause menu lists it.`;
       hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500);
     }
     $('#mini-challenge').classList.remove('show');
@@ -10793,7 +10815,7 @@ function renderAbilityBar(){
     // the hotkeys existed and were mentioned once, in a hint that fades after
     // eight seconds — the button that owns the key now says so permanently
     const KEY={strike:"1",vanish:"2",mend:"3"};
-    btn.innerHTML=`<span class="ab-charge">${left}</span>
+    btn.innerHTML=`<span class="ab-charge">&times;${left}</span>
       <span class="ab-name">${meta.glyph} ${meta.name}</span>
       <kbd class="ab-key">${KEY[kind]||""}</kbd>
       <span class="ab-hint">${abilityHint(kind)}</span>`;
