@@ -7790,8 +7790,8 @@ function stepBuild(){
     align:"The true balance is hidden. Tap the track to strike the beam — each probe reports what it reads at that point and then goes quiet again. You have five.",
     tension:"Three draws, three traits, and you choose which draw gets your steadiest hand. Heat never resets between them, and all three must come out even.",
     fold:"Pick how many pleats to attempt, watch the fold order once, then reproduce it from memory. Only six pleats can fill the Density row — and six is the hardest to hold.",
-    fit:"Set the FIRST claw against the scribed mark. Then the mark disappears and you match the other two by eye — against your own first claw.",
-    pack:"Tap a supply, then tap the case. Fit as much as you can AND keep the weight even across the strap — a full case that swings is still a bad case.",
+    fit:"<b>One press drives a claw</b> — where you press is where it bites, and a driven claw stays driven. Set the first against the scribed mark; then the mark is gone and your own first claw fades, so the other two are struck from memory.",
+    pack:"Take a remedy, then <b>press and hold</b> to pour it — let go inside the dose band. Seat it where the case will still hang level. Every remedy you draw makes the next band narrower, so a fuller case is a steadier hand.",
     weave:"Strike each strand on the beat, then HOLD to seat it home. Let go early and it sits loose; hold too long and you overwork the fibre."
   };
   instruct.innerHTML=instructs[type]||"Work the piece by hand.";
@@ -8403,7 +8403,7 @@ function craftTension(cv,ctx){
   const AX=[{k:"power",label:"Power",target:0.72,color:"#d5643a"},
             {k:"speed",label:"Speed",target:0.42,color:"#7d9a8a"},
             {k:"control",label:"Accuracy",target:0.58,color:"#bd9d5f"}];
-  let remaining=AX.slice(), results=[], cur=null, pull=0, dragging=false, working=false, phase="pick", done=false;
+  let remaining=AX.slice(), results=[], cur=null, pull=0, aim=0, dragging=false, working=false, phase="pick", done=false;
   const samples=[];
   rubInit([
     {k:"aim",    label:"Aim",    hint:"average accuracy across the three draws", w:1.2},
@@ -8449,9 +8449,19 @@ function craftTension(cv,ctx){
       ctx.beginPath(); ctx.moveTo(cx,top); ctx.lineTo(px,midY); ctx.lineTo(cx,bot); ctx.stroke();
       ctx.fillStyle=inZone?cur.color:"#bd9d5f"; ctx.beginPath(); ctx.arc(px,midY,9,0,6.28); ctx.fill();
       if(inZone) craftSpark(sp,px,midY,cur.color,1);
-      if(dragging) samples.push(pull);
+      /* THE LIMB PULLS BACK. The draw used to sit exactly where the mouse put
+         it, so "hold it steady" cost a player nothing at all — park the cursor
+         on the band, stop moving, and steadiness was a free 100%. The string now
+         creeps home the harder you draw it, and the pointer only sets where you
+         are pulling TOWARD. Holding a deep draw on the band is continuous work,
+         which is what the Steadiness row was always claiming to measure. */
+      if(dragging){
+        const creep = 0.014 + pull*0.055;        // a heavy draw fights hardest
+        pull = clamp(pull + (aim-pull)*0.22 - creep, 0, 1);
+        samples.push(pull);
+      }
       craftLabel(ctx,W,H, `Drawing for ${cur.label} — ${inZone?"in the band, release when steady":"draw to the band and hold"}`,
-        "a shaking draw loosens the whole limb");
+        "the limb creeps home the deeper you pull — a shaking draw loosens it");
     }
     stepSparks(sp); drawSparks(ctx,sp);
     craftAnim=craftFrame(gen,draw);
@@ -8489,9 +8499,9 @@ function craftTension(cv,ctx){
         cur=b.ax; remaining=remaining.filter(a=>a.k!==cur.k); phase="draw"; pull=0; Audio2.sfx.tick&&Audio2.sfx.tick();
         return;
       }
-      dragging=true; working=true; pull=clamp((x-cx)/span,0,1);
+      dragging=true; working=true; aim=clamp((x-cx)/span,0,1); pull=aim*0.5;
     },
-    move:(x)=>{ if(dragging) pull=clamp((x-cx)/span,0,1); },
+    move:(x)=>{ if(dragging) aim=clamp((x-cx)/span,0,1); },
     up:()=>{ if(phase==="draw" && dragging){ finishDraw(); } dragging=false; working=false; }
   });
 }
@@ -8595,7 +8605,14 @@ function craftFit(cv,ctx){
   let phase="choose", preset=null, chooseBtns=[];
   const xs=[W*0.26,W*0.5,W*0.74], top=H*0.20, bot=H*0.60;
   const claws=xs.map(x=>({x, norm:0.5, set:false}));
-  let dragIdx=-1, working=false, done=false;
+  let working=false, done=false;
+  /* THE MARK FADES. The first claw's line used to stay on the post forever, and
+     the other two were set by DRAGGING — so "match it by eye" was really "line
+     it up against a visible rule and let go", which anyone can do perfectly.
+     Each claw is now driven with a single press, where you press, and the
+     reference from your first claw fades out over a few seconds. What is being
+     graded is whether you can strike true from memory. */
+  let refT=0;
   rubInit([
     {k:"angle", label:"Angle", hint:"how near the chosen bite each claw sits", w:1.15},
     {k:"match", label:"Match", hint:"all three claws agreeing with each other", w:1.15},
@@ -8643,10 +8660,11 @@ function craftFit(cv,ctx){
         ctx.beginPath(); ctx.moveTo(claws[0].x-40,ty); ctx.lineTo(claws[0].x+40,ty); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle="rgba(125,154,138,.9)"; ctx.font='700 10px "Noto Sans",sans-serif'; ctx.textAlign="center";
         ctx.fillText("scribed mark", claws[0].x, ty-7);
-      } else if(claws[0].set){
-        // your own first claw stays visible as the only reference you get
-        const ry=top+claws[0].norm*(bot-top);
-        ctx.strokeStyle="rgba(216,189,132,.28)"; ctx.lineWidth=1; ctx.setLineDash([3,5]);
+      } else if(claws[0].set && refT>0){
+        // your own first claw is the only reference you get, and it is going
+        refT=Math.max(0, refT-0.016);
+        const ry=top+claws[0].norm*(bot-top), a=clamp(refT/2.6,0,1)*0.34;
+        ctx.strokeStyle=`rgba(216,189,132,${a.toFixed(3)})`; ctx.lineWidth=1; ctx.setLineDash([3,5]);
         ctx.beginPath(); ctx.moveTo(W*0.16,ry); ctx.lineTo(W*0.84,ry); ctx.stroke(); ctx.setLineDash([]);
       }
       claws.forEach((c,i)=>{
@@ -8659,9 +8677,11 @@ function craftFit(cv,ctx){
       });
       stepSparks(sp); drawSparks(ctx,sp);
       craftLabel(ctx,W,H,
-        nSet===0 ? `Set the FIRST claw to the scribed mark  ·  0/3 set`
-                 : `Now match the rest by eye — the mark is gone  ·  ${nSet}/3 set`,
-        nSet===0 ? "this is the only claw that gets a template" : "Angle grades you against the mark; Match grades you against yourself");
+        nSet===0 ? `Drive the FIRST claw onto the scribed mark  ·  0/3 set`
+                 : `Now strike the other two by eye  ·  ${nSet}/3 set`,
+        nSet===0 ? "one press drives it — there is no second chance at a claw"
+                 : (refT>0 ? "your first claw is still faintly visible — it will not be for long"
+                           : "the reference is gone; strike from memory"));
     }
     craftAnim=craftFrame(gen,draw);
   };
@@ -8680,141 +8700,310 @@ function craftFit(cv,ctx){
     down:(x,y)=>{
       if(phase==="choose"){ const b=chooseBtns.find(b=>b.hit(x,y)); if(!b) return;
         preset=b.p; phase="set"; Audio2.sfx.clink(); return; }
-      const hitIdx=claws.findIndex(c=>Math.hypot(c.x-x, (top+c.norm*(bot-top))-y)<30);
+      // whichever post the press is nearest, driven at the height of the press
+      let idx=-1, best=1e9;
+      claws.forEach((c,i)=>{ const d=Math.abs(c.x-x); if(d<best && d<W*0.16){ best=d; idx=i; } });
+      if(idx<0 || y<top-16 || y>bot+16) return;
+      if(claws[idx].set){ Audio2.sfx.bad(); FX.buzz(8); return; }   // a driven claw stays driven
       // the marked claw is set first, always — the reference has to exist before
       // the other two can be judged against it
-      if(hitIdx>0 && !claws[0].set){ Audio2.sfx.bad(); FX.buzz(8); return; }
-      dragIdx=hitIdx;
-      if(dragIdx>=0) working=true;
+      if(idx>0 && !claws[0].set){ Audio2.sfx.bad(); FX.buzz(8); return; }
+      claws[idx].norm=clamp((y-top)/(bot-top),0,1);
+      claws[idx].set=true; working=true;
+      if(idx===0) refT=2.6;                       // the reference starts fading now
+      Audio2.sfx.hammer&&Audio2.sfx.hammer();
+      FX.shake(4,120); FX.impact("#d8bd84",0.14,150);
+      craftHit(sp,claws[idx].x, top+claws[idx].norm*(bot-top), "#7d9a8a");
+      setTimeout(()=>{ working=false; }, 220);
+      maybeFinish();
     },
-    move:(x,y)=>{ if(dragIdx>=0){ claws[dragIdx].norm=clamp((y-top)/(bot-top),0,1); } },
-    up:()=>{ if(dragIdx>=0){ claws[dragIdx].set=true; craftHit(sp,claws[dragIdx].x, top+claws[dragIdx].norm*(bot-top), "#7d9a8a");
-        dragIdx=-1; working=false; maybeFinish(); } }
+    move:()=>{},
+    up:()=>{}
   });
 }
 
-/* FIELD KIT — The Packed Case (spatial puzzle with loadout consequences).
-   Real shaped supplies — bandage (2×1), salve (1×1), splint (3×1), tonic
-   (2×2) — go into a fixed grid case. WHAT you fit determines what the kit
-   can actually do: many bandages means many small recoveries, a couple of
-   tonics means fewer, stronger ones, splints add protection. The player
-   decides when the case is full enough and closes it — push too far and
-   there's nowhere left for the piece that would have mattered most. */
+/* KIT — THE APOTHECARY'S CASE.
+
+   The old case was inventory Tetris: click a supply, click a cell, repeat.
+   Nothing could go wrong, nothing needed a steady hand, and a full case was
+   two minutes of clicking away every single time. The rubric filled itself in
+   as you dropped blocks, which is the definition of a craft with no craft in
+   it — and it was the one bench task with no failure state at all.
+
+   It is three acts now, and the player's hands are in all of them.
+
+   POUR — press and hold. The measure rises up the phial and does not stop for
+   you; the dose band is painted on the glass and every remedy wants a different
+   depth. Let go inside the band and it is full strength. Let go early and it is
+   thin. Hold past the lip and it spills over the bench, which stains the whole
+   case's Doses row — one careless hand ruins the batch, exactly the way the
+   blade's sloppiest fold sets its line.
+
+   SEAT — drop it into a well. Where it goes still decides how the case hangs on
+   the strap, so the balance see-saw that was the best part of the old craft is
+   kept whole.
+
+   CLOSE, OR REACH AGAIN — the drawer is deeper than the case, and every remedy
+   you take makes the next dose band narrower. Push for a fuller case and you
+   are betting a steady hand against a thinner target. That is the same wager
+   the blade makes with its folds, and it is why either can be walked away from
+   at a good number instead of grinding to a fixed one. */
 function craftPack(cv,ctx){
   const W=cv.width,H=craftH(cv), sp=[]; const gen=craftNewGen();
-  const cx=W*0.14, cy=H*0.12, cw=W*0.72, ch=H*0.40, cols=6, rows=4;
+  /* the case: six wells across two shelves */
+  const cx=W*0.46, cy=H*0.10, cw=W*0.44, ch=H*0.40, cols=3, rows=2;
   const cellW=cw/cols, cellH=ch/rows;
-  const PIECES={
-    bandage:{cells:[[0,0],[1,0]], color:"#c9d2d8"},
-    salve:  {cells:[[0,0]], color:"#7d9a8a"},
-    splint: {cells:[[0,0],[1,0],[2,0]], color:"#8a5a2b"},
-    tonic:  {cells:[[0,0],[1,0],[0,1],[1,1]], color:"#b5322b"}
+  const REMEDY={
+    bandage:{name:"Bandage",  dose:0.42, color:"#c9d2d8", weight:1, note:"rolled linen, packed short"},
+    salve:  {name:"Salve",    dose:0.28, color:"#7d9a8a", weight:1, note:"a thin smear is plenty"},
+    splint: {name:"Splint",   dose:0.62, color:"#8a5a2b", weight:2, note:"soaked until the reed bends"},
+    tonic:  {name:"Tonic",    dose:0.86, color:"#b5322b", weight:3, note:"filled near the lip, and it fights you"}
   };
+  const KEYS=Object.keys(REMEDY);
   const occ=Array.from({length:cols},()=>Array(rows).fill(false));
   const placed=[]; const counts={bandage:0,salve:0,splint:0,tonic:0};
-  let held=null, done=false, working=false, stashBtn=null;
-  // the tray sits below the case AND below the strap gauge that reads its balance
-  const trayY=H*0.72, trayItems=Object.keys(PIECES).map((k,i)=>({k, x:cx+i*(cw/4)+cw/8, y:trayY}));
-  const canPlace=(k,gx,gy)=>PIECES[k].cells.every(([dx,dy])=>{
-    const x=gx+dx,y=gy+dy; return x>=0&&x<cols&&y>=0&&y<rows&&!occ[x][y]; });
-  const place=(k,gx,gy)=>{ PIECES[k].cells.forEach(([dx,dy])=>{ occ[gx+dx][gy+dy]=true; }); placed.push({k,gx,gy}); counts[k]++; };
-  const usedCells=()=>placed.reduce((a,p)=>a+PIECES[p.k].cells.length,0);
-  /* CARRY BALANCE. A case can be crammed full and still be useless: load it all
-     down one side and it swings on the strap and rattles all the way to the
-     cavern. WHERE you put each supply now matters as much as how many you fit,
-     which turns a tidy packing puzzle into an actual planning problem. */
-  const WEIGHT={bandage:1,salve:1,splint:2,tonic:3};
+  const doses=[];                                  // one quality per remedy poured
+  let phase="choose", pick=null, level=0, pouring=false, spilled=false, held=null;
+  let done=false, working=false, closeBtn=null, choice=null, drawerBtns=[], wellHint=-1;
+  let takes=0;                                     // how many remedies have been drawn
+  const capacity=cols*rows;
+
+  /* the band narrows with every remedy taken — the wager */
+  const bandFor=()=>Math.max(0.055, 0.155 - takes*0.022);
+  const WEIGHT=(k)=>REMEDY[k].weight;
   const sideLoad=()=>{ let l=0,r=0;
-    placed.forEach(p=>{ const w=WEIGHT[p.k]/PIECES[p.k].cells.length;
-      PIECES[p.k].cells.forEach(([dx,dy])=>{ ((p.gx+dx)<cols/2 ? (l+=w) : (r+=w)); }); });
+    placed.forEach(p=>{ (p.gx < cols/2 ? (l+=WEIGHT(p.k)) : (r+=WEIGHT(p.k))); });
     return {l,r}; };
   const balance=()=>{ const {l,r}=sideLoad(); const t=l+r;
-    return t<=0 ? 0 : clamp(1-Math.abs(l-r)/(t*0.5),0,1); };
+    return t<=0 ? 0 : clamp(1-Math.abs(l-r)/(t*0.6),0,1); };
+  const mean=(a)=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+
   rubInit([
-    {k:"capacity",label:"Capacity",hint:"how much of the case you actually filled", w:1.1},
-    {k:"balance", label:"Balance", hint:"weight spread evenly across the strap", w:1.2},
-    {k:"temper",  label:"Temper",  hint:"time worked inside the heat band", w:0.85}
+    {k:"doses",  label:"Doses",   hint:"how true each remedy was measured — and the worst one counts double", w:1.35},
+    {k:"balance",label:"Balance", hint:"weight spread evenly across the strap", w:1.1},
+    {k:"temper", label:"Temper",  hint:"time worked inside the heat band", w:0.85}
   ]);
   const grade=()=>{
-    rubSet("capacity", clamp(usedCells()/(cols*rows*0.8),0,1));
+    // the sloppiest pour drags the row down, the way the blade's worst fold does
+    rubSet("doses", doses.length ? clamp(mean(doses)*0.6+Math.min(...doses)*0.4,0,1)*clamp(placed.length/3,0.35,1) : 0);
     rubSet("balance", placed.length?balance():0);
     craftPulse();
   };
-  const draw=()=>{
-    if(gen!==craftGen) return;   // a superseded bench must not draw, grade, or reschedule
-    craftBg(ctx,W,H);
-    heatTick(working); grade(); drawHeat(ctx,W,H,H*0.065);
+
+  const drawCase=()=>{
     ctx.fillStyle="#8a6a3a"; ctx.strokeStyle="#5a3f1c"; ctx.lineWidth=3;
-    ctx.beginPath(); (ctx.roundRect?ctx.roundRect(cx,cy,cw,ch,10):ctx.rect(cx,cy,cw,ch)); ctx.fill(); ctx.stroke();
-    for(let i=1;i<cols;i++){ ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.beginPath(); ctx.moveTo(cx+i*cellW,cy); ctx.lineTo(cx+i*cellW,cy+ch); ctx.stroke(); }
-    for(let j=1;j<rows;j++){ ctx.strokeStyle="rgba(0,0,0,.18)"; ctx.beginPath(); ctx.moveTo(cx,cy+j*cellH); ctx.lineTo(cx+cw,cy+j*cellH); ctx.stroke(); }
-    placed.forEach(p=>{ const {cells,color}=PIECES[p.k];
-      cells.forEach(([dx,dy])=>{ const x=cx+(p.gx+dx)*cellW, y=cy+(p.gy+dy)*cellH;
-        ctx.fillStyle=color; ctx.fillRect(x+2,y+2,cellW-4,cellH-4); }); });
-    stepSparks(sp); drawSparks(ctx,sp);
-    trayItems.forEach(t=>{ ctx.fillStyle=PIECES[t.k].color; ctx.beginPath(); ctx.arc(t.x,t.y,16,0,6.28); ctx.fill();
-      ctx.strokeStyle="#2b241c"; ctx.lineWidth=1.4; ctx.stroke();
-      ctx.fillStyle="#f3ecd8"; ctx.font='700 10px "Noto Sans",sans-serif'; ctx.textAlign="center";
-      ctx.fillText(t.k[0].toUpperCase(), t.x, t.y+3.5);
-      ctx.fillText(`×${counts[t.k]}`, t.x, t.y+30); });
-    if(held){
-      const {cells,color}=PIECES[held.k]; const ok=canPlace(held.k,held.gx,held.gy);
-      ctx.globalAlpha=0.55;
-      cells.forEach(([dx,dy])=>{ const gx=held.gx+dx, gy=held.gy+dy; if(gx<0||gx>=cols||gy<0||gy>=rows) return;
-        ctx.fillStyle= ok?color:"#b5322b"; ctx.fillRect(cx+gx*cellW+2,cy+gy*cellH+2,cellW-4,cellH-4); });
-      ctx.globalAlpha=1;
+    ctx.beginPath(); (ctx.roundRect?ctx.roundRect(cx,cy,cw,ch,4):ctx.rect(cx,cy,cw,ch)); ctx.fill(); ctx.stroke();
+    for(let gx=0;gx<cols;gx++) for(let gy=0;gy<rows;gy++){
+      const x=cx+gx*cellW, y=cy+gy*cellH;
+      ctx.fillStyle="rgba(0,0,0,.16)"; ctx.fillRect(x+4,y+4,cellW-8,cellH-8);
+      if(held && wellHint===gx*rows+gy && !occ[gx][gy]){
+        ctx.strokeStyle="rgba(216,189,132,.9)"; ctx.lineWidth=2; ctx.strokeRect(x+4,y+4,cellW-8,cellH-8);
+      }
     }
-    // THE STRAP. A live see-saw across the case's centre line — the one thing
-    // that tells you a full case is still a bad case.
+    placed.forEach(p=>{
+      const x=cx+p.gx*cellW, y=cy+p.gy*cellH;
+      ctx.fillStyle=REMEDY[p.k].color; ctx.globalAlpha=0.35+p.q*0.65;
+      ctx.fillRect(x+7,y+7,cellW-14,cellH-14);
+      ctx.globalAlpha=1;
+      ctx.strokeStyle=p.spill?"#b5322b":"rgba(0,0,0,.35)"; ctx.lineWidth=p.spill?2:1;
+      ctx.strokeRect(x+7,y+7,cellW-14,cellH-14);
+      ctx.fillStyle="#2b241c"; ctx.font='700 10px "Noto Sans",sans-serif'; ctx.textAlign="center";
+      ctx.fillText(REMEDY[p.k].name, x+cellW/2, y+cellH/2+3);
+    });
+    // THE STRAP — kept whole from the old craft; it was the good part of it
     const {l,r}=sideLoad(); const bal=balance();
-    ctx.strokeStyle="rgba(255,255,255,.30)"; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(cx+cw/2,cy-6); ctx.lineTo(cx+cw/2,cy+ch+6); ctx.stroke(); ctx.setLineDash([]);
-    const by=cy+ch+22, bw2=cw*0.5, bx2=cx+cw/2-bw2/2;
-    const tilt = (l+r)>0 ? clamp((r-l)/((l+r)*0.6),-1,1) : 0;
+    const by=cy+ch+20, bw2=cw*0.6;
+    const tilt=(l+r)>0 ? clamp((r-l)/((l+r)*0.6),-1,1) : 0;
     ctx.save(); ctx.translate(cx+cw/2,by); ctx.rotate(tilt*0.20);
     ctx.strokeStyle = bal>0.86?"#7d9a8a" : bal>0.6?"#d8b45f" : "#d5643a";
     ctx.lineWidth=4; ctx.lineCap="round";
     ctx.beginPath(); ctx.moveTo(-bw2/2,0); ctx.lineTo(bw2/2,0); ctx.stroke();
     ctx.restore();
-    ctx.fillStyle="#bd9d5f"; ctx.beginPath(); ctx.moveTo(cx+cw/2,by-7); ctx.lineTo(cx+cw/2-5,by+1); ctx.lineTo(cx+cw/2+5,by+1); ctx.fill();
-    ctx.fillStyle="rgba(216,189,132,.85)"; ctx.textAlign="center"; ctx.font='700 12px "Noto Sans",sans-serif';
-    const balTxt = !placed.length ? "nothing packed yet"
-      : bal>0.86?"hangs true" : bal>0.6?"pulls a little" : "swings badly — even it out";
-    ctx.fillText(`packed ${usedCells()}/${cols*rows} cells  ·  ${balTxt}`, W/2, cy+ch+44);
-    stashBtn=craftBtn(ctx,W,H,"Close the case", placed.length>0);
+    ctx.fillStyle="#bd9d5f"; ctx.beginPath();
+    ctx.moveTo(cx+cw/2,by-7); ctx.lineTo(cx+cw/2-5,by+1); ctx.lineTo(cx+cw/2+5,by+1); ctx.fill();
+    ctx.fillStyle="rgba(216,189,132,.88)"; ctx.textAlign="center"; ctx.font='700 11px "Noto Sans",sans-serif';
+    ctx.fillText(`${placed.length}/${capacity} wells  ·  ${!placed.length?"nothing packed yet":bal>0.86?"hangs true":bal>0.6?"pulls a little":"swings badly"}`,
+      cx+cw/2, by+18);
+  };
+
+  /* the phial, and the band painted on its glass */
+  const px=W*0.20, ptop=H*0.12, pbot=H*0.56, pw=W*0.17;
+  const drawPhial=()=>{
+    const ph=pbot-ptop;
+    ctx.fillStyle="rgba(20,14,8,.30)"; ctx.strokeStyle="#5a3f1c"; ctx.lineWidth=3;
+    ctx.beginPath(); (ctx.roundRect?ctx.roundRect(px-pw/2,ptop,pw,ph,3):ctx.rect(px-pw/2,ptop,pw,ph)); ctx.fill(); ctx.stroke();
+    if(pick){
+      const band=bandFor(), t=REMEDY[pick].dose;
+      const inBand=Math.abs(level-t)<=band;
+      // the measure first, so the band reads ON TOP of it
+      const lv=clamp(level,0,1.06), lh=lv*ph;
+      ctx.fillStyle= spilled?"#b5322b":REMEDY[pick].color;
+      ctx.globalAlpha=0.9; ctx.fillRect(px-pw/2+3, pbot-Math.min(lh,ph-3), pw-6, Math.min(lh, ph-3)); ctx.globalAlpha=1;
+      // the dose band, painted on the glass
+      const y0=pbot-(t+band)*ph, y1=pbot-(t-band)*ph;
+      ctx.fillStyle= inBand?"rgba(125,154,138,.42)":"rgba(243,236,216,.16)";
+      ctx.fillRect(px-pw/2+3, y0, pw-6, y1-y0);
+      ctx.strokeStyle= inBand?"#9fd3b4":"rgba(216,189,132,.95)"; ctx.lineWidth=inBand?3:2;
+      ctx.strokeRect(px-pw/2+3, y0, pw-6, y1-y0);
+      // the target line, and the lip you must not pass
+      ctx.strokeStyle="#f3ecd8"; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(px-pw/2-6,pbot-t*ph); ctx.lineTo(px+pw/2+6,pbot-t*ph); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle="rgba(181,50,43,.8)"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(px-pw/2-4,ptop+3); ctx.lineTo(px+pw/2+4,ptop+3); ctx.stroke();
+      // and the reading, in words, because a bar is not a number
+      ctx.fillStyle= inBand?"#9fd3b4":"rgba(243,236,216,.85)";
+      ctx.textAlign="center"; ctx.font='700 12px "Noto Sans",sans-serif';
+      ctx.fillText(spilled?"over the lip":inBand?"in the band":`${Math.round(level*100)}%`, px, ptop-6);
+      if(spilled){
+        ctx.fillStyle="rgba(181,50,43,.55)";
+        ctx.beginPath(); ctx.ellipse(px, pbot+10, pw*0.9, 7, 0, 0, 6.28); ctx.fill();
+      }
+    }
+    ctx.fillStyle="rgba(216,189,132,.8)"; ctx.textAlign="center"; ctx.font='600 10px "Noto Sans",sans-serif';
+    ctx.fillText(pick?REMEDY[pick].name:"the phial", px, pbot+26);
+  };
+
+  const draw=()=>{
+    if(gen!==craftGen) return;
+    craftBg(ctx,W,H);
+    heatTick(working); grade(); drawHeat(ctx,W,H,H*0.055);
+    drawCase(); drawPhial();
+    stepSparks(sp); drawSparks(ctx,sp);
+
+    if(phase==="choose"){
+      drawerBtns=[];
+      const bw=W*0.30, bh=26, bx=px-bw/2, by0=H*0.64;
+      KEYS.forEach((k,i)=>{
+        const by=by0+i*(bh+5);
+        const spent=counts[k]>=2;
+        ctx.fillStyle= spent?"rgba(90,63,28,.35)":"rgba(43,36,28,.72)";
+        ctx.beginPath(); (ctx.roundRect?ctx.roundRect(bx,by,bw,bh,3):ctx.rect(bx,by,bw,bh)); ctx.fill();
+        ctx.fillStyle=REMEDY[k].color; ctx.fillRect(bx+5,by+6,10,bh-12);
+        ctx.fillStyle= spent?"rgba(243,236,216,.4)":"#f3ecd8";
+        ctx.font='700 11px "Noto Sans",sans-serif'; ctx.textAlign="left"; ctx.textBaseline="middle";
+        ctx.fillText(`${REMEDY[k].name} — ${REMEDY[k].note}`, bx+22, by+bh/2);
+        ctx.textBaseline="alphabetic";
+        drawerBtns.push({k,x:bx,y:by,w:bw,h:bh,spent});
+      });
+      craftLabel(ctx,W,H,"Take a remedy from the drawer",
+        `dose band ±${Math.round(bandFor()*100)}%  ·  it narrows with every remedy you draw`);
+      closeBtn = placed.length ? craftBtn(ctx,W,H,"Close the case", true) : null;
+    } else if(phase==="pour"){
+      craftLabel(ctx,W,H,`Pour the ${REMEDY[pick].name.toLowerCase()} — hold, and let go inside the band`,
+        spilled ? "it went over the lip — that one is spoiled, and it drags the whole case down"
+                : "the measure does not stop for you");
+    } else if(phase==="seat"){
+      craftLabel(ctx,W,H,"Seat it in a well",
+        "where it sits decides how the case hangs on the strap");
+    } else if(phase==="decide"){
+      const worst=doses.length?Math.min(...doses):0;
+      craftLabel(ctx,W,H,
+        `${placed.length} of ${capacity} wells filled — close the case, or reach again?`,
+        `banking now ≈ ${Math.round(rubBuildScore()*100)}%  ·  worst pour so far ${Math.round(worst*100)}%  ·  the next band is ±${Math.round(Math.max(0.055,0.155-(takes)*0.022)*100)}%`);
+      choice = craftChoice(ctx,W,H,"Close the case",
+        placed.length>=capacity?"the case is full":"Reach again", placed.length>=capacity);
+    }
     craftAnim=craftFrame(gen,draw);
   };
   draw();
+
+  /* the measure climbs on its own, and it climbs faster the deeper the dose —
+     a tonic really does fight you, which is why it is worth more */
+  const pourStep=()=>{
+    if(gen!==craftGen || !pouring || phase!=="pour") return;
+    const speed = 0.34 + REMEDY[pick].dose*0.30;
+    level += speed/60;
+    if(level>=1.06 && !spilled){
+      spilled=true; pouring=false; working=false;
+      Audio2.sfx.bad&&Audio2.sfx.bad(); FX.buzz(28); FX.shake(6,200);
+      settle(0);
+      return;
+    }
+    craftPourRaf=requestAnimationFrame(pourStep);
+  };
+  let craftPourRaf=0;
+
+  const settle=(q)=>{
+    doses.push(q);
+    held={k:pick, q, spill:spilled};
+    phase="seat";
+    if(!spilled){ (q>0.85?Audio2.sfx.great:Audio2.sfx.good)&&(q>0.85?Audio2.sfx.great():Audio2.sfx.good());
+      FX.buzz(q>0.85?24:14); craftHit(sp,px,pbot-level*(pbot-ptop),REMEDY[pick].color); }
+  };
+
+  const release=()=>{
+    if(!pouring || phase!=="pour") return;
+    pouring=false; working=false;
+    cancelAnimationFrame(craftPourRaf);
+    const t=REMEDY[pick].dose, band=bandFor();
+    const err=Math.abs(level-t);
+    // inside the band is full strength; outside it falls off over twice the band
+    const q = err<=band ? 1 : clamp(1-(err-band)/(band*2.2), 0, 1);
+    settle(q);
+  };
+
   const finish=()=>{
     if(done) return; done=true;
     grade();
     const q=rubBuildScore();
     craftAddTrait("recover", clamp(Math.round(counts.bandage*0.5+counts.tonic*1.1+counts.salve*0.3),0,5));
     craftAddTrait("protect", Math.round(counts.splint*0.7));
-    craftAddTrait("speed", -Math.round(usedCells()/8));
-    // WHAT you packed decides how Mend actually behaves on the road: a case of
-    // bandages is many small recoveries, a case of tonics is few and strong
-    craftSetMeta({packed:Object.assign({},counts), cells:usedCells(),
-                  balance:Math.round(balance()*100), heatCracked:craftHeat.cracked});
+    craftAddTrait("speed", -Math.round(placed.length/3));
+    craftSetMeta({packed:Object.assign({},counts), cells:placed.length,
+                  balance:Math.round(balance()*100),
+                  worstDose:Math.round((doses.length?Math.min(...doses):0)*100),
+                  spills:placed.filter(p=>p.spill).length,
+                  heatCracked:craftHeat.cracked});
     craftHit(sp,cx+cw/2,cy+ch/2,"#bd9d5f");
     finishBuild(q);
   };
+
+  const wellAt=(x,y)=>{
+    if(x<cx||x>cx+cw||y<cy||y>cy+ch) return null;
+    const gx=clamp(Math.floor((x-cx)/cellW),0,cols-1), gy=clamp(Math.floor((y-cy)/cellH),0,rows-1);
+    return occ[gx][gy] ? null : {gx,gy};
+  };
+
   bindPointer(cv,{
     down:(x,y)=>{
-      if(stashBtn && stashBtn.hit(x,y)){ finish(); return; }
-      const t=trayItems.find(t=>Math.hypot(t.x-x,t.y-y)<18);
-      if(t){ held={k:t.k, gx:0, gy:0}; working=true; Audio2.sfx.tick&&Audio2.sfx.tick(); return; }
-      if(held && x>cx&&x<cx+cw&&y>cy&&y<cy+ch){
-        const gx=Math.floor((x-cx)/cellW), gy=Math.floor((y-cy)/cellH);
-        if(canPlace(held.k,gx,gy)){ place(held.k,gx,gy); craftHit(sp,x,y,PIECES[held.k].color); held=null; working=false; }
-        else { Audio2.sfx.snap&&Audio2.sfx.snap(); FX.buzz(10); }
+      if(phase==="choose"){
+        if(closeBtn && closeBtn.hit(x,y)){ finish(); return; }
+        const b=drawerBtns.find(b=>!b.spent && x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h);
+        if(b){ pick=b.k; level=0; spilled=false; phase="pour";
+               Audio2.sfx.paper&&Audio2.sfx.paper(); }
+        return;
+      }
+      if(phase==="pour"){
+        if(spilled) return;
+        pouring=true; working=true;
+        Audio2.sfx.pour ? Audio2.sfx.pour() : (Audio2.sfx.grind&&Audio2.sfx.grind());
+        cancelAnimationFrame(craftPourRaf); craftPourRaf=requestAnimationFrame(pourStep);
+        return;
+      }
+      if(phase==="seat"){
+        const w=wellAt(x,y); if(!w) return;
+        occ[w.gx][w.gy]=true;
+        placed.push({k:held.k, gx:w.gx, gy:w.gy, q:held.q, spill:held.spill});
+        counts[held.k]++; takes++;
+        craftHit(sp,x,y,REMEDY[held.k].color);
+        held=null; pick=null; level=0; spilled=false;
+        phase = placed.length>=capacity ? "decide" : "decide";
+        return;
+      }
+      if(phase==="decide"){
+        if(!choice) return;
+        if(choice.left.hit(x,y)){ finish(); return; }
+        if(choice.right.hit(x,y) && !choice.right.disabled){ phase="choose"; Audio2.sfx.tick&&Audio2.sfx.tick(); }
+        return;
       }
     },
-    move:(x,y)=>{ if(held && x>cx&&x<cx+cw&&y>cy&&y<cy+ch){
-      held.gx=Math.floor((x-cx)/cellW); held.gy=Math.floor((y-cy)/cellH); } },
-    up:()=>{}
+    move:(x,y)=>{
+      if(phase==="seat"){ const w=wellAt(x,y); wellHint = w ? w.gx*rows+w.gy : -1; }
+    },
+    up:()=>{ if(phase==="pour") release(); }
   });
 }
+
 
 /* ROPE — The Braid Rhythm (timing). The player picks a tempo — faster
    finishes stronger but is harder to hold — then braids on the beat,

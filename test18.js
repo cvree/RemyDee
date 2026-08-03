@@ -323,7 +323,9 @@ function forceRub(P, val) {
     await sleep(60);
     const live = P._craftRub();
     assert(live !== stale, 'a new craft installs its own rubric');
-    assert(live.defs.some(d => d.k === 'capacity'), 'the live rubric is the new craft\'s, not the retired one\'s');
+    // 'doses' is the case craft's own row — the blade has no such thing, so its
+    // presence proves the live rubric belongs to the craft that is on the bench
+    assert(live.defs.some(d => d.k === 'doses'), 'the live rubric is the new craft\'s, not the retired one\'s');
 
     await sleep(80);
     assert(P._craftRub() === live, 'the retired bench did not swap the rubric back');

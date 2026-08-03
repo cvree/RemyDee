@@ -183,30 +183,55 @@ function setupCanvas(window, P, type) {
     assert(cur.buildQ >= 0 && cur.buildQ <= 1, 'smoke: final quality is a valid 0..1 score');
   }
 
-  /* ================= FIELD KIT — The Packed Case ================= */
+  /* ================= FIELD KIT — The Apothecary's Case ================= */
   {
+    /* The case stopped being inventory Tetris. Each remedy is POURED — press and
+       hold while the measure climbs, release inside the dose band — then SEATED
+       in a well, and after each one the player chooses to close the case or reach
+       again into a drawer whose bands get narrower. This drives that whole loop
+       and checks the contract the road reads afterwards. */
     const cv = setupCanvas(window, P, 'pack');
-    const ccx = W2 * 0.14, ccy = H2 * 0.12, cellW = (W2 * 0.72) / 6, cellH = (H2 * 0.40) / 4;
-    const trayY = H2 * 0.72, cw = W2 * 0.72;   // the tray sits below the case AND the strap balance gauge
-    const tray = { bandage: ccx + 0 * (cw / 4) + cw / 8, splint: ccx + 2 * (cw / 4) + cw / 8, tonic: ccx + 3 * (cw / 4) + cw / 8 };
-    const placeAt = (trayX, gx, gy) => {
-      ptr(window, cv, 'pointerdown', tray[trayX], trayY);
-      const px = ccx + gx * cellW + 10, py = ccy + gy * cellH + 10;
-      ptr(window, cv, 'pointerdown', px, py);
+    const drawerX = W2 * 0.20, dbw = W2 * 0.30, dbx = drawerX - dbw / 2, dby0 = H2 * 0.64, dbh = 26;
+    const KEYS = ['bandage', 'salve', 'splint', 'tonic'];
+    const drawerY = (k) => dby0 + KEYS.indexOf(k) * (dbh + 5) + dbh / 2;
+    const ccx = W2 * 0.46, ccy = H2 * 0.10, ccw = W2 * 0.44, cch = H2 * 0.40;
+    const wellX = (gx) => ccx + gx * (ccw / 3) + (ccw / 6);
+    const wellY = (gy) => ccy + gy * (cch / 2) + (cch / 4);
+    // craftChoice geometry: two buttons either side of centre at 0.66 of the height
+    const chW = W2 * 0.34, chY = H2 * 0.66 + 18;
+    const closeX = W2 * 0.5 - chW - 8 + chW / 2, againX = W2 * 0.5 + 8 + chW / 2;
+
+    const takeOne = async (k, gx, gy, holdMs) => {
+      ptr(window, cv, 'pointerdown', drawerX, drawerY(k));          // open the drawer
+      ptr(window, cv, 'pointerdown', W2 * 0.20, H2 * 0.30);          // begin pouring
+      await sleep(holdMs);
+      ptr(window, cv, 'pointerup', W2 * 0.20, H2 * 0.30);            // release the measure
+      ptr(window, cv, 'pointerdown', wellX(gx), wellY(gy));          // seat it
     };
-    placeAt('bandage', 0, 0);
-    placeAt('splint', 2, 0);
-    placeAt('tonic', 0, 1);
-    // close the case
-    ptr(window, cv, 'pointerdown', W2 / 2, H2 - 46 + 17);
+
+    // the decide buttons are laid out by the render loop, so let a frame land
+    // between seating a remedy and pressing the choice it raises
+    const settleFrame = () => sleep(80);
+    await takeOne('bandage', 0, 0, 420); await settleFrame();
+    ptr(window, cv, 'pointerdown', againX, chY);                     // reach again
+    await takeOne('splint', 2, 0, 620); await settleFrame();
+    ptr(window, cv, 'pointerdown', againX, chY);
+    await takeOne('tonic', 0, 1, 900); await settleFrame();
+    ptr(window, cv, 'pointerdown', closeX, chY);                     // close the case
+
     const cur = P._dbg().cur;
     assert(cur.craftMeta && cur.craftMeta.packed, 'kit: packed composition recorded');
     assert(cur.craftMeta.packed.bandage === 1 && cur.craftMeta.packed.splint === 1 && cur.craftMeta.packed.tonic === 1,
-      `kit: exactly what was placed is exactly what is recorded (got ${JSON.stringify(cur.craftMeta.packed)})`);
-    assert(cur.craftMeta.cells === 9, 'kit: cell footprint matches the actual shapes placed (2 + 3 + 4)');
+      `kit: exactly what was poured is exactly what is recorded (got ${JSON.stringify(cur.craftMeta.packed)})`);
+    assert(cur.craftMeta.cells === 3, `kit: one well per remedy, three remedies (got ${cur.craftMeta.cells})`);
     assert((cur.traits.recover || 0) > 0 && (cur.traits.protect || 0) > 0, 'kit: the mix chosen determines real recover/protect traits');
     assert(typeof cur.craftMeta.balance === 'number', 'kit: how evenly the case hangs is recorded');
+    assert(typeof cur.craftMeta.worstDose === 'number',
+      `kit: the sloppiest pour is recorded, because it is what drags the case down (got ${cur.craftMeta.worstDose})`);
     assert(cur.rubric.rows.some(r => r.k === 'balance'), 'kit: carry balance is a graded row, not just flavour');
+    assert(cur.rubric.rows.some(r => r.k === 'doses'),
+      'kit: how truly each remedy was measured is a graded row — the case can now be built badly');
+    assert(cur.buildQ >= 0 && cur.buildQ <= 1, 'kit: final quality is a valid 0..1 score');
   }
 
   /* ================= ROPE — The Braid Rhythm ================= */
