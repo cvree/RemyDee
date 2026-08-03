@@ -112,32 +112,41 @@ The second pass, in `main` now:
 
 ### What is left — verified, not speculation
 
-**Art (from the art audit; P1/P2 not done).**
-- Everything is a rounded web card: `--r-md:12px`, `--r-lg:22px`, `.panel`,
-  `.modal-card`. Proposal: radius 12→3, carved-stone option buttons that press
-  *in*, lacquer buttons (kill the `0 5px 0` Material shadow).
-- `screenIn` animates `scale(.995)` — imperceptible.
-- Silhouettes are crude: `portraitSVG` is a square `<rect>` in a round mask,
-  `walkerSVG` limbs are literal `<rect>`s, `radixSVG` is a Western cartoon fox
-  in a Ming ink game.
-- The difficulty screen leaves the bottom half of the frame empty.
+**Art.** The material language, the screen entrance, the sprites, the dead
+frame space, the mist edges, the impact wiring and the audio limiter are all
+done (see `git log`). Still open, from the same audit:
+- Settings still ships iOS pill toggles and a native range input with Chrome's
+  default accent; the Hall of Records still opens on five KPI stat tiles over a
+  card grid under tab pills. Those two screens are the most generic in the game.
+- The chest is still a mobile-game loot box; it wants to be a lacquered document
+  case with a wax seal that cracks.
+- `FX.clickSpark` is bound globally on window pointerdown, so ink motes fire on
+  every click anywhere — including scrolling the Lexicon and dragging a tray
+  tile. Gate it to `[data-spark]`.
+- Emoji still punch holes in a five-colour ink palette (🔊 on the pronounce
+  button, 🐢 for relaxed timing, ⚡ on Surge). `WEAPON_GLYPH` proves the project
+  can draw its own icons.
 - No `writing-mode` anywhere — no vertical seal text.
+- `sfx.pour` and `sfx.bow` are defined with zero call sites; `page()` still
+  serves seven distinct meanings across twelve call sites.
 
-**Performance (P2 — nothing is slow enough to hurt yet).**
-- Cache the per-frame `document.querySelector` calls in `updatePrepBars`,
-  `updateMomentumMeter`, `updatePaceGauge` and `rubPaint` at mission/craft start.
-- Road sky, bench felt and `drawHeat` gradients are rebuilt every frame; build
-  once per canvas resize.
+**Performance.** The road holds 59.9fps with a 16.7ms median frame, and the
+per-frame DOM queries are down from ~11 to 2.14. Still open: `rubPaint` builds
+attribute selectors in a template literal every bench frame, and the bench felt
+and `drawHeat` gradients are rebuilt per frame.
 
-**Learning design (from the learning audit; the corpus fixes are done, these
-are not).**
-- The road's rune gates still teach only with a one-line caption that scrolls
-  away — the mini-challenge got a proper lesson beat, gates did not.
+**Learning design.** The corpus fixes and the gate's contrast feedback are done.
+Still open:
 - Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
 - 24 terms and 19 parts are never introduced by a traveler — they exist only as
   quiz material.
 - `showReveal` presents the breakdown; it would teach harder if it asked "what
   do you think this means?" before showing it (the pretesting effect).
+
+**Never audited.** A bug-hunting pass on save corruption, quota-exceeded writes,
+private-mode localStorage and long-session listener growth was commissioned
+twice and died on a session limit both times. `test17` and `test28` cover the
+save paths that exist; nobody has tried to break them.
 
 ### How to work
 
