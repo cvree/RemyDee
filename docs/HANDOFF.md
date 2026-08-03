@@ -35,10 +35,10 @@ Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 9 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29; do node test$t.js | tail -1; done
 ```
 
-22 jsdom suites, **~840 assertions, all passing, zero window errors**.
+23 jsdom suites, **889 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -92,6 +92,23 @@ The second pass, in `main` now:
 9. **The Lexicon teaches.** Every part now shows its tongue, its ancestor word,
    and the terms that use it — all three were already in the data and none were
    shown.
+10. **The Vigil** (`__RD_META.openVigil`, screen `s-vigil`). A study step between
+    the bench and the armory, gated by `toArmory()` in the prep module and run
+    once per road. Eight questions drawn from *this* road — the terms the company
+    just named, its travelers' terms, then SRS arrears. Its result is written to
+    `flow.vigil` and read by five systems: `computeForgePassives` (momentum
+    floor, gain, ink value), `computeAbilities` (charges), the mission's opening
+    `stats`, `pickRoadPart` (shaky parts are weighted *above* historically weak
+    ones), and `collectPickup` (studied parts pay a bonus). `renderVigilBrief()`
+    restates the ledger on the armory screen.
+11. **The frame fills the window.** `#frame` lost its 1320x840 cap and the base
+    font-size tracks viewport height, so the road is legible on a large display.
+12. **Three verbs on the road.** `tryLunge` (click / Shift — reach, or shove a
+    hazard, on a cooldown, costs stamina) and `setFocus` (right-click / F — the
+    road drops to 0.38 speed while stamina drains). Both run from `stepHands(dt)`
+    in the tick and are exported as `__RD_MISSION._lunge/_focus` for the suite.
+    The control hint retires after three roads; the pause menu carries the full
+    key legend permanently.
 
 ### What is left — verified, not speculation
 
