@@ -738,6 +738,25 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .reveal-break{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0;}
 .reveal-def{font-size:.95rem;color:var(--ink-soft);margin-bottom:6px;}
 .reveal-plain{font-size:.88rem;color:var(--verd-deep);}
+/* THE PRETEST — a guess asked before the answer is shown. Sized so the three
+   options and the question fit the card without pushing the continue button
+   off a phone screen. */
+.reveal-pretest{margin:18px 0 4px;}
+.reveal-pretest .rp-q{font-size:.9rem;color:var(--ink-soft);margin-bottom:2px;}
+.reveal-pretest .rp-why{font-size:.74rem;color:var(--verd-deep);font-style:italic;margin-bottom:12px;}
+.reveal-pretest .rp-opts{display:flex;flex-direction:column;gap:8px;}
+.reveal-pretest .rp-opt{padding:10px 14px;border-radius:var(--r-md);background:var(--papyrus);
+  border:1px solid var(--gold-soft);font-size:.88rem;text-align:left;line-height:1.35;
+  transition:background .12s,transform .12s var(--ease);}
+.reveal-pretest .rp-opt:hover:not(:disabled){background:var(--gold-soft);transform:translateY(-1px);}
+.reveal-pretest .rp-opt.picked{border-color:var(--cinnabar);box-shadow:0 0 0 2px rgba(181,50,43,.2);}
+.reveal-guess{font-size:.82rem;margin-bottom:10px;padding:8px 12px;border-radius:var(--r-md);
+  background:rgba(69,102,84,.1);border-left:3px solid var(--verd);text-align:left;}
+.reveal-guess.miss{background:rgba(181,50,43,.09);border-left-color:var(--cinnabar);}
+/* THE FACT — why this root is worth keeping, not merely what it means */
+.reveal-fact{font-size:.84rem;color:var(--ink-soft);margin-top:12px;padding:10px 14px;text-align:left;
+  background:var(--papyrus);border-radius:var(--r-md);border-left:3px solid var(--gold);line-height:1.45;}
+.reveal-fact b{color:var(--cinnabar);}
 .reveal-note{font-size:.8rem;background:var(--papyrus-2);border-radius:8px;padding:8px 10px;margin-top:12px;color:var(--ink-soft);}
 .reveal-note .cv-em{color:var(--cinnabar);font-weight:700;}
 
@@ -1652,6 +1671,12 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 .gloss-filter .filter.on{background:var(--verd);color:var(--papyrus);}
 .gloss-sec-title{font-family:var(--font-cal);font-weight:700;color:var(--verd-deep);margin:16px 0 6px;
   font-size:.96rem;border-bottom:1px solid var(--papyrus-3);padding-bottom:4px;}
+/* The fact is the reason the entry is worth reading twice — set apart from the
+   bare gloss above it so a player scanning for a meaning can skip it, and a
+   player who stopped because they were curious has somewhere to land. */
+.gloss-fact{margin-top:5px;padding:6px 0 6px 10px;border-left:2px solid var(--gold-soft);
+  color:var(--ink-soft);line-height:1.45;}
+.gloss-fact i{color:var(--cinnabar);font-style:italic;}
 .gloss-row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;
   padding:9px 10px;border-radius:9px;background:var(--papyrus-2);margin-bottom:6px;}
 .gloss-row .small{line-height:1.35;}
@@ -2308,11 +2333,15 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
           <div class="reveal-cal" id="reveal-cal"><span id="reveal-cal-text"></span><span class="stamp" id="reveal-stamp">&#931;</span></div>
           <div class="reveal-read" id="reveal-read"></div>
           <div class="reveal-pron" id="reveal-pron"></div>
-          <div class="reveal-break" id="reveal-break"></div>
-          <div class="reveal-def" id="reveal-def"></div>
-          <div class="reveal-plain" id="reveal-plain"></div>
-          <div class="reveal-note" id="reveal-note"></div>
-          <div class="mt"><button class="btn" id="reveal-continue">Next &rarr;</button></div>
+          <div class="reveal-pretest" id="reveal-pretest" hidden></div>
+          <div class="reveal-body" id="reveal-body">
+            <div class="reveal-break" id="reveal-break"></div>
+            <div class="reveal-def" id="reveal-def"></div>
+            <div class="reveal-plain" id="reveal-plain"></div>
+            <div class="reveal-fact" id="reveal-fact"></div>
+            <div class="reveal-note" id="reveal-note"></div>
+            <div class="mt"><button class="btn" id="reveal-continue">Next &rarr;</button></div>
+          </div>
         </div>
       </div>
     </section>
@@ -2708,6 +2737,12 @@ const PARTS = {
   "poly":   {kind:"prefix", text:"poly-", mean:"many, much", pron:"POL-ee"},
   "hemi":   {kind:"prefix", text:"hemi-", mean:"half", pron:"HEM-ee"},
   "peri":   {kind:"prefix", text:"peri-", mean:"around, surrounding", pron:"PER-ee"},
+  /* para- arrives to give -plegia a second term. hemiplegia was the only tier-3
+     term in the corpus with no sibling — nothing else used hemi- or -plegia — so
+     the one mode built around recalling a term from a clinical clue had no near
+     miss to be tested against. Paraplegia against hemiplegia is the sharpest
+     pair in the nervous-system vocabulary: one side, or the lower half. */
+  "para":   {kind:"prefix", text:"para-", mean:"beside, alongside; near", pron:"PAR-ah"},
   "endo":   {kind:"prefix", text:"endo-", mean:"within, inside", pron:"EN-doh", sense:"within"},
   /* -- new roots -- */
   "ot":       {kind:"root", text:"ot/o", stem:"ot", cv:"o", mean:"ear", pron:"OH-toh"},
@@ -2922,6 +2957,9 @@ const TERMS = {
   "hemiplegia": {build:["hemi","plegia"], spell:"hemiplegia", system:"Nervous",
     def:"paralysis of one side of the body", plain:"one side of the body cannot move",
     note:"hemi- (half) + -plegia (paralysis) = hemiplegia. No combining vowel is needed between a prefix and a suffix. In the body, &lsquo;half&rsquo; means one <b>side</b> &mdash; the split runs down the midline, not across the waist."},
+  "paraplegia": {build:["para","plegia"], spell:"paraplegia", system:"Nervous",
+    def:"paralysis of the lower half of the body, including both legs", plain:"loss of movement in both legs and the lower body",
+    note:"para- (beside, alongside) + -plegia (paralysis). Neither part offers a combining vowel, so nothing is dropped: para + plegia = paraplegia. Hold it against hemiplegia — hemi- is half by a line down the middle, one side; para- here is the half below."},
   "osteoarthritis": {build:["oste","arthr","itis"], spell:"osteoarthritis", system:"Musculoskeletal",
     def:"degenerative joint disease that wears away cartilage and the bone beneath it",
     plain:"wear-and-tear joint disease, not primarily an inflamed joint",
@@ -3061,7 +3099,7 @@ const TERM_PRON = {
   hepatomegaly:"hep-ah-toh-MEG-ah-lee", gastrectomy:"gas-TREK-toh-mee",
   nephrectomy:"neh-FREK-toh-mee", ophthalmology:"off-thal-MOL-oh-jee",
   neuropathy:"noo-ROP-ah-thee", encephalitis:"en-sef-ah-LY-tis",
-  hemiplegia:"hem-ee-PLEE-jah", osteoarthritis:"oss-tee-oh-ar-THRY-tis",
+  hemiplegia:"hem-ee-PLEE-jah", paraplegia:"par-ah-PLEE-jah", osteoarthritis:"oss-tee-oh-ar-THRY-tis",
   arthroscopy:"ar-THROS-koh-pee",
   phlebotomy:"fleh-BOT-oh-mee", phlebitis:"fleh-BY-tis", phlebectasis:"fleh-BEK-tah-sis",
   venipuncture:"VEN-ih-punk-cher", venous:"VEE-nus", intravenous:"in-trah-VEE-nus",
@@ -3632,6 +3670,7 @@ const ORIGINS = {
   poly: {lang:"Gk", src:"polys — many"},
   hemi: {lang:"Gk", src:"hemi- — half"},
   peri: {lang:"Gk", src:"peri — around"},
+  para: {lang:"Gk", src:"para — beside, alongside"},
   endo: {lang:"Gk", src:"endon — within"},
   intra:{lang:"L",  src:"intra — within"},
   anti: {lang:"Gk", src:"anti — against"},
@@ -3836,6 +3875,108 @@ const FIGURES = {
     truth:"He refused to patent it, believing it belonged to everyone, and donated his Nobel prize money.",
     parts:["gram","oste"], termHint:"-gram, a thing written: the radiogram writes bone onto a plate" }
 };
+
+/* ==================================================================
+   ROOT FACTS — the reason a part is worth remembering.
+   ORIGINS says where a part came from; this says why that is worth
+   knowing. Every line is a verified etymological or historical fact,
+   and every line is chosen for the same property: it gives the meaning
+   somewhere to live. "neuron meant bowstring" is not trivia — it is
+   why the word for nerve is the word for sinew, and a player who knows
+   that will not lose neur/o again.
+   Kept deliberately short. A fact you scroll is a fact you skip.
+   ================================================================== */
+const PART_FACTS = {
+  /* -- prefixes -- */
+  brady: "<i>bradys</i>, slow &mdash; and it kept the meaning intact into modern Greek. Bradycardia is not a diagnosis on its own: trained endurance athletes run resting hearts in the forties and are perfectly well.",
+  tachy: "Greek <i>tachys</i>, swift — the same root as tachometer. A resting heart over 100 beats a minute is a tachycardia; under 60, a bradycardia.",
+  hyper: "<i>hyper</i> and <i>hypo</i> are one letter apart and opposite emergencies: hyperglycaemia and hypoglycaemia need opposite treatments. No pair in this vocabulary punishes carelessness harder.",
+  hypo:  "Its Latin twin is <i>sub-</i>. A hypodermic needle and a subcutaneous injection go to exactly the same place — one names it in Greek, the other in Latin.",
+  dys:   "<i>dys-</i> is bad or hard; its Greek opposite is <i>eu-</i>, good. That is why dysphoria and euphoria mirror each other so neatly, and why dyspnoea is difficult breathing rather than absent breathing.",
+  a:     "The alpha privative — the same 'a' in atypical, amoral and anonymous. Before a vowel it grows an n: <i>a</i>pnoea, but <i>an</i>aemia.",
+  poly:  "<i>polys</i>, many. A polyglot has many tongues, a polygon many corners, and polyuria is simply much urine.",
+  hemi:  "Greek <i>hemi-</i> and Latin <i>semi-</i> mean the same half, and a word almost never mixes them: hemisphere is Greek throughout, semicircle Latin throughout.",
+  para:  "<i>para</i>, beside. A paramedic works beside the physician and the parathyroid glands sit beside the thyroid &mdash; and paraplegia is the paralysis that takes the part beside, the lower half, where hemiplegia takes one side.",
+  peri:  "<i>peri</i>, around — a perimeter is the measure around. The pericardium is the sac around the heart, and the periosteum the skin around a bone.",
+  endo:  "<i>endon</i>, within, is the Greek twin of Latin <i>intra-</i>. They mean the same thing, which is why this game refuses to mark one wrong when the other was asked for.",
+  intra: "Latin <i>intra</i>, within. Intravenous means inside the vein — as opposed to intramuscular, inside the muscle, which is a different needle and a different depth.",
+  anti:  "<i>anti</i>, against. Its Latin twin is <i>contra-</i>: an antidote is Greek (given against) and a contraceptive Latin (against conception), and English kept both.",
+  sub:   "Latin <i>sub</i>, under — twin to Greek <i>hypo-</i>. Sublingual is under the tongue, which is why some tablets dissolve there: the veins beneath it reach the bloodstream fast.",
+  /* -- roots -- */
+  cardi:   "<i>kardia</i>. Greek and Roman writers put courage and memory in the heart rather than the head — which is why English still says a thing learned <i>by heart</i>.",
+  gastr:   "<i>gaster</i>, belly. A gastropod is a belly-foot: a snail, which walks on its stomach.",
+  arthr:   "<i>arthron</i>, a joint — the same root as arthropod, jointed-foot, the phylum that holds every insect, spider and crab.",
+  dermat:  "<i>derma, dermatos</i>, skin. A pachyderm is a thick-skin; taxidermy is arranging the skin.",
+  nephr:   "<i>nephros</i>, and its Latin twin is <i>ren</i>. English kept both, which is why the same organ gives us nephritis and renal failure.",
+  ren:     "Latin <i>ren</i>. The adrenal gland is <i>ad-renal</i>: it is named for sitting on top of the kidney, not for anything it does.",
+  hemat:   "<i>haima, haimatos</i>, blood. The mineral haematite is named from it — ground to powder, the stone bleeds red.",
+  hem:     "The short form of the same <i>haima</i>. Haemoglobin is blood (<i>haima</i>) plus Latin <i>globus</i>, a ball: the blood's little globe of protein.",
+  neur:    "<i>neuron</i> meant sinew or bowstring for centuries before it meant nerve. Greek anatomists could not reliably tell a tendon from a nerve, and the word carries the confusion.",
+  my:      "<i>mys</i> meant both muscle and mouse — a flexed bicep was thought to look like a mouse moving under the skin. Latin translated it literally: <i>musculus</i>, little mouse.",
+  hepat:   "<i>hepar, hepatos</i>. Greek and Etruscan diviners read the liver, not the heart, to tell the future — they took it for the seat of life.",
+  glyc:    "<i>glykys</i>, sweet — the same root as glucose and glycerine. For centuries diabetes was diagnosed by tasting the urine, which is exactly what <i>mellitus</i> (honeyed) records.",
+  electr:  "<i>elektron</i> is Greek for amber. Rub amber and it draws light things to it; that observation is the entire reason electricity has the name it has.",
+  ot:      "<i>ous, otos</i>, ear — twin to Latin <i>auris</i>. Otitis and auricle name the same organ in two tongues.",
+  aur:     "Latin <i>auris</i>, ear — twin to Greek <i>ot/o</i>. 'Aural' is about hearing; 'oral' is about the mouth, and they are not related.",
+  ophthalm:"<i>ophthalmos</i>, eye. The ophthalmoscope — a mirror that let a physician see inside a living eye for the first time — was built by Helmholtz in 1851.",
+  rhin:    "<i>rhis, rhinos</i>, nose &mdash; twin to Latin <i>nas/o</i>. A rhinoceros is a nose-horn, and rhinoplasty is moulding the nose back into shape.",
+  nas:     "Latin <i>nasus</i>, nose — twin to Greek <i>rhin/o</i>. A nasogastric tube goes nose-to-stomach, and its name says the whole route.",
+  oste:    "<i>osteon</i>, bone. Osteoporosis is bone + <i>poros</i>, a passage — bone gone porous.",
+  enter:   "<i>enteron</i>, intestine. The gut carries its own nerve network, the enteric nervous system, which keeps the bowel moving even when it is cut off from the brain.",
+  cyst:    "<i>kystis</i>, a pouch or bladder. A cyst anywhere in the body is named for being a pouch, never for where it sits.",
+  encephal:"<i>en-kephalos</i>: literally 'in the head'. The Greeks named the brain by its address.",
+  bronch:  "<i>bronchos</i>, windpipe. The bronchi branch roughly twenty-three times over before they reach the air sacs.",
+  phleb:   "<i>phleps, phlebos</i>, vein — twin to Latin <i>vena</i>. A phlebotomy and a venesection are the same cut, named twice.",
+  ven:     "Latin <i>vena</i>. Venipuncture is Latin end to end; phlebotomy is Greek end to end; both mean going into a vein.",
+  arteri:  "<i>arteria</i> first meant windpipe. Arteries drain into the veins after death, so Greek anatomists dissecting corpses found them empty and concluded they carried air.",
+  angi:    "<i>angeion</i>, a vessel or container — the same word inside angiogram and angioplasty.",
+  erythr:  "<i>erythros</i>, red. A mature red cell has thrown out its own nucleus to make room for more haemoglobin, which is why it cannot repair itself.",
+  leuk:    "<i>leukos</i>, white. Virchow named leukaemia in the 1840s for exactly what he saw: blood so full of white cells it looked pale.",
+  thromb:  "<i>thrombos</i>, a lump. A thrombosis is the clot where it formed; an embolism is that clot after it has travelled.",
+  coagul:  "Latin <i>coagulare</i>, to curdle — the same word as the rennet that curdles milk. Clotting and cheese-making are one verb.",
+  cutane:  "Latin <i>cutis</i>, skin — twin to Greek <i>derma</i>. Subcutaneous and hypodermic name the same layer beneath it.",
+  lymph:   "Latin <i>lympha</i>, clear water. It was named for what it looked like, long before anyone worked out what it was for.",
+  pulmon:  "Latin <i>pulmo</i>, lung — twin to Greek <i>pneumon</i>. Pulmonary and pneumonia are the same organ in two languages.",
+  pneumon: "<i>pneumon</i>, lung, from <i>pneuma</i>, breath — the same <i>pneuma</i> as pneumatic. Air and lung are one idea in Greek.",
+  /* -- suffixes -- */
+  itis:    "<i>-itis</i> began as a Greek adjective ending agreeing with a noun that has since dropped away: <i>nosos</i>, disease. Arthritis is short for 'the arthritic disease'.",
+  algia:   "<i>algos</i>, pain. Nostalgia is <i>nostos</i> (a homecoming) plus this suffix, and it was coined in 1688 as a genuine medical diagnosis: the pain of wanting to go home.",
+  logy:    "<i>logos</i> — word, reason, an account of a thing. <i>-logy</i> is the study; <i>-logist</i> is the person doing it.",
+  logist:  "The same <i>logos</i> as <i>-logy</i>, with the Greek agent ending. Cardiology is the field; a cardiologist is who you are sent to.",
+  emia:    "The worn-down form of <i>haima</i>, blood. Anaemia is 'no blood', which was a fair description of the patient long before anyone could count a cell.",
+  pnea:    "<i>pnein</i>, to breathe. Apnoea, dyspnoea and tachypnoea are one verb with three different prefixes on the front.",
+  gram:    "<i>graphein</i>, to scratch or write. The <i>-gram</i> is the record produced, the <i>-graph</i> is the machine that produces it, and <i>-graphy</i> is the doing of it.",
+  megaly:  "<i>megas</i>, great — the same word inside megalith and megaphone. Hepatomegaly is simply a liver that has grown too big.",
+  ectomy:  "<i>ek</i> (out) + <i>temnein</i> (to cut). Set the surgical family side by side and it stops being memorisation: <i>-tomy</i> cuts in, <i>-ectomy</i> cuts out, <i>-stomy</i> makes a mouth that stays open.",
+  tomy:    "<i>temnein</i>, to cut — the same verb behind atom, which meant 'uncuttable' until 1938 proved otherwise.",
+  stomy:   "<i>stoma</i>, a mouth. A colostomy makes a new mouth for the colon, and a stoma is what the patient calls it afterwards.",
+  scopy:   "<i>skopein</i>, to look at. Telescope, microscope, endoscope, horoscope — all the same verb, looking at different distances.",
+  plegia:  "<i>plege</i>, a blow. The plain English of the same idea is 'stroke' — both name the suddenness rather than the cause.",
+  osis:    "<i>-osis</i> marks a condition or a process, usually one that has gone wrong. It keeps its Greek plural in writing: one thrombosis, two thromboses.",
+  pathy:   "<i>pathos</i>, suffering or feeling. Sympathy is feeling-with; a neuropathy is nerve suffering; and pathology is the study of what goes wrong.",
+  rrhea:   "<i>rhein</i>, to flow — the same verb as rheumatism and rheostat. A <i>-rrhoea</i> flows; a <i>-rrhage</i> bursts.",
+  rrhage:  "The bursting cousin of <i>-rrhoea</i>. Haemorrhage is blood breaking out, and the double r is the Greek rough breathing surviving in Latin spelling.",
+  lysis:   "<i>lysis</i>, a loosening. Analysis is loosening a thing into its parts — which is precisely what you are doing to every term in this game.",
+  stasis:  "<i>histanai</i>, to stand. Haemostasis is making blood stand still; homeostasis is standing the same.",
+  poiesis: "<i>poiein</i>, to make — the same verb as poetry. Haematopoiesis is blood-making, and a poet is a maker.",
+  crit:    "<i>krinein</i>, to separate or judge — the same root as critic and crisis. A haematocrit separates blood in order to judge its proportions.",
+  cyte:    "<i>kytos</i>, a hollow vessel. Hooke looked at cork in 1665, saw rows of empty boxes and called them cells; the Greek was fitted to the idea afterwards.",
+  penia:   "<i>penia</i>, poverty. Leukopenia is a poverty of white cells, thrombocytopenia a poverty of platelets.",
+  globin:  "Latin <i>globus</i>, a ball. Haemoglobin is the blood's little globe — a protein that changes shape as it takes on oxygen and hands it back.",
+  ous:     "Latin <i>-osus</i>, full of. It is one of four endings in this Lexicon that all mean 'pertaining to', and which word takes which is history rather than logic.",
+  al:      "Four endings do one job — <i>-al</i>, <i>-ic</i>, <i>-ary</i>, <i>-ous</i> all mean 'pertaining to'. Renal, gastric, pulmonary, venous: no rule picks between them, only usage.",
+  ic:      "Greek <i>-ikos</i>, in the manner of. Gastric, hepatic, thoracic — the ending carries no meaning of its own beyond 'of that thing'.",
+  ary:     "Latin <i>-arius</i>. Pulmonary, coronary, urinary: another way of saying 'pertaining to', chosen by custom rather than rule.",
+  centesis:"<i>kentesis</i>, a pricking. Amniocentesis pricks the amniotic sac; thoracentesis pricks the chest to draw fluid off.",
+  puncture:"Latin <i>pungere</i>, to prick — the same verb as pungent (it pricks the nose) and punctual (pricked to a point in time).",
+  oma:     "<i>-oma</i> marks a swelling or a mass, and not every one is a tumour: a haematoma is a mass of blood, and a bruise is the plain word for it.",
+  ectasis: "<i>ektasis</i>, a stretching out. Bronchiectasis is airways stretched permanently wide, so they no longer clear themselves.",
+  uria:    "<i>ouron</i>, urine. One root takes the whole family: polyuria (much), haematuria (bloody), dysuria (painful), anuria (none at all).",
+  plasty:  "<i>plassein</i>, to mould — the same verb as plastic, which means mouldable before it means a material. An angioplasty moulds a vessel back open.",
+  ia:      "<i>-ia</i> turns a thing into a state of being. It is the same ending in insomnia, and in the names of half the countries on the map.",
+  ant:     "Latin <i>-ans, -antis</i>, the present participle: a thing doing something right now. An anticoagulant is a substance actively working against clotting."
+};
+
 const FIGURE_ORDER = ["hippocrates","galen","alrazi","ibnsina","ibnalnafis","vesalius","pare",
   "harvey","leeuwenhoek","jenner","semmelweis","nightingale","pasteur","lister","virchow","rontgen"];
 /* chronological rank, for the "who came first" gate */
@@ -3899,7 +4040,7 @@ window.__RD_DATA = { PARTS, DIRECTIONS, TERMS, TERM_PRON, ROLES, TRAVELERS, SUPP
   PARTY_LADDER, ESCORT_LADDER, BENCH_LADDER, ladderAt,
   BP_UNLOCK, BP_STARTING, blueprintsEarnedBy,
   AFFINITY_LEVELS, affinityLevel, affinityNext,
-  ORIGINS, LANG_NAME, TWIN_ROOTS, FIGURES, FIGURE_ORDER, FIGURE_RANK,
+  ORIGINS, LANG_NAME, TWIN_ROOTS, PART_FACTS, FIGURES, FIGURE_ORDER, FIGURE_RANK,
   MARK_PATHS, mark,
   $, $$, el, clamp, shuffle, pick, toast };
 })();
@@ -6689,6 +6830,10 @@ function weaponName(w){ return {xiphos:"Xiphos",kopis:"Kopis",bow:"Bow",spear:"S
 
 /* ================= TERM BUILDER (sequential per traveler) ================= */
 let builderState=null, bAttempts=0, bSupportUsed=0, bViewedDef=false;
+/* bViewedDef also counts the Pronounce button, which is a hint but not a
+   definition. The pretest needs the narrower fact: was the player actually
+   handed the meaning before being asked to guess it? */
+let bDefShown=false;
 function distractorsFor(neededIds, count){
   if(count<=0) return [];
   const need=new Set(neededIds);
@@ -6705,7 +6850,7 @@ function distractorsFor(neededIds, count){
 function currentTraveler(){ const f=E.getFlow(); return TRAVELERS[f.builders[f.idx]]; }
 function openBuilder(){
   const f=E.getFlow(); const tid=f.builders[f.idx]; const t=TRAVELERS[tid]; const term=TERMS[t.term];
-  bAttempts=0; bSupportUsed=0; bViewedDef=false;
+  bAttempts=0; bSupportUsed=0; bViewedDef=false; bDefShown=false;
   go("s-build",{onShow:()=>{
     buildBackdrop($('#build-bg'),"workshop");
     $('#build-tier').textContent="Tier "+t.tier;
@@ -6915,6 +7060,58 @@ function onBuildSuccess(){
   const tcs=$('#tcs-'+tid); if(tcs){ tcs.textContent="named ✓"; tcs.className="tc-status ready"; }
   setTimeout(()=>showReveal(term),620);
 }
+/* ==================================================================
+   THE PRETEST.
+   showReveal used to hand over the breakdown, the definition and the
+   word-building rule all at once, which is the most comfortable and least
+   effective order there is. Being asked to commit to a guess BEFORE seeing
+   the answer improves later recall of that answer even when the guess is
+   wrong — the effect is robust enough to have its own name, and it costs
+   one tap. So the card now shows the word and nothing else, asks what the
+   player thinks it means, and only then opens.
+   It is skipped whenever the guess would be free, because a question with an
+   obvious answer is not a pretest, it is a tap between the player and the
+   card. Four gates:
+     - TIER 3 ONLY. A tier-1 builder prints "Build the word for inflammation
+       of the stomach" at the top of the screen, and a tier-2 builder says
+       "the clue points to inflammation of the stomach" under it. Asking a
+       player to guess a definition that is on screen behind the card is not
+       retrieval, it is a reading test. Tier 3 is the one mode that shows the
+       clinical clue and nothing else — "no breakdown is shown" — so it is
+       the one mode where the guess costs something to make.
+     - the player spent a Recall charge and was handed the definition anyway;
+     - they have already recorded this term, so this is a repeat;
+     - the term has no SIBLING in the corpus — no other term sharing a
+       word-part with it.
+   That last gate is what makes the question worth asking at all. A guess
+   against three unrelated terms is free; a guess between "inflammation of a
+   joint" and "pain in a joint" is not. Arthritis against arthralgia is
+   exactly the confusion this game exists to fix, and nothing on the tier-3
+   screen resolves it for a player who assembled the word by matching a
+   suffix. So at least one distractor is always a sibling, and the pretest
+   only appears where a sibling exists.
+   ================================================================== */
+function pretestSiblings(term){
+  const mine=new Set(term.build);
+  return Object.keys(TERMS).filter(id=>TERMS[id].spell!==term.spell
+    && TERMS[id].build.some(p=>mine.has(p)));
+}
+function pretestOptions(term, sibs){
+  /* At least one option is always a sibling — the near miss is the whole point.
+     Where the corpus has only one (hypoglycaemia shares a part with exactly one
+     other term), the second distractor is drawn from the same BODY SYSTEM where
+     possible, so the wrong answers stay plausible instead of turning into
+     "surgical repair of a vessel" next to a blood-sugar question. */
+  const chosen=shuffle(sibs).slice(0,2);
+  if(chosen.length<2){
+    const rest=Object.keys(TERMS).filter(id=>TERMS[id].spell!==term.spell && !chosen.includes(id));
+    const sameSystem=rest.filter(id=>TERMS[id].system===term.system);
+    const far=shuffle(sameSystem.length?sameSystem:rest);
+    while(chosen.length<2 && far.length) chosen.push(far.shift());
+  }
+  const picks=chosen.map(id=>({txt:TERMS[id].def, ok:false}));
+  return shuffle(picks.concat([{txt:term.def, ok:true}]));
+}
 function showReveal(term){
   const f=E.getFlow();
   $('#reveal-cal-text').textContent=term.spell;
@@ -6928,15 +7125,66 @@ function showReveal(term){
   $('#reveal-plain').textContent="In plain words: "+term.plain+". Body system: "+term.system+".";
   $('#reveal-note').innerHTML="<b>Word-building rule.</b> "+term.note+
     ` <span class="muted">Naming this term is a vocabulary exercise — it is not a diagnosis of any person.</span>`;
-  Audio2.speak(term.spell); Audio2.sfx.great();
+  Audio2.sfx.great();
   const rev=$('#reveal'); rev.classList.add('show');
-  const stamp=$('#reveal-stamp'); if(stamp){ stamp.classList.remove("go"); requestAnimationFrame(()=>stamp.classList.add("go")); }
-  FX.revealText($('#reveal-read'),{mode:"char",stagger:40});
+  const stamp=$('#reveal-stamp'); if(stamp){ stamp.classList.remove("hit"); requestAnimationFrame(()=>stamp.classList.add("hit")); }
   const last = f.idx>=f.builders.length-1;
   $('#reveal-continue').textContent = last ? "Prepare the company →" : "Next term →";
   $('#reveal-continue').onclick=()=>{ rev.classList.remove('show');
     if(last){ window.__RD_PREP.openPrep(); }
     else { f.idx++; openBuilder(); } };
+
+  /* THE FACT. Attached to whichever part of this term the player has met
+     least often, so the note lands on the piece still doing the work rather
+     than on the one they already own. */
+  const factEl=$('#reveal-fact');
+  if(factEl){
+    const seen=S().mastery.parts||{};
+    const weakest=term.build.slice().sort((a,b)=>((seen[a]&&seen[a].seen)||0)-((seen[b]&&seen[b].seen)||0))[0];
+    const fact=weakest && D.PART_FACTS ? D.PART_FACTS[weakest] : null;
+    if(fact){ factEl.innerHTML=`<b>${PARTS[weakest].text}</b> &mdash; ${fact}`; factEl.hidden=false; }
+    else factEl.hidden=true;
+  }
+
+  const pre=$('#reveal-pretest'), body=$('#reveal-body');
+  const oldGuess=$('.reveal-guess',$('.reveal-card')); if(oldGuess) oldGuess.remove();
+  const termId=Object.keys(TERMS).find(k=>TERMS[k].spell===term.spell);
+  const trav=currentTraveler();
+  const repeat=(S().mastery.terms[termId] && (S().mastery.terms[termId].reps||0)>0);
+  const sibs=pretestSiblings(term);
+  if(!pre || !body || !trav || trav.tier<3 || bDefShown || repeat || !sibs.length){
+    if(pre) pre.hidden=true; body.hidden=false; return; }
+
+  body.hidden=true; pre.hidden=false; pre.innerHTML="";
+  const q=el("div","rp-q",`Before it opens &mdash; what do you think <b>${term.spell}</b> means?`);
+  const why=el("div","rp-why","A guess first, right or wrong, makes the answer stick harder than reading it cold.");
+  const opts=el("div","rp-opts");
+  pre.appendChild(q); pre.appendChild(why); pre.appendChild(opts);
+  let answered=false;
+  pretestOptions(term, sibs).forEach(o=>{
+    const b=el("button","rp-opt",o.txt);
+    b.onclick=()=>{
+      if(answered) return; answered=true;
+      b.classList.add("picked");
+      const g=el("div","reveal-guess"+(o.ok?"":" miss"));
+      g.innerHTML = o.ok
+        ? `<b>You had it.</b> You read the word from its parts before anyone told you what it meant &mdash; that is the whole skill.`
+        : `<b>You guessed:</b> &ldquo;${o.txt}&rdquo;. Not this one &mdash; and having guessed, you will remember the real answer better than if you had simply been shown it.`;
+      /* a beat before the card opens, so the guess is a decision the player
+         watches land rather than a flicker on the way to the answer */
+      Audio2.sfx[o.ok?"good":"page"] && Audio2.sfx[o.ok?"good":"page"]();
+      setTimeout(()=>{
+        pre.hidden=true;
+        body.parentNode.insertBefore(g, body);
+        body.hidden=false;
+        Audio2.speak(term.spell);
+        FX.revealText($('#reveal-read'),{mode:"char",stagger:40});
+        const c=$('#reveal-continue'); if(c) c.focus();
+      }, 420);
+    };
+    opts.appendChild(b);
+  });
+  const first=$('.rp-opt',opts); if(first) first.focus();
 }
 function renderBuildSupport(){
   const bar=$('#build-support'); bar.innerHTML="";
@@ -6948,7 +7196,7 @@ function renderBuildSupport(){
     {k:"consult", label:"Consultation", act:()=>{ const keep=new Set(builderState.needed);
         builderState.trayIds=builderState.trayIds.filter(id=>keep.has(id)||builderState.placed.includes(id));
         renderTray(); bSupportUsed++; toast("Consultation clears the confusing parts."); }},
-    {k:"recall", label:"Recall meaning", act:()=>{ bViewedDef=true; bSupportUsed++;
+    {k:"recall", label:"Recall meaning", act:()=>{ bViewedDef=true; bDefShown=true; bSupportUsed++;
         const fb=$('#build-feedback'); fb.className="build-feedback good show";
         fb.innerHTML=`<b>Recall.</b> The term you need means: <b>${TERMS[builderState.term].def}</b>.`; }}
   ];
@@ -7050,6 +7298,7 @@ function renderGloss(q, filter){
               ${p.lang?`<span class="gloss-lang ${p.lang==='Gk'?'gk':'la'}">${D.LANG_NAME[p.lang]}</span>`:''}
               <div class="small">${p.mean}</div>
               ${p.src?`<div class="small muted gloss-src">from <i>${p.src}</i></div>`:''}
+              ${D.PART_FACTS&&D.PART_FACTS[id]?`<div class="small gloss-fact">${D.PART_FACTS[id]}</div>`:''}
               ${used.length?`<div class="small gloss-used">seen in ${shown}${used.length>5?` and ${used.length-5} more`:''}</div>`:''}
             </div>
             <button class="icon-btn sm" data-say="${p.text.replace(/[-\/]/g,' ')}" aria-label="Pronounce"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
