@@ -9808,22 +9808,22 @@ function craftSpec(item){
     const folds=clamp(n(m.folds,1),1,5);
     sp.strikeSpan = 0.40+folds*0.055;
     sp.momentumFloor = 1.20+folds*0.10;
-    sp.notes.push({ic:"blade", txt:`Folded <b>${folds}×</b> — Strike sweeps <b>${Math.round(sp.strikeSpan*100)}%</b> of the road ahead, and momentum can never fall below <b>×${sp.momentumFloor.toFixed(2)}</b>.`});
+    sp.notes.push({ic:"blade", fmt:(f)=>`Folded <b>${folds}×</b> — Strike sweeps <b>${Math.round(f.strikeSpan*100)}%</b> of the road ahead, and momentum can never fall below <b>×${f.momentumFloor.toFixed(2)}</b>.`});
     if(n(m.worstFold,100)<60) sp.notes.push({ic:"warn", txt:`Its sloppiest fold graded <b>${m.worstFold}%</b> — that pass is the weak line in the edge.`});
   } else if(craft==="align"){
     const read=clamp(n(m.balanceRead,60),0,100)/100;
     if(m.balanceLean==="reach"){
       sp.gateLeadMult = 1+(0.18+read*0.30);
-      sp.notes.push({ic:"hook", txt:`Balanced for <b>reach</b> — thrown ahead, it buys <b>${Math.round((sp.gateLeadMult-1)*100)}%</b> more road to read each rune gate over.`});
+      sp.notes.push({ic:"hook", fmt:(f)=>`Balanced for <b>reach</b> — thrown ahead, it buys <b>${Math.round((f.gateLeadMult-1)*100)}%</b> more road to read each rune gate over.`});
     } else {
       sp.hazardShrug = 0.10+read*0.22;
-      sp.notes.push({ic:"hook", txt:`Balanced for <b>stability</b> — it anchors the line, and <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards glance off the squad.`});
+      sp.notes.push({ic:"hook", fmt:(f)=>`Balanced for <b>stability</b> — it anchors the line, and <b>${Math.round(f.hazardShrug*100)}%</b> of hazards glance off the squad.`});
     }
     if(n(m.probesUsed,5)<=2) sp.notes.push({ic:"ear", txt:`Found on <b>${m.probesUsed} probe${m.probesUsed===1?"":"s"}</b> — a smith's ear.`});
   } else if(craft==="tension"){
     const best=m.bestDraw||"power";
     if(best==="power"){ sp.strikeSpan+=0.10;
-      sp.notes.push({ic:"bow", txt:`Tuned for <b>power</b> — Strike reaches <b>${Math.round(sp.strikeSpan*100)}%</b> of the road.`}); }
+      sp.notes.push({ic:"bow", fmt:(f)=>`Tuned for <b>power</b> — Strike reaches <b>${Math.round(f.strikeSpan*100)}%</b> of the road.`}); }
     else if(best==="control"){ sp.strikeMomentum=0.45;
       sp.notes.push({ic:"bow", txt:`Tuned for <b>accuracy</b> — every Strike also surges momentum by <b>+0.45</b>.`}); }
     else { sp.extraStrike=1;
@@ -9836,9 +9836,9 @@ function craftSpec(item){
   } else if(craft==="fit"){
     const cons=clamp(n(m.consistency,60),0,100)/100;
     if(m.angle==="steep"){ sp.hazardShrug=0.08+cons*0.14;
-      sp.notes.push({ic:"climb", txt:`<b>Steep bite</b> — deep grip on rock; <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards fail to land.`}); }
+      sp.notes.push({ic:"climb", fmt:(f)=>`<b>Steep bite</b> — deep grip on rock; <b>${Math.round(f.hazardShrug*100)}%</b> of hazards fail to land.`}); }
     else if(m.angle==="shallow"){ sp.ledgeSpeed=0.10+cons*0.14;
-      sp.notes.push({ic:"climb", txt:`<b>Shallow bite</b> — the upper ledge is walked <b>${Math.round(sp.ledgeSpeed*100)}%</b> faster.`}); }
+      sp.notes.push({ic:"climb", fmt:(f)=>`<b>Shallow bite</b> — the upper ledge is walked <b>${Math.round(f.ledgeSpeed*100)}%</b> faster.`}); }
     else { sp.hazardShrug=0.05+cons*0.08; sp.ledgeSpeed=0.05+cons*0.08;
       sp.notes.push({ic:"climb", txt:`<b>Balanced bite</b> — a little of both: some grip, some speed on the ledge.`}); }
     if(cons<0.6){ sp.slipChance=0.16;
@@ -9853,7 +9853,7 @@ function craftSpec(item){
     else sp.notes.push({ic:"✚", txt:`A plain case — Mend restores the standard amount.`});
     if(salve) sp.notes.push({ic:"·", txt:`${salve} salve${salve>1?"s":""} tucked in the gaps.`});
     if(splint){ sp.hazardShrug+=Math.min(0.15,splint*0.05);
-      sp.notes.push({ic:"splint", txt:`<b>${splint} splint${splint>1?"s":""}</b> — <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards are shrugged off.`}); }
+      sp.notes.push({ic:"splint", fmt:(f)=>`<b>${splint} splint${splint>1?"s":""}</b> — <b>${Math.round(f.hazardShrug*100)}%</b> of hazards are shrugged off.`}); }
     if(n(m.balance,100)<62) sp.notes.push({ic:"warn", txt:`The case hangs badly (<b>${m.balance}%</b> balance) — it rattles, and the squad walks a touch slower for it.`});
   } else if(craft==="weave"){
     const weak=(m.weakSpots||[]).length, loose=(m.looseSpots||[]).length;
@@ -9893,6 +9893,12 @@ function craftSpec(item){
     sp.slipChance=Math.max(sp.slipChance,0.22);
     sp.notes.push({ic:"warn", txt:`The flaw in the build shows in every number above — they are already the reduced ones, about <b>60%</b> of what this pattern is worth — and it can fail outright.`});
   }
+  /* Notes that quote a number are written as formatters and rendered HERE, after
+     the grade has been applied — otherwise a masterwork blade's spec sheet said
+     "momentum can never fall below ×1.70" while the road held it at ×2.05, and
+     the one document a player reads to decide what to build next was quoting
+     the ungraded number back at them. */
+  sp.notes=sp.notes.map(nt=> nt.fmt ? {ic:nt.ic, txt:nt.fmt(sp)} : nt);
   return sp;
 }
 

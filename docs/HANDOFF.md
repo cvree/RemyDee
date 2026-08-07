@@ -13,7 +13,7 @@ every push to `main` redeploys it via `.github/workflows/pages.yml`.
 
 ### What this project is
 
-One self-contained file: `RemyDee_TheLostLexicon.html` (~850KB, ~14,400 lines).
+One self-contained file: `RemyDee_TheLostLexicon.html` (~940KB, ~15,900 lines).
 CSS in `<style>` blocks, markup in the middle, **9 inline `<script>` blocks**.
 This must stay a single file — no image, font or audio assets can be added.
 Everything visual is CSS, inline SVG and canvas; all sound is procedural
@@ -35,10 +35,10 @@ Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 9 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32; do node test$t.js | tail -1; done
 ```
 
-23 jsdom suites, **889 assertions, all passing, zero window errors**.
+26 jsdom suites, **942 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -55,93 +55,81 @@ jsdom cannot see any of that.
 
 ### What has been done
 
-Two large passes. The first (merged as `af1dc05`) fixed learning correctness,
-built the meta layer, added three lieutenants, hardened saves, and did the art
-and accessibility groundwork — see the git log for detail.
+Three large passes are merged. The first two are in the git log (learning
+correctness, the meta layer, the scheduler, distractors, fifteen factual
+corrections, the corpus, the first minute, the road as a decision, the Vigil,
+three verbs on the road). The third pass is the four commits below.
 
-The second pass, in `main` now:
+**1. The world stops borrowing a culture it never taught.** The game taught
+Greek and Latin word-parts inside a wuxia frame: ~120 hanzi seals, a cast of
+forty-eight Chinese-named travelers, jian and dao in the armoury, a moxa cup
+and a jade pulse-ring among the relics, a pagoda on the title screen, and a
+font stack asking for Songti and SimSun. None of it carried the subject. The
+setting is now the Hellenistic Mediterranean the vocabulary actually comes
+from, which pays twice: every seal, weapon and place name can carry an
+etymology the player is already being asked to learn. The seals are Greek
+capitals chosen to mean something, and where an achievement counts, its seal
+is the Greek alphabetic numeral for that count. Lord Jian is **Lord Kanon** —
+*kanna*, a reed; *kanōn*, the straight reed cut into a measuring rod — against
+the **School of Kalamos**, the same reed cut into pens. Palatino leads the font
+stack because it carries polytonic Greek on every desktop.
 
-1. **Learning integrity.** `completeTerm` recorded every completed chain as
-   correct practice for every part in it — but only 55 of the 1,290 two-part
-   chains the road can produce are real terms. Credit is gated on a real term
-   now; coined chains keep momentum and get told what they built.
-2. **The scheduler.** Measured chasing weak items at only 1.38x; now 3.5–3.9x,
-   asserted in `test24.js`. One lucky guess used to end the learning queue; the
-   resting floor ignored lapses; a 24-run interval cap retired parts for the
-   rest of a campaign nowhere near 24 runs long.
-3. **Distractors.** Parts carry a `sense`; same-sense parts never meet. 57 of
-   4,000 generated true/false items had been graded wrong because the game
-   teaches `endo-`/`intra-` as twins and then marked one of them incorrect.
-4. **Fifteen factual corrections**, worst of which was a combining-vowel note
-   that spells its own example wrong (`cardi/o + -itis` does not give
-   `cardiitis`).
-5. **The corpus grew**: 73 → 84 parts, 67 → 77 terms. Latin partners for
-   `nephr/o`, `rhin/o`, `ot/o`, `pneumon/o` take Greek/Latin twin pairs from 3
-   to 8; `-al`, `-ic`, `-ary`, `-logist`, `-plasty`, `-stomy` arrive with nine
-   real terms. Every one of the 84 parts now appears in at least one term.
-6. **The first minute.** Difficulty chooser off the cold path (new games are
-   `adaptive`; it is offered once after the first road). Seven-panel prologue is
-   one scrolling page. Eleven clicks to the first real decision became three.
-   The page carries a combining-vowel primer the game never had.
-7. **The road is a decision.** Word-parts arrive in *offers* — two or three at
-   once in different bands, at most one finishing a real term. The combo HUD
-   names the *meaning* that would finish the word instead of saying "suffix?".
-8. **Legibility and access.** Road HUD text had no ink behind it; a `main`
-   landmark and skip link were missing entirely; eight map buttons claimed to be
-   list items; Lexicon filter chips were 17px tall.
-9. **The Lexicon teaches.** Every part now shows its tongue, its ancestor word,
-   and the terms that use it — all three were already in the data and none were
-   shown.
-10. **The Vigil** (`__RD_META.openVigil`, screen `s-vigil`). A study step between
-    the bench and the armory, gated by `toArmory()` in the prep module and run
-    once per road. Eight questions drawn from *this* road — the terms the company
-    just named, its travelers' terms, then SRS arrears. Its result is written to
-    `flow.vigil` and read by five systems: `computeForgePassives` (momentum
-    floor, gain, ink value), `computeAbilities` (charges), the mission's opening
-    `stats`, `pickRoadPart` (shaky parts are weighted *above* historically weak
-    ones), and `collectPickup` (studied parts pay a bonus). `renderVigilBrief()`
-    restates the ledger on the armory screen.
-11. **The frame fills the window.** `#frame` lost its 1320x840 cap and the base
-    font-size tracks viewport height, so the road is legible on a large display.
-12. **Three verbs on the road.** `tryLunge` (click / Shift — reach, or shove a
-    hazard, on a cooldown, costs stamina) and `setFocus` (right-click / F — the
-    road drops to 0.38 speed while stamina drains). Both run from `stepHands(dt)`
-    in the tick and are exported as `__RD_MISSION._lunge/_focus` for the suite.
-    The control hint retires after three roads; the pause menu carries the full
-    key legend permanently.
+**2. What the bench bought, said out loud.** Three defects on the line from the
+forge to the road: `gainMult`/`valueMult` were assignments where they meant
+multiplies, so a build with two points of control silently deleted the Vigil's
+study bonus and every masterwork bonus; the grade reached Strike, Vanish and
+Mend and nothing else, so a masterwork rope anchored the line exactly as well
+as a serviceable one; and no passive could say which piece paid for it, so the
+debrief told players that a perfectly braided rope "never came into play" while
+it held every descent. `ownerFor` + `creditPassive` name the piece once per
+road and tally silently after. The game also draws its own icons now
+(`MARK_PATHS`, `D.mark()`) — the emoji are gone.
+
+**3. The roots get a reason to stick.** `PART_FACTS` gives all 84 parts one
+verified line each — *neuron* meant bowstring, *mys* meant mouse, *elektron* is
+amber — shown in the Lexicon and on the reveal card, attached to whichever part
+of the term the player has met least. And the reveal asks for a **guess before
+it opens**, on tier 3 only (tiers 1 and 2 print the definition on the builder
+screen, so a guess there is a reading test). That gate exposed a corpus hole:
+hemiplegia had no sibling to be confused with; `para-`/paraplegia closes it.
+Also, the seal never landed — the CSS animates `.stamp.hit` and the code added
+`.go`.
+
+**4. The journey stops stacking three things in one place.** The momentum
+readout grows downward and the gate prompt and pressure meter were pinned at
+fixed offsets under it; they are one flex column now. `clickSpark` was bound to
+window and fired on every pointerdown in the document. And `conceptBias`
+resolved to a part of speech, so a field kit's order asked about visual
+examination; each concept carries a vocabulary pool now.
 
 ### What is left — verified, not speculation
 
-**Art.** The material language, the screen entrance, the sprites, the dead
-frame space, the mist edges, the impact wiring and the audio limiter are all
-done (see `git log`). Still open, from the same audit:
+**Art.**
 - Settings still ships iOS pill toggles and a native range input with Chrome's
   default accent; the Hall of Records still opens on five KPI stat tiles over a
   card grid under tab pills. Those two screens are the most generic in the game.
 - The chest is still a mobile-game loot box; it wants to be a lacquered document
-  case with a wax seal that cracks.
-- `FX.clickSpark` is bound globally on window pointerdown, so ink motes fire on
-  every click anywhere — including scrolling the Lexicon and dragging a tray
-  tile. Gate it to `[data-spark]`.
-- Emoji still punch holes in a five-colour ink palette (🔊 on the pronounce
-  button, 🐢 for relaxed timing, ⚡ on Surge). `WEAPON_GLYPH` proves the project
-  can draw its own icons.
-- No `writing-mode` anywhere — no vertical seal text.
+  case with a wax seal that cracks. (Note the fiction is Mediterranean now: a
+  sealed wooden *capsa* with a wax *sphragis*.)
+- No `writing-mode` anywhere.
 - `sfx.pour` and `sfx.bow` are defined with zero call sites; `page()` still
   serves seven distinct meanings across twelve call sites.
+- Border radii are still a mix of 2/3/8/9/10/12/14/20px against a token set that
+  says 2/3/4. The decode chips and the gate prompt were brought in line; the
+  rest were not, because pills and seals legitimately want round.
 
-**Performance.** The road holds 59.9fps with a 16.7ms median frame, and the
-per-frame DOM queries are down from ~11 to 2.14. Still open: `rubPaint` builds
-attribute selectors in a template literal every bench frame, and the bench felt
-and `drawHeat` gradients are rebuilt per frame.
+**Performance.** The road holds 59.9fps with a 16.7ms median frame. Still open:
+`rubPaint` builds attribute selectors in a template literal every bench frame,
+and the bench felt and `drawHeat` gradients are rebuilt per frame.
 
-**Learning design.** The corpus fixes and the gate's contrast feedback are done.
-Still open:
+**Learning design.**
 - Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
-- 24 terms and 19 parts are never introduced by a traveler — they exist only as
-  quiz material.
-- `showReveal` presents the breakdown; it would teach harder if it asked "what
-  do you think this means?" before showing it (the pretesting effect).
+- Around 24 terms and 19 parts are never introduced by a traveler — they exist
+  only as quiz material. `paraplegia` and `para-` just joined that list.
+- The pretest only fires on tier 3. Tiers 1 and 2 print the definition as their
+  own prompt, which is the reason — but that is a *builder* design choice worth
+  revisiting rather than a fact of nature. A tier-2 builder that withheld the
+  definition would earn a pretest and a harder, better minute.
 
 **Never audited.** A bug-hunting pass on save corruption, quota-exceeded writes,
 private-mode localStorage and long-session listener growth was commissioned

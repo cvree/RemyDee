@@ -47,6 +47,16 @@ function blade(qtier, folds) {
     assert(master.strikeSpan > plain.strikeSpan && plain.strikeSpan > flawed.strikeSpan,
       'the strike corridor is graded the same way, and the ladder runs the right direction');
 
+    // and the printed note quotes the graded number, not the raw one — the spec
+    // sheet is the document a player reads to decide what to build next
+    const headline = (sp) => sp.notes.map(n => n.txt).join(' ');
+    assert(/\u00d72\.05/.test(headline(master)),
+      `the masterwork's own note quotes its graded floor (${headline(master).slice(0, 110)})`);
+    assert(!/\u00d71\.70/.test(headline(master)),
+      'and never the ungraded one it used to print while the road held a different number');
+    assert(/\u00d71\.70/.test(headline(plain)),
+      'an ordinary piece quotes the raw value, because for it they are the same');
+
     // and the promise on the card is not made twice: phaseSec and mendPer are
     // multiplied by tierMult where they are USED, so grading them here would pay
     // the grade twice over
