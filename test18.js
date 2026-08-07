@@ -121,10 +121,25 @@ function forceRub(P, val) {
       return P._dbg().cur;
     };
 
+    /* THE FOURTH CONDITION. A masterwork used to need three things: every
+       rubric row clear, no heat crack, and a clean decode. It now needs a
+       fourth — the piece has to survive its own proof — so these runs say out
+       loud which grade the proof came back with. */
+    const MG = window.__RD_MG;
+    MG.setAuto(4);
     const perfect = await runOne(true, 0.99);
     assert(perfect.qtier === 'masterwork',
-      `a clean decode + every row clear ships a MASTERWORK (got ${perfect.qtier} at q=${perfect.finalQ})`);
+      `a clean decode + every row clear + a clean proof ships a MASTERWORK (got ${perfect.qtier} at q=${perfect.finalQ})`);
     assert(perfect.rubric && perfect.rubric.master, 'the masterwork carries a rubric snapshot that says so');
+
+    // and the proof is a real gate, not a formality: the same flawless build,
+    // fumbled at the proof, does not ship as a masterwork
+    MG.setAuto(1);
+    const unproved = await runOne(true, 0.99);
+    assert(unproved.qtier !== 'masterwork',
+      `a flawless build that fails its proof is not a masterwork (got ${unproved.qtier})`);
+    assert(unproved.finalQ < perfect.finalQ, 'a bad proof visibly costs final quality');
+    MG.setAuto(4);
 
     const sloppyWord = await runOne(false, 0.99);
     assert(sloppyWord.qtier !== 'masterwork',

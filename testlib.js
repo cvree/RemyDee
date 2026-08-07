@@ -61,6 +61,11 @@ async function boot(file) {
   });
   // let boot() + loader timeout run
   await new Promise((r) => setTimeout(r, 700));
+  /* The Trials are hand-skill challenges that sit in the middle of the chest,
+     cache and forge flows. jsdom has no hands, so every trial resolves at a
+     clean grade by default and the suites drive the flows around them. A test
+     that wants to prove a grade CHANGES an outcome sets its own tier. */
+  if (dom.window.__RD_MG && dom.window.__RD_MG.setAuto) dom.window.__RD_MG.setAuto(2);
   return { dom, window: dom.window, errors };
 }
 

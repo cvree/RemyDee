@@ -23,7 +23,7 @@ and the CDN is blocked in the dev container, so you always test the offline
 path whether you mean to or not.
 
 Modules talk through globals: `window.__RD_DATA`, `__RD_ENG`, `__RD_QE`,
-`__RD_FX`/`window.FX`, `__RD_SCREENS`, `__RD_PREP`, `__RD_MISSION`,
+`__RD_FX`/`window.FX`, `__RD_MG`, `__RD_SCREENS`, `__RD_PREP`, `__RD_MISSION`,
 `__RD_ARCADE`, `__RD_META`, `__RD_MODAL`. Prefer adding to a module over
 editing across blocks.
 
@@ -34,14 +34,23 @@ Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
-node syntaxcheck.js                   # parses all 9 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32; do node test$t.js | tail -1; done
+node syntaxcheck.js                   # parses all 10 script blocks
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33; do node test$t.js | tail -1; done
 ```
 
-26 jsdom suites, **942 assertions, all passing, zero window errors**.
+27 jsdom suites, **1125 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
+
+**The Trials need a headless escape hatch.** `__RD_MG` sits in the middle of the
+chest, cache, slide, spring and forge-proof flows, and it is a hand-skill
+challenge that jsdom cannot play. `testlib.js` calls `__RD_MG.setAuto(2)` after
+boot, which resolves every trial instantly at a clean grade; a suite that wants
+to prove a grade *changes* an outcome sets its own tier (`setAuto(0)` /
+`setAuto(4)`) and puts it back afterwards. Anything that opens a chest or fires
+a road event is now asynchronous — `await until(...)`, do not assert on the
+next line.
 
 **Look at it in a real browser. This is not optional.** Playwright with the
 preinstalled Chromium:

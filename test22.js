@@ -123,6 +123,22 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(errors.length === before, 'clicking through twice throws nothing');
 
   console.log('\n== no chest is ever silently discarded ==');
+  /* The Trial's own payout chest may still be on screen from the block above.
+     It used to be dropped by a timing race — the take-it-all button was live
+     before the lid was, so the veil could be dismissed out from under its own
+     loot. It is not dropped any more, which is the point of this section, so
+     drain it before counting rather than pretending it was never granted. */
+  {
+    let guard = 0;
+    while (guard++ < 12 && $('#chest-veil') && $('#chest-veil').classList.contains('show')) {
+      const box = $('#chest-veil .chest-box');
+      if (box) box.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await sleep(200);
+      const d = $('#chest-veil .chest-done .btn');
+      if (d) d.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+      await sleep(320);
+    }
+  }
   E.setS(E.newGame());
   const st3 = E.S();
   const coin0 = st3.coin;

@@ -1061,6 +1061,11 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .test-verdict{text-align:center;color:var(--papyrus);font-size:1.02rem;line-height:1.5;min-height:2.6em;
   padding:0 10px;text-shadow:0 2px 6px rgba(0,0,0,.6);}
 .test-verdict .tv-grade{font-family:var(--font-cal);font-weight:900;font-size:1.2rem;display:block;margin-bottom:2px;}
+/* what the proof did to the grade — set apart from the verdict prose so the
+   player can see at a glance that the number moved and which way */
+.test-verdict .tv-proof{display:block;margin-top:4px;font-size:.86em;font-style:italic;}
+.test-verdict .tv-proof.good{color:var(--verd-deep);}
+.test-verdict .tv-proof.bad{color:var(--cinnabar);}
 .test-verdict .tv-grade.fine{color:var(--verd-soft);}
 .test-verdict .tv-grade.ok{color:var(--gold-soft);}
 .test-verdict .tv-grade.flawed{color:#e08a5a;}
@@ -1982,6 +1987,10 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
   background:radial-gradient(circle at 34% 30%,var(--gold-soft),var(--gold) 64%,#8e7233);color:#1b150e;}
 .loot-row .ln{font-family:var(--font-cal);font-weight:700;font-size:.92rem;}
 .loot-row .ll{font-size:.74rem;color:var(--verd-deep);margin-top:2px;line-height:1.35;}
+/* what a forced lock cost you, said in the ceremony rather than left to be
+   inferred from a shorter list than usual */
+.chest-cost{margin-top:6px;color:var(--cinnabar);font-size:.86rem;font-style:italic;
+  letter-spacing:.02em;max-width:34ch;text-align:center;align-self:center;}
 .chest-done{margin-top:20px;display:none;}
 #chest-veil.opened .chest-done{display:block;animation:achIn .5s var(--ease) .9s backwards;}
 
@@ -2115,6 +2124,29 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
 .rec-row .rd{font-size:.72rem;color:var(--verd-deep);margin-top:2px;}
 .rec-row .rv{font-family:var(--font-cal);font-weight:700;font-size:1.15rem;color:var(--ink);}
 .rec-empty{text-align:center;color:var(--verd-deep);padding:26px 12px;font-size:.88rem;}
+
+/* ==================================================================
+   THE TRIALS — the mini-game veil.
+
+   Almost nothing lives here on purpose. A trial is one canvas and the
+   object it draws; if the interface needed a stylesheet it would mean
+   the object had stopped being the interface. The rules below only
+   place the canvas and get the page out of its way.
+   ================================================================== */
+.mg-veil{position:absolute;inset:0;z-index:150;display:flex;align-items:stretch;justify-content:stretch;
+  background:#0c0906;animation:mgIn .34s var(--ease) both;touch-action:none;}
+.mg-veil.out{animation:mgOut .38s var(--ease) both;pointer-events:none;}
+@keyframes mgIn{from{opacity:0;} to{opacity:1;}}
+@keyframes mgOut{from{opacity:1;} to{opacity:0;}}
+.mg-wrap{position:relative;flex:1;display:block;}
+.mg-canvas{display:block;width:100%;height:100%;cursor:crosshair;}
+/* A canvas says nothing to a screen reader. Every trial pushes its beats
+   into this instead — the object's state in words, at the moments that
+   matter, and never once per frame. */
+.mg-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+html[data-motion="reduced"] .mg-veil{animation:none;}
+html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
+
 </style>
 </head>
 <body>
@@ -6426,6 +6458,3396 @@ window.__RD_QE = (function(){
 </script>
 <script>
 /* ==================================================================
+   THE TRIALS  —  window.__RD_MG
+   ------------------------------------------------------------------
+   Every chest, cache, seal and proof in this game used to open itself.
+   You pressed a lid and watched an animation; the road pried a cache
+   open for you if you happened to be carrying an edge. Nothing you did
+   with your hands changed a single number, so nothing you did with your
+   hands was worth doing.
+
+   This module is one library of hand-skill challenges and one shared
+   set of rules for what they pay. Ten archetypes, each drawn as the
+   OBJECT — a lock, a balance, a mortar, a kettle, a channel board, a
+   wax tablet, a reed pen — rather than as a dialog with a bar in it.
+   There is no progress bar anywhere in this file, and the only
+   rectangle is the screen.
+
+   The contract, for everything that calls in:
+
+     __RD_MG.play({ type, diff, title, brief, stakes, seed, tone })
+        -> Promise<{ score, tier, grade, mult, flawless, detail }>
+
+   tier   0..4          grade  fail | rough | success | excellent | perfect
+   mult   0 | .55 | 1 | 1.3 | 1.75    — what the caller multiplies its payout by
+
+   A caller never needs to know which archetype ran. It asks for a
+   difficulty and a flavour, gets a graded number back, and pays out.
+   That is what lets the same chest be a lock one night and a seized
+   lid the next without a single caller changing.
+   ================================================================== */
+(function(){
+"use strict";
+
+const D  = window.__RD_DATA || {};
+const E  = window.__RD_ENG  || {};
+const FX = window.FX || {};
+const PARTS = D.PARTS || {};
+const clamp = D.clamp || ((v,a,b)=>v<a?a:v>b?b:v);
+
+/* Reduced motion is honoured everywhere: the trials still play, but nothing
+   strobes, nothing shakes, and the particle counts collapse to near zero. */
+const reduced = ()=>{ try{ return !!(FX.reduced && FX.reduced()); }catch(e){ return false; } };
+const qScale  = ()=>{ try{ return (FX.qScale && FX.qScale()) || 1; }catch(e){ return 1; } };
+
+/* ---------- palette: the game's tokens, resolved for canvas ---------- */
+const C = {
+  ink:      "#191510",
+  inkSoft:  "#2b241c",
+  inkLine:  "#4a3f31",
+  papyrus:  "#ece2cb",
+  papyrus2: "#e2d5b8",
+  papyrus3: "#d4c39f",
+  parch:    "#f3ecd8",
+  verd:     "#456654",
+  verdDeep: "#33513f",
+  verdSoft: "#7d9a8a",
+  cinnabar: "#b5322b",
+  cinDeep:  "#8a241f",
+  gold:     "#bd9d5f",
+  goldSoft: "#d8bd84",
+  goldHot:  "#f2d78e",
+  olive:    "#6f7a4e",
+  bronze:   "#8a6a3a",
+  bronzeLt: "#c2a068",
+  bronzeDk: "#4a3720",
+  steel:    "#c9d2d8",
+  steelDk:  "#6b7780"
+};
+const FONT_CAL  = '"Cormorant Garamond","Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,"Hoefler Text",Georgia,serif';
+const FONT_READ = '"Noto Sans","Segoe UI","Helvetica Neue",Arial,sans-serif';
+
+/* ==================================================================
+   SEEDED RANDOM — a trial that is worth replaying has to be able to
+   repeat itself exactly (the Daily Trial) and also never repeat itself
+   (everything else). One PRNG, seeded or not.
+   ================================================================== */
+function rng(seed){
+  let s = (seed==null ? (Math.random()*4294967296)>>>0 : (seed>>>0)) || 0x9e3779b9;
+  const f = ()=>{ s ^= s<<13; s>>>=0; s ^= s>>17; s ^= s<<5; s>>>=0; return s/4294967296; };
+  f.range = (a,b)=>a+f()*(b-a);
+  f.int   = (a,b)=>Math.floor(a+f()*(b-a+1));
+  f.pick  = (arr)=>arr[Math.floor(f()*arr.length)|0];
+  f.chance= (p)=>f()<p;
+  f.shuffle = (arr)=>{ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(f()*(i+1));
+    const t=a[i]; a[i]=a[j]; a[j]=t; } return a; };
+  return f;
+}
+
+/* ==================================================================
+   SOUND — the trials need a vocabulary the rest of the game does not
+   have. Bronze detents, a ward dropping home, the dull nothing of a
+   near miss, ticks that climb toward a strike, a perfect chime that is
+   used for exactly one thing so it always means that thing.
+
+   Built on its own graph rather than Audio2's so a trial can duck,
+   layer and pitch-bend without fighting the caravan music, but it
+   reads Audio2's volumes and the global mute so the settings screen
+   still governs it.
+   ================================================================== */
+const A = (function(){
+  let ac=null, bus=null, ok=true;
+  function ctx(){
+    if(ac || !ok) return ac;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC){ ok=false; return null; }
+      ac = new AC();
+      bus = ac.createGain(); bus.gain.value = 0.9;
+      try{
+        const comp = ac.createDynamicsCompressor();
+        comp.threshold.value=-12; comp.knee.value=14; comp.ratio.value=7;
+        comp.attack.value=0.003; comp.release.value=0.14;
+        bus.connect(comp); comp.connect(ac.destination);
+      }catch(e){ bus.connect(ac.destination); }
+    }catch(e){ ok=false; ac=null; }
+    return ac;
+  }
+  /* the settings screen owns the volume; this only reads it */
+  function vol(){
+    try{
+      if(window.__RD_MUTED) return 0;
+      const v = E.Audio2 && E.Audio2.getVol && E.Audio2.getVol();
+      if(!v) return 0.9;
+      return clamp((v.master==null?1:v.master) * (v.sfx==null?1:v.sfx), 0, 1.4);
+    }catch(e){ return 0.9; }
+  }
+  const now = ()=>{ const c=ctx(); return c?c.currentTime:0; };
+
+  /* one oscillator with an envelope — the atom everything is built from */
+  function osc(freq, dur, type, gain, opt){
+    const c=ctx(); if(!c) return; const v=vol(); if(v<=0) return;
+    opt=opt||{};
+    try{
+      const o=c.createOscillator(), g=c.createGain();
+      o.type=type||"sine"; o.frequency.value=Math.max(20,freq);
+      if(opt.to) { try{ o.frequency.exponentialRampToValueAtTime(Math.max(20,opt.to), c.currentTime+dur); }catch(e){} }
+      let node=g;
+      if(opt.filter){
+        const f=c.createBiquadFilter(); f.type=opt.filter.type||"lowpass";
+        f.frequency.value=opt.filter.freq||1200; if(opt.filter.q) f.Q.value=opt.filter.q;
+        g.connect(f); node=f;
+      }
+      o.connect(g); node.connect(bus);
+      const t=c.currentTime+(opt.delay||0), pk=(gain==null?0.25:gain)*v;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.linearRampToValueAtTime(pk, t+(opt.attack==null?0.006:opt.attack));
+      g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+      o.start(t); o.stop(t+dur+0.03);
+    }catch(e){}
+  }
+  /* filtered noise — every strike, grind, pour and scrape in here */
+  function nz(dur, gain, freq, opt){
+    const c=ctx(); if(!c) return; const v=vol(); if(v<=0) return;
+    opt=opt||{};
+    try{
+      const n=c.createBufferSource();
+      const len=Math.max(64, Math.floor(c.sampleRate*dur));
+      const buf=c.createBuffer(1,len,c.sampleRate); const d=buf.getChannelData(0);
+      const curve=opt.curve||2;
+      for(let i=0;i<len;i++){ const k=1-i/len; d[i]=(Math.random()*2-1)*Math.pow(k,curve); }
+      n.buffer=buf;
+      const f=c.createBiquadFilter();
+      f.type=opt.type||"bandpass"; f.frequency.value=freq||1200; f.Q.value=opt.q==null?1.1:opt.q;
+      if(opt.sweep){ try{ f.frequency.exponentialRampToValueAtTime(Math.max(40,opt.sweep), c.currentTime+(opt.delay||0)+dur);}catch(e){} }
+      const g=c.createGain(); g.gain.value=(gain==null?0.2:gain)*v;
+      n.connect(f); f.connect(g); g.connect(bus);
+      n.start(c.currentTime+(opt.delay||0));
+    }catch(e){}
+  }
+  const later=(ms,fn)=>{ try{ setTimeout(fn,ms); }catch(e){} };
+  const jit=(f,amt)=>f*(1+(Math.random()*2-1)*(amt==null?0.02:amt));
+
+  return {
+    resume(){ const c=ctx(); try{ if(c && c.state==="suspended") c.resume(); }catch(e){} },
+    /* ---- anticipation: the ladder that tells you a strike is coming ----
+       Pitch climbs with `step`, so four ticks in a row read as a wind-up
+       and the ear knows where the fifth one lands before the eye does. */
+    tick(step){ const k=Math.min(8,step||0);
+      nz(0.028, 0.11, 1900+k*260, {q:2.4, curve:3});
+      osc(760*Math.pow(1.075,k), 0.04, "triangle", 0.07); },
+    /* a dial passing a notch — dry, woody, cheap, fires a lot */
+    detent(){ nz(0.022, 0.10, jit(2600,0.06), {q:3, curve:4}); osc(jit(1500),0.028,"triangle",0.05); },
+    hover(){ osc(jit(1180),0.05,"sine",0.045); },
+    /* ---- the good ones ---- */
+    // a bronze ward falling into its notch: strike, body, ring-out
+    lock(step){ const k=Math.min(6,step||0);
+      nz(0.05, 0.34, 900, {q:0.8, curve:2.6});
+      osc(150-k*6, 0.16, "sine", 0.30, {to:88});
+      osc(jit(1240+k*150), 0.34, "triangle", 0.13, {filter:{type:"bandpass",freq:2200,q:3}});
+      later(26,()=>nz(0.12,0.07,3200,{q:1.6})); },
+    // the moment a hit lands inside the zone — snappier than lock, no ring
+    snap(){ nz(0.035,0.30,1500,{q:1.2,curve:3}); osc(520,0.07,"triangle",0.22,{to:300}); },
+    // dead centre. Used for nothing else, ever.
+    perfect(){ const c=ctx();
+      nz(0.05,0.26,2000,{q:1,curve:3});
+      osc(1046.5,0.5,"sine",0.20); osc(1568,0.46,"sine",0.14,{delay:0.012});
+      osc(2093,0.58,"sine",0.09,{delay:0.026});
+      later(40,()=>nz(0.5,0.05,5200,{q:0.7,curve:1.2}));
+      later(90,()=>osc(2637,0.5,"sine",0.06)); },
+    // you were close enough to feel it and it did not take: dull, falling
+    nearMiss(){ nz(0.09,0.22,300,{q:0.7,curve:2}); osc(196,0.20,"sine",0.16,{to:120});
+      later(60,()=>osc(155,0.16,"triangle",0.08,{to:104})); },
+    // a clean, cold failure
+    fail(){ nz(0.16,0.26,220,{q:0.6,curve:1.6});
+      osc(140,0.30,"sawtooth",0.16,{to:70,filter:{type:"lowpass",freq:600}});
+      later(110,()=>osc(104,0.34,"sawtooth",0.11,{to:58,filter:{type:"lowpass",freq:420}})); },
+    // something you were working got wrecked
+    crack(){ nz(0.05,0.40,1700,{q:0.6,curve:4}); nz(0.30,0.16,520,{q:0.5,curve:1.4,delay:0.03});
+      osc(84,0.36,"sawtooth",0.22,{to:44}); },
+    /* ---- material verbs ---- */
+    grind(t){ nz(0.16,0.16,jit(760,0.12),{q:0.9,curve:0.7,sweep:420});
+      osc(jit(96),0.14,"sawtooth",0.055,{filter:{type:"lowpass",freq:420}}); },
+    pour(){ nz(0.62,0.10,900,{q:0.5,curve:0.5,sweep:1500});
+      later(70,()=>nz(0.5,0.05,2400,{q:0.6,curve:0.4})); },
+    slice(){ nz(0.10,0.30,3400,{q:1.4,curve:3,sweep:900});
+      osc(2200,0.10,"triangle",0.10,{to:700}); },
+    hammer(){ nz(0.07,0.42,340,{q:0.7,curve:3}); osc(96,0.16,"sine",0.32,{to:56});
+      later(18,()=>osc(jit(1900),0.28,"triangle",0.07)); },
+    brush(){ nz(0.20,0.09,jit(1500,0.15),{q:0.7,curve:1,sweep:800}); },
+    steam(){ nz(0.7,0.09,3000,{q:0.5,curve:0.4,sweep:1200}); },
+    glass(){ osc(jit(2400),0.30,"sine",0.13); osc(jit(3600),0.22,"sine",0.06,{delay:0.01}); },
+    wood(){ nz(0.04,0.20,jit(900,0.1),{q:2,curve:3.4}); osc(jit(320),0.06,"triangle",0.10); },
+    strain(){ nz(0.34,0.13,jit(220,0.2),{q:1.4,curve:0.6,sweep:400});
+      osc(jit(62),0.32,"sawtooth",0.10,{filter:{type:"lowpass",freq:300}}); },
+    pluck(f){ osc(f||440,0.42,"triangle",0.16,{filter:{type:"lowpass",freq:2400}});
+      nz(0.02,0.10,3000,{q:2,curve:4}); },
+    /* ---- the combo voice: pitch climbs with the streak, which is the
+       single cheapest way to make mastery audible ---- */
+    combo(n){ const k=Math.min(11,Math.max(0,n-1));
+      osc(523.25*Math.pow(2,k/12), 0.22, "triangle", 0.15);
+      osc(1046.5*Math.pow(2,k/12), 0.16, "sine", 0.06, {delay:0.014}); },
+    // the streak breaks
+    comboBreak(){ osc(330,0.22,"triangle",0.12,{to:180}); nz(0.10,0.10,600,{q:0.8}); },
+    /* ---- outcomes ---- */
+    win(tier){
+      const chords=[[262,311,392],[294,349,440],[330,392,494],[349,440,523],[392,494,587]];
+      const ch=chords[clamp(tier,0,4)];
+      ch.forEach((f,i)=>osc(f,0.7+i*0.1,"sine",0.16-i*0.03,{delay:i*0.05}));
+      if(tier>=3){ later(160,()=>{ osc(ch[0]*2,0.8,"sine",0.10); osc(ch[2]*2,0.9,"sine",0.07,{delay:0.04}); }); }
+      if(tier>=4){ later(60,()=>nz(0.9,0.06,5600,{q:0.6,curve:1}));
+                   later(340,()=>{ osc(2093,0.9,"sine",0.08); osc(3136,0.8,"sine",0.05,{delay:0.03}); }); } },
+    open(){ nz(0.24,0.20,1400,{q:0.5,curve:1.4,sweep:400});
+      later(70,()=>{ osc(392,0.7,"sine",0.16); osc(587,0.7,"sine",0.11,{delay:0.02});
+                     osc(784,0.8,"sine",0.08,{delay:0.05}); });
+      later(120,()=>nz(0.8,0.07,900,{q:0.4,curve:0.6})); }
+  };
+})();
+
+/* ==================================================================
+   THE STAGE — one canvas, sized to the frame, with a camera that can
+   be punched, shaken, zoomed and stopped. Everything a trial draws
+   goes through here; nothing a trial draws is a DOM node.
+   ================================================================== */
+function Stage(opts){
+  const host = document.getElementById("frame") || document.body;
+  const veil = document.createElement("div");
+  veil.className = "mg-veil";
+  veil.setAttribute("role","dialog");
+  veil.setAttribute("aria-modal","true");
+  veil.setAttribute("aria-label", opts.title || "A trial of hand");
+  const wrap = document.createElement("div"); wrap.className="mg-wrap";
+  const cv = document.createElement("canvas"); cv.className="mg-canvas";
+  wrap.appendChild(cv); veil.appendChild(wrap);
+
+  /* One live region, because a canvas says nothing to a screen reader. Trials
+     push short lines into it at the beats that matter — never per frame. */
+  const live = document.createElement("div");
+  live.className="mg-live"; live.setAttribute("aria-live","polite");
+  veil.appendChild(live);
+  host.appendChild(veil);
+
+  let ctx=null; try{ ctx = cv.getContext("2d"); }catch(e){ ctx=null; }
+
+  const S = {
+    veil, wrap, cv, ctx, live,
+    w:900, h:520, dpr:1,
+    t:0,            // sim clock in seconds, affected by hitstop and slow-mo
+    real:0,         // wall clock in seconds
+    dt:0,
+    dead:false,
+    /* How much of the brief is still on screen, 0..1. A trial reads this to
+       fade its own headers in behind it — two lines of type fighting for the
+       same band of screen is the oldest interface bug there is, and every one
+       of these draws a title. */
+    briefA:1,
+    // camera
+    cam:{ x:0, y:0, zoom:1, rot:0, shake:0, shakeDecay:5, punch:0 },
+    _stop:0, _slow:1, _slowT:0,
+    _flash:null,
+    parts:[],
+    rings:[],
+    floats:[]
+  };
+
+  function resize(){
+    const r = veil.getBoundingClientRect();
+    const w = Math.max(320, Math.round(r.width||900));
+    const h = Math.max(240, Math.round(r.height||520));
+    const dpr = Math.min(2, (window.devicePixelRatio||1) * (reduced()?1:qScale()));
+    S.w=w; S.h=h; S.dpr=dpr;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    cv.style.width=w+"px"; cv.style.height=h+"px";
+  }
+  resize();
+  const onResize = ()=>resize();
+  window.addEventListener("resize", onResize);
+
+  /* ---------- camera verbs ---------- */
+  S.shake = (mag, decay)=>{ if(reduced()) return; S.cam.shake=Math.max(S.cam.shake, mag); S.cam.shakeDecay=decay||5; };
+  S.punch = (mag)=>{ if(reduced()) return; S.cam.punch=Math.max(S.cam.punch, mag); };
+  S.hitstop = (ms)=>{ if(reduced()) return; S._stop=Math.max(S._stop, ms/1000); };
+  S.slowmo = (scale, ms)=>{ if(reduced()) return; S._slow=scale; S._slowT=ms/1000; };
+  S.flash = (color, alpha, ms)=>{ if(reduced()) return; S._flash={c:color,a:alpha,t:0,d:(ms||220)/1000}; };
+  S.say = (txt)=>{ try{ live.textContent=txt; }catch(e){} };
+
+  /* ---------- particles ----------
+     One array, one integrator. `kind` only chooses how it is painted;
+     drag, gravity and lifetime are per-particle so a spark and a petal
+     can share the loop. */
+  S.emit = (n, cfg)=>{
+    const budget = reduced() ? Math.min(2,Math.ceil(n*0.15)) : Math.ceil(n*qScale());
+    for(let i=0;i<budget;i++){
+      const ang = cfg.ang==null ? Math.random()*6.2832 : cfg.ang + (Math.random()*2-1)*(cfg.spread==null?6.2832:cfg.spread);
+      const spd = (cfg.spd==null?120:cfg.spd) * (0.45+Math.random()*0.9);
+      S.parts.push({
+        x: cfg.x + (cfg.jx?(Math.random()*2-1)*cfg.jx:0),
+        y: cfg.y + (cfg.jy?(Math.random()*2-1)*cfg.jy:0),
+        vx: Math.cos(ang)*spd*(cfg.sx==null?1:cfg.sx),
+        vy: Math.sin(ang)*spd*(cfg.sy==null?1:cfg.sy),
+        g:  cfg.g==null?520:cfg.g,
+        drag: cfg.drag==null?1.6:cfg.drag,
+        life: 1, decay: 1/((cfg.life==null?0.7:cfg.life)*(0.6+Math.random()*0.8)),
+        r: (cfg.r==null?2.4:cfg.r)*(0.55+Math.random()*0.9),
+        c: Array.isArray(cfg.c) ? cfg.c[(Math.random()*cfg.c.length)|0] : (cfg.c||C.goldSoft),
+        kind: cfg.kind||"spark",
+        rot: Math.random()*6.28, vr:(Math.random()*2-1)*7,
+        glow: !!cfg.glow
+      });
+    }
+    if(S.parts.length>720) S.parts.splice(0, S.parts.length-720);
+  };
+  /* an expanding ring — the single most legible "that landed" mark there is */
+  S.ring = (x,y,cfg)=>{
+    cfg=cfg||{};
+    S.rings.push({x,y,r:cfg.r0==null?6:cfg.r0, to:cfg.r==null?90:cfg.r,
+      life:1, decay:1/(cfg.life==null?0.42:cfg.life),
+      c:cfg.c||C.goldSoft, w:cfg.w==null?3:cfg.w, dashed:!!cfg.dashed});
+  };
+  /* a word that leaps off the thing that produced it */
+  S.float = (x,y,text,cfg)=>{
+    cfg=cfg||{};
+    S.floats.push({x,y,text,life:1,decay:1/(cfg.life==null?0.9:cfg.life),
+      c:cfg.c||C.goldSoft, size:cfg.size==null?20:cfg.size, vy:cfg.vy==null?-48:cfg.vy,
+      font:cfg.font||FONT_CAL, weight:cfg.weight||700, track:cfg.track||0});
+  };
+
+  function stepFx(dt){
+    for(let i=S.parts.length-1;i>=0;i--){
+      const p=S.parts[i];
+      p.life-=p.decay*dt; if(p.life<=0){ S.parts.splice(i,1); continue; }
+      const d=Math.exp(-p.drag*dt);
+      p.vx*=d; p.vy*=d; p.vy+=p.g*dt;
+      p.x+=p.vx*dt; p.y+=p.vy*dt; p.rot+=p.vr*dt;
+    }
+    for(let i=S.rings.length-1;i>=0;i--){
+      const r=S.rings[i]; r.life-=r.decay*dt;
+      if(r.life<=0){ S.rings.splice(i,1); continue; }
+      r.r += (r.to-r.r)*Math.min(1,dt*9);
+    }
+    for(let i=S.floats.length-1;i>=0;i--){
+      const f=S.floats[i]; f.life-=f.decay*dt;
+      if(f.life<=0){ S.floats.splice(i,1); continue; }
+      f.y += f.vy*dt; f.vy *= Math.exp(-2.4*dt);
+    }
+  }
+  S.paintFx = ()=>{
+    const g=S.ctx; if(!g) return;
+    g.save();
+    S.rings.forEach(r=>{
+      g.globalAlpha = Math.max(0, r.life)*0.9;
+      g.strokeStyle=r.c; g.lineWidth=r.w*Math.max(0.2,r.life);
+      if(r.dashed && g.setLineDash) g.setLineDash([6,7]);
+      g.beginPath(); g.arc(r.x,r.y,Math.max(0.5,r.r),0,6.2832); g.stroke();
+      if(g.setLineDash) g.setLineDash([]);
+    });
+    S.parts.forEach(p=>{
+      const a=Math.max(0,p.life);
+      g.globalAlpha=a;
+      if(p.glow){ g.shadowBlur=10; g.shadowColor=p.c; } else g.shadowBlur=0;
+      g.fillStyle=p.c;
+      if(p.kind==="spark"){
+        // a spark is a streak along its own velocity, not a dot
+        const sp=Math.hypot(p.vx,p.vy), L=Math.min(22, sp*0.026);
+        g.strokeStyle=p.c; g.lineWidth=p.r*0.9; g.lineCap="round";
+        g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x-p.vx/ (sp||1)*L, p.y-p.vy/(sp||1)*L); g.stroke();
+      } else if(p.kind==="dust" || p.kind==="mote"){
+        g.beginPath(); g.arc(p.x,p.y,p.r,0,6.2832); g.fill();
+      } else if(p.kind==="shard"){
+        g.save(); g.translate(p.x,p.y); g.rotate(p.rot);
+        g.beginPath(); g.moveTo(0,-p.r*1.7); g.lineTo(p.r,0); g.lineTo(0,p.r*1.7); g.lineTo(-p.r,0); g.closePath(); g.fill();
+        g.restore();
+      } else if(p.kind==="petal"){
+        g.save(); g.translate(p.x,p.y); g.rotate(p.rot);
+        g.beginPath(); g.ellipse ? g.ellipse(0,0,p.r*2,p.r*0.8,0,0,6.2832) : g.arc(0,0,p.r,0,6.2832); g.fill();
+        g.restore();
+      } else if(p.kind==="ink"){
+        g.beginPath(); g.arc(p.x,p.y,p.r*(0.6+a*0.8),0,6.2832); g.fill();
+      } else { g.beginPath(); g.arc(p.x,p.y,p.r,0,6.2832); g.fill(); }
+    });
+    g.shadowBlur=0; g.globalAlpha=1;
+    S.floats.forEach(f=>{
+      const a=Math.max(0,Math.min(1,f.life*1.6));
+      g.globalAlpha=a;
+      g.font=`${f.weight} ${f.size}px ${f.font}`;
+      g.textAlign="center"; g.textBaseline="middle";
+      g.lineWidth=4; g.strokeStyle="rgba(12,9,6,.65)";
+      g.strokeText(f.text,f.x,f.y); g.fillStyle=f.c; g.fillText(f.text,f.x,f.y);
+    });
+    g.restore(); g.globalAlpha=1;
+  };
+
+  /* ---------- the loop ---------- */
+  let raf=null, last=0, onFrame=null;
+  S.run = (fn)=>{
+    onFrame = fn;
+    last = (typeof performance!=="undefined" && performance.now) ? performance.now() : Date.now();
+    const tick = (now)=>{
+      if(S.dead) return;
+      const nw = now || ((typeof performance!=="undefined"&&performance.now)?performance.now():Date.now());
+      let dt = Math.min(0.05, (nw-last)/1000); last=nw;
+      S.real += dt;
+      // hitstop eats real time before slow-mo scales it
+      if(S._stop>0){ S._stop-=dt; dt=0; }
+      if(S._slowT>0){ S._slowT-=dt; dt*=S._slow; } else S._slow=1;
+      S.dt=dt; S.t+=dt;
+      // camera decay
+      S.cam.shake *= Math.exp(-S.cam.shakeDecay*dt);
+      if(S.cam.shake<0.05) S.cam.shake=0;
+      S.cam.punch *= Math.exp(-11*dt);
+      if(S.cam.punch<0.001) S.cam.punch=0;
+      if(S._flash){ S._flash.t+=dt; if(S._flash.t>=S._flash.d) S._flash=null; }
+      stepFx(dt);
+      if(S.ctx){
+        const g=S.ctx;
+        g.setTransform(S.dpr,0,0,S.dpr,0,0);
+        g.clearRect(0,0,S.w,S.h);
+        g.save();
+        const sh=S.cam.shake;
+        const z=S.cam.zoom*(1+S.cam.punch*0.055);
+        g.translate(S.w/2 + (sh?(Math.random()*2-1)*sh:0), S.h/2 + (sh?(Math.random()*2-1)*sh:0));
+        if(S.cam.rot) g.rotate(S.cam.rot);
+        g.scale(z,z);
+        g.translate(-S.w/2 - S.cam.x, -S.h/2 - S.cam.y);
+        try{ if(onFrame) onFrame(dt); }catch(e){ /* a broken trial must not lock the game */ }
+        g.restore();
+        if(S._flash){
+          const f=S._flash, k=1-f.t/f.d;
+          g.globalAlpha=f.a*k*k; g.fillStyle=f.c; g.fillRect(0,0,S.w,S.h); g.globalAlpha=1;
+        }
+      } else {
+        try{ if(onFrame) onFrame(dt); }catch(e){}
+      }
+      raf = (window.requestAnimationFrame||setTimeout)(tick, 16);
+    };
+    raf = (window.requestAnimationFrame||setTimeout)(tick, 16);
+  };
+
+  /* ---------- input: pointer and keyboard, normalised ---------- */
+  const listeners=[];
+  const on=(el,ev,fn,o)=>{ el.addEventListener(ev,fn,o); listeners.push([el,ev,fn,o]); };
+  S.pointer = {x:-999, y:-999, down:false, moved:false};
+  const toLocal=(e)=>{
+    const r=cv.getBoundingClientRect();
+    const cx=(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+    const cy=(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
+    // undo the camera so a trial's hit tests live in its own coordinates
+    const z=S.cam.zoom;
+    let x=(cx-r.left)*(S.w/(r.width||S.w));
+    let y=(cy-r.top)*(S.h/(r.height||S.h));
+    x = (x - S.w/2)/z + S.w/2 + S.cam.x;
+    y = (y - S.h/2)/z + S.h/2 + S.cam.y;
+    return {x,y};
+  };
+  S.bind = (h)=>{
+    on(cv,"pointerdown",(e)=>{ e.preventDefault(); A.resume();
+      const p=toLocal(e); S.pointer.x=p.x; S.pointer.y=p.y; S.pointer.down=true; S.pointer.moved=false;
+      try{ cv.setPointerCapture && cv.setPointerCapture(e.pointerId); }catch(_){}
+      h.down && h.down(p.x,p.y,e); });
+    on(cv,"pointermove",(e)=>{ const p=toLocal(e); S.pointer.x=p.x; S.pointer.y=p.y;
+      if(S.pointer.down) S.pointer.moved=true;
+      h.move && h.move(p.x,p.y,e); });
+    on(window,"pointerup",(e)=>{ if(!S.pointer.down && !h.always) return;
+      const p=toLocal(e); S.pointer.down=false; h.up && h.up(p.x,p.y,e); });
+    on(cv,"pointerleave",()=>{ h.leave && h.leave(); });
+    on(window,"keydown",(e)=>{
+      if(e.repeat && !h.allowRepeat) { h.keyRepeat && h.keyRepeat(e); return; }
+      // Space and Enter are the universal "strike" for every trial in here,
+      // so a keyboard player is never locked out of a hand-skill challenge.
+      h.key && h.key(e);
+    });
+    on(window,"keyup",(e)=>{ h.keyUp && h.keyUp(e); });
+  };
+  S.destroy = ()=>{
+    if(S.dead) return; S.dead=true;
+    try{ if(raf && window.cancelAnimationFrame) window.cancelAnimationFrame(raf); }catch(e){}
+    listeners.forEach(([el,ev,fn,o])=>{ try{ el.removeEventListener(ev,fn,o); }catch(e){} });
+    listeners.length=0;
+    window.removeEventListener("resize", onResize);
+    veil.classList.add("out");
+    setTimeout(()=>{ try{ if(veil.parentNode) veil.parentNode.removeChild(veil); }catch(e){} }, 420);
+  };
+  return S;
+}
+
+/* ==================================================================
+   SHARED PAINT — the material language every trial is cut from.
+   Lamp-lit bronze, worn papyrus, engraved letterforms, and light that
+   comes from one place so the objects read as solid.
+   ================================================================== */
+const P = {
+  /* The room the object sits in: a tight pool of lamplight on a dark bench.
+
+     The first cut of this was a wide, generous warm gradient, and every object
+     drawn on top of it turned to brown-on-brown mush — the bronze lock, the
+     wax tablets and the channel board all sat at the same value as the floor
+     they were lying on. The pool is tighter and much darker at the edges now,
+     which costs nothing and buys every trial its silhouette back. */
+  room(g,S,tint){
+    const t = tint||"#120c07";
+    g.fillStyle=t; g.fillRect(0,0,S.w,S.h);
+    if(g.createRadialGradient){
+      const r=g.createRadialGradient(S.w*0.5,S.h*0.46,10, S.w*0.5,S.h*0.5,Math.max(S.w,S.h)*0.62);
+      r.addColorStop(0,"rgba(255,226,168,.115)");
+      r.addColorStop(0.34,"rgba(168,126,72,.045)");
+      r.addColorStop(0.74,"rgba(0,0,0,.42)");
+      r.addColorStop(1,"rgba(0,0,0,.86)");
+      g.fillStyle=r; g.fillRect(0,0,S.w,S.h);
+    }
+  },
+  /* slow motes in the lamplight — the cheapest thing that stops a canvas
+     from reading as a still image while the player is reading the brief */
+  motes(g,S,n){
+    if(reduced()) return;
+    const k=Math.round((n||26)*qScale());
+    for(let i=0;i<k;i++){
+      const seed=i*127.1;
+      const x=(Math.sin(seed)*0.5+0.5)*S.w + Math.sin(S.real*0.22+i)*16;
+      const y=((Math.cos(seed*1.7)*0.5+0.5)*S.h + S.real*10 + i*13) % S.h;
+      const a=0.06+0.10*(Math.sin(S.real*0.9+i*2.1)*0.5+0.5);
+      g.globalAlpha=a; g.fillStyle="#f0dfb4";
+      g.beginPath(); g.arc(x,y,0.9+(i%3)*0.5,0,6.2832); g.fill();
+    }
+    g.globalAlpha=1;
+  },
+  /* an engraved line of small caps — the game's voice, cut into the scene */
+  eyebrow(g,x,y,txt,col,size,align){
+    g.save();
+    g.font=`700 ${size||12}px ${FONT_READ}`;
+    g.textAlign=align||"center"; g.textBaseline="middle";
+    const s=String(txt).toUpperCase().split("").join(" ");
+    g.fillStyle="rgba(0,0,0,.55)"; g.fillText(s,x,y+1.2);
+    g.fillStyle=col||C.gold; g.fillText(s,x,y);
+    g.restore();
+  },
+  title(g,x,y,txt,col,size){
+    g.save();
+    g.font=`700 ${size||34}px ${FONT_CAL}`;
+    g.textAlign="center"; g.textBaseline="middle";
+    g.fillStyle="rgba(0,0,0,.6)"; g.fillText(txt,x,y+2);
+    g.fillStyle=col||C.parch; g.fillText(txt,x,y);
+    g.restore();
+  },
+  body(g,x,y,txt,col,size,align){
+    g.save();
+    g.font=`400 ${size||14}px ${FONT_READ}`;
+    g.textAlign=align||"center"; g.textBaseline="middle";
+    g.fillStyle=col||"rgba(236,226,203,.72)"; g.fillText(txt,x,y);
+    g.restore();
+  },
+  /* wrap a sentence to a width and paint it centred */
+  wrap(g,x,y,txt,maxW,lh,col,size){
+    g.save(); g.font=`400 ${size||14}px ${FONT_READ}`; g.textAlign="center"; g.textBaseline="middle";
+    g.fillStyle=col||"rgba(236,226,203,.72)";
+    const words=String(txt).split(" "); let line="", ly=y;
+    for(let i=0;i<words.length;i++){
+      const test=line?line+" "+words[i]:words[i];
+      let wd=maxW; try{ wd=g.measureText(test).width; }catch(e){ wd=0; }
+      if(wd>maxW && line){ g.fillText(line,x,ly); ly+=(lh||19); line=words[i]; }
+      else line=test;
+    }
+    if(line) g.fillText(line,x,ly);
+    g.restore();
+    return ly;
+  },
+  /* a bronze disc with a lit rim — the base of the lock, the balance pivot,
+     the pestle bowl, every round thing in here */
+  bronzeDisc(g,x,y,r,opts){
+    opts=opts||{};
+    g.save(); g.translate(x,y);
+    if(g.createLinearGradient){
+      const lg=g.createLinearGradient(-r,-r,r*0.6,r);
+      lg.addColorStop(0, opts.hi||C.bronzeLt);
+      lg.addColorStop(0.42, opts.mid||C.bronze);
+      lg.addColorStop(1, opts.lo||C.bronzeDk);
+      g.fillStyle=lg;
+    } else g.fillStyle=C.bronze;
+    g.beginPath(); g.arc(0,0,r,0,6.2832); g.fill();
+    // the lit crescent at the top-left, where the lamp is
+    g.globalAlpha=0.5; g.strokeStyle=opts.rim||"#e8cf9a"; g.lineWidth=Math.max(1.4,r*0.045);
+    g.beginPath(); g.arc(0,0,r-g.lineWidth*0.6, Math.PI*0.86, Math.PI*1.78); g.stroke();
+    g.globalAlpha=0.55; g.strokeStyle="rgba(0,0,0,.7)";
+    g.beginPath(); g.arc(0,0,r-g.lineWidth*0.6, Math.PI*-0.18, Math.PI*0.68); g.stroke();
+    g.globalAlpha=1; g.restore();
+  },
+  /* a ring cut into bronze, used for tracks and channels */
+  groove(g,x,y,r,w,col){
+    g.save(); g.strokeStyle=col||"rgba(0,0,0,.5)"; g.lineWidth=w;
+    g.beginPath(); g.arc(x,y,r,0,6.2832); g.stroke();
+    g.strokeStyle="rgba(255,222,166,.16)"; g.lineWidth=Math.max(1,w*0.22);
+    g.beginPath(); g.arc(x,y,r-w*0.42,0,6.2832); g.stroke();
+    g.restore();
+  },
+  /* worn papyrus panel — wax tablets, labels, the pairs board */
+  tablet(g,x,y,w,h,opts){
+    opts=opts||{};
+    g.save(); g.translate(x,y);
+    g.fillStyle="rgba(0,0,0,.45)";
+    P.roundRect(g,-w/2+3,-h/2+5,w,h,opts.r||4); g.fill();
+    if(g.createLinearGradient){
+      const lg=g.createLinearGradient(0,-h/2,0,h/2);
+      lg.addColorStop(0, opts.hi||C.papyrus);
+      lg.addColorStop(1, opts.lo||C.papyrus3);
+      g.fillStyle=lg;
+    } else g.fillStyle=C.papyrus;
+    P.roundRect(g,-w/2,-h/2,w,h,opts.r||4); g.fill();
+    g.strokeStyle=opts.edge||"rgba(74,63,49,.55)"; g.lineWidth=opts.lw||1.6;
+    P.roundRect(g,-w/2,-h/2,w,h,opts.r||4); g.stroke();
+    g.restore();
+  },
+  roundRect(g,x,y,w,h,r){
+    r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);
+    g.beginPath();
+    g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.quadraticCurveTo(x+w,y,x+w,y+r);
+    g.lineTo(x+w,y+h-r); g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    g.lineTo(x+r,y+h); g.quadraticCurveTo(x,y+h,x,y+h-r);
+    g.lineTo(x,y+r); g.quadraticCurveTo(x,y,x+r,y); g.closePath();
+  },
+  /* a soft additive bloom, for anything that is meant to be glowing */
+  glow(g,x,y,r,col,alpha){
+    if(!g.createRadialGradient || reduced()) return;
+    const rg=g.createRadialGradient(x,y,0,x,y,r);
+    rg.addColorStop(0, col); rg.addColorStop(1,"rgba(0,0,0,0)");
+    g.save(); g.globalAlpha=alpha==null?0.5:alpha;
+    g.globalCompositeOperation="lighter";
+    g.fillStyle=rg; g.beginPath(); g.arc(x,y,r,0,6.2832); g.fill();
+    g.restore();
+  },
+  /* a flame that actually moves — the lamp every one of these scenes is lit by */
+  lamp(g,S,x,y,scale){
+    const s=scale||1;
+    const f=Math.sin(S.real*7.3)*0.5+Math.sin(S.real*11.7)*0.3;
+    P.glow(g,x,y-10*s,64*s,"rgba(255,206,120,.55)",0.55+f*0.06);
+    g.save(); g.translate(x,y);
+    g.fillStyle="#3a2b18";
+    g.beginPath(); g.ellipse ? g.ellipse(0,0,15*s,6*s,0,0,6.2832) : g.arc(0,0,12*s,0,6.2832); g.fill();
+    g.fillStyle="#ffd98a";
+    g.beginPath(); g.moveTo(0,-4*s);
+    g.quadraticCurveTo((3+f*2)*s,-13*s, 0,-(20+f*3)*s);
+    g.quadraticCurveTo(-(3+f*2)*s,-13*s, 0,-4*s); g.fill();
+    g.fillStyle="#fff3d0";
+    g.beginPath(); g.moveTo(0,-5*s);
+    g.quadraticCurveTo(1.6*s,-10*s,0,-(13+f*2)*s);
+    g.quadraticCurveTo(-1.6*s,-10*s,0,-5*s); g.fill();
+    g.restore();
+  }
+};
+
+/* ==================================================================
+   GRADING — one ladder, used by every trial and every caller.
+
+   PERFECT is deliberately hard to reach by accident: a trial has to
+   report `flawless` (no miss, no break, nothing damaged) AND land the
+   score. Excellent is the ceiling for a clean-but-imprecise run, which
+   keeps the top rung meaning something.
+   ================================================================== */
+const GRADES = [
+  {id:"fail",      name:"FAILED",    mult:0,    col:C.cinnabar, sub:"the work is spoiled"},
+  {id:"rough",     name:"ROUGH",     mult:0.55, col:"#a8763c",  sub:"it holds, barely"},
+  {id:"success",   name:"CLEAN",     mult:1.0,  col:C.verdSoft, sub:"honest work"},
+  {id:"excellent", name:"EXCELLENT", mult:1.3,  col:C.goldSoft, sub:"a steady hand"},
+  {id:"perfect",   name:"FLAWLESS",  mult:1.75, col:C.goldHot,  sub:"not one fault in it"}
+];
+function gradeOf(score, flawless){
+  const s=clamp(score,0,1);
+  let t = s>=0.95 ? 4 : s>=0.84 ? 3 : s>=0.60 ? 2 : s>=0.33 ? 1 : 0;
+  if(t===4 && !flawless) t=3;          // one slip anywhere costs the top rung
+  return t;
+}
+function result(score, flawless, detail){
+  const tier=gradeOf(score, flawless);
+  const G=GRADES[tier];
+  return { score:clamp(score,0,1), tier, grade:G.id, name:G.name, mult:G.mult,
+           flawless:!!flawless && tier===4, detail:detail||{} };
+}
+
+/* ==================================================================
+   THE BRIEF — how a trial teaches itself.
+
+   One line, set once, big, and gone the moment the player's hand moves.
+   It never sits over the object it is describing, and it is never a
+   panel. The stakes line stays a beat longer because it is the part
+   that makes the trial worth caring about.
+   ================================================================== */
+function Brief(S, spec){
+  const B = { t:0, held:true, dismissed:false, sinceDismiss:0 };
+  B.dismiss = ()=>{ if(!B.dismissed){ B.dismissed=true; B.sinceDismiss=0; } };
+  B.step = (dt)=>{
+    B.t+=dt;
+    if(!B.dismissed && B.t>(spec.holdFor||2.6)) B.dismiss();
+    if(B.dismissed) B.sinceDismiss+=dt;
+  };
+  B.alpha = ()=>{
+    if(!B.dismissed) return Math.min(1, B.t/0.32);
+    return Math.max(0, 1 - B.sinceDismiss/0.42);
+  };
+  B.paint = (g)=>{
+    const a=B.alpha(); if(a<=0.002) return;
+    g.save(); g.globalAlpha=a;
+    const rise=(1-a)*10;
+    P.eyebrow(g, S.w/2, S.h*0.115 + rise, spec.eyebrow||"A trial of hand", C.gold, 11);
+    P.title(g, S.w/2, S.h*0.175 + rise, spec.title||"", C.parch, Math.min(38, S.w*0.052));
+    if(spec.brief) P.wrap(g, S.w/2, S.h*0.235 + rise, spec.brief, Math.min(560,S.w*0.72), 20, "rgba(236,226,203,.78)", 15);
+    g.restore();
+  };
+  /* the stakes ride at the very bottom, in cinnabar, and outlive the brief */
+  B.paintStakes = (g)=>{
+    if(!spec.stakes) return;
+    const a = B.dismissed ? Math.max(0, 1-B.sinceDismiss/2.2) : Math.min(1,B.t/0.4);
+    if(a<=0.002) return;
+    g.save(); g.globalAlpha=a*0.9;
+    P.eyebrow(g, S.w/2, S.h-22, spec.stakes, C.cinnabar, 10.5);
+    g.restore();
+  };
+  return B;
+}
+
+/* ==================================================================
+   THE VERDICT — a struck seal, not a dialog.
+
+   The grade is stamped into the middle of the object the player was
+   just working, in wax-red or gold leaf, and the object reacts. There
+   is no OK button until the stamp has landed, because a reward you can
+   click through before it plays is a reward you never saw.
+   ================================================================== */
+function Verdict(S, res, opts){
+  opts=opts||{};
+  const V={ t:0, done:false, landed:false, lines:opts.lines||[] };
+  const G=GRADES[res.tier];
+  V.step=(dt)=>{
+    V.t+=dt;
+    if(!V.landed && V.t>=0.16){
+      V.landed=true;
+      S.punch(res.tier>=3?1:0.55); S.shake(res.tier>=3?14:7, 6);
+      if(res.tier>=4){
+        S.flash("#f2d78e",0.30,420); S.slowmo(0.35,320);
+        S.emit(46,{x:S.w/2,y:S.h*0.5,spd:420,life:1.1,r:3,c:[C.goldHot,C.goldSoft,"#fff6df"],kind:"spark",g:180,glow:true});
+        S.emit(28,{x:S.w/2,y:S.h*0.5,spd:180,life:1.9,r:2,c:[C.goldSoft,"#fff"],kind:"mote",g:-40,drag:0.9});
+        S.ring(S.w/2,S.h*0.5,{r:Math.max(S.w,S.h)*0.6,life:0.8,c:C.goldHot,w:5});
+        S.ring(S.w/2,S.h*0.5,{r:Math.max(S.w,S.h)*0.36,life:0.55,c:"#fff6df",w:2.5});
+      } else if(res.tier===3){
+        S.flash(C.goldSoft,0.16,300);
+        S.emit(24,{x:S.w/2,y:S.h*0.5,spd:280,life:0.8,r:2.6,c:[C.goldSoft,C.gold],kind:"spark",g:260});
+        S.ring(S.w/2,S.h*0.5,{r:Math.max(S.w,S.h)*0.42,life:0.6,c:C.goldSoft,w:3.5});
+      } else if(res.tier===0){
+        S.flash(C.cinnabar,0.22,320); S.shake(20,4);
+        S.emit(26,{x:S.w/2,y:S.h*0.5,spd:200,life:1.0,r:3,c:["#5a4a34","#3a2f22",C.cinDeep],kind:"shard",g:900});
+      }
+      A.win(res.tier);
+      S.say(`${G.name}. ${opts.line||G.sub}.`);
+    }
+    if(V.t>(opts.hold||1.05)) V.done=true;
+  };
+  V.paint=(g)=>{
+    const k=Math.min(1, V.t/0.16);
+    // the seal drops in from above and overshoots, the way a stamp does
+    const scale = V.landed ? 1 + Math.exp(-(V.t-0.16)*13)*Math.sin((V.t-0.16)*26)*0.16 : 0.4+k*0.6;
+    const alpha = Math.min(1, V.t/0.12);
+    const cy=S.h*0.5;
+    g.save(); g.globalAlpha=alpha;
+    // the scene dims behind the stamp so the stamp is the only thing lit
+    g.fillStyle="rgba(12,9,6,"+(0.52*alpha)+")"; g.fillRect(0,0,S.w,S.h);
+    g.translate(S.w/2, cy); g.scale(scale,scale);
+    if(res.tier>=3) P.glow(g,0,0,150,res.tier>=4?"rgba(242,215,142,.5)":"rgba(216,189,132,.36)",0.7);
+    // the ring the grade is struck inside
+    g.strokeStyle=G.col; g.lineWidth=2.4; g.globalAlpha=alpha*0.7;
+    g.beginPath(); g.arc(0,0,Math.min(120,S.w*0.16),0,6.2832); g.stroke();
+    g.globalAlpha=alpha;
+    g.font=`700 ${Math.min(46,S.w*0.062)}px ${FONT_CAL}`;
+    g.textAlign="center"; g.textBaseline="middle";
+    const nm=G.name.split("").join(" ");
+    g.fillStyle="rgba(0,0,0,.6)"; g.fillText(nm,0,3);
+    g.fillStyle=G.col; g.fillText(nm,0,1);
+    g.restore();
+    g.save(); g.globalAlpha=Math.min(1,Math.max(0,(V.t-0.24)/0.3));
+    P.body(g,S.w/2,cy+Math.min(74,S.h*0.13), opts.line||G.sub, "rgba(236,226,203,.82)", 15);
+    V.lines.forEach((L,i)=>{
+      P.body(g,S.w/2,cy+Math.min(102,S.h*0.175)+i*20, L, i===0?C.goldSoft:"rgba(236,226,203,.6)", 13.5);
+    });
+    if(V.done) P.eyebrow(g,S.w/2,S.h-40,"press to continue","rgba(216,189,132,.55)",10.5);
+    g.restore();
+  };
+  return V;
+}
+
+/* ==================================================================
+   COMBO — the shared streak meter. Not a bar: a stack of struck marks
+   beside the object that climbs, brightens and shivers. Every archetype
+   that can chain hits uses this one, so a streak means the same thing
+   everywhere in the game.
+   ================================================================== */
+function Combo(S){
+  const K={ n:0, best:0, heat:0, shakeT:0 };
+  K.hit = (perfect)=>{
+    K.n++; K.best=Math.max(K.best,K.n);
+    K.heat=Math.min(1, K.heat+ (perfect?0.34:0.20));
+    A.combo(K.n);
+    if(K.n>=3){ S.punch(0.14+Math.min(0.3,K.n*0.03)); }
+  };
+  K.break = ()=>{ if(K.n>=2){ A.comboBreak(); K.shakeT=0.4; } K.n=0; K.heat=0; };
+  K.step = (dt)=>{ K.heat=Math.max(0,K.heat-dt*0.34); K.shakeT=Math.max(0,K.shakeT-dt); };
+  K.paint = (g,x,y)=>{
+    if(K.n<2 && K.shakeT<=0) return;
+    const jitter = K.shakeT>0 ? (Math.random()*2-1)*4 : 0;
+    g.save(); g.translate(x+jitter,y);
+    const hot = K.heat;
+    g.font=`700 ${26+hot*10}px ${FONT_CAL}`; g.textAlign="center"; g.textBaseline="middle";
+    const col = K.shakeT>0 ? C.cinnabar : (hot>0.6? C.goldHot : C.goldSoft);
+    g.globalAlpha=0.35+hot*0.65;
+    g.fillStyle="rgba(0,0,0,.6)"; g.fillText("×"+K.n,0,2);
+    g.fillStyle=col; g.fillText("×"+K.n,0,0);
+    // a tally of struck marks under the number, one per hit, five to a group
+    g.globalAlpha=0.5+hot*0.4; g.strokeStyle=col; g.lineWidth=2; g.lineCap="round";
+    const n=Math.min(15,K.n);
+    for(let i=0;i<n;i++){
+      const gx=(i%5)*7 - 14, gy=20+Math.floor(i/5)*9;
+      g.beginPath(); g.moveTo(gx,gy-4); g.lineTo(gx+2,gy+4); g.stroke();
+    }
+    g.restore(); g.globalAlpha=1;
+  };
+  return K;
+}
+
+/* ==================================================================
+   THE ARCHETYPES
+   ------------------------------------------------------------------
+   Each is a factory: (S, cfg, api) -> { step, paint, down, up, move, key }
+   The runner owns the loop, the brief, the combo mark and the verdict,
+   so an archetype only ever describes its own object and its own rules.
+
+   cfg.diff   0..1     cfg.R  seeded rng     cfg.skin  a flavour key
+   api.finish(score, flawless, detail)
+   api.combo  the shared streak
+   ================================================================== */
+const ARCH = {};
+
+/* ENDING A TRIAL EXACTLY ONCE.
+
+   Several archetypes end on a condition their own step() keeps evaluating —
+   the sand runs out, the last note is judged, the pour reaches the phial. The
+   obvious spelling of that is `if(condition) setTimeout(finish, 500)`, and it
+   is wrong in a way that only shows up with the sound on: the condition is
+   still true on the next frame, and the one after, so the closing chime, the
+   camera punch and the particle burst all fire sixty times a second until the
+   timeout lands. finish() itself is idempotent, which is exactly why the bug
+   is invisible in a test and deafening in a browser.
+
+   One latch, shared. Everything that ends on a lingering condition goes
+   through it, and the flourish plays once. */
+function Ender(){
+  const E2={ ending:false };
+  E2.end = (ms, fn, flourish)=>{
+    if(E2.ending) return false;
+    E2.ending=true;
+    if(flourish) try{ flourish(); }catch(e){}
+    setTimeout(fn, ms||0);
+    return true;
+  };
+  return E2;
+}
+
+/* ------------------------------------------------------------------
+   1. SWEET SPOT — "THE STEADY HAND"
+
+   The object is a bronze steelyard balance: a beam on a pivot, a pan
+   of material hanging off one end, a counterweight running the beam.
+   The weight slides; you drop the pin when it crosses true.
+
+   What makes it skill: the true zone is not where the beam looks
+   level — it is marked, it drifts, and it narrows with every strike
+   you land, so the last weighing of a run is always the hardest one
+   you have done. The beam TILTS with the weight in real time, so the
+   whole object is the meter and there is no meter.
+
+   What failure costs: the pan tips and the material actually leaves
+   it — you can see the loss, and the score is the material left.
+   ------------------------------------------------------------------ */
+ARCH.sweetspot = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const strikes = 2 + Math.round(diff*2.2);              // 2 → 4
+  const SKINS = {
+    balance:{ eyebrow:"The steelyard", pan:"material", unit:"grain",
+              hitSfx:()=>A.snap(), col:C.bronzeLt },
+    whet:   { eyebrow:"The whetstone", pan:"edge", unit:"pass",
+              hitSfx:()=>A.slice(), col:C.steel },
+    kettle: { eyebrow:"The decoction", pan:"draught", unit:"pour",
+              hitSfx:()=>A.pour(), col:C.verdSoft }
+  };
+  const skin = SKINS[cfg.skin] || SKINS.balance;
+
+  let i=0, dir=1, pos=R.range(0.1,0.9), done=false;
+  let speed = 0.62 + diff*0.72;                          // beam-lengths per second
+  let zone  = { c:R.range(0.28,0.72), w:0.20 - diff*0.085 };
+  let drift = diff>0.45 ? (R.chance(0.5)?1:-1)*(0.05+diff*0.10) : 0;
+  let fakeT = 0, faking=false;
+  const marks=[];                                        // one entry per strike
+  let tilt=0, tiltV=0, spill=0, settleT=0, lastQ=0;
+  let ticked=-1;
+
+  const core = ()=>zone.w*0.24;                          // the dead-centre band
+  const inZone = (p)=>Math.abs(p-zone.c) <= zone.w/2;
+  const quality = (p)=>{
+    const d=Math.abs(p-zone.c);
+    if(d>zone.w/2) return 0;
+    return clamp(1 - (d/(zone.w/2))*0.72, 0, 1);         // edge of zone still pays 0.28
+  };
+
+  function nextWeighing(){
+    i++;
+    if(i>=strikes){ finish(); return; }
+    // each landed strike narrows the zone and quickens the beam: the run
+    // gets harder because you are doing well, not because a timer said so
+    zone = { c: clamp(R.range(0.22,0.78),0.14,0.86), w: Math.max(0.052, zone.w*(0.80-diff*0.09)) };
+    speed *= 1.10 + diff*0.16;
+    drift = diff>0.30 ? (R.chance(0.5)?1:-1)*(0.05+diff*0.13) : 0;
+    settleT=0;
+  }
+  function finish(){
+    if(done) return; done=true;
+    const sum=marks.reduce((a,m)=>a+m.q,0);
+    const score = marks.length ? sum/marks.length : 0;
+    const flawless = marks.length===strikes && marks.every(m=>m.q>=0.93);
+    api.finish(score, flawless, {strikes:marks.length, spilled:Math.round(spill*100)});
+  }
+
+  function strike(){
+    if(done || settleT>0) return;
+    const q=quality(pos);
+    const perfect = q>=0.93;
+    marks.push({q, p:pos, perfect});
+    lastQ=q; settleT = 0.42;
+    const px = S.w*0.14 + pos*S.w*0.72, py = S.h*0.44;
+    if(q<=0){
+      // a miss dumps the pan
+      api.combo.break();
+      spill = Math.min(1, spill+0.34);
+      tiltV += (pos<zone.c?-1:1)*7.4;
+      A.nearMiss(); S.shake(14,5); S.flash(C.cinnabar,0.14,240);
+      S.emit(20,{x:S.w*0.78,y:S.h*0.56,spd:190,life:0.9,r:2.6,c:["#7a6440","#4a3a26",C.cinDeep],kind:"dust",g:820,spread:1.1,ang:1.4});
+      S.float(px,py-40,"SPILLED",{c:C.cinnabar,size:19});
+      S.say("Missed. Material spilled.");
+    } else if(perfect){
+      api.combo.hit(true);
+      tiltV += (Math.random()*2-1)*0.6;
+      A.perfect(); skin.hitSfx();
+      S.punch(0.85); S.shake(9,7); S.hitstop(70); S.flash(C.goldHot,0.20,260);
+      S.ring(px,py,{r:120,life:0.5,c:C.goldHot,w:3.5});
+      S.ring(px,py,{r:64,life:0.34,c:"#fff6df",w:2});
+      S.emit(28,{x:px,y:py,spd:340,life:0.8,r:2.6,c:[C.goldHot,C.goldSoft,"#fff6df"],kind:"spark",g:400,glow:true});
+      S.float(px,py-44,"TRUE",{c:C.goldHot,size:24});
+    } else {
+      api.combo.hit(false);
+      tiltV += (pos-zone.c)*5.0;
+      A.snap(); skin.hitSfx();
+      S.punch(0.34); S.shake(4,7);
+      S.ring(px,py,{r:74,life:0.4,c:C.goldSoft,w:2.4});
+      S.emit(12,{x:px,y:py,spd:180,life:0.5,r:2,c:[C.goldSoft,C.gold],kind:"spark",g:420});
+      S.float(px,py-40, q>0.7?"GOOD":"ROUGH",{c:q>0.7?C.goldSoft:"#a8763c",size:18});
+    }
+  }
+
+  return {
+    step(dt){
+      if(done) return;
+      if(settleT>0){
+        settleT-=dt;
+        if(settleT<=0) nextWeighing();
+      } else {
+        // the counterweight runs the beam and bounces off the ends
+        let sp=speed;
+        // FAKE-OUT: at high difficulty the weight stutters, so a player who is
+        // riding the rhythm instead of watching the mark gets caught out
+        if(diff>0.55){
+          fakeT-=dt;
+          if(fakeT<=0){ fakeT=R.range(0.7,1.8); faking=R.chance(0.34); }
+          if(faking) sp *= 0.32;
+        }
+        pos += dir*sp*dt;
+        if(pos>1){ pos=1; dir=-1; A.wood(); }
+        if(pos<0){ pos=0; dir=1; A.wood(); }
+        // the mark drifts, so you cannot memorise a spot
+        if(drift){
+          zone.c += drift*dt;
+          if(zone.c < zone.w/2+0.06){ zone.c=zone.w/2+0.06; drift*=-1; }
+          if(zone.c > 1-zone.w/2-0.06){ zone.c=1-zone.w/2-0.06; drift*=-1; }
+        }
+        // ANTICIPATION: ticks climb as the weight closes on the mark, so the
+        // trial can be played by ear once you know the sound
+        const d=Math.abs(pos-zone.c);
+        const step=d<zone.w*0.5?4 : d<zone.w?3 : d<zone.w*1.8?2 : d<zone.w*3?1 : 0;
+        if(step!==ticked){ ticked=step; if(step>0) A.tick(step+2); }
+      }
+      // beam physics: a spring back to the tilt the weight implies
+      const want = settleT>0 ? (lastQ>0? (1-lastQ)*0.5*(marks.length?Math.sign(marks[marks.length-1].p-zone.c):1) : tilt)
+                             : (pos-0.5)*0.9;
+      tiltV += (want-tilt)*46*dt;
+      tiltV *= Math.exp(-7*dt);
+      tilt += tiltV*dt;
+      // a beam that swings through twenty degrees hides its own graduations;
+      // half that is still legibly alive and stays readable at speed
+      tilt = clamp(tilt,-0.34,0.34);
+    },
+    paint(g){
+      const cx=S.w/2, cy=S.h*0.44;
+      const L=Math.min(S.w*0.30, 420);
+      // ---- the stand ----
+      g.save();
+      g.fillStyle=C.bronzeDk;
+      P.roundRect(g,cx-9,cy,18,S.h*0.30,3); g.fill();
+      g.fillStyle="rgba(0,0,0,.5)";
+      g.beginPath(); g.ellipse ? g.ellipse(cx,cy+S.h*0.31,74,11,0,0,6.2832) : g.arc(cx,cy+S.h*0.31,60,0,6.2832); g.fill();
+      g.restore();
+      // ---- the beam ----
+      g.save(); g.translate(cx,cy); g.rotate(tilt*0.30);
+      g.strokeStyle="#1d1408"; g.lineWidth=17; g.lineCap="round";
+      g.beginPath(); g.moveTo(-L,0); g.lineTo(L,0); g.stroke();
+      g.strokeStyle=C.bronzeDk; g.lineWidth=13;
+      g.beginPath(); g.moveTo(-L,0); g.lineTo(L,0); g.stroke();
+      g.strokeStyle=skin.col; g.lineWidth=8;
+      g.beginPath(); g.moveTo(-L,0); g.lineTo(L,0); g.stroke();
+      // the lamp catches the top edge of the beam
+      g.strokeStyle="rgba(255,238,198,.45)"; g.lineWidth=2;
+      g.beginPath(); g.moveTo(-L,-3); g.lineTo(L,-3); g.stroke();
+      // the graduated track cut into the beam
+      g.strokeStyle="rgba(0,0,0,.45)"; g.lineWidth=1.4;
+      for(let k=0;k<=20;k++){ const x=-L+ (k/20)*2*L; const h=(k%5===0)?7:4;
+        g.beginPath(); g.moveTo(x,-h); g.lineTo(x,h); g.stroke(); }
+      /* ---- THE MARK: the true zone, cut into the beam and inlaid ----
+         This is the single most important thing on the screen and the first
+         cut painted it at thirty per cent over a bronze beam, where it read as
+         a smear of pale blue. It is opaque inlay now, with a scribed pointer
+         above it, so "where true is" is answerable from across the room. */
+      const zx=-L+zone.c*2*L, zw=zone.w*2*L;
+      const pulse=0.55+0.45*Math.sin(S.real*5.2);
+      g.save();
+      g.fillStyle="#2c4436"; P.roundRect(g,zx-zw/2,-12,zw,24,3); g.fill();
+      g.globalAlpha=0.55+pulse*0.30;
+      g.fillStyle=C.verdSoft; P.roundRect(g,zx-zw/2+2,-10,Math.max(1,zw-4),20,2); g.fill();
+      g.globalAlpha=1; g.strokeStyle="#0f1a13"; g.lineWidth=1.6;
+      P.roundRect(g,zx-zw/2,-12,zw,24,3); g.stroke();
+      // the core: the band that pays FLAWLESS, inlaid in gold leaf
+      const cw=core()*2*L;
+      g.fillStyle=C.goldHot; g.globalAlpha=0.75+pulse*0.25;
+      P.roundRect(g,zx-cw/2,-12,Math.max(2.5,cw),24,2); g.fill();
+      // the scribed pointer that names the centre
+      g.globalAlpha=1; g.fillStyle=C.goldHot;
+      g.beginPath(); g.moveTo(zx,-14); g.lineTo(zx-5,-22); g.lineTo(zx+5,-22); g.closePath(); g.fill();
+      g.restore();
+      // ---- the counterweight ----
+      const wx=-L+pos*2*L;
+      const near = Math.abs(pos-zone.c)<zone.w*0.5;
+      if(near) P.glow(g,wx,0,42,"rgba(242,215,142,.5)",0.6);
+      g.save(); g.translate(wx,0);
+      g.fillStyle="rgba(0,0,0,.5)"; P.roundRect(g,-11,-19,24,40,3); g.fill();
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(-12,-20,12,20);
+        lg.addColorStop(0,near?"#f6e2b0":C.bronzeLt); lg.addColorStop(1,C.bronzeDk); g.fillStyle=lg;
+      } else g.fillStyle=C.bronze;
+      P.roundRect(g,-12,-20,24,40,3); g.fill();
+      g.strokeStyle=near?C.goldHot:"rgba(0,0,0,.6)"; g.lineWidth=1.8;
+      P.roundRect(g,-12,-20,24,40,3); g.stroke();
+      // the pin that will drop
+      g.strokeStyle=near?C.goldHot:C.goldSoft; g.lineWidth=2.4; g.lineCap="round";
+      g.beginPath(); g.moveTo(0,-20); g.lineTo(0,-34); g.stroke();
+      g.restore();
+      g.restore();
+      /* THE PAN HANGS. It used to be drawn twice — once as a pair of cords in
+         the beam's rotated space and once as a bowl in world space — and the
+         two never met, so a beautifully drawn pan floated unattached below the
+         end of the beam. Both are in world space now, off the same point, and
+         the pan swings a little behind the beam the way a hung thing does. */
+      const tipX=cx+Math.cos(tilt*0.30)*L, tipY=cy+Math.sin(tilt*0.30)*L;
+      const swing=clamp(-tiltV*0.012,-0.3,0.3);
+      const drop=42;
+      const wpx=tipX+Math.sin(swing)*drop, wpy=tipY+Math.cos(swing)*drop;
+      g.save();
+      g.strokeStyle=C.bronzeDk; g.lineWidth=1.6;
+      g.beginPath(); g.moveTo(tipX,tipY); g.lineTo(wpx-28,wpy);
+      g.moveTo(tipX,tipY); g.lineTo(wpx+28,wpy); g.stroke();
+      g.restore();
+      g.save(); g.translate(wpx,wpy);
+      g.fillStyle=C.bronze;
+      g.beginPath(); g.moveTo(-30,0); g.lineTo(30,0); g.lineTo(22,15); g.lineTo(-22,15); g.closePath(); g.fill();
+      g.strokeStyle=C.bronzeDk; g.lineWidth=1.6; g.stroke();
+      // the material — visibly less after every spill
+      const heap=(1-spill);
+      if(heap>0.02){
+        g.fillStyle=C.olive; g.globalAlpha=0.9;
+        g.beginPath(); g.moveTo(-24*heap,0);
+        g.quadraticCurveTo(0,-16*heap-3, 24*heap,0); g.closePath(); g.fill();
+        g.globalAlpha=1;
+      }
+      g.restore();
+      // ---- the tally of weighings, struck as pins along the base ----
+      g.save();
+      for(let k=0;k<strikes;k++){
+        const bx=cx-(strikes-1)*13/2 + k*13, by=cy+S.h*0.24;
+        const m=marks[k];
+        g.strokeStyle = !m ? "rgba(216,189,132,.28)" : m.q<=0 ? C.cinnabar : m.perfect ? C.goldHot : C.verdSoft;
+        g.fillStyle = g.strokeStyle;
+        g.lineWidth=2;
+        g.beginPath(); g.arc(bx,by,4,0,6.2832);
+        if(m) g.fill(); else g.stroke();
+      }
+      g.restore();
+      P.lamp(g,S,S.w*0.09,S.h*0.20,1.1);
+    },
+    down(){ strike(); },
+    key(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); strike(); } }
+  };
+};
+
+/* ------------------------------------------------------------------
+   2. STOP THE NEEDLE — "THE WARD LOCK"
+
+   A bronze lock face fills the screen. Six wards sit around a ring,
+   each with a notch cut at a different angle. A pointer sweeps the
+   ring; press when it crosses the lit notch and that ward DRIVES
+   INWARD and locks — physically, with a clack you can feel.
+
+   What makes it skill: the pointer accelerates with every ward you
+   set, it reverses direction without warning at higher difficulty,
+   and the notches get narrower as the lock gets closer to open. So
+   the last ward of a six-ward lock is a genuinely tight window that
+   you have earned the right to attempt.
+
+   What failure costs: a missed ward springs back out AND takes a bite
+   out of the mechanism. Three bites and the lock seizes — the trial
+   is over and the contents are what a forced lock leaves you.
+   ------------------------------------------------------------------ */
+ARCH.needle = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const nWards = 3 + Math.round(diff*3.2);               // 3 → 6
+  const BITES  = 3;
+  let ang = R.range(0,6.2832);
+  let spin = (1.5 + diff*1.5) * (R.chance(0.5)?1:-1);    // radians/sec
+  let set=0, bites=0, done=false, seized=false;
+  let reverseT = diff>0.4 ? R.range(0.9,2.2) : 1e9;
+  const wards=[];
+  for(let k=0;k<nWards;k++){
+    wards.push({
+      a: (k/nWards)*6.2832 + R.range(-0.28,0.28),
+      w: 0.34 - diff*0.13,                                // half-width in radians
+      set:false, drive:0, spring:0, glow:0
+    });
+  }
+  // the wards must be taken in order, which is what makes the pointer's
+  // direction matter — you cannot just wait for whichever is convenient
+  const order = wards.map((_,k)=>k);
+
+  const cur = ()=>wards[order[set]];
+  const dAng=(a,b)=>{ let d=(a-b)%6.2832; if(d>Math.PI)d-=6.2832; if(d<-Math.PI)d+=6.2832; return d; };
+  /* One place decides how big the lock is, so the hit feedback and the drawing
+     cannot drift apart. Sized to leave room beneath for the bite tally. */
+  const RING = ()=>Math.min(S.w*0.30, S.h*0.255);
+
+  function finish(forced){
+    if(done) return; done=true;
+    // a seized lock still pays something — you did get it open, by force
+    const base = set/nWards;
+    const clean = 1 - bites/(BITES+1);
+    const score = seized ? base*0.30 : clamp(base*0.68 + clean*0.32, 0, 1);
+    api.finish(score, !seized && bites===0 && set===nWards, {wards:set, of:nWards, bites, seized});
+  }
+
+  function strike(){
+    if(done || seized) return;   // a seized lock is finished with you
+    const w=cur(); if(!w) return;
+    const d=Math.abs(dAng(ang, w.a));
+    const cx=S.w/2, cy=S.h*0.47, ring=RING();
+    const hx=cx+Math.cos(w.a)*ring, hy=cy+Math.sin(w.a)*ring;
+    if(d<=w.w){
+      const q=1-d/w.w;
+      w.set=true; w.drive=0; set++;
+      // every ward set winds the mechanism tighter
+      spin *= (1.13 + diff*0.12);
+      if(diff>0.5 && R.chance(0.35)) spin*=-1;
+      wards.forEach(x=>{ if(!x.set) x.w=Math.max(0.085, x.w*0.90); });
+      if(q>0.72){
+        api.combo.hit(true);
+        A.perfect(); S.punch(0.7); S.hitstop(60); S.flash(C.goldHot,0.14,220);
+        S.ring(hx,hy,{r:110,life:0.5,c:C.goldHot,w:3});
+        S.emit(22,{x:hx,y:hy,spd:300,life:0.7,r:2.4,c:[C.goldHot,"#fff6df"],kind:"spark",g:0,drag:2.4,glow:true});
+        S.float(hx,hy-30,"SEATED",{c:C.goldHot,size:18});
+      } else {
+        api.combo.hit(false);
+        A.lock(set); S.punch(0.4); S.shake(7,6);
+        S.ring(hx,hy,{r:76,life:0.42,c:C.goldSoft,w:2.4});
+        S.emit(12,{x:hx,y:hy,spd:170,life:0.5,r:2,c:[C.goldSoft,C.bronzeLt],kind:"spark",g:0,drag:3});
+      }
+      A.lock(set);
+      S.say(`Ward ${set} of ${nWards} set.`);
+      if(set>=nWards){
+        // THE OPENING — the whole face turns and the light comes out of it
+        A.open(); S.punch(1.2); S.shake(18,4); S.slowmo(0.4,340); S.flash(C.goldHot,0.26,460);
+        S.emit(50,{x:cx,y:cy,spd:420,life:1.2,r:3,c:[C.goldHot,C.goldSoft,"#fff6df"],kind:"spark",g:120,glow:true});
+        S.ring(cx,cy,{r:Math.max(S.w,S.h)*0.55,life:0.7,c:C.goldHot,w:5});
+        setTimeout(()=>finish(false), 620);
+      }
+    } else {
+      // MISS — the ward springs, the mechanism bites
+      w.spring=1; bites++;
+      api.combo.break();
+      spin *= 1.09;
+      A.crack(); S.shake(22,4); S.flash(C.cinnabar,0.20,280);
+      S.emit(18,{x:hx,y:hy,spd:230,life:0.8,r:2.6,c:[C.cinDeep,"#5a4a34",C.bronzeDk],kind:"shard",g:700});
+      S.float(cx,cy-ring-26,`THE LOCK BITES  ${BITES-bites} left`,{c:C.cinnabar,size:17});
+      S.say(`Missed. ${BITES-bites} attempts left.`);
+      if(bites>=BITES){ seized=true; A.fail(); S.shake(28,3); setTimeout(()=>finish(true), 480); }
+    }
+  }
+
+  return {
+    step(dt){
+      if(done) return;
+      ang += spin*dt;
+      if(diff>0.4){
+        reverseT-=dt;
+        if(reverseT<=0){ reverseT=R.range(0.8,2.4); spin*=-1; A.wood(); }
+      }
+      wards.forEach(w=>{
+        w.drive += ((w.set?1:0)-w.drive)*Math.min(1,dt*16);
+        w.spring=Math.max(0,w.spring-dt*3.4);
+        const t = w===cur() && !w.set ? 1 : 0;
+        w.glow += (t-w.glow)*Math.min(1,dt*10);
+      });
+      // the anticipation ladder: ticks climb as the pointer closes on the
+      // live ward, so the lock can be picked half by ear
+      const w=cur();
+      if(w){ const d=Math.abs(dAng(ang,w.a));
+        const st=d<w.w?4:d<w.w*2?3:d<w.w*4?2:d<w.w*7?1:0;
+        if(st!==this._tk){ this._tk=st; if(st>0) A.tick(st+1); if(st===4) A.detent(); } }
+    },
+    paint(g){
+      /* The lock is sized off the SHORT edge and then pulled in far enough to
+         leave room under it for the bite tally and the ward count. The first
+         cut filled the frame edge to edge and pushed its own readouts off the
+         bottom of the screen — an object can be the interface and still has to
+         fit in the room. */
+      const cx=S.w/2, cy=S.h*0.47, ring=RING();
+      const face=ring*1.42;
+      // ---- the lock face ----
+      P.bronzeDisc(g,cx,cy,face);
+      P.groove(g,cx,cy,ring,Math.max(9,ring*0.10));
+      // the inner drum, which turns as wards are set
+      g.save(); g.translate(cx,cy); g.rotate(set*0.22);
+      P.bronzeDisc(g,0,0,ring*0.52,{hi:"#a3854e",mid:"#6b5330",lo:"#2f2312"});
+      // a Greek key border cut around the drum, because the object should look
+      // like it was made by someone
+      g.strokeStyle="rgba(255,222,166,.22)"; g.lineWidth=1.6;
+      for(let k=0;k<16;k++){
+        const a=(k/16)*6.2832, r0=ring*0.34, r1=ring*0.46;
+        g.beginPath(); g.moveTo(Math.cos(a)*r0,Math.sin(a)*r0); g.lineTo(Math.cos(a)*r1,Math.sin(a)*r1); g.stroke();
+      }
+      g.restore();
+      // ---- the wards ----
+      wards.forEach((w,k)=>{
+        const isCur = w===cur() && !w.set;
+        const spring = Math.sin(w.spring*22)*w.spring*6;
+        const rr = ring + 26 - w.drive*26 + spring;
+        const x=cx+Math.cos(w.a)*rr, y=cy+Math.sin(w.a)*rr;
+        // the notch cut in the ring that this ward has to drop into
+        g.save(); g.translate(cx,cy); g.rotate(w.a);
+        g.globalAlpha = w.set?0.85:(0.30+w.glow*0.6);
+        g.fillStyle = w.set?C.verdSoft:(isCur?C.goldHot:"rgba(216,189,132,.5)");
+        const halfW = Math.max(2, Math.sin(w.w)*ring);
+        P.roundRect(g,ring-9,-halfW,18,halfW*2,2); g.fill();
+        if(isCur){
+          g.globalAlpha=0.20+0.18*Math.sin(S.real*8);
+          P.roundRect(g,ring-9,-halfW,18,halfW*2,2); g.fill();
+        }
+        g.restore();
+        // the ward itself: a bronze tongue that drives inward
+        g.save(); g.translate(x,y); g.rotate(w.a+Math.PI/2);
+        g.fillStyle="rgba(0,0,0,.5)"; P.roundRect(g,-8,-13,16,26,2); g.fill();
+        g.fillStyle = w.set?"#8fae9a":(isCur?"#e6c884":C.bronze);
+        P.roundRect(g,-7,-14,14,26,2); g.fill();
+        g.strokeStyle=w.set?C.verdDeep:C.bronzeDk; g.lineWidth=1.5;
+        P.roundRect(g,-7,-14,14,26,2); g.stroke();
+        g.restore();
+        if(w.set) P.glow(g,x,y,26,"rgba(125,154,138,.6)",0.4);
+        /* THE LIVE WARD HAS TO BE UNMISTAKABLE. In the first cut it was a
+           slightly paler tongue among five identical ones, and finding it cost
+           more attention than hitting it did — difficulty from confusion, which
+           is the one kind this game is not allowed to have. It now carries a
+           breathing halo and a caret pointing in at it. */
+        if(isCur){
+          const puls=0.5+0.5*Math.sin(S.real*6.4);
+          P.glow(g,x,y,44+puls*10,"rgba(242,215,142,.7)",0.55);
+          g.save(); g.translate(x,y);
+          g.strokeStyle=C.goldHot; g.lineWidth=2; g.globalAlpha=0.45+puls*0.45;
+          g.beginPath(); g.arc(0,0,22+puls*4,0,6.2832); g.stroke();
+          g.rotate(w.a);
+          g.globalAlpha=0.7+puls*0.3;
+          g.beginPath(); g.moveTo(30,-7); g.lineTo(22,0); g.lineTo(30,7); g.stroke();
+          g.restore(); g.globalAlpha=1;
+        }
+      });
+      // ---- the pointer ----
+      g.save(); g.translate(cx,cy); g.rotate(ang);
+      g.strokeStyle="rgba(0,0,0,.55)"; g.lineWidth=5; g.lineCap="round";
+      g.beginPath(); g.moveTo(-ring*0.16,2); g.lineTo(ring*1.06,2); g.stroke();
+      g.strokeStyle=C.cinnabar; g.lineWidth=3.4;
+      g.beginPath(); g.moveTo(-ring*0.16,0); g.lineTo(ring*1.06,0); g.stroke();
+      g.fillStyle=C.cinnabar;
+      g.beginPath(); g.moveTo(ring*1.06,0); g.lineTo(ring*0.94,-7); g.lineTo(ring*0.94,7); g.closePath(); g.fill();
+      g.restore();
+      P.bronzeDisc(g,cx,cy,ring*0.13,{hi:"#e8cf9a",mid:C.gold,lo:C.bronzeDk});
+      // ---- the bite tally: teeth broken out of the ring ----
+      for(let k=0;k<BITES;k++){
+        const bx=cx-(BITES-1)*15/2+k*15, by=cy+face+30;
+        g.strokeStyle = k<bites ? C.cinnabar : "rgba(216,189,132,.32)";
+        g.lineWidth=2.2; g.lineCap="round";
+        if(k<bites){ g.beginPath(); g.moveTo(bx-5,by-5); g.lineTo(bx+5,by+5);
+                     g.moveTo(bx+5,by-5); g.lineTo(bx-5,by+5); g.stroke(); }
+        else { g.beginPath(); g.arc(bx,by,5,0,6.2832); g.stroke(); }
+      }
+      P.eyebrow(g,cx,cy+face+56,`${set} of ${nWards} wards`,"rgba(216,189,132,.6)",10);
+      P.lamp(g,S,S.w*0.10,S.h*0.22,1.0);
+    },
+    down(){ strike(); },
+    key(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); strike(); } }
+  };
+};
+
+/* ------------------------------------------------------------------
+   3. RHYTHM — "THE PESTLE"
+
+   A mortar sits under a pestle. Rings of resin close in on the bowl's
+   rim in time with a drum; you strike as each one touches. Some beats
+   are not strikes at all — an open ring is a POUR that you must hold
+   through, and a doubled ring is a fold you must not hit.
+
+   What makes it skill: the pattern is a real bar of music, so it can
+   be felt rather than read, and the tempo steps up every four beats.
+   The pestle physically slams and the bowl's contents change colour
+   as the grind takes — the object IS the score.
+   ------------------------------------------------------------------ */
+ARCH.rhythm = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const SKINS = {
+    pestle:{ eyebrow:"The mortar", hit:()=>A.grind(), hold:()=>A.pour(),
+             col:C.olive, bowl:"#5a4a2e", name:"grind" },
+    anvil: { eyebrow:"The anvil",  hit:()=>A.hammer(), hold:()=>A.strain(),
+             col:C.cinnabar, bowl:"#3a3128", name:"strike" }
+  };
+  const skin=SKINS[cfg.skin]||SKINS.pestle;
+  let bpm = 86 + diff*46;
+  const beat = ()=>60/bpm;
+  const nBeats = 8 + Math.round(diff*6);                 // 8 → 14
+  const notes=[];
+  // build a bar that reads as music: a downbeat, then a pattern of strikes,
+  // one held pour per phrase, and a rest you have to NOT play
+  for(let k=0;k<nBeats;k++){
+    let kind="hit";
+    if(k>0 && k%4===3 && R.chance(0.55+diff*0.2)) kind="hold";
+    else if(k>2 && R.chance(0.10+diff*0.16)) kind="rest";
+    notes.push({t:(k+2)*beat(), kind, hitAt:null, q:0, judged:false, holdOK:false});
+  }
+  const total = notes.filter(n=>n.kind!=="rest").length;
+  const EN=Ender();
+  let clock=0, idx=0, done=false, holding=false, holdStart=0, holdNote=null;
+  let pestle=0, pestleV=0, grind=0, spillT=0;
+  let lastBeatMark=-1;
+  const HOLD_LEN = ()=>beat()*0.9;
+  const WIN = ()=>0.20 - diff*0.075;                     // ± seconds for a hit
+
+  function judge(n, dt){
+    const a=Math.abs(dt);
+    if(a>WIN()) return 0;
+    return clamp(1-(a/WIN())*0.8,0,1);
+  }
+  function finish(){
+    if(done) return; done=true;
+    const played=notes.filter(n=>n.kind!=="rest");
+    const sum=played.reduce((a,n)=>a+n.q,0);
+    const misfires=notes.filter(n=>n.kind==="rest" && n.judged).length;
+    const score=clamp((total? sum/total : 0) - misfires*0.12, 0, 1);
+    const flawless = misfires===0 && played.every(n=>n.q>=0.9);
+    api.finish(score, flawless, {beats:total, misfires, ground:Math.round(grind*100)});
+  }
+  function strike(down){
+    if(done) return;
+    // find the nearest unjudged note
+    let best=null, bd=1e9;
+    notes.forEach(n=>{ if(n.judged) return; const d=Math.abs(n.t-clock); if(d<bd){bd=d;best=n;} });
+    if(!best || bd>beat()*0.7){
+      // struck into empty air — that is a misfire and it costs the streak
+      if(down){ api.combo.break(); A.nearMiss(); S.shake(8,6); spillT=0.4;
+        S.float(S.w/2,S.h*0.30,"OFF THE BEAT",{c:C.cinnabar,size:16}); }
+      return;
+    }
+    const cx=S.w/2, cy=S.h*0.62;
+    if(best.kind==="rest"){
+      if(down){ best.judged=true; api.combo.break(); A.crack(); S.shake(14,5);
+        S.flash(C.cinnabar,0.14,220); spillT=0.5;
+        S.float(cx,cy-120,"THAT WAS A REST",{c:C.cinnabar,size:17}); }
+      return;
+    }
+    if(best.kind==="hold"){
+      if(down){ holding=true; holdStart=clock; holdNote=best; skin.hold();
+        pestleV-=8; S.emit(10,{x:cx,y:cy-30,spd:70,life:1.2,r:2.4,c:["#cfe0d4","#9ab3a4"],kind:"mote",g:-70,drag:1}); }
+      return;
+    }
+    if(!down) return;
+    best.judged=true; best.hitAt=clock;
+    const q=judge(best, clock-best.t); best.q=q;
+    pestleV -= 14; grind=Math.min(1, grind + (q>0?0.10+q*0.06:0));
+    if(q<=0){
+      api.combo.break(); A.nearMiss(); S.shake(10,5); spillT=0.4;
+      S.float(cx,cy-120,"MISSED",{c:C.cinnabar,size:17});
+    } else if(q>=0.9){
+      api.combo.hit(true); skin.hit(); A.perfect();
+      S.punch(0.6); S.hitstop(45);
+      S.ring(cx,cy,{r:150,life:0.45,c:C.goldHot,w:3});
+      S.emit(20,{x:cx,y:cy-16,spd:300,life:0.7,r:2.4,c:[C.goldHot,skin.col,"#fff6df"],kind:"spark",g:520,glow:true});
+      S.float(cx,cy-120,"PERFECT",{c:C.goldHot,size:21});
+    } else {
+      api.combo.hit(false); skin.hit();
+      S.punch(0.28); S.shake(4,7);
+      S.emit(10,{x:cx,y:cy-16,spd:160,life:0.5,r:2,c:[skin.col,C.goldSoft],kind:"dust",g:600});
+      S.float(cx,cy-120,"GOOD",{c:C.goldSoft,size:17});
+    }
+  }
+  function release(){
+    if(!holding || !holdNote) { holding=false; return; }
+    const held=clock-holdStart;
+    const want=HOLD_LEN();
+    const err=Math.abs(held-want)/want;
+    holdNote.judged=true;
+    holdNote.q = clamp(1-err*1.5, 0, 1);
+    const cx=S.w/2, cy=S.h*0.62;
+    grind=Math.min(1, grind+holdNote.q*0.12);
+    if(holdNote.q>=0.9){ api.combo.hit(true); A.perfect(); S.punch(0.55);
+      S.float(cx,cy-120,"POURED CLEAN",{c:C.goldHot,size:19}); }
+    else if(holdNote.q>0.3){ api.combo.hit(false); A.snap();
+      S.float(cx,cy-120, held<want?"CUT SHORT":"OVERWORKED",{c:C.goldSoft,size:16}); }
+    else { api.combo.break(); A.nearMiss(); spillT=0.4;
+      S.float(cx,cy-120, held<want?"CUT SHORT":"OVERWORKED",{c:C.cinnabar,size:16}); }
+    holding=false; holdNote=null;
+  }
+
+  return {
+    step(dt){
+      if(done) return;
+      clock+=dt;
+      // the drum: a click on every beat, accented on the downbeat, and the
+      // tempo steps up each phrase so the bar you have learned keeps moving
+      const bi=Math.floor(clock/beat());
+      if(bi!==lastBeatMark){
+        lastBeatMark=bi;
+        if(bi>=0){ if(bi%4===0){ A.wood(); S.punch(0.10); } else A.detent(); }
+        if(bi>0 && bi%4===0) bpm=Math.min(200, bpm*1.055);
+      }
+      // notes that sailed past unplayed
+      notes.forEach(n=>{ if(!n.judged && n.kind!=="rest" && clock-n.t>WIN()){
+        n.judged=true; n.q=0; api.combo.break(); spillT=0.35;
+        S.float(S.w/2,S.h*0.42,"MISSED",{c:C.cinnabar,size:15}); }
+        if(!n.judged && n.kind==="rest" && clock-n.t>WIN()){ n.q=1; } });
+      if(holding && holdNote && clock-holdStart > HOLD_LEN()*2) release();
+      // pestle spring
+      pestleV += (0-pestle)*180*dt; pestleV*=Math.exp(-9*dt); pestle+=pestleV*dt;
+      pestle=clamp(pestle,-6,40);
+      spillT=Math.max(0,spillT-dt);
+      if(notes.every(n=>n.judged) && !holding) EN.end(260, finish);
+    },
+    paint(g){
+      const cx=S.w/2, cy=S.h*0.62, rim=Math.min(S.w*0.19, S.h*0.19);
+      const ar=0.34;                       // how much the rim ellipse is foreshortened
+      const FALL=Math.min(S.h*0.40, 300);  // how far above the rim a note starts
+      /* ---- the notes fall INTO the bowl ----
+         The first cut had them closing in as concentric rings around the mortar,
+         which put every one of them straight through the object: at the moment a
+         note mattered most it was drawn on top of the thing it was about to hit.
+         They descend now — hoops of resin dropping down the pestle's line onto
+         the rim — so the strike point is a place in the world, the timing is a
+         distance you can see, and nothing ever overlaps the bowl. */
+      const LEAD=()=>beat()*3.2;
+      g.save();
+      g.strokeStyle="rgba(216,189,132,.10)"; g.lineWidth=1;
+      g.beginPath(); g.moveTo(cx-rim*0.92,cy-FALL); g.lineTo(cx-rim*0.92,cy);
+      g.moveTo(cx+rim*0.92,cy-FALL); g.lineTo(cx+rim*0.92,cy); g.stroke();
+      g.restore();
+      notes.forEach(n=>{
+        if(n.judged && n.kind!=="hold") return;
+        const lead=(n.t-clock);
+        if(lead>LEAD() || lead< -WIN()*1.6) return;
+        const k=clamp(1-lead/LEAD(),0,1.25);          // 0 far above, 1 on the rim
+        const y=cy-FALL*(1-k);
+        const a=clamp(k*1.5,0,1)*(n.judged?0.3:1);
+        const r=rim*0.92;
+        g.save(); g.globalAlpha=a;
+        g.lineWidth = n.kind==="hold"?6:n.kind==="rest"?2:4;
+        if(n.kind==="rest"){ if(g.setLineDash) g.setLineDash([5,7]); g.strokeStyle=C.cinnabar; }
+        else if(n.kind==="hold") g.strokeStyle=C.verdSoft;
+        else g.strokeStyle=k>0.88?C.goldHot:C.goldSoft;
+        g.beginPath(); g.ellipse? g.ellipse(cx,y,r,r*ar,0,0,6.2832):g.arc(cx,y,r,0,6.2832); g.stroke();
+        if(k>0.88 && n.kind!=="rest") P.glow(g,cx,y,r*0.9,"rgba(242,215,142,.35)",0.5);
+        if(g.setLineDash) g.setLineDash([]);
+        g.restore();
+      });
+      /* ---- the mortar: a bowl, drawn as a bowl ----
+         A filled disc reads as a ball. This is a rim ellipse, a tapering wall
+         below it, and a foot — so the thing you are grinding into has an inside. */
+      g.save();
+      g.fillStyle="rgba(0,0,0,.55)";
+      g.beginPath(); g.ellipse? g.ellipse(cx,cy+rim*1.42,rim*1.12,rim*0.20,0,0,6.2832):g.arc(cx,cy,rim,0,6.2832); g.fill();
+      // the outside wall
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(cx-rim,cy,cx+rim*0.7,cy+rim*1.3);
+        lg.addColorStop(0,"#b08d51"); lg.addColorStop(0.45,"#7a5f36"); lg.addColorStop(1,"#2c2110");
+        g.fillStyle=lg;
+      } else g.fillStyle=C.bronze;
+      g.beginPath();
+      g.moveTo(cx-rim, cy);
+      g.bezierCurveTo(cx-rim*0.98, cy+rim*0.95, cx-rim*0.52, cy+rim*1.30, cx-rim*0.40, cy+rim*1.32);
+      g.lineTo(cx+rim*0.40, cy+rim*1.32);
+      g.bezierCurveTo(cx+rim*0.52, cy+rim*1.30, cx+rim*0.98, cy+rim*0.95, cx+rim, cy);
+      g.closePath(); g.fill();
+      g.strokeStyle="rgba(20,14,8,.7)"; g.lineWidth=2; g.stroke();
+      // the foot
+      g.fillStyle="#3a2c17";
+      P.roundRect(g,cx-rim*0.46,cy+rim*1.28,rim*0.92,rim*0.16,3); g.fill();
+      // the inside of the bowl
+      g.fillStyle=skin.bowl;
+      g.beginPath(); g.ellipse? g.ellipse(cx,cy,rim*0.92,rim*0.92*ar,0,0,6.2832):g.arc(cx,cy,rim*0.6,0,6.2832); g.fill();
+      // shadow inside the far wall
+      g.fillStyle="rgba(0,0,0,.35)";
+      g.beginPath(); g.ellipse? g.ellipse(cx,cy-rim*0.05,rim*0.90,rim*0.90*ar,0,Math.PI,6.2832):g.arc(cx,cy,rim*0.5,0,6.2832); g.fill();
+      // what is in it — colour shifts as the grind takes
+      const gcol = grind>0.66?"#cbb26a" : grind>0.33?"#8f8347" : skin.col;
+      g.fillStyle=gcol; g.globalAlpha=0.65+grind*0.35;
+      const gw=rim*(0.28+grind*0.56);
+      g.beginPath(); g.ellipse? g.ellipse(cx,cy+rim*0.05,gw,gw*ar,0,0,6.2832):g.arc(cx,cy,gw,0,6.2832); g.fill();
+      g.globalAlpha=1;
+      // the lit rim
+      g.strokeStyle="rgba(255,230,180,.55)"; g.lineWidth=3;
+      g.beginPath(); g.ellipse? g.ellipse(cx,cy,rim*0.92,rim*0.92*ar,0,0,6.2832):g.arc(cx,cy,rim*0.6,0,6.2832); g.stroke();
+      g.restore();
+      // the rim flashes on the beat you are meant to play
+      const nxt=notes.find(n=>!n.judged);
+      if(nxt){ const lead=Math.abs(nxt.t-clock);
+        if(lead<WIN()){ P.glow(g,cx,cy,rim*1.5,"rgba(242,215,142,.45)",0.6); } }
+      // ---- the pestle: a weighted rod with a worn head, held over the bowl ----
+      g.save(); g.translate(cx, cy-rim*0.55-58+pestle);
+      g.strokeStyle="rgba(0,0,0,.5)"; g.lineWidth=17; g.lineCap="round";
+      g.beginPath(); g.moveTo(2,-92); g.lineTo(2,8); g.stroke();
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(-9,0,9,0);
+        lg.addColorStop(0,"#e0c085"); lg.addColorStop(0.5,"#a3814a"); lg.addColorStop(1,"#4a3720");
+        g.strokeStyle=lg;
+      } else g.strokeStyle=C.bronzeLt;
+      g.lineWidth=13;
+      g.beginPath(); g.moveTo(0,-92); g.lineTo(0,4); g.stroke();
+      // the grinding head
+      g.fillStyle="#8a6a3a";
+      g.beginPath(); g.ellipse? g.ellipse(0,16,19,15,0,0,6.2832):g.arc(0,16,17,0,6.2832); g.fill();
+      g.fillStyle="rgba(255,230,180,.30)";
+      g.beginPath(); g.ellipse? g.ellipse(-5,11,8,6,0,0,6.2832):g.arc(-5,11,7,0,6.2832); g.fill();
+      g.strokeStyle="rgba(20,14,8,.7)"; g.lineWidth=1.8;
+      g.beginPath(); g.ellipse? g.ellipse(0,16,19,15,0,0,6.2832):g.arc(0,16,17,0,6.2832); g.stroke();
+      // the knob at the top of the shaft
+      g.fillStyle=C.bronze;
+      g.beginPath(); g.ellipse? g.ellipse(0,-92,11,8,0,0,6.2832):g.arc(0,-92,10,0,6.2832); g.fill();
+      g.restore();
+      if(holding){
+        const held=(clock-holdStart)/HOLD_LEN();
+        // the pour: a ribbon of liquid, and the ribbon itself tells you how
+        // long you have held — no bar, the material is the readout
+        g.save(); g.strokeStyle=held>1.12?C.cinnabar:C.verdSoft; g.lineWidth=4+Math.sin(S.real*20)*1.2;
+        g.globalAlpha=0.8; g.lineCap="round";
+        g.beginPath(); g.moveTo(cx,cy-rim*0.55-40);
+        g.quadraticCurveTo(cx+Math.sin(S.real*9)*5, cy-rim*0.3, cx, cy);
+        g.stroke(); g.restore();
+        S.emit(1,{x:cx,y:cy,spd:60,life:0.5,r:2,c:[C.verdSoft],kind:"mote",g:-30});
+      }
+      if(spillT>0){
+        g.save(); g.globalAlpha=spillT*1.6; g.strokeStyle=C.cinnabar; g.lineWidth=3;
+        g.beginPath(); g.arc(cx,cy,rim*1.14,0,6.2832); g.stroke(); g.restore();
+      }
+      g.save(); g.globalAlpha=1-S.briefA;
+      P.eyebrow(g,cx,S.h*0.155,skin.eyebrow+" — "+Math.round(bpm)+" to the minute","rgba(216,189,132,.55)",10);
+      g.restore();
+      P.lamp(g,S,S.w*0.11,S.h*0.24,1.0);
+    },
+    down(){ strike(true); },
+    up(){ if(holding) release(); },
+    key(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if(!e.repeat) strike(true); } },
+    keyUp(e){ if((e.key===" "||e.key==="Enter") && holding) release(); },
+    allowRepeat:false
+  };
+};
+
+/* ==================================================================
+   THE LEXICON FEED — where the knowledge trials get their words.
+
+   The memory, match and aim trials all need word-parts. Taking them
+   at random would make them trivia; taking them from what the player
+   has actually met makes them practice. Weak parts first, then seen
+   parts, then anything — so a trial quietly drills the roots you keep
+   getting wrong without ever once looking like a quiz.
+   ================================================================== */
+function lexPool(n, R){
+  const ids=Object.keys(PARTS);
+  if(!ids.length) return [];
+  let weak=[], seen=[];
+  try{ weak=(E.weakParts?E.weakParts():[]).filter(id=>PARTS[id]); }catch(e){}
+  try{ seen=(E.seenParts?E.seenParts():[]).filter(id=>PARTS[id]); }catch(e){}
+  const out=[];
+  const take=(src)=>{ R.shuffle(src).forEach(id=>{ if(out.length<n && out.indexOf(id)<0) out.push(id); }); };
+  take(weak); take(seen); take(ids);
+  return out.slice(0,n);
+}
+/* the meaning, trimmed to something that fits on a wax tablet */
+function shortMean(id){
+  const p=PARTS[id]; if(!p) return "";
+  return String(p.mean||"").split(",")[0].trim();
+}
+
+/* ------------------------------------------------------------------
+   4. MEMORY SEQUENCE — "THE SHELF OF LAMPS"
+
+   A shelf of apothecary jars, each with a word-part painted on it and
+   a wick behind the glass. The wicks take light in an order; then the
+   shelf goes dark and you light them again in the same order.
+
+   The educational load is carried entirely by the object: to repeat a
+   sequence you have to hold five word-parts in your head for four
+   seconds, which is exactly the rehearsal a flashcard is trying to buy
+   and never gets. Nothing is ever asked. Nothing is ever marked.
+
+   Modifiers by difficulty: longer chains, a shorter look, jars that
+   flicker as decoys, and — at the top — the whole thing REVERSED, so
+   the last jar lit is the first you must touch.
+   ------------------------------------------------------------------ */
+ARCH.sequence = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const nJars = 4 + Math.round(diff*2);                   // 4 → 6
+  const len   = 3 + Math.round(diff*3.4);                 // 3 → 6
+  const showT = 0.62 - diff*0.26;                         // per-jar look
+  const reversed = diff>0.72 && R.chance(0.5);
+  const decoys   = diff>0.45;
+  const ids = lexPool(nJars, R);
+  const jars = ids.map((id,k)=>({
+    id, part:PARTS[id]||{text:"?",mean:""},
+    lit:0, wrong:0, k
+  }));
+  const seq=[]; for(let k=0;k<len;k++) seq.push(R.int(0,jars.length-1));
+
+  const EN=Ender();
+  let phase="show", si=0, t=0, input=[], done=false, decoyT=R.range(0.8,1.6);
+  let lives = 1 + (diff<0.5?1:0);                          // a second chance early on
+  let usedLives=0;
+
+  const want = ()=> reversed ? seq[seq.length-1-input.length] : seq[input.length];
+
+  function finish(){
+    if(done) return; done=true;
+    const got=input.length;
+    const score = clamp(got/len - usedLives*0.18, 0, 1);
+    api.finish(score, got===len && usedLives===0, {recalled:got, of:len, reversed});
+  }
+  function press(k){
+    if(phase!=="play" || done) return;
+    const j=jars[k]; if(!j) return;
+    if(k===want()){
+      j.lit=1; input.push(k);
+      api.combo.hit(input.length===len);
+      A.pluck(392*Math.pow(2, (k%6)/6 + input.length/12));
+      S.punch(0.2);
+      S.emit(10,{x:jarX(k),y:jarY(k)-14,spd:120,life:0.6,r:2,c:[C.goldSoft,C.goldHot],kind:"mote",g:-90,drag:1.2});
+      S.say(j.part.text+" — "+shortMean(j.id));
+      if(input.length>=len){
+        A.perfect(); S.punch(1); S.flash(C.goldHot,0.20,340); S.slowmo(0.4,300);
+        jars.forEach((x,i)=>setTimeout(()=>{ x.lit=1; A.pluck(523*Math.pow(2,i/12)); }, i*70));
+        setTimeout(()=>finish(), 620);
+      }
+    } else {
+      j.wrong=1; usedLives++;
+      api.combo.break(); A.crack(); S.shake(18,4); S.flash(C.cinnabar,0.18,260);
+      S.emit(16,{x:jarX(k),y:jarY(k),spd:210,life:0.8,r:2.6,c:["#8a6a3a",C.cinDeep],kind:"shard",g:800});
+      S.float(jarX(k),jarY(k)-56,"NOT THAT ONE",{c:C.cinnabar,size:15});
+      if(usedLives>=lives) EN.end(420, finish, ()=>A.fail());
+      else { S.say("Wrong jar. Watch again."); phase="show"; si=0; t=0; input=[]; }
+    }
+  }
+  function jarX(k){ return S.w*0.5 + (k-(jars.length-1)/2)*Math.min(112, S.w/(jars.length+1.2)); }
+  function jarY(){ return S.h*0.55; }
+
+  return {
+    step(dt){
+      if(done) return;
+      t+=dt;
+      jars.forEach(j=>{ j.lit=Math.max(0,j.lit-dt*(phase==="show"?2.2:2.8)); j.wrong=Math.max(0,j.wrong-dt*2.2); });
+      if(phase==="show"){
+        if(t>=showT){
+          t=0;
+          if(si<seq.length){
+            const k=seq[si];
+            jars[k].lit=1;
+            A.pluck(392*Math.pow(2,(k%6)/6));
+            S.emit(8,{x:jarX(k),y:jarY(k)-10,spd:80,life:0.8,r:1.8,c:[C.goldSoft],kind:"mote",g:-60,drag:1});
+            si++;
+          } else {
+            phase="play"; t=0;
+            S.say(reversed?"Now light them backwards.":"Now light them in order.");
+            A.detent();
+          }
+        }
+        // DECOYS: jars that flicker but are not part of the chain. The eye
+        // wants to count flashes; this makes you remember jars instead.
+        if(decoys){
+          decoyT-=dt;
+          if(decoyT<=0){ decoyT=R.range(0.5,1.3);
+            const k=R.int(0,jars.length-1);
+            if(jars[k].lit<0.2){ jars[k].lit=0.34; A.tick(1); } }
+        }
+      }
+    },
+    paint(g){
+      const y=jarY();
+      /* ---- the shelf ----
+         The labels used to be painted at the same height as the shelf board and
+         disappeared behind it. The jars stand ON the shelf now and their labels
+         are a plaque along its face, which is where a apothecary's labels are
+         anyway. */
+      g.save();
+      const shX=S.w*0.5-Math.min(S.w*0.46,jars.length*60+34), shW=Math.min(S.w*0.92,jars.length*120+68);
+      g.fillStyle="#4a3a24";
+      P.roundRect(g,shX,y+44,shW,15,2); g.fill();
+      g.fillStyle="rgba(255,226,168,.16)";
+      P.roundRect(g,shX,y+44,shW,3,1); g.fill();
+      g.fillStyle="#2a2013";
+      P.roundRect(g,shX,y+59,shW,40,2); g.fill();
+      g.fillStyle="rgba(0,0,0,.45)";
+      P.roundRect(g,shX,y+99,shW,8,2); g.fill();
+      g.restore();
+      jars.forEach((j,k)=>{
+        const x=jarX(k), lit=j.lit, w=j.wrong;
+        const shk = w>0 ? (Math.random()*2-1)*w*5 : 0;
+        g.save(); g.translate(x+shk,y);
+        if(lit>0.05) P.glow(g,0,-6,58,`rgba(255,214,130,${0.55*lit})`,0.7*lit);
+        if(w>0.05) P.glow(g,0,-6,54,`rgba(181,50,43,${0.5*w})`,0.6*w);
+        // the jar body
+        g.fillStyle="rgba(0,0,0,.45)";
+        P.roundRect(g,-25,-36,52,80,6); g.fill();
+        if(g.createLinearGradient){
+          const lg=g.createLinearGradient(-26,-38,26,42);
+          lg.addColorStop(0, lit>0.05?"#6d6a52":"#3b4038");
+          lg.addColorStop(0.5,lit>0.05?"#4e5544":"#2b3029");
+          lg.addColorStop(1, "#1b201b"); g.fillStyle=lg;
+        } else g.fillStyle="#3b4038";
+        P.roundRect(g,-26,-38,52,80,6); g.fill();
+        // the wick behind the glass
+        g.globalAlpha=0.25+lit*0.75;
+        g.fillStyle= w>0.05?C.cinnabar : lit>0.05?"#ffd98a":"#4a4536";
+        g.beginPath(); g.ellipse? g.ellipse(0,2,13,17,0,0,6.2832):g.arc(0,2,14,0,6.2832); g.fill();
+        g.globalAlpha=1;
+        // the rim and the stopper
+        g.strokeStyle=lit>0.05?C.goldHot:C.bronzeDk; g.lineWidth=2;
+        P.roundRect(g,-26,-38,52,80,6); g.stroke();
+        g.fillStyle=C.bronze; P.roundRect(g,-15,-48,30,12,3); g.fill();
+        // ---- the label on the shelf face: this is the whole education, and
+        // it is just a label ----
+        g.font=`700 ${Math.min(17,S.w*0.020)}px ${FONT_CAL}`;
+        g.textAlign="center"; g.textBaseline="middle";
+        g.fillStyle="rgba(0,0,0,.7)"; g.fillText(j.part.text,0,73);
+        g.fillStyle= lit>0.05?C.goldHot:"rgba(216,189,132,.78)"; g.fillText(j.part.text,0,72);
+        if(lit>0.30){
+          g.globalAlpha=(lit-0.30)/0.70;
+          g.font=`400 ${Math.min(12,S.w*0.0145)}px ${FONT_READ}`;
+          g.fillStyle=C.verdSoft; g.fillText(shortMean(j.id),0,90);
+          g.globalAlpha=1;
+        }
+        g.restore();
+      });
+      // ---- the chain of beads: how many jars are held, not a bar ----
+      const bx=S.w/2-(len-1)*11/2;
+      for(let k=0;k<len;k++){
+        const filled = phase==="play" ? k<input.length : k<si;
+        g.save();
+        g.strokeStyle=filled?C.goldHot:"rgba(216,189,132,.28)";
+        g.fillStyle=C.goldHot; g.lineWidth=1.8;
+        g.globalAlpha=1-S.briefA;
+        g.beginPath(); g.arc(bx+k*11, S.h*0.335, 4.2, 0, 6.2832);
+        filled?g.fill():g.stroke();
+        g.restore();
+      }
+      g.save(); g.globalAlpha=1-S.briefA;
+      P.eyebrow(g,S.w/2,S.h*0.285, phase==="show"?"watch the wicks":(reversed?"light them backwards":"light them in order"),
+        phase==="show"?"rgba(216,189,132,.6)":C.goldHot,11);
+      g.restore();
+      P.lamp(g,S,S.w*0.07,S.h*0.24,0.9);
+    },
+    down(x,y){
+      if(phase!=="play") return;
+      const yy=jarY();
+      for(let k=0;k<jars.length;k++){
+        if(Math.abs(x-jarX(k))<30 && Math.abs(y-yy)<48){ press(k); return; }
+      }
+    },
+    key(e){
+      if(phase!=="play") return;
+      const n=parseInt(e.key,10);
+      if(n>=1 && n<=jars.length){ e.preventDefault(); press(n-1); }
+    }
+  };
+};
+
+/* ------------------------------------------------------------------
+   5. QUICK MATCH — "THE WAX TABLETS"
+
+   Pairs of hinged wax tablets, face down on the bench. Each pair is a
+   word-part and the thing it means. You turn two; if they belong
+   together the hinge folds them into one tablet and the pair leaves
+   the board lit.
+
+   The candle at the side of the board is the clock. It is a candle —
+   it shortens, it gutters, the light on the tablets dims with it, and
+   when it goes out you are working in the dark on whatever is left.
+
+   This is the one trial that is unambiguously teaching, and it is
+   still the fastest, most tactile thing in the library, because
+   turning a tablet over is a good verb and being right is a good
+   feeling. No question is ever asked.
+   ------------------------------------------------------------------ */
+ARCH.match = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const pairs = 3 + Math.round(diff*2.4);                 // 3 → 5
+  const ids = lexPool(pairs, R);
+  const cards=[];
+  ids.forEach((id,k)=>{
+    cards.push({id, face:"part", text:(PARTS[id]||{}).text||id, k});
+    cards.push({id, face:"mean", text:shortMean(id), k});
+  });
+  const deck = R.shuffle(cards).map((c,i)=>Object.assign(c,{
+    i, flip:0, want:0, gone:0, wrong:0, x:0, y:0
+  }));
+  const cols = deck.length<=6?3:deck.length<=8?4:5;
+  const rows = Math.ceil(deck.length/cols);
+
+  const EN=Ender();
+  let open=[], done=false, matched=0, misses=0, lock=0;
+  let candle = 1;                                          // 1 → 0
+  const BURN = 1/(16 - diff*7);                            // seconds of light
+  // A BRIEF LOOK: every tablet is turned up for a moment at the start, which
+  // turns this from blind luck into a memory trial. The look shortens fast.
+  let peek = 1.4 - diff*0.7;
+
+  function finish(){
+    if(done) return; done=true;
+    const score=clamp(matched/pairs - misses*0.055, 0, 1);
+    api.finish(score, matched===pairs && misses===0, {matched, of:pairs, misses});
+  }
+  function pos(c){
+    const cw=Math.min(120, (S.w*0.66)/cols), ch=Math.min(86, (S.h*0.46)/rows);
+    const gx=Math.min(cw*1.18, S.w*0.16), gy=Math.min(ch*1.24, S.h*0.16);
+    const col=c.i%cols, row=Math.floor(c.i/cols);
+    return { x:S.w*0.52 + (col-(cols-1)/2)*gx, y:S.h*0.52 + (row-(rows-1)/2)*gy, w:cw, h:ch };
+  }
+  function turn(c){
+    if(done || lock>0 || c.gone>0 || c.want>0.5 || peek>0) return;
+    c.want=1; open.push(c); A.wood(); S.punch(0.12);
+    S.say(c.text);
+    if(open.length===2){
+      const [a,b]=open;
+      if(a.id===b.id && a.face!==b.face){
+        matched++; api.combo.hit(true);
+        A.perfect(); S.punch(0.5); S.hitstop(50);
+        [a,b].forEach(x=>{ x.gone=0.001;
+          const p=pos(x);
+          S.ring(p.x,p.y,{r:90,life:0.45,c:C.goldHot,w:2.6});
+          S.emit(16,{x:p.x,y:p.y,spd:220,life:0.7,r:2.2,c:[C.goldHot,C.goldSoft,"#fff6df"],kind:"spark",g:200,glow:true}); });
+        const p=pos(a);
+        S.float((pos(a).x+pos(b).x)/2,(pos(a).y+pos(b).y)/2-38, (PARTS[a.id]||{}).text+" = "+shortMean(a.id),
+          {c:C.goldHot,size:16,life:1.3});
+        // learning credit, quietly: the engine counts this as a correct recall
+        try{ E.markPartResult && E.markPartResult(a.id, true); }catch(e){}
+        open=[];
+        if(matched>=pairs) EN.end(560, finish, ()=>{ A.open(); S.flash(C.goldHot,0.22,400); });
+      } else {
+        misses++; api.combo.break(); lock=0.52;
+        A.nearMiss(); S.shake(10,6);
+        [a,b].forEach(x=>{ x.wrong=1; });
+        // a wrong turn costs LIGHT, which is the real punishment here — it
+        // takes time away from every guess you have left
+        candle=Math.max(0, candle-0.10-diff*0.06);
+        try{ if(a.id!==b.id){ E.markPartResult && E.markPartResult(a.id,false); } }catch(e){}
+      }
+    }
+  }
+
+  return {
+    step(dt){
+      if(done) return;
+      if(peek>0){ peek-=dt; deck.forEach(c=>{ if(c.gone<=0) c.want=1; });
+        if(peek<=0){ deck.forEach(c=>c.want=0); A.brush(); S.say("Tablets down."); } }
+      else if(lock>0){ lock-=dt; if(lock<=0){ open.forEach(c=>c.want=0); open=[]; } }
+      else { candle=Math.max(0, candle-BURN*dt);
+        if(candle<=0 && matched<pairs) EN.end(320, finish, ()=>A.fail()); }
+      deck.forEach(c=>{
+        c.flip += (c.want-c.flip)*Math.min(1,dt*13);
+        c.wrong=Math.max(0,c.wrong-dt*2.4);
+        if(c.gone>0) c.gone=Math.min(1,c.gone+dt*2.6);
+      });
+      if(candle<0.22 && candle>0 && Math.random()<dt*3) A.tick(1);
+    },
+    paint(g){
+      // ---- the candle: the clock, and the light source ----
+      const cx=S.w*0.13, base=S.h*0.70;
+      const hgt=Math.max(6, 150*candle);
+      g.save();
+      g.fillStyle="rgba(0,0,0,.5)";
+      g.beginPath(); g.ellipse? g.ellipse(cx,base+6,30,8,0,0,6.2832):g.arc(cx,base,26,0,6.2832); g.fill();
+      P.bronzeDisc(g,cx,base,26,{hi:C.bronzeLt,mid:C.bronze,lo:C.bronzeDk});
+      g.fillStyle="#e7dcc0";
+      P.roundRect(g,cx-11,base-hgt,22,hgt,3); g.fill();
+      g.fillStyle="rgba(0,0,0,.16)";
+      P.roundRect(g,cx+4,base-hgt,7,hgt,3); g.fill();
+      // wax runs down the stick as it burns — the object records its own history
+      g.fillStyle="rgba(231,220,192,.8)";
+      for(let k=0;k<3;k++){ const rx=cx-8+k*8, rl=(1-candle)*26*(0.5+k*0.3);
+        P.roundRect(g,rx,base-hgt+4,4,rl,2); g.fill(); }
+      g.restore();
+      if(candle>0) P.lamp(g,S,cx,base-hgt,0.9+candle*0.4);
+      else { P.eyebrow(g,cx,base-30,"out",C.cinnabar,11); }
+      /* The candle used to throw a screen-wide additive wash, and it flattened
+         the whole board into one brown field — the light was doing more damage
+         to legibility than the darkness it was meant to fix. It reaches about
+         as far as a candle actually does now, and the tablets carry their own
+         value instead. */
+      if(!reduced() && g.createRadialGradient && candle>0){
+        const rg=g.createRadialGradient(cx,base-hgt,10,cx,base-hgt,S.w*0.34);
+        rg.addColorStop(0,`rgba(255,214,130,${0.10*candle})`);
+        rg.addColorStop(1,"rgba(0,0,0,0)");
+        g.save(); g.globalCompositeOperation="lighter"; g.fillStyle=rg; g.fillRect(0,0,S.w,S.h); g.restore();
+      }
+      // ---- the tablets ----
+      // as the candle dies the board dims, but never past the point of being
+      // readable — difficulty must never come from not being able to see
+      const dark = 0.62 + candle*0.38;
+      deck.forEach(c=>{
+        const p=pos(c);
+        if(c.gone>=1) return;
+        const f=c.flip, gone=c.gone;
+        const shk=c.wrong>0?(Math.random()*2-1)*c.wrong*5:0;
+        g.save();
+        g.translate(p.x+shk, p.y - gone*30);
+        g.globalAlpha=(1-gone)*dark + gone*0.0;
+        // the fold: scaleX through zero is the hinge turning over
+        const sx=Math.abs(Math.cos(f*Math.PI));
+        g.scale(Math.max(0.02,sx), 1-gone*0.2);
+        const up = f>0.5;
+        if(up){
+          P.tablet(g,0,0,p.w,p.h,{hi:c.wrong>0.05?"#e8c6bf":C.parch, lo:c.wrong>0.05?"#c99a92":C.papyrus3,
+            edge:c.wrong>0.05?C.cinnabar:"rgba(74,63,49,.6)"});
+          g.font=`${c.face==="part"?700:400} ${Math.min(c.face==="part"?19:14, p.w*0.17)}px ${c.face==="part"?FONT_CAL:FONT_READ}`;
+          g.textAlign="center"; g.textBaseline="middle";
+          g.fillStyle=c.face==="part"?C.ink:C.verdDeep;
+          // long meanings wrap inside the tablet rather than running off it
+          const words=String(c.text).split(" ");
+          if(words.length>2){
+            const mid=Math.ceil(words.length/2);
+            g.fillText(words.slice(0,mid).join(" "),0,-8);
+            g.fillText(words.slice(mid).join(" "),0,10);
+          } else g.fillText(c.text,0,0);
+        } else {
+          // face down: dark wax with a stamped rosette. Light enough to read as
+          // an object you could pick up, dark enough to read as "closed".
+          P.tablet(g,0,0,p.w,p.h,{hi:"#6d5c3f", lo:"#3d3222", edge:"rgba(216,189,132,.55)",lw:2});
+          g.strokeStyle="rgba(216,189,132,.42)"; g.lineWidth=1.4;
+          g.beginPath(); g.arc(0,0,Math.min(p.w,p.h)*0.22,0,6.2832); g.stroke();
+          for(let k=0;k<6;k++){ const a=(k/6)*6.2832;
+            g.beginPath(); g.moveTo(Math.cos(a)*7,Math.sin(a)*7);
+            g.lineTo(Math.cos(a)*Math.min(p.w,p.h)*0.2,Math.sin(a)*Math.min(p.w,p.h)*0.2); g.stroke(); }
+        }
+        g.restore();
+      });
+      g.globalAlpha=1;
+      g.save(); g.globalAlpha=1-S.briefA;
+      P.eyebrow(g,S.w*0.52,S.h*0.205,`${matched} of ${pairs} joined`,"rgba(216,189,132,.6)",10.5);
+      g.restore();
+    },
+    down(x,y){
+      for(let k=0;k<deck.length;k++){
+        const c=deck[k], p=pos(c);
+        if(Math.abs(x-p.x)<p.w/2 && Math.abs(y-p.y)<p.h/2){ turn(c); return; }
+      }
+    }
+  };
+};
+
+/* ------------------------------------------------------------------
+   6. ROUTE THE FLOW — "THE CHANNELS"
+
+   A bronze channel-board of the kind an apothecary uses to draw a
+   decoction off a retort: short lengths of pipe set in a stone bed,
+   each free to turn a quarter at a time. Turn them until the liquid
+   has a road from the retort to the phial.
+
+   What makes it skill: you get a fixed number of turns, and the count
+   is visible from the first frame. Reading the board before touching
+   it is the whole game — a player who turns pieces to see what happens
+   will run out of turns and get a partial pour.
+
+   The payoff is the pour itself: the moment the last piece lines up,
+   the liquid actually runs the path, piece by piece, lighting each one
+   as it fills. That is the reward, and it is worth working for.
+   ------------------------------------------------------------------ */
+ARCH.flow = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const N = 3 + Math.round(diff*1.6);                      // a 3×3 → 5×5 bed
+  const grid=[];
+  /* Build a guaranteed-solvable board by laying a real path first and then
+     scrambling every piece's rotation. A puzzle that might not have an answer
+     is not a puzzle, it is an insult. */
+  const path=[];
+  let cx0=0, cy0=R.int(0,N-1);
+  path.push([cx0,cy0]);
+  while(cx0<N-1){
+    if(R.chance(0.62) || cy0===0 || cy0===N-1){ cx0++; }
+    else { cy0 += R.chance(0.5)?1:-1; cy0=clamp(cy0,0,N-1); }
+    const last=path[path.length-1];
+    if(last[0]!==cx0 || last[1]!==cy0) path.push([cx0,cy0]);
+  }
+  const key=(x,y)=>x+","+y;
+  const onPath={}; path.forEach(([x,y],i)=>{ onPath[key(x,y)]=i; });
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const idx=onPath[key(x,y)];
+    let open=[false,false,false,false];                    // N E S W
+    if(idx!=null){
+      const prev=path[idx-1], next=path[idx+1];
+      const link=(o)=>{ if(!o) return; const dx=o[0]-x, dy=o[1]-y;
+        if(dy<0) open[0]=true; if(dx>0) open[1]=true; if(dy>0) open[2]=true; if(dx<0) open[3]=true; };
+      link(prev); link(next);
+      if(idx===0) open[3]=true;                            // the inlet
+      if(idx===path.length-1) open[1]=true;                // the outlet
+    } else {
+      // decoy pieces: real pipe, wrong place. They make the board read.
+      const kinds=[[true,false,true,false],[true,true,false,false],[false,true,false,true],[true,true,true,false]];
+      open=R.pick(kinds).slice();
+    }
+    // scramble: rotate each piece a random number of quarters
+    const rot=R.int(0,3);
+    for(let r=0;r<rot;r++) open=[open[3],open[0],open[1],open[2]];
+    grid.push({x,y,open,rot:0,turns:0,fill:0,live:false,onPath:idx!=null, wobble:0});
+  }
+  const at=(x,y)=>(x<0||y<0||x>=N||y>=N)?null:grid[y*N+x];
+  /* the turn budget: the true minimum, plus a small allowance that shrinks
+     with difficulty. At the top you must read the board exactly right. */
+  const minTurns = path.reduce((a,[x,y])=>a+0,0);
+  let budget = path.length + Math.round(4 - diff*3);
+  const startBudget = budget;
+
+  const EN=Ender();
+  let done=false, solved=false, pourT=0, litIdx=0;
+
+  function connected(){
+    // walk from the inlet and see how far the liquid gets
+    const seen={}; const order=[];
+    let cx=0, cy=path[0][1];
+    // the inlet only feeds a piece that is open on its west face
+    let cell=at(cx,cy); if(!cell || !cell.open[3]) return [];
+    const stack=[[cx,cy,3]];
+    while(stack.length){
+      const [x,y,from]=stack.pop();
+      const c=at(x,y); if(!c || seen[key(x,y)]) continue;
+      if(!c.open[from]) continue;
+      seen[key(x,y)]=true; order.push(c);
+      const dirs=[[0,-1,2],[1,0,3],[0,1,0],[-1,0,1]];
+      for(let d=0;d<4;d++){ if(!c.open[d]) continue;
+        const [dx,dy,back]=dirs[d];
+        if(x+dx>=N && d===1 && y===path[path.length-1][1]) continue;
+        stack.push([x+dx,y+dy,back]); }
+    }
+    return order;
+  }
+  function reachesOutlet(order){
+    const end=path[path.length-1];
+    const last=at(end[0],end[1]);
+    return order.indexOf(last)>=0 && last.open[1];
+  }
+  function finish(){
+    if(done) return; done=true;
+    const order=connected();
+    const got=reachesOutlet(order);
+    const reach = order.length/Math.max(1,path.length);
+    const spare = clamp(budget/Math.max(1,startBudget),0,1);
+    const score = got ? clamp(0.68 + spare*0.32, 0, 1) : clamp(reach*0.42, 0, 0.45);
+    api.finish(score, got && budget>=startBudget-path.length, {turnsLeft:budget, sealed:got});
+  }
+  function turn(c){
+    if(done || solved || budget<=0 || !c) return;
+    c.open=[c.open[3],c.open[0],c.open[1],c.open[2]];
+    c.rot -= Math.PI/2; c.turns++; c.wobble=1;
+    budget--;
+    A.detent(); A.wood(); S.punch(0.14);
+    const p=cell(c);
+    S.emit(6,{x:p.x,y:p.y,spd:90,life:0.4,r:1.8,c:["#8a6a3a",C.goldSoft],kind:"dust",g:400});
+    const order=connected();
+    order.forEach(o=>o.live=true);
+    grid.forEach(o=>{ if(order.indexOf(o)<0) o.live=false; });
+    if(reachesOutlet(order)){
+      solved=true; pourT=0; litIdx=0;
+      A.open(); S.punch(0.8); S.flash(C.verdSoft,0.14,320);
+      S.say("The channel is sealed. It runs.");
+    } else if(budget<=0){
+      EN.end(520, finish, ()=>{ A.fail(); S.shake(16,4); });
+    }
+  }
+  function cell(c){
+    const sz=Math.min(S.w*0.52, S.h*0.50)/N;
+    return { x:S.w*0.5 + (c.x-(N-1)/2)*sz, y:S.h*0.52 + (c.y-(N-1)/2)*sz, sz };
+  }
+
+  return {
+    step(dt){
+      grid.forEach(c=>{ c.rot += (0-c.rot)*Math.min(1,dt*15); c.wobble=Math.max(0,c.wobble-dt*3); });
+      if(solved && !done){
+        pourT+=dt;
+        const order=connected();
+        const want=Math.floor(pourT/0.085);
+        while(litIdx<want && litIdx<order.length){
+          const c=order[litIdx]; c.fill=1;
+          const p=cell(c);
+          A.pour(); A.pluck(392*Math.pow(2,litIdx/14));
+          S.emit(6,{x:p.x,y:p.y,spd:70,life:0.5,r:1.8,c:[C.verdSoft,"#cfe0d4"],kind:"mote",g:-40,drag:1.4});
+          S.ring(p.x,p.y,{r:p.sz*0.8,life:0.3,c:C.verdSoft,w:2});
+          litIdx++;
+        }
+        if(litIdx>=order.length && pourT>order.length*0.085+0.5){
+          EN.end(420, finish, ()=>{ A.perfect(); S.punch(1); S.flash(C.goldHot,0.2,380); });
+        }
+      }
+      grid.forEach(c=>{ if(c.fill>0 && c.fill<1) c.fill=Math.min(1,c.fill+dt*3); });
+    },
+    paint(g){
+      const sz=Math.min(S.w*0.52, S.h*0.50)/N;
+      // ---- the stone bed ----
+      g.save();
+      const bw=sz*N+34, bh=sz*N+34;
+      g.fillStyle="rgba(0,0,0,.5)";
+      P.roundRect(g,S.w*0.5-bw/2+4,S.h*0.52-bh/2+6,bw,bh,6); g.fill();
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(0,S.h*0.52-bh/2,0,S.h*0.52+bh/2);
+        lg.addColorStop(0,"#5e5442"); lg.addColorStop(1,"#3a332a"); g.fillStyle=lg;
+      } else g.fillStyle="#4a4234";
+      P.roundRect(g,S.w*0.5-bw/2,S.h*0.52-bh/2,bw,bh,6); g.fill();
+      g.strokeStyle="rgba(189,157,95,.35)"; g.lineWidth=2;
+      P.roundRect(g,S.w*0.5-bw/2,S.h*0.52-bh/2,bw,bh,6); g.stroke();
+      g.restore();
+      // ---- the retort feeding in, and the phial waiting ----
+      const inP=cell(at(0,path[0][1])), outP=cell(at(path[path.length-1][0],path[path.length-1][1]));
+      g.save();
+      P.bronzeDisc(g,inP.x-sz*0.92,inP.y,sz*0.34,{hi:"#c2a068",mid:C.bronze,lo:C.bronzeDk});
+      g.fillStyle=C.verdSoft; g.globalAlpha=0.8;
+      g.beginPath(); g.arc(inP.x-sz*0.92,inP.y,sz*0.18,0,6.2832); g.fill(); g.globalAlpha=1;
+      // the phial
+      g.fillStyle="rgba(207,224,212,.28)";
+      P.roundRect(g,outP.x+sz*0.66,outP.y-sz*0.34,sz*0.44,sz*0.72,4); g.fill();
+      g.strokeStyle=C.steelDk; g.lineWidth=1.6;
+      P.roundRect(g,outP.x+sz*0.66,outP.y-sz*0.34,sz*0.44,sz*0.72,4); g.stroke();
+      if(solved){
+        const fill=clamp(litIdx/Math.max(1,path.length),0,1);
+        g.fillStyle=C.verdSoft; g.globalAlpha=0.85;
+        P.roundRect(g,outP.x+sz*0.68,outP.y+sz*0.36-sz*0.68*fill,sz*0.40,sz*0.68*fill,3); g.fill();
+        g.globalAlpha=1;
+      }
+      g.restore();
+      // ---- the pieces ----
+      grid.forEach(c=>{
+        const p=cell(c);
+        const wob=c.wobble>0?(Math.random()*2-1)*c.wobble*1.6:0;
+        g.save(); g.translate(p.x+wob,p.y); g.rotate(c.rot);
+        // the socket the piece sits in
+        g.fillStyle="rgba(0,0,0,.35)";
+        g.beginPath(); g.arc(0,0,sz*0.44,0,6.2832); g.fill();
+        // the pipe arms
+        const lit=c.fill>0.01;
+        g.lineCap="round";
+        g.strokeStyle=C.bronzeDk; g.lineWidth=sz*0.30;
+        c.open.forEach((o,d)=>{ if(!o) return;
+          const a=[-Math.PI/2,0,Math.PI/2,Math.PI][d];
+          g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*sz*0.5,Math.sin(a)*sz*0.5); g.stroke(); });
+        g.strokeStyle=lit?C.verdSoft:C.bronzeLt; g.lineWidth=sz*0.19;
+        c.open.forEach((o,d)=>{ if(!o) return;
+          const a=[-Math.PI/2,0,Math.PI/2,Math.PI][d];
+          g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*sz*0.5,Math.sin(a)*sz*0.5); g.stroke(); });
+        // the liquid inside
+        if(lit){
+          g.strokeStyle="#dff0e4"; g.lineWidth=sz*0.075; g.globalAlpha=0.55+0.35*Math.sin(S.real*6+c.x+c.y);
+          c.open.forEach((o,d)=>{ if(!o) return;
+            const a=[-Math.PI/2,0,Math.PI/2,Math.PI][d];
+            g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*sz*0.5*c.fill,Math.sin(a)*sz*0.5*c.fill); g.stroke(); });
+          g.globalAlpha=1;
+        }
+        // the boss in the middle, which is what you grab
+        P.bronzeDisc(g,0,0,sz*0.15,{hi:lit?"#dff0e4":"#c2a068",mid:lit?C.verdSoft:C.bronze,lo:C.bronzeDk});
+        g.restore();
+        if(lit) P.glow(g,p.x,p.y,sz*0.7,"rgba(125,154,138,.4)",0.5);
+      });
+      // ---- the turn budget: bronze pins, removed as you spend them ----
+      const tb=Math.min(startBudget,14);
+      for(let k=0;k<tb;k++){
+        const bx=S.w*0.5-(tb-1)*13/2+k*13, by=S.h*0.52+bh/2+26;
+        g.save();
+        const spent = k>=budget;
+        g.globalAlpha=spent?0.22:1;
+        g.strokeStyle=budget<=2&&!spent?C.cinnabar:C.goldSoft; g.lineWidth=2.2; g.lineCap="round";
+        g.beginPath(); g.moveTo(bx,by-5); g.lineTo(bx,by+5); g.stroke();
+        g.restore();
+      }
+      P.eyebrow(g,S.w*0.5,S.h*0.52+bh/2+48, budget>0?`${budget} turns left`:"no turns left",
+        budget<=2?C.cinnabar:"rgba(216,189,132,.6)",10.5);
+      P.lamp(g,S,S.w*0.09,S.h*0.24,0.95);
+    },
+    down(x,y){
+      const sz=Math.min(S.w*0.52,S.h*0.50)/N;
+      for(let k=0;k<grid.length;k++){
+        const c=grid[k], p=cell(c);
+        if(Math.abs(x-p.x)<sz/2 && Math.abs(y-p.y)<sz/2){ turn(c); return; }
+      }
+    }
+  };
+};
+
+/* ------------------------------------------------------------------
+   7. PRECISION AIM — "THE SORTING"
+
+   Herbs come off the drying rack and have to go into the right jar
+   before they spoil. A root shows on the bench for a moment with its
+   meaning called; strike it if it belongs in the order, leave it if it
+   does not.
+
+   The decoys are the education. When the order reads "the heart", the
+   bench will offer cardi/o and it will also offer hepat/o, and the
+   only way to be fast is to actually know which is which. A player who
+   does not know can still get through by reading — slowly, and at the
+   cost of every speed bonus in the trial. That is the right pressure:
+   knowledge buys tempo, it does not gate entry.
+
+   Failure costs twice: a struck decoy spoils a jar, and a root you let
+   rot is a root you do not have.
+   ------------------------------------------------------------------ */
+ARCH.aim = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const rounds = 4 + Math.round(diff*3);
+  const life   = 1.55 - diff*0.62;                        // seconds on the bench
+  const moving = diff>0.42;
+  const ids = lexPool(Math.max(8, rounds*2+4), R);
+  const EN=Ender();
+  let ri=-1, done=false, hits=0, wrongs=0, rots=0;
+  let target=null, marks=[];
+  const items=[];                                          // live on the bench
+
+  function nextRound(){
+    ri++;
+    if(ri>=rounds){ EN.end(320, finish); return; }
+    items.length=0;
+    const good = ids[(ri*3)%ids.length] || Object.keys(PARTS)[0];
+    target = good;
+    const n = 2 + Math.round(diff*2.2);
+    const others = R.shuffle(ids.filter(id=>id!==good)).slice(0,n-1);
+    const set = R.shuffle([good].concat(others));
+    set.forEach((id,k)=>{
+      const ang=(k/set.length)*6.2832 + R.range(-0.3,0.3);
+      const rr=Math.min(S.w,S.h)*(0.20+R.range(0,0.10));
+      items.push({ id, good:id===good,
+        x:S.w*0.5+Math.cos(ang)*rr, y:S.h*0.52+Math.sin(ang)*rr*0.8,
+        vx: moving? R.range(-60,60):0, vy: moving? R.range(-40,40):0,
+        t:0, r:Math.max(30, 54 - diff*17), struck:0, rot:R.range(-0.2,0.2) });
+    });
+    A.tick(3); S.say("Wanted: "+shortMean(good));
+  }
+  function finish(){
+    if(done) return; done=true;
+    const score=clamp(hits/rounds - wrongs*0.14 - rots*0.06, 0, 1);
+    api.finish(score, hits===rounds && wrongs===0 && rots===0, {hits, of:rounds, wrongs, rots});
+  }
+  function strikeAt(x,y){
+    if(done || !items.length) return;
+    let hit=null;
+    for(let k=0;k<items.length;k++){
+      const it=items[k];
+      if(it.struck>0) continue;
+      if(Math.hypot(x-it.x,y-it.y)<=it.r){ hit=it; break; }
+    }
+    if(!hit){
+      // a strike into the bench: not free, but not a catastrophe either
+      A.wood(); S.shake(4,7);
+      S.emit(6,{x,y,spd:120,life:0.4,r:1.8,c:["#6a5a40"],kind:"dust",g:700});
+      return;
+    }
+    hit.struck=0.001;
+    if(hit.good){
+      hits++;
+      const speed = 1 - hit.t/life;                        // struck early = struck well
+      const perfect = speed>0.55;
+      api.combo.hit(perfect);
+      marks.push(perfect?2:1);
+      try{ E.markPartResult && E.markPartResult(hit.id, true); }catch(e){}
+      if(perfect){
+        A.perfect(); A.slice(); S.punch(0.65); S.hitstop(50);
+        S.ring(hit.x,hit.y,{r:110,life:0.45,c:C.goldHot,w:3});
+        S.emit(22,{x:hit.x,y:hit.y,spd:300,life:0.7,r:2.4,c:[C.goldHot,C.olive,"#fff6df"],kind:"spark",g:340,glow:true});
+        S.float(hit.x,hit.y-46,"CLEAN",{c:C.goldHot,size:20});
+      } else {
+        A.snap(); S.punch(0.3);
+        S.emit(12,{x:hit.x,y:hit.y,spd:180,life:0.5,r:2,c:[C.olive,C.goldSoft],kind:"spark",g:420});
+        S.float(hit.x,hit.y-42,"GOOD",{c:C.goldSoft,size:17});
+      }
+      setTimeout(()=>nextRound(), 180);
+    } else {
+      wrongs++; api.combo.break(); marks.push(0);
+      try{ E.markPartResult && E.markPartResult(target, false); }catch(e){}
+      A.crack(); S.shake(16,5); S.flash(C.cinnabar,0.16,240);
+      S.emit(18,{x:hit.x,y:hit.y,spd:220,life:0.8,r:2.6,c:[C.cinDeep,"#5a4a34"],kind:"shard",g:760});
+      // the trial NAMES the mistake — this is the whole educational payload,
+      // delivered at the one moment the player is guaranteed to be looking
+      S.float(hit.x,hit.y-46,(PARTS[hit.id]||{}).text+" = "+shortMean(hit.id),{c:C.cinnabar,size:16,life:1.4});
+      S.say("Wrong. "+(PARTS[hit.id]||{}).text+" means "+shortMean(hit.id));
+      setTimeout(()=>nextRound(), 620);
+    }
+  }
+
+  nextRound();
+  return {
+    step(dt){
+      if(done) return;
+      let allGone=items.length>0;
+      items.forEach(it=>{
+        it.t+=dt;
+        if(it.struck>0){ it.struck=Math.min(1,it.struck+dt*3); return; }
+        allGone=false;
+        if(moving){
+          it.x+=it.vx*dt; it.y+=it.vy*dt;
+          const m=it.r+10;
+          if(it.x<m||it.x>S.w-m){ it.vx*=-1; it.x=clamp(it.x,m,S.w-m); }
+          if(it.y<S.h*0.30||it.y>S.h*0.80){ it.vy*=-1; it.y=clamp(it.y,S.h*0.30,S.h*0.80); }
+        }
+        it.rot+=dt*0.4;
+      });
+      // the round times out: the good root rots on the bench
+      const live=items.filter(i=>i.struck<=0);
+      if(live.length && live[0].t>life){
+        rots++; api.combo.break(); marks.push(0);
+        const gd=items.find(i=>i.good);
+        A.nearMiss(); S.shake(9,5);
+        if(gd){ S.float(gd.x,gd.y-40,"SPOILED",{c:C.cinnabar,size:17});
+          S.emit(14,{x:gd.x,y:gd.y,spd:120,life:1,r:2.4,c:["#5a5030","#3a3320"],kind:"dust",g:500}); }
+        items.forEach(i=>i.struck=0.001);
+        setTimeout(()=>nextRound(), 380);
+      }
+    },
+    paint(g){
+      // ---- the order: what the jar is waiting for ----
+      const want = target ? shortMean(target) : "";
+      g.save();
+      g.globalAlpha=1-S.briefA;
+      P.tablet(g,S.w*0.5,S.h*0.205,Math.min(360,S.w*0.5),58,{r:3});
+      P.eyebrow(g,S.w*0.5,S.h*0.205-15,"the jar wants","rgba(74,63,49,.7)",9.5);
+      g.font=`700 ${Math.min(26,S.w*0.034)}px ${FONT_CAL}`;
+      g.textAlign="center"; g.textBaseline="middle"; g.fillStyle=C.ink;
+      g.fillText(want, S.w*0.5, S.h*0.205+10);
+      g.restore();
+      // ---- the roots on the bench ----
+      items.forEach(it=>{
+        const gone=it.struck;
+        if(gone>=1) return;
+        const urg = clamp(it.t/life,0,1);
+        g.save(); g.translate(it.x,it.y);
+        g.globalAlpha=1-gone;
+        g.scale(1+gone*0.6, 1+gone*0.6);
+        g.rotate(it.rot*0.2);
+        // a drying root: a lumpy shape with a papyrus tag tied to it
+        if(urg>0.7 && !reduced()){
+          // it starts to go: the colour drains toward grey before it spoils
+          P.glow(g,0,0,it.r*1.6,`rgba(181,50,43,${(urg-0.7)*0.7})`,0.5);
+        }
+        const col = urg>0.7 ? "#6a6450" : C.olive;
+        g.fillStyle="rgba(0,0,0,.45)";
+        g.beginPath(); g.arc(3,4,it.r*0.86,0,6.2832); g.fill();
+        g.fillStyle=col;
+        g.beginPath();
+        for(let k=0;k<9;k++){ const a=(k/9)*6.2832;
+          const rr=it.r*(0.72+Math.sin(k*2.7+it.id.length)*0.16);
+          k?g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):g.moveTo(Math.cos(a)*rr,Math.sin(a)*rr); }
+        g.closePath(); g.fill();
+        g.strokeStyle="rgba(30,26,18,.6)"; g.lineWidth=1.6; g.stroke();
+        // hairy rootlets, because a root should look like a root
+        g.strokeStyle="rgba(50,44,30,.6)"; g.lineWidth=1.2;
+        for(let k=0;k<5;k++){ const a=(k/5)*6.2832+it.rot;
+          g.beginPath(); g.moveTo(Math.cos(a)*it.r*0.7,Math.sin(a)*it.r*0.7);
+          g.lineTo(Math.cos(a)*it.r*1.18,Math.sin(a)*it.r*1.18); g.stroke(); }
+        /* The tag hangs BELOW the root on a length of twine. In the first cut it
+           was painted across the middle of the root and hid the very shape it
+           was labelling — you were aiming at a rectangle of parchment, not at a
+           thing that had been dug up. */
+        g.save(); g.rotate(-it.rot*0.2);
+        g.strokeStyle="rgba(120,100,70,.9)"; g.lineWidth=1.4;
+        g.beginPath(); g.moveTo(0,it.r*0.55); g.lineTo(0,it.r*1.24); g.stroke();
+        P.tablet(g,0,it.r*1.52,it.r*1.9,26,{r:2,hi:C.parch,lo:C.papyrus2});
+        g.font=`700 ${Math.min(17,it.r*0.46)}px ${FONT_CAL}`;
+        g.textAlign="center"; g.textBaseline="middle"; g.fillStyle=C.ink;
+        g.fillText((PARTS[it.id]||{}).text||it.id, 0, it.r*1.52);
+        g.restore();
+        g.restore();
+      });
+      // ---- the tally of the sort, struck as marks on the rack ----
+      const mx=S.w*0.5-(rounds-1)*13/2;
+      for(let k=0;k<rounds;k++){
+        const m=marks[k];
+        g.save();
+        g.lineWidth=2.2; g.lineCap="round";
+        g.strokeStyle = m==null?"rgba(216,189,132,.25)": m===0?C.cinnabar : m===2?C.goldHot : C.verdSoft;
+        const bx=mx+k*13, by=S.h*0.86;
+        if(m===0){ g.beginPath(); g.moveTo(bx-4,by-4); g.lineTo(bx+4,by+4); g.moveTo(bx+4,by-4); g.lineTo(bx-4,by+4); g.stroke(); }
+        else if(m){ g.fillStyle=g.strokeStyle; g.beginPath(); g.arc(bx,by,4.2,0,6.2832); g.fill(); }
+        else { g.beginPath(); g.arc(bx,by,4.2,0,6.2832); g.stroke(); }
+        g.restore();
+      }
+      P.lamp(g,S,S.w*0.08,S.h*0.30,0.9);
+    },
+    down(x,y){ strikeAt(x,y); },
+    key(e){
+      // keyboard: number the roots left to right
+      const n=parseInt(e.key,10);
+      if(n>=1 && n<=items.length){ e.preventDefault();
+        const sorted=items.slice().sort((a,b)=>a.x-b.x);
+        const it=sorted[n-1]; if(it) strikeAt(it.x,it.y); }
+    }
+  };
+};
+
+/* ------------------------------------------------------------------
+   8. TRACE THE SYMBOL — "THE SEAL"
+
+   A reed pen and a seal cut into the page. You draw it, once, without
+   lifting. The ink is real ink: it pools where you slow down, it goes
+   dry and scratchy where you rush, and it bleeds outward if you stray
+   off the cut line.
+
+   What makes it skill: coverage AND accuracy AND pace all count, and
+   they pull against each other. Rushing gets you a thin, broken line;
+   creeping gets you a blot and runs the sand out. At high difficulty
+   the guide fades behind you as you draw, so the second half of the
+   seal is drawn from the shape you have in your head.
+
+   The seals are Greek letterforms the game already uses for its
+   achievements, so a player is drawing a letter they have been reading
+   all game.
+   ------------------------------------------------------------------ */
+ARCH.trace = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  /* Each seal is a polyline in unit space. They are letterforms and marks the
+     rest of the game already uses, drawn as one continuous stroke. */
+  const SEALS = {
+    lambda: {name:"Λ  lambda", pts:[[0.5,0.06],[0.14,0.94],[0.5,0.06],[0.86,0.94]]},
+    delta:  {name:"Δ  delta",  pts:[[0.5,0.06],[0.10,0.92],[0.90,0.92],[0.5,0.06]]},
+    sigma:  {name:"Σ  sigma",  pts:[[0.84,0.08],[0.16,0.08],[0.54,0.50],[0.16,0.92],[0.84,0.92]]},
+    zeta:   {name:"Ζ  zeta",   pts:[[0.16,0.08],[0.84,0.08],[0.20,0.92],[0.86,0.92]]},
+    chi:    {name:"Χ  chi",    pts:[[0.12,0.08],[0.88,0.92],[0.50,0.50],[0.88,0.08],[0.12,0.92]]},
+    theta:  {name:"Θ  theta",  circle:true, pts:(function(){ const a=[]; for(let k=0;k<=30;k++){
+              const t=(k/30)*6.2832; a.push([0.5+Math.cos(t)*0.40, 0.5+Math.sin(t)*0.44]); }
+              a.push([0.5-0.40,0.5]); a.push([0.5+0.40,0.5]); return a; })()}
+  };
+  const keys=Object.keys(SEALS);
+  const seal = SEALS[cfg.skin && SEALS[cfg.skin] ? cfg.skin : R.pick(keys)];
+  const fade = diff>0.55;                                  // the guide burns away behind you
+  const TOL  = 34 - diff*15;                               // px from the line that still counts
+
+  // resample the polyline into evenly spaced checkpoints
+  let pts=[];
+  function build(){
+    const box=Math.min(S.w*0.52, S.h*0.62);
+    const ox=S.w*0.5-box/2, oy=S.h*0.50-box/2;
+    const raw=seal.pts.map(([x,y])=>({x:ox+x*box, y:oy+y*box}));
+    pts=[];
+    for(let k=0;k<raw.length-1;k++){
+      const a=raw[k], b=raw[k+1];
+      const d=Math.hypot(b.x-a.x,b.y-a.y);
+      const n=Math.max(2, Math.round(d/9));
+      for(let j=0;j<n;j++) pts.push({x:a.x+(b.x-a.x)*j/n, y:a.y+(b.y-a.y)*j/n, hit:false, err:0});
+    }
+    pts.push({x:raw[raw.length-1].x, y:raw[raw.length-1].y, hit:false, err:0});
+  }
+  build();
+
+  const EN=Ender();
+  let drawing=false, done=false, started=false;
+  let ink=[], head=0, errSum=0, errN=0, strays=0, lifts=0;
+  let lastX=0, lastY=0, speed=0, sand=1;
+  const SAND = 1/(7.5 - diff*3);
+  let blots=[];
+
+  function finish(){
+    if(done) return; done=true;
+    const cov = pts.filter(p=>p.hit).length/pts.length;
+    const acc = errN ? clamp(1-(errSum/errN)/TOL, 0, 1) : 0;
+    const clean = clamp(1 - strays*0.05 - lifts*0.12, 0, 1);
+    const score = clamp(cov*0.48 + acc*0.36 + clean*0.16, 0, 1);
+    api.finish(score, cov>0.985 && acc>0.86 && strays===0 && lifts===0,
+      {coverage:Math.round(cov*100), accuracy:Math.round(acc*100), strays, lifts});
+  }
+  function mark(x,y){
+    let best=1e9, bi=-1;
+    // only look forward from the head — the seal is drawn in ONE order, which
+    // is what makes it a stroke rather than a scribble
+    const from=Math.max(0,head-3), to=Math.min(pts.length, head+14);
+    for(let k=from;k<to;k++){
+      const d=Math.hypot(pts[k].x-x, pts[k].y-y);
+      if(d<best){ best=d; bi=k; }
+    }
+    if(bi<0) return;
+    if(best<=TOL){
+      for(let k=head;k<=bi;k++) if(pts[k]) pts[k].hit=true;
+      if(bi>head){ head=bi; }
+      errSum+=best; errN++;
+      if(!started){ started=true; }
+      if(Math.random()<0.5) A.brush();
+      // the ink follows the pen with the right weight for the speed
+      ink.push({x,y,w:clamp(7-speed*0.020,1.6,8),a:1});
+      if(head>=pts.length-2){
+        EN.end(480, finish, ()=>{
+          A.perfect(); S.punch(0.9); S.flash(C.goldHot,0.20,380); S.slowmo(0.4,300);
+          S.emit(34,{x,y,spd:280,life:1,r:2.6,c:[C.goldHot,C.ink,"#fff6df"],kind:"spark",g:180,glow:true});
+        });
+      }
+    } else {
+      // off the line: the ink bleeds into the page and stays there
+      strays++;
+      ink.push({x,y,w:clamp(9-speed*0.02,3,11),a:1,stray:true});
+      if(blots.length<80 && Math.random()<0.4) blots.push({x,y,r:3+Math.random()*5,a:0.5});
+      if(Math.random()<0.25){ A.nearMiss(); S.shake(3,8); }
+      api.combo.break();
+    }
+  }
+
+  return {
+    step(dt){
+      if(done) return;
+      if(started){
+        sand=Math.max(0,sand-SAND*dt);
+        if(sand<=0) EN.end(300, finish, ()=>A.fail());
+      }
+      ink.forEach(p=>{ if(p.stray) p.a=Math.max(0.45,p.a-dt*0.1); });
+      blots.forEach(b=>{ b.r+=dt*1.6; });
+    },
+    paint(g){
+      // ---- the page ----
+      const box=Math.min(S.w*0.52,S.h*0.62);
+      g.save();
+      P.tablet(g,S.w*0.5,S.h*0.50,box+72,box+72,{r:3,hi:"#f6efdc",lo:"#e0d4b6"});
+      // laid lines in the papyrus
+      g.globalAlpha=0.10; g.strokeStyle=C.inkLine; g.lineWidth=1;
+      for(let k=0;k<26;k++){ const yy=S.h*0.50-box/2-30+k*((box+60)/26);
+        g.beginPath(); g.moveTo(S.w*0.5-box/2-32,yy); g.lineTo(S.w*0.5+box/2+32,yy); g.stroke(); }
+      g.globalAlpha=1; g.restore();
+      // ---- the cut guide ----
+      g.save();
+      g.lineCap="round"; g.lineJoin="round";
+      g.strokeStyle="rgba(74,63,49,.20)"; g.lineWidth=TOL*1.25;
+      g.beginPath(); pts.forEach((p,k)=>k?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y)); g.stroke();
+      // the guide burns away behind the pen at high difficulty
+      g.strokeStyle="rgba(74,63,49,.40)"; g.lineWidth=2;
+      if(g.setLineDash) g.setLineDash([4,6]);
+      g.beginPath();
+      let moved=false;
+      pts.forEach((p,k)=>{
+        if(fade && k<head-2){ moved=false; return; }
+        moved?g.lineTo(p.x,p.y):(g.moveTo(p.x,p.y),moved=true);
+      });
+      g.stroke();
+      if(g.setLineDash) g.setLineDash([]);
+      g.restore();
+      // ---- the blots you left ----
+      blots.forEach(b=>{
+        g.save(); g.globalAlpha=b.a*0.5; g.fillStyle="#241d13";
+        g.beginPath(); g.arc(b.x,b.y,b.r,0,6.2832); g.fill(); g.restore();
+      });
+      // ---- the ink you laid ----
+      g.save(); g.lineCap="round"; g.lineJoin="round";
+      for(let k=1;k<ink.length;k++){
+        const a=ink[k-1], b=ink[k];
+        if(Math.hypot(b.x-a.x,b.y-a.y)>60) continue;
+        g.globalAlpha=b.a*(b.stray?0.55:0.95);
+        g.strokeStyle=b.stray?"#4a3a28":"#1a140c";
+        g.lineWidth=b.w;
+        g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.stroke();
+      }
+      g.restore(); g.globalAlpha=1;
+      // ---- the pen, riding the pointer ----
+      if(drawing && !done){
+        const px=S.pointer.x, py=S.pointer.y;
+        g.save(); g.translate(px,py); g.rotate(-0.62);
+        g.strokeStyle="#7a5a30"; g.lineWidth=7; g.lineCap="round";
+        g.beginPath(); g.moveTo(0,-4); g.lineTo(14,-64); g.stroke();
+        g.strokeStyle="#c2a068"; g.lineWidth=3;
+        g.beginPath(); g.moveTo(1,-6); g.lineTo(13,-60); g.stroke();
+        g.fillStyle="#1a140c";
+        g.beginPath(); g.moveTo(-2,0); g.lineTo(4,-9); g.lineTo(0,-10); g.closePath(); g.fill();
+        g.restore();
+      }
+      // ---- the sand glass: the clock, and it is a real glass ----
+      const sx=S.w*0.5+box/2+62, sy=S.h*0.50;
+      if(sx<S.w-30){
+        g.save(); g.translate(sx,sy);
+        g.strokeStyle=C.bronze; g.lineWidth=3;
+        g.beginPath(); g.moveTo(-20,-46); g.lineTo(20,-46); g.moveTo(-20,46); g.lineTo(20,46); g.stroke();
+        g.strokeStyle="rgba(207,224,212,.5)"; g.lineWidth=2;
+        g.beginPath(); g.moveTo(-17,-44); g.lineTo(3,-2); g.lineTo(-17,44);
+        g.moveTo(17,-44); g.lineTo(-3,-2); g.lineTo(17,44); g.stroke();
+        g.fillStyle= sand<0.25?C.cinnabar:"#d8bd84";
+        g.beginPath(); g.moveTo(-15*sand,-40); g.lineTo(15*sand,-40); g.lineTo(0,-4); g.closePath(); g.fill();
+        const bot=1-sand;
+        g.beginPath(); g.moveTo(-15*bot,42); g.lineTo(15*bot,42); g.lineTo(0,42-26*bot); g.closePath(); g.fill();
+        if(started && sand>0){ g.strokeStyle="#d8bd84"; g.lineWidth=1.2;
+          g.beginPath(); g.moveTo(0,-2); g.lineTo(0,38); g.stroke(); }
+        g.restore();
+      }
+      P.eyebrow(g,S.w*0.5,S.h*0.50-box/2-52, seal.name, "rgba(216,189,132,.62)",11);
+      if(!started) P.eyebrow(g,S.w*0.5,S.h*0.50+box/2+50,"press and draw — do not lift","rgba(216,189,132,.45)",10);
+      P.lamp(g,S,S.w*0.09,S.h*0.24,0.9);
+    },
+    down(x,y){ drawing=true; lastX=x; lastY=y; if(started) lifts++; mark(x,y); },
+    move(x,y){
+      if(!drawing||done) return;
+      speed = Math.hypot(x-lastX,y-lastY)/Math.max(0.001,S.dt);
+      lastX=x; lastY=y;
+      mark(x,y);
+    },
+    up(){ if(drawing && started && !done){ drawing=false; } else drawing=false; },
+    key(e){
+      // keyboard fallback: hold Space to let the pen run the seal itself,
+      // slowly and imperfectly, so the trial is never a wall
+      if(e.key===" "){ e.preventDefault();
+        if(head<pts.length-1){ const p=pts[Math.min(pts.length-1,head+1)];
+          mark(p.x+(Math.random()*2-1)*TOL*0.4, p.y+(Math.random()*2-1)*TOL*0.4); }
+      }
+    },
+    allowRepeat:true
+  };
+};
+
+/* ------------------------------------------------------------------
+   9. CATCH / TRACK — "THE PULSE"
+
+   Two fingers on a wrist. The pulse wanders, fades, doubles back; you
+   keep contact. A papyrus strip beside the arm is drawing the trace
+   in real time — steady and even while you have it, ragged and flat
+   the moment you lose it. The strip IS the score, and you can read it
+   at a glance without a single number on screen.
+
+   What makes it skill: the pulse accelerates when you are on it, so
+   holding contact is what makes it harder. It feints — a sharp change
+   of direction with no warning — and at high difficulty it goes under
+   entirely for a beat and you have to guess where it surfaces.
+   ------------------------------------------------------------------ */
+ARCH.track = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const DUR = 6.5 + diff*3;
+  const rad = Math.max(26, 52 - diff*20);
+  /* the arm, in one place: the drawing and the pulse's cage read the same
+     numbers, so the thing you are feeling for can never leave the limb */
+  const armY = ()=>S.h*0.50;
+  const armW = ()=>Math.min(S.w*0.34, 380);
+  const armBox = ()=>({ x0:S.w*0.5-armW()+rad*0.8, x1:S.w*0.5+armW()*0.62-rad*0.8,
+                        y0:armY()-46+rad*0.5, y1:armY()+46-rad*0.5 });
+  let x=S.w*0.5, y=S.h*0.50, vx=R.range(-1,1), vy=R.range(-1,1);
+  const nv=Math.hypot(vx,vy)||1; vx/=nv; vy/=nv;
+  let spd = 130 + diff*140;
+  const EN=Ender();
+  let t=0, held=0, on=false, done=false, feintT=R.range(0.8,1.8);
+  let submerged=0, subT= diff>0.6 ? R.range(2,4) : 1e9;
+  const trace=[];                                          // the strip
+  let contactRun=0, bestRun=0, breaks=0;
+  let beatPhase=0;
+
+  function finish(){
+    if(done) return; done=true;
+    const frac=held/DUR;
+    const score=clamp(frac*0.82 + clamp(bestRun/DUR,0,1)*0.18 - breaks*0.02, 0, 1);
+    api.finish(score, frac>0.985 && breaks===0, {held:Math.round(frac*100), breaks});
+  }
+  return {
+    step(dt){
+      if(done) return;
+      t+=dt;
+      if(t>=DUR){ EN.end(200, finish); return; }
+      beatPhase += dt*(1.6+ (on?0.8:0));
+      // wander with feints
+      feintT-=dt;
+      if(feintT<=0){
+        feintT=R.range(0.5,1.5)*(1.2-diff*0.5);
+        const turn=R.range(-1,1)*(1.1+diff*1.4);
+        const c=Math.cos(turn), s=Math.sin(turn);
+        const nx=vx*c-vy*s, ny=vx*s+vy*c; vx=nx; vy=ny;
+        if(on) A.tick(2);
+      }
+      if(subT!==1e9){
+        subT-=dt;
+        if(subT<=0 && submerged<=0){ submerged=0.55; subT=R.range(1.8,3.4); A.wood(); }
+      }
+      submerged=Math.max(0,submerged-dt);
+      // holding contact winds it up — the trial gets harder BECAUSE you are good
+      const acc = on ? 1+dt*0.55 : 1-dt*0.25;
+      spd = clamp(spd*acc, 110, 460+diff*160);
+      x+=vx*spd*dt; y+=vy*spd*dt*0.62;
+      /* THE PULSE STAYS ON THE ARM. It used to wander a band of the screen half
+         again as tall as the limb it belonged to, so the thing you were feeling
+         for regularly floated off into the air above the wrist — which makes
+         nonsense of the fiction and of the fantasy. Its box is the arm now. */
+      const B=armBox();
+      if(x<B.x0){ x=B.x0; vx=Math.abs(vx); } if(x>B.x1){ x=B.x1; vx=-Math.abs(vx); }
+      if(y<B.y0){ y=B.y0; vy=Math.abs(vy); } if(y>B.y1){ y=B.y1; vy=-Math.abs(vy); }
+      // contact
+      const d=Math.hypot(S.pointer.x-x, S.pointer.y-y);
+      const wasOn=on;
+      on = submerged<=0 && d<=rad && S.pointer.x>-500;
+      if(on){
+        held+=dt; contactRun+=dt; bestRun=Math.max(bestRun,contactRun);
+        if(!wasOn){ A.detent(); api.combo.hit(false); }
+        if(Math.random()<dt*6) S.emit(1,{x,y,spd:40,life:0.7,r:1.6,c:[C.cinnabar,"#e08880"],kind:"mote",g:-20,drag:1});
+      } else {
+        if(wasOn){ breaks++; contactRun=0; api.combo.break(); A.nearMiss(); S.shake(6,7); }
+      }
+      // the strip
+      trace.push({v: on ? Math.sin(beatPhase*6.2832)*(0.6+0.4*Math.sin(beatPhase*12)) : (Math.random()*2-1)*0.16, on});
+      if(trace.length>320) trace.shift();
+    },
+    paint(g){
+      /* ---- the arm ----
+         A rounded rectangle read as a bar of soap. This is a forearm: wide at
+         the elbow, narrowing to a wrist, a hand open past it, a sleeve cuff
+         behind. It is the thing the whole trial is about, so it is worth the
+         twenty lines. */
+      const ay=armY(), aw=armW();
+      g.save();
+      g.fillStyle="rgba(0,0,0,.45)";
+      g.beginPath();
+      g.moveTo(S.w*0.5-aw, ay-52); g.quadraticCurveTo(S.w*0.5-aw*0.1, ay-46, S.w*0.5+aw*0.62, ay-32);
+      g.lineTo(S.w*0.5+aw*0.62, ay+42); g.quadraticCurveTo(S.w*0.5-aw*0.1, ay+58, S.w*0.5-aw, ay+58);
+      g.closePath(); g.fill();
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(0,ay-54,0,ay+52);
+        lg.addColorStop(0,"#d6b492"); lg.addColorStop(0.55,"#b48d6a"); lg.addColorStop(1,"#7d6144");
+        g.fillStyle=lg;
+      } else g.fillStyle="#b0906f";
+      g.beginPath();
+      g.moveTo(S.w*0.5-aw, ay-56); g.quadraticCurveTo(S.w*0.5-aw*0.1, ay-50, S.w*0.5+aw*0.60, ay-36);
+      g.lineTo(S.w*0.5+aw*0.60, ay+38); g.quadraticCurveTo(S.w*0.5-aw*0.1, ay+54, S.w*0.5-aw, ay+54);
+      g.closePath(); g.fill();
+      // the tendons of the wrist, which is where you are actually feeling
+      g.strokeStyle="rgba(120,92,66,.35)"; g.lineWidth=2;
+      g.beginPath(); g.moveTo(S.w*0.5+aw*0.10, ay-16); g.lineTo(S.w*0.5+aw*0.58, ay-12);
+      g.moveTo(S.w*0.5+aw*0.10, ay+16); g.lineTo(S.w*0.5+aw*0.58, ay+14); g.stroke();
+      // the hand, open, past the wrist
+      g.fillStyle="#c2a17c";
+      P.roundRect(g,S.w*0.5+aw*0.58, ay-40, aw*0.30, 80, 26); g.fill();
+      g.strokeStyle="rgba(90,68,46,.45)"; g.lineWidth=1.6;
+      for(let f=0;f<3;f++){ g.beginPath();
+        g.moveTo(S.w*0.5+aw*0.70, ay-22+f*20); g.lineTo(S.w*0.5+aw*0.86, ay-22+f*20); g.stroke(); }
+      // the sleeve at the elbow
+      g.fillStyle="#5a5f4a";
+      P.roundRect(g,S.w*0.5-aw-30, ay-62, 46, 122, 8); g.fill();
+      g.fillStyle="rgba(0,0,0,.25)";
+      P.roundRect(g,S.w*0.5-aw-4, ay-62, 20, 122, 4); g.fill();
+      g.restore();
+      // ---- the pulse ----
+      const beat=0.5+0.5*Math.sin(beatPhase*6.2832);
+      const rr=rad*(0.86+beat*0.16)*(submerged>0?0.4:1);
+      if(submerged<=0){
+        P.glow(g,x,y,rr*2.1,`rgba(181,50,43,${on?0.5:0.26})`,on?0.7:0.4);
+        g.save();
+        g.globalAlpha=0.30+beat*0.28;
+        g.fillStyle=C.cinnabar;
+        g.beginPath(); g.arc(x,y,rr,0,6.2832); g.fill();
+        g.globalAlpha=0.9; g.strokeStyle=on?C.goldHot:C.cinnabar; g.lineWidth=on?3:2;
+        g.beginPath(); g.arc(x,y,rr,0,6.2832); g.stroke();
+        // the two fingers of the reading, drawn on the pulse itself
+        g.strokeStyle=on?C.goldHot:"rgba(236,226,203,.5)"; g.lineWidth=2.4; g.lineCap="round";
+        g.beginPath(); g.moveTo(x-rr*0.36,y-rr*0.5); g.lineTo(x-rr*0.36,y+rr*0.5);
+        g.moveTo(x+rr*0.36,y-rr*0.5); g.lineTo(x+rr*0.36,y+rr*0.5); g.stroke();
+        g.restore();
+      } else {
+        g.save(); g.globalAlpha=0.35; g.strokeStyle=C.cinnabar; g.lineWidth=1.6;
+        if(g.setLineDash) g.setLineDash([3,6]);
+        g.beginPath(); g.arc(x,y,rad*1.3,0,6.2832); g.stroke();
+        if(g.setLineDash) g.setLineDash([]);
+        g.restore();
+      }
+      // the player's hand
+      if(S.pointer.x>-500){
+        g.save(); g.globalAlpha=0.9;
+        g.strokeStyle=on?C.goldHot:"rgba(236,226,203,.45)"; g.lineWidth=2;
+        g.beginPath(); g.arc(S.pointer.x,S.pointer.y,13,0,6.2832); g.stroke();
+        g.beginPath(); g.moveTo(S.pointer.x-19,S.pointer.y); g.lineTo(S.pointer.x-7,S.pointer.y);
+        g.moveTo(S.pointer.x+7,S.pointer.y); g.lineTo(S.pointer.x+19,S.pointer.y); g.stroke();
+        g.restore();
+      }
+      // ---- the strip: the whole readout, and it is a piece of paper ----
+      const sw=Math.min(S.w*0.72,620), sh=76;
+      const sx=S.w*0.5-sw/2, sy=S.h*0.83-sh/2;
+      P.tablet(g,S.w*0.5,S.h*0.83,sw,sh,{r:2,hi:"#f2ead4",lo:"#ddd0b0"});
+      g.save();
+      g.beginPath(); P.roundRect(g,sx,sy,sw,sh,2); g.clip();
+      g.strokeStyle="rgba(74,63,49,.18)"; g.lineWidth=1;
+      g.beginPath(); g.moveTo(sx,sy+sh/2); g.lineTo(sx+sw,sy+sh/2); g.stroke();
+      g.lineWidth=1.8; g.lineJoin="round"; g.lineCap="round";
+      let prevOn=null;
+      trace.forEach((p,k)=>{
+        const px=sx+(k/320)*sw, py=sy+sh/2 - p.v*(sh*0.40);
+        if(p.on!==prevOn){ if(prevOn!==null) g.stroke();
+          g.beginPath(); g.moveTo(px,py); g.strokeStyle=p.on?C.cinDeep:"rgba(120,105,82,.6)"; prevOn=p.on; }
+        else g.lineTo(px,py);
+      });
+      g.stroke();
+      // the pen head, riding the right edge
+      const hx=sx+(trace.length/320)*sw;
+      g.strokeStyle=C.ink; g.lineWidth=1.4;
+      g.beginPath(); g.moveTo(hx,sy+4); g.lineTo(hx,sy+sh-4); g.stroke();
+      g.restore();
+      P.eyebrow(g,S.w*0.5,S.h*0.83-sh/2-16, on?"contact":"lost the beat", on?C.verdSoft:C.cinnabar,10.5);
+      P.lamp(g,S,S.w*0.08,S.h*0.26,0.9);
+    },
+    always:true
+  };
+};
+
+/* ------------------------------------------------------------------
+   10. PHYSICAL STRUGGLE — "THE SEIZED LID"
+
+   Something is stuck and Remy is going to open it with their shoulder.
+   Alternate hands — left, right, left — and the force climbs. Stop and
+   it bleeds away fast.
+
+   This is NOT a mash bar, and that distinction is the whole design.
+   There is a band on the strain, and above it the thing you are trying
+   to open BREAKS. So the verb is not "press quickly", it is "build
+   force to the edge of what the object can take and hold it there
+   while the seal gives" — which means backing off, on purpose, at the
+   exact moment your instinct says push harder.
+
+   The object carries all of it: the lid bows, dust shakes loose from
+   the lip, the bands strain and the wood creaks louder the closer you
+   are to breaking it.
+   ------------------------------------------------------------------ */
+ARCH.struggle = function(S, cfg, api){
+  const R=cfg.R, diff=cfg.diff;
+  const BAND=[0.62, 0.88 - diff*0.10];                     // the safe strain
+  const BREAK=0.985;
+  const NEED = 1.5 + diff*1.4;                             // seconds inside the band
+  const EN=Ender();
+  let force=0, inBand=0, done=false, broke=false, giving=false, side=1, lastSide=0, t=0;
+  let creakT=0, dust=0, bow=0, bowV=0;
+  let damage=0;
+
+  function finish(){
+    if(done) return; done=true;
+    const prog=clamp(inBand/NEED,0,1);
+    const score = broke ? clamp(prog*0.30,0,0.30) : clamp(prog*(1-damage*0.30), 0, 1);
+    api.finish(score, !broke && damage<0.02 && prog>=1, {forced:!broke&&prog>=1, broke, strain:Math.round(damage*100)});
+  }
+  function push(s){
+    if(done) return;
+    // ALTERNATING is the input. The same hand twice gives you almost nothing,
+    // which is what stops this being a mash.
+    const alt = s!==lastSide;
+    lastSide=s; side=s;
+    const gain = alt ? 0.115 - diff*0.022 : 0.026;
+    force=Math.min(1.06, force+gain);
+    bowV -= alt?4.2:1.6;
+    A.strain(); A.wood();
+    S.shake(alt?5:2.4, 8);
+    dust=Math.min(1,dust+ (alt?0.34:0.14));
+    const lx=S.w*0.5+s*Math.min(150,S.w*0.17), ly=S.h*0.44;
+    S.emit(alt?7:3,{x:lx,y:ly,spd:130,life:0.5,r:2,c:["#6a5a40","#8a7458"],kind:"dust",g:600,ang:s>0?0.4:2.7,spread:0.8});
+  }
+  return {
+    step(dt){
+      if(done) return;
+      t+=dt;
+      // force bleeds fast — this is a struggle, not a battery
+      force=Math.max(0, force - dt*(0.42+diff*0.16));
+      bowV += (force*14-bow)*70*dt; bowV*=Math.exp(-8*dt); bow+=bowV*dt;
+      dust=Math.max(0,dust-dt*1.8);
+      if(force>=BAND[0] && force<=BAND[1]){
+        inBand+=dt;
+        if(Math.random()<dt*9) A.detent();
+        if(inBand>=NEED && !giving){
+          /* IT GIVES. This needs its own latch: `done` is not set until the
+             delayed finish() lands, so without one the frame after the seal
+             breaks still reads inBand >= NEED and fires the whole burst again —
+             thirty overlapping crack samples and a screen shake that never
+             decays, for half a second, every time you succeeded. */
+          giving=true;
+          A.open(); A.crack(); S.punch(1.3); S.shake(26,3); S.slowmo(0.35,340);
+          S.flash(C.goldHot,0.24,420);
+          S.emit(46,{x:S.w*0.5,y:S.h*0.44,spd:420,life:1.1,r:2.8,
+            c:[C.goldHot,C.goldSoft,"#8a7458"],kind:"spark",g:640,glow:true});
+          setTimeout(()=>finish(),520);
+          inBand=NEED; force=0;
+          return;
+        }
+        if(giving) return;
+      } else if(force>BAND[1]){
+        // over the band: you are hurting the thing you want
+        damage=Math.min(1,damage+dt*(0.30+diff*0.22));
+        if(Math.random()<dt*14) A.wood();
+        if(force>=BREAK && !broke){
+          broke=true; A.crack(); A.fail(); S.shake(30,3); S.flash(C.cinnabar,0.30,420);
+          S.emit(40,{x:S.w*0.5,y:S.h*0.44,spd:380,life:1.2,r:3.4,
+            c:["#5a4a34","#3a2f22",C.cinDeep],kind:"shard",g:900});
+          setTimeout(()=>finish(),520);
+        }
+      }
+      creakT-=dt;
+      if(creakT<=0 && force>0.25){ creakT=0.28-force*0.16; A.strain(); }
+      if(t>16 && !done) EN.end(100, finish);
+    },
+    paint(g){
+      const cx=S.w*0.5, cy=S.h*0.44;
+      const w=Math.min(520,S.w*0.46), h=Math.min(280,S.h*0.40);
+      const shk=force>BAND[1] ? (Math.random()*2-1)*force*4 : 0;
+      // ---- the crate ----
+      g.save(); g.translate(cx+shk,cy);
+      g.fillStyle="rgba(0,0,0,.5)";
+      g.beginPath(); g.ellipse? g.ellipse(0,h*0.62,w*0.60,16,0,0,6.2832):g.arc(0,h*0.6,w*0.5,0,6.2832); g.fill();
+      // body
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(0,-h/2,0,h/2);
+        lg.addColorStop(0,"#6a5233"); lg.addColorStop(1,"#3b2d1a"); g.fillStyle=lg;
+      } else g.fillStyle="#553f26";
+      P.roundRect(g,-w/2,-h*0.18,w,h*0.72,4); g.fill();
+      // planks
+      g.strokeStyle="rgba(0,0,0,.35)"; g.lineWidth=1.6;
+      for(let k=1;k<4;k++){ const yy=-h*0.18+k*(h*0.72/4);
+        g.beginPath(); g.moveTo(-w/2,yy); g.lineTo(w/2,yy); g.stroke(); }
+      // iron bands — they visibly strain
+      const strain=force*4;
+      [-w*0.28, w*0.28].forEach(bx=>{
+        g.strokeStyle= force>BAND[1] ? "#a8493f" : "#5a5a5f";
+        g.lineWidth=8+force*2;
+        g.beginPath(); g.moveTo(bx,-h*0.20-bow*0.4); g.lineTo(bx, h*0.56); g.stroke();
+        g.strokeStyle="rgba(255,255,255,.14)"; g.lineWidth=2;
+        g.beginPath(); g.moveTo(bx-2,-h*0.20-bow*0.4); g.lineTo(bx-2,h*0.56); g.stroke();
+      });
+      // ---- the lid: bows under the force, and that bow IS the meter ----
+      g.save(); g.translate(0,-h*0.20-bow*0.5);
+      if(g.createLinearGradient){
+        const lg=g.createLinearGradient(0,-24,0,14);
+        lg.addColorStop(0, force>BAND[1]?"#8a5a3a":"#7a5f39"); lg.addColorStop(1,"#4a381f"); g.fillStyle=lg;
+      } else g.fillStyle="#6a5233";
+      g.beginPath();
+      g.moveTo(-w/2-8, 10);
+      g.quadraticCurveTo(0, 10-Math.max(0,bow)*1.5-16, w/2+8, 10);
+      g.lineTo(w/2+8, 22); g.lineTo(-w/2-8,22); g.closePath(); g.fill();
+      g.strokeStyle="rgba(0,0,0,.45)"; g.lineWidth=2; g.stroke();
+      g.restore();
+      // ---- the strain band, cut into the crate's own iron plate ----
+      // not a bar on the HUD: a gauge riveted to the object
+      const gw=w*0.62, gx=-gw/2, gy=h*0.30;
+      g.save();
+      g.fillStyle="#2e2820"; P.roundRect(g,gx-6,gy-9,gw+12,20,3); g.fill();
+      g.strokeStyle="#5a5a5f"; g.lineWidth=1.6; P.roundRect(g,gx-6,gy-9,gw+12,20,3); g.stroke();
+      // the safe band, inlaid in verdigris; the break zone in cinnabar
+      g.fillStyle="rgba(69,102,84,.75)";
+      g.fillRect(gx+gw*BAND[0], gy-6, gw*(BAND[1]-BAND[0]), 14);
+      g.fillStyle="rgba(181,50,43,.55)";
+      g.fillRect(gx+gw*BAND[1], gy-6, gw*(1-BAND[1]), 14);
+      // the needle
+      const nx=gx+gw*clamp(force,0,1);
+      g.strokeStyle= force>BAND[1]?C.cinnabar : (force>=BAND[0]?C.goldHot:C.goldSoft);
+      g.lineWidth=3; g.lineCap="round";
+      g.beginPath(); g.moveTo(nx,gy-11); g.lineTo(nx,gy+13); g.stroke();
+      // how far the seal has given — struck marks, filling the band from within
+      const prog=clamp(inBand/NEED,0,1);
+      g.fillStyle=C.goldHot; g.globalAlpha=0.85;
+      g.fillRect(gx+gw*BAND[0], gy+5, gw*(BAND[1]-BAND[0])*prog, 3);
+      g.globalAlpha=1;
+      g.restore();
+      g.restore();
+      // ---- dust off the lip ----
+      if(dust>0.02 && !reduced()){
+        S.emit(1,{x:cx+(Math.random()*2-1)*w*0.5, y:cy-h*0.20, spd:20, life:0.9, r:1.6,
+          c:["#8a7458","#6a5a40"], kind:"dust", g:220, drag:0.8});
+      }
+      // ---- the hands ----
+      [-1,1].forEach(s=>{
+        const active = side===s && force>0.1;
+        const px=cx+s*(w*0.5+38) - s*(active?12:0), py=cy-h*0.06;
+        g.save(); g.translate(px,py); g.scale(-s,1);
+        // a hand braced against the lip: heel of the palm on the wood, fingers
+        // curled over it. It shoves when it is the one doing the work.
+        g.fillStyle=active?"#e0bd93":"#b0906f";
+        P.roundRect(g,-6,-17,26,34,9); g.fill();
+        g.strokeStyle="rgba(0,0,0,.45)"; g.lineWidth=1.6;
+        P.roundRect(g,-6,-17,26,34,9); g.stroke();
+        g.fillStyle=active?"#d3ae83":"#a0805f";
+        for(let f=0;f<3;f++){ P.roundRect(g,-15,-13+f*10,13,8,4); g.fill(); g.stroke(); }
+        // the forearm running back out of frame
+        g.strokeStyle=active?"#c9a37a":"#96795a"; g.lineWidth=17; g.lineCap="round";
+        g.beginPath(); g.moveTo(16,0); g.lineTo(52,-6); g.stroke();
+        g.restore();
+      });
+      // ---- the prompt, as two struck keys, not a sentence ----
+      const kx=cx, ky=S.h*0.80;
+      [["A / ←",-1],["D / →",1]].forEach(([lab,s],i)=>{
+        const bx=kx+(i?52:-52);
+        g.save();
+        const hot = lastSide===s && force>0.06;
+        g.globalAlpha=hot?1:0.5;
+        P.tablet(g,bx,ky,80,32,{r:3,hi:hot?C.goldSoft:C.papyrus3,lo:hot?C.gold:"#a89a7c"});
+        g.font=`700 12px ${FONT_READ}`; g.textAlign="center"; g.textBaseline="middle";
+        g.fillStyle=C.ink; g.fillText(lab,bx,ky);
+        g.restore();
+      });
+      P.eyebrow(g,cx,S.h*0.87, force>BAND[1]?"EASE OFF — you are breaking it":"hold it in the green and it gives",
+        force>BAND[1]?C.cinnabar:"rgba(216,189,132,.55)",10.5);
+      P.lamp(g,S,S.w*0.09,S.h*0.24,1.0);
+    },
+    down(x){ push(x<S.w/2?-1:1); },
+    key(e){
+      const k=e.key;
+      if(k==="a"||k==="A"||k==="ArrowLeft"){ e.preventDefault(); push(-1); }
+      else if(k==="d"||k==="D"||k==="ArrowRight"){ e.preventDefault(); push(1); }
+      else if(k===" "){ e.preventDefault(); push(-lastSide||1); }
+    },
+    allowRepeat:false
+  };
+};
+
+/* ==================================================================
+   THE RUNNER — brief in, trial, verdict out.
+
+   Owns the loop so every trial gets the same three-beat shape:
+     ANTICIPATION  the object is on screen and named before you can act
+     INPUT         the archetype has the frame
+     IMPACT        the stamp lands, the object reacts, the grade is read
+   ================================================================== */
+const RELAX = ()=>{ try{ return !!(E.S && E.S().settings && E.S().settings.timerRelax); }catch(e){ return false; } };
+
+/* AUTOMATION — the trial that is not played.
+
+   A trial is a hand-skill challenge, so there are environments where it
+   cannot happen at all: a headless test run, a browser with no 2d context.
+   The caller is still owed a grade, and stalling forever waiting for a hand
+   that will never arrive is the one failure mode that takes the whole game
+   down with it. Set this to a tier and every trial resolves at that tier
+   without opening a stage. The test harness sets it; the game never does. */
+let AUTO=null;
+const AUTO_SCORE=[0.15, 0.45, 0.72, 0.90, 1.0];
+function setAuto(t){ AUTO = (t==null ? null : clamp(t|0, 0, 4)); }
+
+function play(spec){
+  spec = spec || {};
+  if(AUTO!=null){
+    const r=result(AUTO_SCORE[AUTO], AUTO>=4, {auto:true});
+    r.type = ARCH[spec.type]?spec.type:"sweetspot";
+    return Promise.resolve(r);
+  }
+  return new Promise((resolve)=>{
+    const type = ARCH[spec.type] ? spec.type : "sweetspot";
+    let diff = clamp(spec.diff==null?0.4:spec.diff, 0, 1);
+    const relax = RELAX();
+    if(relax) diff *= 0.45;                       // Relax mode: wider windows everywhere
+    const R = rng(spec.seed);
+
+    let S;
+    try{ S = Stage(spec); }catch(e){ S=null; }
+    /* No canvas at all — a very old browser, or a headless run. The trial does
+       not exist, but the caller is still owed a result, and refusing to pay is
+       worse than paying honestly. This is the one path that hands out a grade
+       nobody earned, and it hands out a middling one. */
+    if(!S || !S.ctx){
+      if(S) S.destroy();
+      resolve(result(0.68, false, {skipped:true}));
+      return;
+    }
+    A.resume();
+    try{ if(E.Audio2 && E.Audio2.setMood) E.Audio2.setMood("trial"); }catch(e){}
+
+    const brief  = Brief(S, {
+      eyebrow: spec.eyebrow || "A trial of hand",
+      title:   spec.title   || "",
+      brief:   spec.brief   || "",
+      stakes:  relax ? "relax mode — this cannot be ruined" : (spec.stakes||""),
+      holdFor: spec.holdFor==null ? 2.4 : spec.holdFor
+    });
+    const combo = Combo(S);
+    let verdict=null, finished=null, closing=false;
+
+    const api = {
+      combo, diff, R,
+      finish(score, flawless, detail){
+        if(finished) return;
+        let sc = clamp(score,0,1);
+        // Relax mode compresses the range upward rather than switching the
+        // trial off: you still feel the difference between a good run and a
+        // bad one, you just cannot lose the contents over it.
+        if(relax) sc = 0.42 + sc*0.58;
+        finished = result(sc, flawless && !relax, detail);
+        finished.type = type;
+        const lines=[];
+        if(spec.payoff) lines.push(spec.payoff(finished));
+        if(combo.best>=3) lines.push(`best run ×${combo.best}`);
+        verdict = Verdict(S, finished, {lines, line:spec.verdictLine, hold: finished.tier>=4?1.5:1.05});
+      }
+    };
+
+    const impl = ARCH[type](S, {diff, R, skin:spec.skin, seed:spec.seed}, api);
+    let armed = false;                    // input is live only after the first frame
+
+    S.bind({
+      always: !!impl.always,
+      allowRepeat: !!impl.allowRepeat,
+      down(x,y,e){
+        if(!armed) return;
+        if(verdict){ if(verdict.done) close(); return; }
+        brief.dismiss(); impl.down && impl.down(x,y,e);
+      },
+      move(x,y,e){ if(!armed||verdict) return; impl.move && impl.move(x,y,e); },
+      up(x,y,e){ if(!armed||verdict) return; impl.up && impl.up(x,y,e); },
+      leave(){ impl.leave && impl.leave(); },
+      key(e){
+        if(!armed) return;
+        if(verdict){ if(verdict.done && (e.key===" "||e.key==="Enter"||e.key==="Escape")){ e.preventDefault(); close(); } return; }
+        if(e.key==="Escape") return;      // a trial cannot be escaped; that is the point
+        brief.dismiss(); impl.key && impl.key(e);
+      },
+      keyUp(e){ if(!armed||verdict) return; impl.keyUp && impl.keyUp(e); }
+    });
+
+    function close(){
+      if(closing) return; closing=true;
+      try{ if(E.Audio2 && E.Audio2.setMood) E.Audio2.setMood(spec.moodAfter||"hub"); }catch(e){}
+      S.destroy();
+      resolve(finished || result(0, false, {aborted:true}));
+    }
+
+    S.run((dt)=>{
+      const g=S.ctx;
+      S.briefA = brief.alpha();
+      P.room(g,S,spec.tint);
+      P.motes(g,S, verdict?10:24);
+      /* THE OBJECT IS ON SCREEN BEFORE THE CLOCK IS.
+         The trial paints from the first frame — you can see the lock, the beam,
+         the shelf — but no time passes until the brief has cleared. Nothing can
+         spoil, burn down or sail past while the player is still reading what
+         they are being asked to do, and every trial gets the same anticipation
+         beat for free. */
+      const live = brief.dismissed;
+      try{ if(live && impl.step) impl.step(dt); }catch(e){}
+      try{ impl.paint && impl.paint(g); }catch(e){}
+      combo.step(dt);
+      combo.paint(g, S.w-Math.min(70,S.w*0.09), S.h*0.32);
+      S.paintFx();
+      /* The brief is set over the object it describes, and on a big board the
+         two collided. Rather than move every object out of the way of a line
+         of type that is on screen for two seconds, the room dims while the
+         brief is up and comes back as it goes — which is also just how a thing
+         being introduced ought to feel. */
+      brief.step(dt);
+      if(S.briefA>0.01){ g.save(); g.globalAlpha=S.briefA*0.55;
+        g.fillStyle="#0c0906"; g.fillRect(0,0,S.w,S.h); g.restore(); }
+      brief.paint(g); brief.paintStakes(g);
+      if(verdict){ verdict.step(dt); verdict.paint(g);
+        if(verdict.t>(verdict.done?2.6:99)) close(); }
+      armed = true;
+    });
+    // the object is announced before the hand is asked for anything
+    S.say((spec.title||"A trial")+". "+(spec.brief||""));
+  });
+}
+
+/* ==================================================================
+   ASSIGNMENT — which fantasy gets which archetype.
+
+   Every entry answers the ten questions the design pass asks: what the
+   player is doing, what physical thing that is, which mechanic carries
+   it, what skill means here, what a miss costs, and how it varies the
+   next time it comes round. The pool per activity is what stops a
+   playthrough feeling like one mini-game wearing hats: a chest is a
+   lock tonight and a seized lid tomorrow.
+   ================================================================== */
+const ACTS = {
+  /* ---- a chest, a coffer, a reliquary ---- */
+  chest:[
+    {type:"needle", w:3, eyebrow:"The ward lock", title:"A lock of seven wards",
+     brief:"Strike as the pointer crosses each lit ward. They must go in order.",
+     stakes:"three misses and the mechanism seizes on what is inside"},
+    {type:"struggle", w:2, eyebrow:"The seized lid", title:"Swollen shut",
+     brief:"Alternate your shoulders. Hold the strain in the green — past it, the lid splits.",
+     stakes:"force it too far and you break what you came for"},
+    {type:"trace", w:2, eyebrow:"The wax seal", title:"An unbroken seal",
+     brief:"Cut the seal along its own line, one stroke, without lifting.",
+     stakes:"a torn seal is a torn document"},
+    {type:"flow", w:1.4, eyebrow:"The Archive lock", title:"A lock that drinks",
+     brief:"Turn the channels until the oil reaches the catch. Your turns are counted.",
+     stakes:"run out of turns and the catch stays dry"},
+    {type:"sweetspot", w:1.4, skin:"balance", eyebrow:"The weighed catch", title:"A counterweight lock",
+     brief:"Drop the pin as the weight crosses the mark.",
+     stakes:"a bad weighing spills the tray"}
+  ],
+  /* ---- a cache on the road, opened at speed, under threat ---- */
+  cache:[
+    {type:"struggle", w:3, eyebrow:"A buried cache", title:"Wedged under stone",
+     brief:"Alternate your shoulders. Stay in the green.", holdFor:1.5,
+     stakes:"crack it open and half of it is gone"},
+    {type:"aim", w:2.2, eyebrow:"Sorting at speed", title:"What is worth carrying",
+     brief:"Take only what the order calls for. Leave the rest.", holdFor:1.8,
+     stakes:"the wrong root spoils the jar it goes in"},
+    {type:"needle", w:1.6, eyebrow:"A courier's strongbox", title:"Three wards, fast",
+     brief:"Strike as the pointer crosses each lit ward.", holdFor:1.5,
+     stakes:"noise carries — a fumbled lock brings company"}
+  ],
+  /* ---- gathering: herbs, resin, spring water ---- */
+  gather:[
+    {type:"sweetspot", w:3, skin:"whet", eyebrow:"The cut", title:"Take it at the node",
+     brief:"Cut when the blade crosses the joint. Anywhere else and the stem bleeds out.",
+     stakes:"a bad cut is a weaker draught"},
+    {type:"track", w:2, eyebrow:"The living stem", title:"Steady the stalk",
+     brief:"Keep your hand on it. It will fight you.",
+     stakes:"let go and the root tears"},
+    {type:"rhythm", w:2, skin:"pestle", eyebrow:"The mortar", title:"Grind it out",
+     brief:"Strike on the beat. Hold the long ones through the pour.",
+     stakes:"overworked resin loses its virtue"},
+    {type:"aim", w:1.6, eyebrow:"The drying rack", title:"Sort before it spoils",
+     brief:"Take only what the jar wants.",
+     stakes:"a spoiled root is a root you do not have"}
+  ],
+  /* ---- proving a forged piece at the bench ---- */
+  proof:[
+    {type:"sweetspot", w:2.4, skin:"whet", eyebrow:"The proof", title:"Prove the edge",
+     brief:"Strike the stone where the edge is true.",
+     stakes:"a piece that fails the proof goes out flawed"},
+    {type:"rhythm", w:2.4, skin:"anvil", eyebrow:"The proof", title:"Ring it true",
+     brief:"Strike on the beat. A sound piece rings; a cracked one will not.",
+     stakes:"a piece that will not ring is a piece that will not hold"},
+    {type:"track", w:1.6, eyebrow:"The proof", title:"Hold the line",
+     brief:"Follow the strain. Do not lose it.",
+     stakes:"lose the line and the fault stays in the metal"},
+    {type:"needle", w:1.4, eyebrow:"The proof", title:"Set the fittings",
+     brief:"Drive each fitting as the pointer crosses it.",
+     stakes:"a loose fitting is a loose tool"}
+  ],
+  /* ---- knowledge trials: the Lexicon's own doors ---- */
+  seal:[
+    {type:"sequence", w:2.6, eyebrow:"The shelf of lamps", title:"Light them in order",
+     brief:"Watch which wicks take. Then light them again yourself.",
+     stakes:"the shelf resets and the light is shorter next time"},
+    {type:"match", w:2.6, eyebrow:"The wax tablets", title:"Join what belongs",
+     brief:"Turn two. A part and its meaning fold together.",
+     stakes:"every wrong turn burns the candle down"},
+    {type:"trace", w:2, eyebrow:"The seal", title:"Cut the mark",
+     brief:"One stroke, along the line, without lifting.",
+     stakes:"a blotted seal will not be honoured"},
+    {type:"flow", w:1.8, eyebrow:"The channels", title:"Let it run",
+     brief:"Turn the channels until it reaches the phial. Turns are counted.",
+     stakes:"a dry channel opens nothing"}
+  ],
+  /* ---- a door, a gate, a mechanism in the world ---- */
+  door:[
+    {type:"flow", w:2.4, eyebrow:"The mechanism", title:"Feed the counterweight",
+     brief:"Route the water to the drum. Your turns are counted.",
+     stakes:"a dry drum will not lift the gate"},
+    {type:"needle", w:2.4, eyebrow:"The gate wards", title:"Set the wards",
+     brief:"Strike as the pointer crosses each lit ward, in order.",
+     stakes:"three misses and it bars itself"},
+    {type:"struggle", w:1.8, eyebrow:"The barred door", title:"Shoulder it",
+     brief:"Alternate. Hold the strain in the green.",
+     stakes:"break the bar and the door will not close behind you"},
+    {type:"sequence", w:1.4, eyebrow:"The lamps", title:"The order of lighting",
+     brief:"Watch, then repeat.",
+     stakes:"a wrong lamp and it goes dark"}
+  ],
+  /* ---- tending a person: the healing fantasy ---- */
+  tend:[
+    {type:"track", w:3, eyebrow:"The pulse", title:"Find it and keep it",
+     brief:"Two fingers on the wrist. It wanders — stay with it.",
+     stakes:"lose the pulse and you are reading nothing"},
+    {type:"rhythm", w:2, skin:"pestle", eyebrow:"The draught", title:"Prepare it",
+     brief:"Strike on the beat. Hold the long ones through the pour.",
+     stakes:"a rushed draught is a weak one"},
+    {type:"sweetspot", w:2, skin:"kettle", eyebrow:"The decoction", title:"Draw it off",
+     brief:"Pour when the mark passes true.",
+     stakes:"boiled past the mark and the virtue is cooked out of it"}
+  ]
+};
+/* Rotation memory: the same archetype does not come round twice running for
+   the same activity, which is the cheapest possible variety and the one
+   players notice most. */
+const lastPick = {};
+function pickFor(activity, R){
+  const pool = ACTS[activity] || ACTS.chest;
+  const avoid = lastPick[activity];
+  let cands = pool.filter(p=>p.type!==avoid);
+  if(!cands.length) cands = pool;
+  const total = cands.reduce((a,p)=>a+(p.w||1),0);
+  let r = (R?R():Math.random())*total;
+  let chosen = cands[cands.length-1];
+  for(let i=0;i<cands.length;i++){ r-=(cands[i].w||1); if(r<=0){ chosen=cands[i]; break; } }
+  lastPick[activity]=chosen.type;
+  return chosen;
+}
+
+/* ==================================================================
+   THE ONE CALL EVERYTHING ELSE USES.
+
+   run("chest", {diff, title, seed}) -> Promise<result>
+
+   The caller says what the player is DOING, not which mini-game to
+   play. That indirection is the whole point: a chest can change what
+   it asks of you between one run and the next, and the code that
+   opens chests never learns about it.
+   ================================================================== */
+function run(activity, opts){
+  opts = opts || {};
+  const R = rng(opts.seed);
+  const P0 = pickFor(activity, R);
+  return play(Object.assign({}, P0, {
+    diff: opts.diff==null?0.4:opts.diff,
+    seed: opts.seed,
+    title: opts.title || P0.title,
+    eyebrow: opts.eyebrow || P0.eyebrow,
+    brief: opts.brief || P0.brief,
+    stakes: opts.stakes || P0.stakes,
+    payoff: opts.payoff,
+    verdictLine: opts.verdictLine,
+    moodAfter: opts.moodAfter,
+    tint: opts.tint
+  }));
+}
+
+/* Difficulty from the game's own state: later chapters ask more, and the
+   player's chosen difficulty scales the whole ladder. One place, so a trial
+   opened from the road and a trial opened from the bench agree. */
+function diffFor(base){
+  let d = base==null?0.4:base;
+  try{
+    const st=E.S && E.S();
+    if(st){
+      const ch = clamp(((st.chapter||1)-1)/7, 0, 1);
+      d = d*0.62 + ch*0.38;
+      const mode = (st.settings && st.settings.difficulty) || "steady";
+      const M = {gentle:0.62, steady:1, hard:1.22, brutal:1.4};
+      d *= (M[mode]==null?1:M[mode]);
+    }
+  }catch(e){}
+  return clamp(d, 0.05, 1);
+}
+
+window.__RD_MG = {
+  run, play, diffFor, setAuto,
+  GRADES, gradeOf, result,
+  ACTS, ARCH, pickFor,
+  /* the tests reach for these */
+  _rng: rng, _lexPool: lexPool, _stage: Stage
+};
+})();
+</script>
+<script>
+/* ==================================================================
    SCREENS — title, intro, hub, party brief, term builder, reveal,
    glossary, settings.
    ================================================================== */
@@ -9599,13 +13021,54 @@ function bindPointer(cv, handlers){
 /* ==================================================================
    STEP 4: TEST — a short proving action, shows WHY it worked/failed
    ================================================================== */
+/* THE PROOF IS A THING YOU DO.
+
+   Step 4 used to be a cutscene. The grade was already decided by the time the
+   step opened; the canvas played a short animation of the item working or
+   failing, and the player watched it and pressed on. The most dramatic beat at
+   the bench — the moment you find out whether the thing you made is any good —
+   asked nothing of the hands that made it.
+
+   Now the piece is proved. A short trial stands between the build and the
+   verdict, its difficulty set by how good the piece already is (a fine edge is
+   easy to prove; a marginal one is not), and the result moves the final grade
+   in both directions. A masterwork picks up a fourth condition on top of the
+   three it already had: it has to survive its own proof. */
 function stepTest(){
   const bp=W.cur.bp; setStepDot(4);
-  $('#forge-eyebrow').textContent="4 · Test the item";
-  $('#forge-sub').textContent="Prove it before it goes to the squad.";
+  $('#forge-eyebrow').textContent="4 · Prove the item";
+  $('#forge-sub').textContent="Nothing leaves this bench untested.";
   radixReact();
-  // final quality = decode quality * build quality (both matter, no floor)
-  const q = clamp(W.cur.quality*0.45 + W.cur.buildQ*0.55, 0, 1);
+  const q0 = clamp(W.cur.quality*0.45 + W.cur.buildQ*0.55, 0, 1);
+  const MG=window.__RD_MG;
+  if(MG && MG.run && !W.cur.proofDone){
+    W.cur.proofDone=true;
+    const body0=$('#forge-body'); if(body0) body0.innerHTML="";
+    // a good piece proves itself easily; a doubtful one fights you
+    const d = MG.diffFor(clamp(0.72 - q0*0.45, 0.12, 0.9));
+    MG.run("proof", {
+      diff:d,
+      title: W.cur.itemName || bp.name,
+      eyebrow:"4 · The proof",
+      stakes:"the proof can find a fault the bench missed",
+      payoff:(res)=> res.tier<=0 ? "it failed under proof"
+                   : res.tier>=4 ? "it held perfectly — and that is a masterwork's fourth condition"
+                   : res.tier>=3 ? "it held, and better than it had to"
+                   : "it held",
+      moodAfter:"hub"
+    }).then((res)=>{ W.cur.proof=res; stepTestResolve(); });
+    return;
+  }
+  stepTestResolve();
+}
+function stepTestResolve(){
+  const bp=W.cur.bp;
+  const proof=W.cur.proof;
+  // final quality = decode quality * build quality (both matter, no floor),
+  // then moved by how the piece behaved under proof
+  const PROOF_MULT=[0.74, 0.90, 1.0, 1.06, 1.13];
+  const pm = proof ? PROOF_MULT[clamp(proof.tier,0,4)] : 1;
+  const q = clamp((W.cur.quality*0.45 + W.cur.buildQ*0.55) * pm, 0, 1);
   W.cur.finalQ=q;
   // FIVE tiers now. A careless build can be RUINED — it never leaves the bench.
   // Relax mode keeps the softer behaviour for players who need it.
@@ -9619,7 +13082,10 @@ function stepTest(){
      That last clause is the point of the whole game: you cannot hammer your way
      to a perfect tool without knowing the term it was ordered against. */
   const decodeClean = W.cur.quality >= 0.85;
-  const isMaster = !!(rub && rub.master && !rub.cracked && decodeClean && q>=0.88);
+  // the fourth condition: a piece that cannot be proved is not a masterwork,
+  // however well it was built
+  const proofClean = !proof || proof.tier>=3;
+  const isMaster = !!(rub && rub.master && !rub.cracked && decodeClean && proofClean && q>=0.88);
   const qtier = isMaster ? "masterwork"
               : q>=0.82?"fine" : q>=0.58?"ok" : (q>=0.34||relax)?"flawed" : "ruined";
   W.cur.qtier=qtier;
@@ -9648,7 +13114,14 @@ function stepTest(){
                      : qtier==="flawed"?"Flawed — but usable." : "Ruined.";
     const gradeCls = qtier==="ruined"?"ruined":qtier;
     const why = testWhy(bp, qtier, W.cur.material);
-    verdict.innerHTML=`<span class="tv-grade ${gradeCls}">${gradeLabel}</span>${why}`;
+    /* What the proof did, said in the verdict rather than buried in a number —
+       a grade that moved and did not say why is a grade the player distrusts. */
+    const proofLine = !proof ? ""
+      : proof.tier<=0 ? ` <span class="tv-proof bad">It failed under proof, and the grade fell with it.</span>`
+      : proof.tier===1 ? ` <span class="tv-proof bad">It came through the proof shaken.</span>`
+      : proof.tier>=4 ? ` <span class="tv-proof good">It came through the proof without a mark.</span>`
+      : proof.tier===3 ? ` <span class="tv-proof good">The proof found nothing to complain of.</span>` : "";
+    verdict.innerHTML=`<span class="tv-grade ${gradeCls}">${gradeLabel}</span>${why}${proofLine}`;
     // THE SPEC SHEET — the build you actually made, translated into what it will
     // do on the road, plus the one thing that would have made it perfect
     stage.appendChild(buildSpecSheet(bp, W.cur, qtier, isMaster, decodeClean));
@@ -13081,31 +16554,118 @@ function updateGate(dt){
    forged gear and perks decide how they land, and each one drops fresh
    word-parts so the combo keeps flowing ---------- */
 function scatterParts(n){ for(let i=0;i<n;i++) spawnPickup(pick([0,1,2]),"lexeme",40+i*90); }
+/* THE SPRING — relief first, then the harvest.
+
+   The oasis is the road's one moment of mercy and it must stay one: the water
+   and the rest are unconditional, granted before anything is asked. What was
+   free and is now earned is the HERB growing at the edge of it. Cutting a
+   living stem at the node instead of through the middle of it is a real skill
+   with a real fantasy, and a bad cut gives a weaker draught — which is exactly
+   what a bad cut does. Miss it and you still got the water. */
 function oasisEvent(){
   statGain({stamina:20,morale:12}); setPace(1.15,3);
   caption("A spring oasis — they drink deep and press on refreshed, word-parts glinting in the reeds.");
   Audio2.sfx.good(); scatterParts(3);
-  if(Math.random()<0.5) grantReagent("springwater", M.cv.width*0.30, M.laneY-80);
+  const MG=window.__RD_MG;
+  if(!MG || !MG.run){ if(Math.random()<0.5) grantReagent("springwater", M.cv.width*0.30, M.laneY-80); return; }
+  M.paused=true;
+  MG.run("gather", {
+    diff: MG.diffFor(0.34),
+    title:"Sweet-flag, at the water's edge",
+    eyebrow:"While they drink",
+    stakes:"a torn stem is a thin draught",
+    payoff:(res)=> res.tier<=0 ? "torn — it will not keep"
+                 : res.tier>=4 ? "cut at the node, root and all"
+                 : "cut, and it will serve",
+    moodAfter:"flow"
+  }).then((res)=>{
+    if(!M) return;
+    M.paused=false;
+    const sx=M.cv.width*0.30, sy=M.laneY-80;
+    if(res.tier<=0){
+      caption("The stem tears rather than cuts. What comes up is not worth carrying.");
+      pop(sx,sy,"nothing kept",true); Audio2.sfx.bad(); FX.buzz(10);
+    } else {
+      grantReagent("springwater", sx, sy);
+      if(res.tier>=3){
+        M.inkFound+=Math.round(5*M.forge.valueMult);
+        caption("Cut clean at the node. The root comes up whole with it — the bench will thank you.");
+        pop(sx,sy-30,"+ink"); Audio2.sfx.great();
+      }
+      if(res.tier>=4){ statGain({morale:6}); bumpMomentum(0.35); }
+    }
+  });
 }
+/* A CACHE IS SOMETHING YOU OPEN, NOT SOMETHING THAT OPENS.
+
+   This used to check one flag — did you forge anything with an edge on it —
+   and then hand you the contents or not. The squad stopped, a line of prose
+   appeared, and the player's hands never moved. It was the single most
+   valuable thing on the road and the least interesting.
+
+   Now the cache is a trial. The forged edge has not stopped mattering: it
+   buys you an easier one, which is a better reward than a boolean, because
+   it means the tool changes how the moment FEELS rather than whether you
+   are allowed to have it. And the grade decides what is inside — a forced
+   cache is loud and half-empty, a flawless one gives up the rare thing. */
 function cacheEvent(){
   const sx=M.cv.width*0.30;
+  const MG=window.__RD_MG;
+  if(!MG || !MG.run){ cachePayout(2, false); return; }
+  M.paused=true;
+  const eased = !!M.forge.cutClear;
+  const base = eased ? 0.28 : 0.55;
+  MG.run("cache", {
+    diff: MG.diffFor(base + Math.min(0.18, M.threat*0.03)),
+    title: eased ? "A cache, and an edge to pry it" : "A cache, and bare hands",
+    eyebrow:"Sunk beside the road",
+    stakes: eased ? "a clean prise keeps this quiet" : "no tool — force it and the noise carries",
+    payoff:(res)=> res.tier<=0 ? "you were heard doing it"
+                 : res.tier>=4 ? "opened without a sound"
+                 : "opened, and they moved on",
+    moodAfter:"flow"
+  }).then((res)=>{
+    if(M) M.paused=false;
+    cachePayout(res.tier, eased);
+  });
+}
+function cachePayout(tier, eased){
+  if(!M) return;
+  const sx=M.cv.width*0.30, sy=M.laneY-80;
   const FOUND=window.__RD_FOUND||{};
   const unfound=Object.keys(FOUND).filter(id=>!(S().foundMats||[]).includes(id));
-  if(M.forge.cutClear){
+  if(tier<=0){
+    // forced: some ink, and every raider within a mile knows where you are
+    M.inkFound+=3; M.threat+=1.4;
+    caption("They break it open by main force. Wood splits, the sound goes down the valley, and half of what was inside goes with it.");
+    pop(sx,sy,"+3 ink &middot; noise!",true); Audio2.sfx.bad(); FX.buzz(18);
+  } else if(tier===1){
+    M.inkFound+=Math.round(6*M.forge.valueMult); M.threat+=0.4;
+    caption("The lid comes away crooked — stores for the bench, and a scar across the lid that anyone can read.");
+    pop(sx,sy,"+ink"); Audio2.sfx.clink(); FX.buzz(10);
+  } else {
+    // clean and better: the rare find, and the top grades pay twice
     if(unfound.length){
       const id=pick(unfound); const mat=FOUND[id];
       S().foundMats=S().foundMats||[]; S().foundMats.push(id); persist(); M.matsFound.push(mat.name);
-      caption(`Your forged edge pries the cache clean. Inside: ${mat.name} — the bench will know its use.`);
-      pop(sx,M.laneY-80,`+ ${mat.name}`); Audio2.sfx.great(); FX.buzz(20);
-    } else { M.inkFound+=Math.round(8*M.forge.valueMult); pop(sx,M.laneY-80,"+ink");
-      caption("Your forged edge pries the cache clean — ink and stores for the bench.");
-      grantReagent(pick(Object.keys(window.__RD_REAGENTS||{springwater:1})), sx, M.laneY-80); }
-  } else {
-    M.inkFound+=4; M.threat+=1.0;
-    caption("No edge to pry with — they crack the cache open by hand, saving some ink but making noise.");
-    pop(sx,M.laneY-80,"+4 ink · noise!",true); Audio2.sfx.bad(); FX.buzz(16);
+      caption(`The cache comes open clean. Inside: ${mat.name} — the bench will know its use.`);
+      pop(sx,sy,`+ ${mat.name}`); Audio2.sfx.great(); FX.buzz(20);
+    } else {
+      M.inkFound+=Math.round(8*M.forge.valueMult); pop(sx,sy,"+ink");
+      caption("The cache comes open clean — ink and stores for the bench.");
+      grantReagent(pick(Object.keys(window.__RD_REAGENTS||{springwater:1})), sx, sy);
+    }
+    if(tier>=3){
+      M.inkFound+=Math.round(6*M.forge.valueMult);
+      grantReagent(pick(Object.keys(window.__RD_REAGENTS||{springwater:1})), sx, sy-30);
+    }
+    if(tier>=4){
+      bumpMomentum(0.5); statGain({morale:8});
+      caption("Not a sound out of it. The squad watches you do it and picks up the pace.");
+      pop(sx,sy-56,"flawless",false); Audio2.sfx.trophy && Audio2.sfx.trophy();
+    }
   }
-  scatterParts(2);
+  scatterParts(tier>=2?3:1);
 }
 function scholarEvent(){
   M.revealT=14;
@@ -13131,15 +16691,48 @@ function stormEvent(){
   }
   updatePrepBars();
 }
+/* THE SLIDE — a wall of rock, and a pair of shoulders.
+
+   This was the purest example of the problem: a rockslide chokes the trail,
+   and the game checked whether you happened to own a lever, printed one of
+   two sentences, and walked on. The most physical obstacle on the road asked
+   nothing physical of anyone. Now you shift it yourself. Forged gear still
+   matters — it makes the stone easier to move, which is what a lever is for —
+   and the cost of failing is the cost of heaving rock badly: time and legs. */
 function slideEvent(){
-  if(M.forge.cutClear||M.forge.surefoot){
-    statGain({morale:6}); setPace(1.2,2.5);
-    caption("A rockslide chokes the trail — forged gear levers it apart and the squad files through at pace.");
-    Audio2.sfx.great();
-  } else {
-    M.stats.stamina=clamp(M.stats.stamina-10,0,100); M.slowT=2.5; knockMomentum();
+  const MG=window.__RD_MG;
+  const geared = M.forge.cutClear||M.forge.surefoot;
+  if(!MG || !MG.run){ slidePayout(geared?3:1, geared); return; }
+  M.paused=true;
+  MG.run("door", {
+    diff: MG.diffFor(geared?0.30:0.58),
+    title: geared ? "Rock, and a lever to move it" : "Rock, and bare shoulders",
+    eyebrow:"The trail is choked",
+    stakes: geared ? "a slipped lever costs the squad its legs" : "no lever — this will cost something",
+    payoff:(res)=> res.tier<=0 ? "the stone won"
+                 : res.tier>=4 ? "it went the first time you leaned on it"
+                 : "through, and moving again",
+    moodAfter:"flow"
+  }).then((res)=>{ if(M) M.paused=false; slidePayout(res.tier, geared); });
+}
+function slidePayout(tier, geared){
+  if(!M) return;
+  if(tier<=0){
+    M.stats.stamina=clamp(M.stats.stamina-16,0,100); M.slowT=3.4; knockMomentum(); M.threat+=0.5;
+    caption("The stone shifts, settles, and shifts back. They get through in the end, on their hands, hours later than they meant to.");
+    Audio2.sfx.bad(); FX.buzz(24);
+  } else if(tier===1){
+    M.stats.stamina=clamp(M.stats.stamina-8,0,100); M.slowT=1.8; knockMomentum();
     caption("A rockslide chokes the trail — they heave the stones aside by hand, through but slowed.");
-    Audio2.sfx.bad(); FX.buzz(18);
+    Audio2.sfx.bad(); FX.buzz(14);
+  } else {
+    statGain({morale:tier>=4?12:6}); setPace(tier>=4?1.35:1.2, tier>=4?3.5:2.5);
+    caption(tier>=4
+      ? "One shoulder in the right place and the whole face gives at once. They file through without breaking step."
+      : (geared ? "A rockslide chokes the trail — forged gear levers it apart and the squad files through at pace."
+                : "A rockslide chokes the trail — they put their backs into it and the trail opens."));
+    Audio2.sfx.great();
+    if(tier>=4){ bumpMomentum(0.5); Audio2.sfx.trophy && Audio2.sfx.trophy(); }
   }
   updatePrepBars(); scatterParts(2);
 }
@@ -15364,6 +18957,9 @@ function chestSVG(rank){
 }
 /* Open a chest. Returns immediately; onDone fires when the player dismisses it. */
 const chestQueue=[];
+/* how the last chest was opened — the achievements layer reads it, and it is
+   the only place the grade outlives the ceremony that produced it */
+let lastChestGrade=null;
 function grantChest(quality, reason, onDone){
   // One veil is reused for every chest, and a second call used to wipe the
   // first one's contents — the earlier roll was discarded unapplied and its
@@ -15374,7 +18970,7 @@ function grantChest(quality, reason, onDone){
     return null;
   }
   const rank=rollRank(quality==null?0.5:quality);
-  const loot=rollLoot(rank);
+  let loot=rollLoot(rank);
   const v=chestVeil();
   v.className=""; v.innerHTML="";
   v.classList.add("show");
@@ -15384,7 +18980,7 @@ function grantChest(quality, reason, onDone){
   const box=el("div","chest-box"); box.innerHTML=chestSVG(rank);
   box.setAttribute("role","button"); box.setAttribute("tabindex","0");
   box.setAttribute("aria-label","Open the chest");
-  const hint=el("div","chest-hint"); hint.textContent="Press to open";
+  const hint=el("div","chest-hint"); hint.textContent="Press to work the lock";
   const lootBox=el("div","chest-loot");
   const done=el("div","chest-done");
   const btn=el("button","btn"); btn.textContent="Take it all →";
@@ -15392,18 +18988,113 @@ function grantChest(quality, reason, onDone){
   v.appendChild(eyebrow); v.appendChild(title); v.appendChild(box);
   v.appendChild(hint); v.appendChild(lootBox); v.appendChild(done);
 
-  let opened=false;
+  let opened=false, dismissed=false;
+  /* THE LOCK IS THE CHEST.
+     A chest used to open itself: you pressed a lid, an animation played, and
+     the same loot fell out whatever you did. Every rank rolled the same
+     ceremony, so the difference between a travelling case and an Archive
+     reliquary was a colour. Now the rank you can see on the lid buys the
+     difficulty of the lock in front of it — a reliquary is a harder lock
+     because it is worth more — and how you work that lock decides what
+     comes out of it. Failing is a real outcome with a real cost, and a
+     flawless pick promotes the chest a whole rank. */
+  function chestDiff(){
+    const base=[0.22,0.42,0.62,0.85][RARITY_RANK[rank.id]];
+    const MG=window.__RD_MG;
+    return MG && MG.diffFor ? MG.diffFor(base) : base;
+  }
+  /* What the grade does to the contents. Ink scales, lines are lost or won,
+     and a flawless pick reaches one rank above what the chest was. */
+  function applyGrade(res){
+    const t=res.tier;
+    const extra=[];
+    const ink=loot.find(x=>x.kind==="ink");
+    const others=loot.filter(x=>x.kind!=="ink");
+    if(t<=0){
+      // forced: you get the coin and nothing that was worth locking away
+      if(ink){ ink.ink=Math.max(2,Math.round(ink.ink*0.45)); ink.name=`${ink.ink} ink`;
+               ink.note="What was loose in the bottom of it."; }
+      loot=ink?[ink]:[];
+      if(others.length) extra.push({lost:others.length});
+    } else if(t===1){
+      if(ink){ ink.ink=Math.round(ink.ink*0.78); ink.name=`${ink.ink} ink`; }
+      if(others.length){ const drop=others[others.length-1];
+        loot=loot.filter(x=>x!==drop); extra.push({lost:1}); }
+    } else if(t===3){
+      if(ink){ ink.ink=Math.round(ink.ink*1.35); ink.name=`${ink.ink} ink`;
+               ink.note="Struck for the school's coffers — and the lock gave up its float."; }
+    } else if(t>=4){
+      if(ink){ ink.ink=Math.round(ink.ink*1.9); ink.name=`${ink.ink} ink`;
+               ink.note="Every coin in it, and the lock never knew you were there."; }
+      // a flawless pick reaches one rank above the chest it was cut for
+      const up=Math.min(3, RARITY_RANK[rank.id]+1);
+      const bonus=rollLoot(RANKS[up]).filter(x=>x.kind!=="ink");
+      const have={}; loot.forEach(x=>{ have[(x.kind||"")+":"+(x.id||"")]=1; });
+      const add=bonus.filter(x=>!have[(x.kind||"")+":"+(x.id||"")])[0];
+      if(add){ add.rare=true; add.note="Reached with a flawless hand. "+add.note; loot.push(add); }
+    }
+    return extra;
+  }
   function open(){
     if(opened) return; opened=true;
     box.classList.add("shake");
     Audio2.sfx.chestRattle ? Audio2.sfx.chestRattle() : Audio2.sfx.grind();
-    setTimeout(()=>{
-      box.classList.remove("shake");
+    const MG=window.__RD_MG;
+    if(MG && MG.run){
+      setTimeout(()=>{
+        box.classList.remove("shake");
+        MG.run("chest", {
+          diff: chestDiff(),
+          title: rank.name,
+          eyebrow: reason||"Found on the road",
+          payoff:(res)=> res.tier<=0 ? "the contents are what a forced lock leaves"
+                       : res.tier===1 ? "one thing in there did not survive it"
+                       : res.tier>=4  ? "it gave up more than it was holding"
+                       : res.tier===3 ? "clean — and the float came with it"
+                       : "opened honest",
+          moodAfter:"hub"
+        }).then((res)=>{ lastChestGrade=res; applyGrade(res); reveal(res); });
+      }, 420);
+    } else {
+      setTimeout(()=>{ box.classList.remove("shake"); reveal(null); }, 900);
+    }
+  }
+  let revealed=false;
+  function reveal(res){
+    {
+      /* The lid now comes off a beat later than it used to, because a trial
+         happens in between. That opened a window in which the chest could be
+         dismissed before its contents had ever been shown — and the loot was
+         still applied afterwards, to a veil nobody was looking at. Both ends
+         are shut: the take-it-all button does nothing until the chest has
+         actually opened, and a dismissed chest never reveals. */
+      if(dismissed) return;
+      revealed=true;
+      if(res){
+        // the lid tells you how it went before a single word does
+        const G=res.tier;
+        eyebrow.textContent = (reason||"Found on the road")
+          + " · " + (G<=0?"forced open":G===1?"worked rough":G===2?"opened clean"
+                    :G===3?"opened well":"picked flawless");
+        if(G>=4){ title.textContent = rank.name + " — and better"; }
+      }
       v.classList.add("opened");
-      Audio2.sfx.chestOpen ? Audio2.sfx.chestOpen() : Audio2.sfx.chime();
-      FX && FX.buzz && FX.buzz(RARITY_RANK[rank.id]>=2?60:34);
-      FX && FX.shake && FX.shake(10,300);
-      FX && FX.impact && FX.impact("#d8bd84",0.40,420);
+      /* A forced chest does not get the fanfare. The lid still comes off, but
+         the light, the shake and the colour all step down with the grade —
+         otherwise a botched lock and a flawless one land identically, which is
+         the exact failure this whole pass exists to fix. */
+      const tier = res ? res.tier : 2;
+      if(tier<=0){
+        Audio2.sfx.bad && Audio2.sfx.bad();
+        FX && FX.buzz && FX.buzz(20);
+        FX && FX.shake && FX.shake(14,260);
+        FX && FX.impact && FX.impact("#b5322b",0.22,340);
+      } else {
+        Audio2.sfx.chestOpen ? Audio2.sfx.chestOpen() : Audio2.sfx.chime();
+        FX && FX.buzz && FX.buzz((RARITY_RANK[rank.id]>=2?60:34) * (0.6+tier*0.16));
+        FX && FX.shake && FX.shake(6+tier*2,300);
+        FX && FX.impact && FX.impact(tier>=4?"#f2d78e":"#d8bd84",0.22+tier*0.06,420);
+      }
       loot.forEach((it,i)=>{
         const row=el("div","loot-row"+(it.rare?" rare":""));
         row.style.animationDelay=(i*0.14)+"s";
@@ -15417,12 +19108,22 @@ function grantChest(quality, reason, onDone){
                          else (Audio2.sfx.coin&&Audio2.sfx.coin()); }, 340+i*140);
       });
       applyLoot(loot);
+      // a forced lock says out loud what it cost, so the grade is never abstract
+      if(res && res.tier<=0){
+        // NOT .chest-hint — that class is display:none once the lid is open,
+        // which silently swallowed this line the first time round
+        const line=el("div","chest-cost");
+        line.textContent="Forced. Whatever was worth locking away is broken in the bottom of it.";
+        lootBox.appendChild(line);
+      }
       setTimeout(()=>btn.focus(), 900);
-    }, 900);
+    }
   }
   box.onclick=open;
   box.onkeydown=(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); open(); } };
   btn.onclick=()=>{
+    if(!revealed) return;         // nothing to take until the chest has opened
+    dismissed=true;
     v.classList.remove("show"); v.innerHTML="";
     if(onDone) onDone(loot);
     const next=chestQueue.shift();

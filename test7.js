@@ -126,8 +126,13 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(!MI._gate(), 'scholar is an auto-resolving beat, not a gate');
   assert(M.revealT > 0, 'scholar road-lore names dangers ahead');
 
+  /* A cache is a trial now, not a flag check: the squad stops, the player works
+     the lid, and the payout follows the grade. So it resolves a tick later than
+     it used to, and the assertion has to wait for it. */
   MI._forceEvent('cache');
-  assert((E.S().foundMats || []).length >= 1, 'a keen edge pries a rare bench material from a cache');
+  await until(() => (E.S().foundMats || []).length >= 1, 3000, 'cache trial pays out');
+  assert((E.S().foundMats || []).length >= 1, 'a worked cache gives up a rare bench material');
+  assert(!M.paused, 'the road resumes once the cache trial is done');
 
   // a found reagent unlocks Reagent craft at the bench (as the oasis spring can)
   MI._grantReagent('springwater');
