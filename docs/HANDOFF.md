@@ -38,7 +38,7 @@ node syntaxcheck.js                   # parses all 10 script blocks
 for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33; do node test$t.js | tail -1; done
 ```
 
-27 jsdom suites, **1125 assertions, all passing, zero window errors**.
+27 jsdom suites, **1140 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.

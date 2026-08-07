@@ -178,6 +178,63 @@ const { boot, sleep, until, assert, summary } = require('./testlib.js');
   await openIt(); await takeIt();
   assert(E.S().chests === 1, 'and the chest is counted exactly once');
 
+  /* ================= 7b. THE MISSION'S NEW PATTERN LIVES IN THE CHEST =========
+     One new commission pattern per mission, and the chest is where it arrives.
+     The rule that matters: progression is NEVER gated on hand skill. A fumbled
+     lock costs you the roll — it must never cost you the pattern, or a player
+     who cannot pick locks stops being able to play the game. */
+  console.log('\n== the mission\'s new pattern is delivered by the chest ==');
+  const pin = () => ({ kind: 'blueprint', id: 'blade', glyph: 'Δ', rare: true,
+    name: 'War blade — a new pattern', note: 'cuts snags. Cut for <b>Thera</b>.' });
+  const rowNames = () => [...window.document.querySelectorAll('#chest-veil .loot-row .ln')]
+    .map(n => n.textContent);
+
+  for (const tier of [0, 2, 4]) {
+    MG.setAuto(tier);
+    E.setS(E.newGame());
+    assert(!(E.S().unlockedBps || []).includes('blade'), `tier ${tier}: the bench does not know the pattern yet`);
+    META.grantChest(0.8, 'arrival', () => {}, { pin: [pin()] });
+    await sleep(120);
+    await openIt();
+    const names = rowNames();
+    assert(names[0] === 'War blade — a new pattern',
+      `tier ${tier}: the pattern is the FIRST thing out of the chest`);
+    await takeIt();
+    assert((E.S().unlockedBps || []).includes('blade'),
+      `tier ${tier}: and the bench has learned it — even a forced lock cannot cost you progression`);
+  }
+
+  /* what the grade DOES decide: whether the pattern arrives with its stock */
+  MG.setAuto(0);
+  E.setS(E.newGame());
+  META.grantChest(0.8, 'arrival', () => {}, { pin: [pin()] });
+  await sleep(120); await openIt(); await takeIt();
+  assert((E.S().foundMats || []).length === 0, 'a forced lock yields no bench stock alongside the pattern');
+
+  MG.setAuto(4);
+  E.setS(E.newGame());
+  META.grantChest(0.8, 'arrival', () => {}, { pin: [pin()] });
+  await sleep(120); await openIt(); await takeIt();
+  const mats = E.S().foundMats || [];
+  assert(mats.length === 1, 'a flawless one folds a length of bench stock in beside it');
+  const FOUND = window.__RD_FOUND || {};
+  assert(FOUND[mats[0]] && FOUND[mats[0]].forBps.includes('blade'),
+    `and it is the stock that pattern was cut for (${mats[0]})`);
+
+  /* a replayed road owes nothing: no phantom pattern in the chest */
+  MG.setAuto(2);
+  E.setS(E.newGame());
+  const MIx = window.__RD_MISSION;
+  assert(typeof MIx._pendingPattern === 'function', 'the arrival exposes what pattern it owes');
+  const ch1 = D.CHAPTERS[0];
+  const owed = MIx._pendingPattern(ch1);
+  if (owed) {
+    assert(owed.kind === 'blueprint' && !!D.CHAPTERS.length, 'a fresh chapter owes a real pattern');
+    E.S().unlockedBps = (E.S().unlockedBps || []).concat([owed.id]);
+    assert(MIx._pendingPattern(ch1) === null,
+      'and a road walked twice does not promise the same pattern again');
+  }
+
   /* ================= 8. THE ROAD ================= */
   console.log('\n== the road pays what the hands earned ==');
   const MI = window.__RD_MISSION;

@@ -809,15 +809,9 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   border:1px solid var(--ink-line);background:var(--parch);color:var(--ink);width:110px;
   text-transform:uppercase;letter-spacing:.04em;}
 .small-btn{padding:4px 10px !important;font-size:.72rem !important;min-width:0 !important;}
-/* ---- the unlock card on the result screen ---- */
-.unlock-card{padding:16px;margin-top:14px;text-align:left;border-color:var(--gold);
-  background:linear-gradient(180deg,rgba(189,157,95,.14),rgba(243,236,216,.6));}
-.unlock-card.uc-in{animation:ucIn .6s var(--ease-back);}
-@keyframes ucIn{0%{opacity:0;transform:translateY(14px) scale(.97);}100%{opacity:1;transform:none;}}
-.unlock-card .uc-row{display:flex;align-items:center;gap:14px;margin-top:6px;}
-.unlock-card .uc-ico svg{width:52px;height:52px;}
-.unlock-card h3{margin:0 0 2px;font-size:1.1rem;color:var(--gold);}
-.unlock-card .uc-why{margin-top:4px;line-height:1.4;}
+/* The unlock card that used to sit on the result screen is gone: the new
+   commission pattern is delivered inside the chest now, which is where the
+   game's reward ceremony already was. Its styles went with it. */
 /* ---- commission board ---- */
 .road-report{background:rgba(189,157,95,.12);border:1px dashed var(--gold);border-radius:10px;
   padding:8px 12px;margin-bottom:10px;font-size:.86rem;}
@@ -2626,7 +2620,6 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
             <span class="eyebrow">What your bench did</span>
             <div class="gear-debrief" id="gear-debrief"></div>
           </div>
-          <div class="panel unlock-card" id="unlock-card" style="display:none;"></div>
           <div class="panel" id="page-reward" style="padding:16px;margin-top:14px;display:none;">
             <span class="eyebrow">Recovered</span>
             <h3 id="page-title" style="margin:4px 0;"></h3>
@@ -17655,7 +17648,6 @@ function showResult(){
     const movedTo = noteRunOutcome(overall);
     renderRoadLevel(movedTo, bandBefore);
     if(S().roadFails) delete S().roadFails[chapter.id];   // arriving clears the tally
-    const uc=$('#unlock-card'); if(uc){ uc.style.display="none"; uc.innerHTML=""; }
     const cons=$('#consequences'); cons.innerHTML="";
     consequenceLines(f,grade,st).forEach(c=>{
       const row=el("div","consq"); row.innerHTML=`<span class="ic">${D.mark(c.ic)}</span><div>${c.txt}</div>`; cons.appendChild(row);
@@ -17673,9 +17665,6 @@ function showResult(){
       // the party ladder only advances on a FINISHED road — travelers who waited
       // this time are first in line for the next company
       E.commitParty(f.party);
-      // ONE new thing per mission: the pattern the next road was designed around
-      const newBp = E.unlockBp(E.bpUnlockedBy(chapter.id));
-      if(newBp) renderUnlockCard(newBp, CHAPTERS[CHAPTERS.findIndex(c=>c.id===chapter.id)+1]);
     }
     if(chapter.id==="ch6" && grade!=="poor") S().valeRescued=true;
     // page + story revelation
@@ -17734,32 +17723,45 @@ function showResult(){
         const why = felled ? "Taken from a lieutenant of the Silent Archive"
                   : grade==="excellent" ? "The waystation keeper owed you a favour"
                   : grade==="poor" ? "Salvaged from the road" : "Payment at the waystation";
-        // driving off a lieutenant is the single best thing you can do on a road,
-        // and the chest it leaves behind says so
-        META.grantChest(felled ? Math.min(1, overall+0.35) : overall, why, after);
+        /* ONE NEW THING PER MISSION, AND IT IS IN THE CHEST.
+           The pattern the next road was designed around used to be announced in
+           a card on this screen, which meant the chest that followed it — the
+           game's whole reward ceremony — never contained the actual reward for
+           the mission. It is pinned into the chest now, so opening the lid is
+           the moment the bench learns something. Pinned means it survives every
+           grade: a fumbled lock costs you the roll, never the progression. */
+        META.grantChest(felled ? Math.min(1, overall+0.35) : overall, why, after,
+          { pin:[ pendingPatternLoot(chapter) ] });
       } else after();
     };
   }});
 }
-/* THE UNLOCK CARD — progression the player cannot miss. One new pattern per
-   mission, announced full-width, with the reason it was chosen for them. */
-function renderUnlockCard(bpId, nextChapter){
+/* THE PATTERN THIS MISSION EARNED, as a line of chest loot.
+
+   Returns null when the chapter opens nothing new, or when the player already
+   has the pattern (a replayed road), so an arrival never promises a reward it
+   is not carrying. The note is the whole of what the old unlock card said: what
+   the tool does, and which road it was cut for. */
+const GRANT_WORDS = {
+  climb:"opens the high routes", smoke:"slips patrols & ambushes",
+  shoot:"strikes at range", cut:"cuts snags & barricades",
+  heal:"mends the squad", descend:"opens rope descents"
+};
+function pendingPatternLoot(chapter){
+  const id = E.bpUnlockedBy(chapter.id);
+  if(!id) return null;
+  if((S().unlockedBps||[]).indexOf(id)>=0) return null;   // a replayed road owes nothing
   const BP=(window.__RD_PREP && window.__RD_PREP._blueprints) ? window.__RD_PREP._blueprints() : null;
-  const bp=BP && BP[bpId];
-  const host=$('#unlock-card'); if(!host) return;
-  const nextCh=nextChapter||CHAPTERS[clamp(S().chapter,0,CHAPTERS.length-1)];
-  host.style.display="block";
-  host.innerHTML=`<span class="eyebrow">The bench learns a new pattern</span>
-    <div class="uc-row">
-      <div class="uc-ico">${bp&&bp.icon&&window.__RD_PREP&&window.__RD_PREP._gearIcon?window.__RD_PREP._gearIcon(bp.icon):"✦"}</div>
-      <div>
-        <h3>${bp?bp.name:bpId}</h3>
-        <div class="small">${bp?bp.grants.map(g=>({climb:"opens the high routes",smoke:"slips patrols & ambushes",shoot:"strikes at range",cut:"cuts snags & barricades",heal:"mends the squad",descend:"opens rope descents"}[g]||g)).join(" · "):""}</div>
-        ${nextCh?`<div class="small muted uc-why">Cut for what waits at <b>${nextCh.dest}</b>. It will be on the board when you next open the forge.</div>`:""}
-      </div>
-    </div>`;
-  host.classList.remove("uc-in"); void host.offsetWidth; host.classList.add("uc-in");
-  setTimeout(()=>{ Audio2.sfx.great && Audio2.sfx.great(); }, 500);
+  const bp=BP && BP[id];
+  const nextCh=CHAPTERS[CHAPTERS.findIndex(c=>c.id===chapter.id)+1];
+  const does = bp ? bp.grants.map(g=>GRANT_WORDS[g]||g).join(" · ") : "";
+  return {
+    kind:"blueprint", id, glyph:"Δ", rare:true,
+    name:`${bp?bp.name:id} — a new pattern`,
+    note:`${does}${does?". ":""}`
+      + (nextCh?`Cut for what waits at <b>${nextCh.dest}</b>. `:"")
+      + "It will be on the board when you next open the forge."
+  };
 }
 /* Every field the result screen reads comes from the departure step, which is
    the only place that builds them — so any road that reaches an arrival by some
@@ -17922,6 +17924,8 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _momentum:()=>M&&M.momentum,
   _forge:()=>M&&M.forge,
   _forceEvent:(type)=>{ if(M && !M.done) fireEvent({type}); return M&&(M.gate||M.raid||M.questionOpen)||null; },
+  // what pattern this arrival owes the player — pinned into the chest, not announced
+  _pendingPattern:(chapter)=>pendingPatternLoot(chapter),
   _hazardDeck:()=>{ if(M && (!M.hazardDeck||!M.hazardDeck.length)) M.hazardDeck=buildHazardDeck(); return M&&M.hazardDeck; },
   _grantReagent:(id)=>grantReagent(id),
   /* --- free movement / study / corridor hooks (headless tests) --- */
@@ -18919,6 +18923,14 @@ function applyLoot(loot){
     else if(it.kind==="relic"){ st.relics[it.id]={at:Date.now()}; }
     else if(it.kind==="support"){ st.support[it.id]=(st.support[it.id]||0)+1; }
     else if(it.kind==="reagent"){ st.reagents[it.id]=(st.reagents[it.id]||0)+1; }
+    /* The mission's new commission pattern is delivered HERE now, not announced
+       on the arrival screen — the chest is the game's reward ceremony and it
+       had never once contained the reward for the mission. */
+    else if(it.kind==="blueprint"){ if(E.unlockBp) E.unlockBp(it.id); }
+    else if(it.kind==="material"){
+      st.foundMats=st.foundMats||[];
+      if(st.foundMats.indexOf(it.id)<0) st.foundMats.push(it.id);
+    }
   });
   st.chests=(st.chests||0)+1;
   E.persist();
@@ -18960,17 +18972,29 @@ const chestQueue=[];
 /* how the last chest was opened — the achievements layer reads it, and it is
    the only place the grade outlives the ceremony that produced it */
 let lastChestGrade=null;
-function grantChest(quality, reason, onDone){
+/* PINNED LOOT — the things a chest is CARRYING, as opposed to the things it
+   happened to roll.
+
+   The new commission pattern used to be announced on the arrival screen, in a
+   card of its own, before the chest was ever opened — so the chest, which is
+   the game's reward ceremony, never once contained the actual reward for the
+   mission. It does now. A pinned line is prepended to the roll and marked
+   `keep`, which means the fail-strip cannot touch it: progression is never
+   gated on hand skill. What the grade decides is what comes WITH it. */
+function grantChest(quality, reason, onDone, opts){
   // One veil is reused for every chest, and a second call used to wipe the
   // first one's contents — the earlier roll was discarded unapplied and its
   // onDone (a navigation callback at both call sites) never fired. Queue
   // instead, so every chest granted is a chest opened.
   if(veil && veil.classList.contains("show")){
-    chestQueue.push({quality, reason, onDone});
+    chestQueue.push({quality, reason, onDone, opts});
     return null;
   }
+  opts=opts||{};
   const rank=rollRank(quality==null?0.5:quality);
   let loot=rollLoot(rank);
+  const pinned=(opts.pin||[]).filter(Boolean).map(it=>Object.assign({keep:true}, it));
+  if(pinned.length) loot=pinned.concat(loot);
   const v=chestVeil();
   v.className=""; v.innerHTML="";
   v.classList.add("show");
@@ -19009,12 +19033,15 @@ function grantChest(quality, reason, onDone){
     const t=res.tier;
     const extra=[];
     const ink=loot.find(x=>x.kind==="ink");
-    const others=loot.filter(x=>x.kind!=="ink");
+    // a pinned line is what the chest was SENT with; the roll is what it happened
+    // to be holding. Only the roll is at risk.
+    const keeps=loot.filter(x=>x.keep);
+    const others=loot.filter(x=>x.kind!=="ink" && !x.keep);
     if(t<=0){
       // forced: you get the coin and nothing that was worth locking away
       if(ink){ ink.ink=Math.max(2,Math.round(ink.ink*0.45)); ink.name=`${ink.ink} ink`;
                ink.note="What was loose in the bottom of it."; }
-      loot=ink?[ink]:[];
+      loot=keeps.concat(ink?[ink]:[]);
       if(others.length) extra.push({lost:others.length});
     } else if(t===1){
       if(ink){ ink.ink=Math.round(ink.ink*0.78); ink.name=`${ink.ink} ink`; }
@@ -19032,6 +19059,22 @@ function grantChest(quality, reason, onDone){
       const have={}; loot.forEach(x=>{ have[(x.kind||"")+":"+(x.id||"")]=1; });
       const add=bonus.filter(x=>!have[(x.kind||"")+":"+(x.id||"")])[0];
       if(add){ add.rare=true; add.note="Reached with a flawless hand. "+add.note; loot.push(add); }
+    }
+    /* A PATTERN COMES WITH ITS STOCK.
+       When the chest is carrying the mission's new commission pattern, a well
+       worked lock also turns up a length of the material that pattern was cut
+       for. It is the most useful thing the game can hand over at that exact
+       moment, because the next thing the player does is walk to the bench and
+       build the thing they were just given the drawing of. */
+    const bp=loot.find(x=>x.kind==="blueprint");
+    if(bp && t>=3){
+      const FOUND=window.__RD_FOUND||{};
+      const owned=S().foundMats||[];
+      const left=Object.keys(FOUND).filter(id=>!owned.includes(id));
+      const id=left.filter(x=>(FOUND[x].forBps||[]).includes(bp.id))[0] || left[0];
+      if(id){ const m=FOUND[id];
+        loot.push({kind:"material", id, glyph:"✦", name:m.name, rare:true,
+          note:`Folded in beside the pattern — the stock it was cut for. ${m.story}`}); }
     }
     return extra;
   }
@@ -19127,7 +19170,7 @@ function grantChest(quality, reason, onDone){
     v.classList.remove("show"); v.innerHTML="";
     if(onDone) onDone(loot);
     const next=chestQueue.shift();
-    if(next) setTimeout(()=>grantChest(next.quality, next.reason, next.onDone), 260);
+    if(next) setTimeout(()=>grantChest(next.quality, next.reason, next.onDone, next.opts), 260);
   };
   v.onkeydown=(e)=>{ if(e.key==="Escape" && opened){ btn.click(); } };
   setTimeout(()=>box.focus(), 120);

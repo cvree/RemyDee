@@ -57,6 +57,27 @@ FLAWLESS needs the score **and** a clean run — one miss anywhere caps you at
 EXCELLENT. That gate is what keeps the top rung meaning something; without it,
 accuracy alone buys it and the word stops being true.
 
+### The mission's new pattern is in the chest
+
+One new commission pattern per mission. It used to be announced in a card on the
+arrival screen — which meant the chest that followed it, the game's entire reward
+ceremony, never once contained the actual reward for the mission. The card is
+gone and the pattern is **pinned** into the arrival chest as its first loot line,
+carrying what the card used to say: what the tool does, and which road it was cut
+for.
+
+Pinned means the fail-strip cannot touch it. **Progression is never gated on hand
+skill** — a fumbled lock costs you the roll, never the pattern, because a player
+who cannot pick locks must not stop being able to play. What the grade decides is
+what comes *with* it: at EXCELLENT or better, the chest also yields a length of
+the bench stock that pattern was cut for, which is the most useful thing the game
+can hand over at the exact moment the player is about to walk to the forge and
+build it.
+
+`grantChest(quality, reason, onDone, {pin:[…]})`. Pins are prepended to the roll
+and flagged `keep`. `pendingPatternLoot(chapter)` returns null on a replayed road,
+so an arrival never promises a reward it is not carrying.
+
 ### What failure costs, per call site
 
 | where | FAILED | FLAWLESS |
@@ -66,6 +87,7 @@ accuracy alone buys it and the word stops being true.
 | rockslide | 16 stamina, a long slow, momentum knocked | pace bonus, morale, momentum |
 | spring | the stem tears; nothing kept (the *water* is still free) | reagent, ink, morale, momentum |
 | forge proof | final quality ×0.74 | ×1.13, and it is the fourth condition of a masterwork |
+| arrival pattern | delivered anyway — progression is not for sale | delivered with the bench stock it was cut for |
 
 The masterwork rule was three clauses (every rubric row clear, no heat crack, a
 clean decode). It is four now: **a piece that cannot be proved is not a
