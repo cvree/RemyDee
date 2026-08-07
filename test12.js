@@ -183,55 +183,72 @@ function setupCanvas(window, P, type) {
     assert(cur.buildQ >= 0 && cur.buildQ <= 1, 'smoke: final quality is a valid 0..1 score');
   }
 
-  /* ================= FIELD KIT — The Apothecary's Case ================= */
+  /* ================= FIELD KIT — The Hanging Case ================= */
   {
-    /* The case stopped being inventory Tetris. Each remedy is POURED — press and
-       hold while the measure climbs, release inside the dose band — then SEATED
-       in a well, and after each one the player chooses to close the case or reach
-       again into a drawer whose bands get narrower. This drives that whole loop
-       and checks the contract the road reads afterwards. */
+    /* The case stopped being inventory Tetris, and then it stopped being a pour
+       into a painted band — which was worse, because a bar filling itself tells
+       your hand nothing. What is left is the one good idea: the case HANGS, it
+       swings on its strap with real weight, and every remedy you put in it moves
+       it. Take one off the shelf, press above the case, and it falls into
+       whichever pocket is under your finger when it lands. Keep it level. */
     const cv = setupCanvas(window, P, 'pack');
-    const drawerX = W2 * 0.20, dbw = W2 * 0.30, dbx = drawerX - dbw / 2, dby0 = H2 * 0.64, dbh = 26;
-    const KEYS = ['bandage', 'salve', 'splint', 'tonic'];
-    const drawerY = (k) => dby0 + KEYS.indexOf(k) * (dbh + 5) + dbh / 2;
-    const ccx = W2 * 0.46, ccy = H2 * 0.10, ccw = W2 * 0.44, cch = H2 * 0.40;
-    const wellX = (gx) => ccx + gx * (ccw / 3) + (ccw / 6);
-    const wellY = (gy) => ccy + gy * (cch / 2) + (cch / 4);
-    // craftChoice geometry: two buttons either side of centre at 0.66 of the height
-    const chW = W2 * 0.34, chY = H2 * 0.66 + 18;
-    const closeX = W2 * 0.5 - chW - 8 + chW / 2, againX = W2 * 0.5 + 8 + chW / 2;
+    const bw = Math.min(W2 * 0.30, 190), gap = 14, bx0 = W2 / 2 - (bw * 2 + gap) / 2;
+    const cardX = (i) => bx0 + i * (bw + gap) + bw / 2;
+    const cardY = H2 * 0.60 + 22;
+    const dropY = H2 * 0.28;
+    const closeY = H2 - 46 + 17;
 
-    const takeOne = async (k, gx, gy, holdMs) => {
-      ptr(window, cv, 'pointerdown', drawerX, drawerY(k));          // open the drawer
-      ptr(window, cv, 'pointerdown', W2 * 0.20, H2 * 0.30);          // begin pouring
-      await sleep(holdMs);
-      ptr(window, cv, 'pointerup', W2 * 0.20, H2 * 0.30);            // release the measure
-      ptr(window, cv, 'pointerdown', wellX(gx), wellY(gy));          // seat it
+    const takeAndDrop = async (cardIdx, dropX) => {
+      ptr(window, cv, 'pointerdown', cardX(cardIdx), cardY);   // take one off the shelf
+      await sleep(40);
+      ptr(window, cv, 'pointerdown', dropX, dropY);            // and let it go above the case
+      await sleep(560);                                        // it falls, it lands, the case swings
     };
 
-    // the decide buttons are laid out by the render loop, so let a frame land
-    // between seating a remedy and pressing the choice it raises
-    const settleFrame = () => sleep(80);
-    await takeOne('bandage', 0, 0, 420); await settleFrame();
-    ptr(window, cv, 'pointerdown', againX, chY);                     // reach again
-    await takeOne('splint', 2, 0, 620); await settleFrame();
-    ptr(window, cv, 'pointerdown', againX, chY);
-    await takeOne('tonic', 0, 1, 900); await settleFrame();
-    ptr(window, cv, 'pointerdown', closeX, chY);                     // close the case
+    // load it evenly — left, right, middle — and it should hang close to true
+    await takeAndDrop(0, W2 * 0.36);
+    await takeAndDrop(1, W2 * 0.64);
+    await takeAndDrop(0, W2 * 0.50);
+    ptr(window, cv, 'pointerdown', W2 / 2, closeY);            // close the case
+    await sleep(60);
 
     const cur = P._dbg().cur;
-    assert(cur.craftMeta && cur.craftMeta.packed, 'kit: packed composition recorded');
-    assert(cur.craftMeta.packed.bandage === 1 && cur.craftMeta.packed.splint === 1 && cur.craftMeta.packed.tonic === 1,
-      `kit: exactly what was poured is exactly what is recorded (got ${JSON.stringify(cur.craftMeta.packed)})`);
-    assert(cur.craftMeta.cells === 3, `kit: one well per remedy, three remedies (got ${cur.craftMeta.cells})`);
-    assert((cur.traits.recover || 0) > 0 && (cur.traits.protect || 0) > 0, 'kit: the mix chosen determines real recover/protect traits');
-    assert(typeof cur.craftMeta.balance === 'number', 'kit: how evenly the case hangs is recorded');
-    assert(typeof cur.craftMeta.worstDose === 'number',
-      `kit: the sloppiest pour is recorded, because it is what drags the case down (got ${cur.craftMeta.worstDose})`);
-    assert(cur.rubric.rows.some(r => r.k === 'balance'), 'kit: carry balance is a graded row, not just flavour');
-    assert(cur.rubric.rows.some(r => r.k === 'doses'),
-      'kit: how truly each remedy was measured is a graded row — the case can now be built badly');
+    const m = cur.craftMeta || {};
+    assert(!!m.packed, 'kit: packed composition recorded');
+    const total = Object.keys(m.packed).reduce((a, k) => a + m.packed[k], 0);
+    assert(m.cells === 3, `kit: three remedies dropped, three pockets filled (got ${m.cells})`);
+    assert(total === m.cells, `kit: what is in the pockets is what is recorded (${total} vs ${m.cells})`);
+    assert(typeof m.balance === 'number', 'kit: how level the loaded case hangs is recorded');
+    assert(typeof m.broken === 'number', 'kit: what smashed on the bench is recorded');
+    assert((cur.traits.recover || 0) + (cur.traits.protect || 0) > 0,
+      'kit: the mix chosen determines real recover/protect traits');
+    assert(cur.rubric.rows.some(r => r.k === 'balance'),
+      'kit: how level it hangs is a graded row, not flavour');
+    assert(cur.rubric.rows.some(r => r.k === 'packed'),
+      'kit: how much of the case you filled is the other graded row');
+    assert(!cur.rubric.rows.some(r => r.k === 'doses'),
+      'kit: the pour is gone, and so is the row that graded it');
     assert(cur.buildQ >= 0 && cur.buildQ <= 1, 'kit: final quality is a valid 0..1 score');
+    const evenBalance = m.balance;
+
+    /* THE MECHANIC ITSELF. Balance has to be a real consequence of WHERE things
+       went, or the whole craft is decoration. Same number of remedies, all piled
+       into one outer column, must hang measurably worse than the spread load
+       above — otherwise the player's aim never mattered. */
+    const cv2 = setupCanvas(window, P, 'pack');
+    const takeAndDrop2 = async (i, x) => {
+      ptr(window, cv2, 'pointerdown', cardX(i), cardY);
+      await sleep(40);
+      ptr(window, cv2, 'pointerdown', x, dropY);
+      await sleep(560);
+    };
+    await takeAndDrop2(0, W2 * 0.30);
+    await takeAndDrop2(1, W2 * 0.30);
+    ptr(window, cv2, 'pointerdown', W2 / 2, closeY);
+    await sleep(60);
+    const lop = (P._dbg().cur.craftMeta || {}).balance;
+    assert(typeof lop === 'number' && lop < evenBalance,
+      `kit: a case loaded all down one side hangs worse than an even one (${lop}% vs ${evenBalance}%)`);
   }
 
   /* ================= ROPE — The Braid Rhythm ================= */

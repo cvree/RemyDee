@@ -137,6 +137,40 @@ masterwork**, however well it was built.
   swallowed by a `display:none` it inherited from `.chest-hint`. jsdom saw none
   of that and never will.
 
+## The field kit: the pour is gone
+
+The case has been two different bad crafts. First inventory Tetris — click a
+supply, click a cell, repeat, with no way to fail. Then it grew a POUR in front
+of it: press and hold while an invisible measure climbed a phial toward a painted
+band. That was worse. Nothing about a bar filling itself tells your hand what to
+do, the band moved for reasons the player could not see, and it sat between them
+and the one genuinely good idea the craft ever had.
+
+What is left is that idea, made the whole game. **The case hangs.** It swings on
+its strap as a real pendulum, and every remedy you put in it moves it — right
+now, while you watch, with real weight and a swing that has to settle. Take one
+off the shelf, press above the case, and it falls into whichever pocket is under
+your finger when it lands. A spirit level set into the lid reads the angle. The
+rule is one sentence: **keep it level.**
+
+The numbers are the design. The empty case is heavy on purpose, so that the worst
+load the geometry allows (both pockets of one outer column filled with tonics)
+settles at ~0.34 rad, comfortably inside the 0.40 spill angle. A case can
+therefore **never** be tipped out by how it is loaded — only by how hard you
+landed something, and only while it is still swinging. Every mistake is
+recoverable by loading the other side; the only thing that breaks a remedy is
+slamming a heavy one into a case that was already heeled over. That single
+property is what makes it fun rather than cruel.
+
+The first cut had the case weighing about as much as two splints, and one heavy
+remedy in an outer pocket put it past the spill angle on its own — four remedies
+in a row smashed on the bench without the player doing anything wrong. Found by
+opening it in a browser and dropping four things into it.
+
+Rubric rows are now `balance` (how level it settles, weighted heaviest), `packed`
+(how full, minus what you smashed) and `temper`. The `doses` row went with the
+pour.
+
 ## One thing deliberately left alone
 
 The brief for this pass asked for the mini-games to be built around a Chinese
