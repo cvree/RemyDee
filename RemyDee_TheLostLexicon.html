@@ -5564,7 +5564,7 @@ function buildBackdrop(host, variant){
 
   if(S0.prop && PROPS[S0.prop]){
     /* Props keep their aspect ratio. Stretching a 400x200 silhouette across a
-       1320px frame turned the pagoda into a slab and the steles into pillars
+       1320px frame turned the temple into a slab and the steles into pillars
        wider than the buttons in front of them. */
     const p=el("div","layer"); p.dataset.depth=String(S0.ridges.length+1);
     p.style.bottom="0"; p.style.height=(S0.propH||"46%");
@@ -11017,7 +11017,7 @@ function updateBossPhase(dt){
 }
 
 /* ---------- PHASE III: THE CARAVAN CHORUS ----------
-   Jian assembles one final word to prove a single master can hold all
+   Kanon assembles one final word to prove a single master can hold all
    knowledge — and falters, because no one person has every part. Every
    traveler the player named a term for across the campaign steps forward
    and offers a piece first; the rest is the player's alone to finish. A
@@ -13878,7 +13878,7 @@ function drawWeapon(ctx, weapon){
   ctx.lineCap="round";
   if(weapon==="xiphos"){ ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,6); ctx.lineTo(3,-16); ctx.stroke();
     ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(-2,4); ctx.lineTo(4,4); ctx.stroke(); }
-  else if(weapon==="dao"){ ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,6); ctx.quadraticCurveTo(7,-6,3,-16); ctx.stroke();
+  else if(weapon==="kopis"){ ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,6); ctx.quadraticCurveTo(7,-6,3,-16); ctx.stroke();
     ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=2.4; ctx.beginPath(); ctx.moveTo(-2,5); ctx.lineTo(4,5); ctx.stroke(); }
   else if(weapon==="bow"){ ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(2,-6,12,-1.1,1.1); ctx.stroke();
     ctx.strokeStyle="#e2d5b8"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-4,-16); ctx.lineTo(-4,4); ctx.stroke(); }
@@ -14979,7 +14979,7 @@ const RELIC_SETS = {
     lore:"What a company carries when the waystation is still two days off.",
     bonus:{ drain:-0.15 }, bonusText:"The squad tires 15% more slowly on every road." },
   physician:{ id:"physician", name:"The Physician's Case", glyph:"\u0399",
-    lore:"Nine needles, a moxa cup, and the patience to use them.",
+    lore:"Bronze probes, a cupping glass, and the patience to use them.",
     bonus:{ heal:0.25 }, bonusText:"A completed term restores 25% more to the party." },
   shadow:{ id:"shadow", name:"The Archive's Shadow", glyph:"\u03a3",
     lore:"Taken from the Keepers themselves. They do not know it is gone.",
@@ -15018,10 +15018,10 @@ const RELICS = {
              lore:"Nine gauges, nine uses. The ninth is never explained to apprentices." },
   moxa:    { id:"moxa",    set:"physician", name:"Copper cupping-glass", glyph:"\u03a3", rarity:"common",
              eff:{heal:0.06}, effText:"+6% recovery from terms",
-             lore:"Warmth driven inward, where the cold got in." },
+             lore:"Heated, pressed, and the skin rises to meet it. Hippocrates swore by these." },
   ring:    { id:"ring",    set:"physician", name:"Wax note-tablet", glyph:"\u0394", rarity:"uncommon",
              eff:{drain:-0.05}, effText:"-5% stamina drain",
-             lore:"Worn on the reading hand. You feel the count before you take it." },
+             lore:"Wax over wood. Warmed with a thumb, it takes a note and gives it back." },
   phial:   { id:"phial",   set:"physician", name:"Bitter-root phial", glyph:"\u03a6", rarity:"uncommon",
              eff:{emberPlus:1}, effText:"+1 ember at the bench",
              lore:"Foul enough that whoever drinks it believes it is working." },
