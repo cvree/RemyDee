@@ -25,13 +25,13 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   // each node hints its value/traits without a click — glyph + terrain icon are always in the markup
   const firstNode = nodes[0];
   assert(firstNode.querySelector('.mn-glyph'), 'a spot shows its state at a glance (number, lock, or check)');
-  assert(firstNode.querySelector('.mn-traits').textContent.length > 0, 'a spot hints its terrain-driven traits without opening it');
+  assert(firstNode.querySelectorAll('.mn-traits > g').length > 0, 'a spot hints its terrain-driven traits without opening it');
   assert(firstNode.querySelector('title'), 'a spot exposes its full risk/traits detail on hover via a native tooltip');
 
   // a locked spot still shows a trait hint, just visibly dimmed (never fully hidden)
   const lockedNode = doc.querySelector('#campaign-map .map-node.locked');
-  assert(lockedNode.querySelector('.mn-glyph').textContent === '🔒', 'a locked spot reads as locked, not just greyed out');
-  assert(lockedNode.querySelector('.mn-traits').textContent.length > 0, 'a locked spot still hints at what it holds — locks gate access, not information');
+  assert(lockedNode.querySelector('.mn-lock'), 'a locked spot reads as locked — a drawn padlock, not just a greyed-out number');
+  assert(lockedNode.querySelectorAll('.mn-traits > g').length > 0, 'a locked spot still hints at what it holds — locks gate access, not information');
 
   // clicking a locked spot refuses, with a clear reason, and does not start a chapter
   const flowBefore = E.getFlow();

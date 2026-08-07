@@ -297,8 +297,12 @@ function forceRub(P, val) {
     await until(() => !!MI._state(), 6000, 'mission started with pre-built gear');
     const F = MI._state().forge;
 
-    assert(Math.abs(F.momentumFloor - (1.20 + 5 * 0.10)) < 1e-6,
+    // five folds give a raw floor of 1.70; the blade is a masterwork, so the
+    // ADVANTAGE over no floor at all (0.70) is worth half again — 1 + 0.70*1.5
+    assert(Math.abs(F.momentumFloor - (1 + ((1.20 + 5 * 0.10) - 1) * 1.5)) < 1e-6,
       `the road's momentum floor comes from the blade's FOLD COUNT, not a constant (${F.momentumFloor})`);
+    assert(F.momentumFloor > 1.20 + 5 * 0.10,
+      'a masterwork blade holds a HIGHER floor than the same blade built merely well — the grade reaches the passives, not only the three ability buttons');
     assert(F.slipChance > 0.25, `the road carries the scarred rope's real slip chance (${F.slipChance.toFixed(2)})`);
     assert(Math.abs(F.phaseSec - (2.0 + 6 * 0.68)) < 1e-6, `the road's phase window comes from the shell's PLEAT COUNT (${F.phaseSec})`);
     assert(F.gainMult > 1, 'a masterwork on the bench speeds momentum on every step');

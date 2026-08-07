@@ -209,6 +209,12 @@ html[data-motion="reduced"] .no-reduce{display:none !important;}
 .reveal.show,.modal.show,.boss-chorus.show{animation:panelIn .34s var(--ease-back);}
 .pause-menu.show{animation:panelIn .2s var(--ease-back);}
 
+/* MARKS. Line drawings that take the colour of the text they sit in, so one
+   icon set works on parchment, on a dark strip and in the high-contrast theme
+   without a second palette. mk-s strokes, mk-f fills; anything unclassed fills. */
+svg.mk{width:1em;height:1em;vertical-align:-.13em;flex:0 0 auto;fill:currentColor;stroke:none;}
+svg.mk .mk-s{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+svg.mk .mk-f{fill:currentColor;stroke:none;}
 .small{font-size:.8rem;} .muted{color:var(--verd-deep);} .center{text-align:center;}
 .mt{margin-top:14px;} .mb{margin-bottom:14px;}
 .flex{display:flex;} .gap{gap:10px;} .wrap{flex-wrap:wrap;} .aic{align-items:center;} .jcc{justify-content:center;}
@@ -558,8 +564,16 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .map-node.locked .mn-glyph{fill:var(--ink-soft,#8a7a5f);opacity:.7;}
 .map-node.done .mn-glyph{fill:var(--verd-deep,#33513f);}
 .map-node .mn-label{font-size:10px;fill:var(--ink-soft,#8a7a5f);letter-spacing:.02em;}
-.map-node .mn-traits{font-size:12px;}
+/* The trait row and the lock are drawn from the same MARK_PATHS table as the
+   rest of the UI, dropped straight in as SVG children — a <text> node cannot
+   hold an <svg>, and the emoji that used to sit here were the reason the map
+   had two icon languages on it. */
+.map-node .mn-traits{color:var(--ink-soft,#6a5c46);fill:currentColor;}
+.map-node .mn-traits .mk-s{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.map-node .mn-traits .mk-f{fill:currentColor;stroke:none;}
 .map-node.locked .mn-traits{opacity:.32;}
+.map-node .mn-lock{color:var(--ink-soft,#8a7a5f);fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.75;}
 .order-list{display:flex;flex-direction:column;gap:16px;}
 .party-card{padding:16px;cursor:pointer;transition:transform .16s var(--ease),box-shadow .16s;}
 .party-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px var(--shadow);}
@@ -1180,7 +1194,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 /* forged-gear readout: what each tool you made actually does on THIS road.
    CLUTTER RULE: the road itself is the thing worth looking at, so the strip is
    collapsed while walking. A chip springs out for a moment when its item
-   actually does something, and the ⚒ toggle pins the whole strip open. */
+   actually does something, and the anvil toggle pins the whole strip open. */
 .forge-strip{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;pointer-events:none;
   max-height:0;opacity:0;overflow:hidden;margin-bottom:0;
   transition:max-height .28s var(--ease),opacity .22s var(--ease),margin-bottom .28s var(--ease);}
@@ -1533,7 +1547,10 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   padding:2px 7px;border-radius:999px;margin-left:6px;background:var(--papyrus-3);color:var(--ink);}
 .debrief-row .db-tier.fine{background:linear-gradient(180deg,var(--verd),var(--verd-deep));color:var(--papyrus);}
 .debrief-row .db-tier.flawed{background:linear-gradient(180deg,var(--gold,#d8b45f),var(--gold-deep,#8a6a2b));color:var(--ink);}
-.debrief-row .db-uses{font-size:.78rem;color:var(--verd-deep);margin-top:3px;}
+.debrief-row .db-build{font-size:.76rem;color:var(--ink-soft);margin-top:5px;line-height:1.4;
+  padding-left:9px;border-left:2px solid var(--papyrus-3);}
+.debrief-row .db-build svg.mk{margin-right:3px;opacity:.8;}
+.debrief-row .db-uses{font-size:.78rem;color:var(--verd-deep);margin-top:5px;}
 .debrief-row .db-verdict{font-size:.74rem;color:var(--ink-3,#7a6f5c);margin-top:2px;font-style:italic;}
 #page-reward{overflow:hidden;}
 .page-unfold{transform-origin:top center;}
@@ -2154,9 +2171,9 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
         <span class="stat"><span class="k">Pages</span> <span id="hub-pages">0</span>/8</span>
         <span class="spacer"></span>
         <button class="icon-btn" id="hub-arcade" title="Training Hall" aria-label="Open Training Hall">&#915;</button>
-        <button class="icon-btn" id="hub-hall" title="The Hall of Records" aria-label="Open the Hall of Records">&#924;</button>
+        <button class="icon-btn" id="hub-hall" title="The Hall of Records" aria-label="Open the Hall of Records">&#920;</button>
         <button class="icon-btn" id="hub-gloss" title="Lexicon" aria-label="Open lexicon">&#923;</button>
-        <button class="icon-btn" id="hub-settings" title="Settings" aria-label="Open settings">⚙</button>
+        <button class="icon-btn" id="hub-settings" title="Settings" aria-label="Open settings"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 5.4 A2.6 2.6 0 1 0 8 10.6 A2.6 2.6 0 1 0 8 5.4 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 1.6 V3.4 M8 12.6 V14.4 M1.6 8 H3.4 M12.6 8 H14.4 M3.5 3.5 L4.8 4.8 M11.2 11.2 L12.5 12.5 M12.5 3.5 L11.2 4.8 M4.8 11.2 L3.5 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </header>
       <div class="content">
         <div class="section-head">
@@ -2278,7 +2295,7 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
 
           <div class="build-controls">
             <button class="btn ghost" id="build-clear">Clear</button>
-            <button class="btn verd" id="build-pron" aria-label="Hear pronunciation">🔊 Pronounce</button>
+            <button class="btn verd" id="build-pron" aria-label="Hear pronunciation"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Pronounce
             <button class="btn" id="build-check">Stamp the seal</button>
           </div>
 
@@ -2570,7 +2587,7 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
         <button class="icon-btn" id="arcade-back" aria-label="Back">&larr;</button>
         <span class="brand">&#915; Training Hall</span>
         <span class="spacer"></span>
-        <button class="icon-btn" id="arcade-relax" title="Relaxed timing" aria-label="Relaxed timing">🐢</button>
+        <button class="icon-btn" id="arcade-relax" title="Relaxed timing" aria-label="Relaxed timing"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 4.4 V8 L10.8 9.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <button class="icon-btn" id="arcade-gloss" title="Lexicon" aria-label="Lexicon">&#923;</button>
       </header>
       <div class="content">
@@ -3825,6 +3842,57 @@ const FIGURE_ORDER = ["hippocrates","galen","alrazi","ibnsina","ibnalnafis","ves
 const FIGURE_RANK = {};
 FIGURE_ORDER.forEach((id,i)=>{ FIGURE_RANK[id]=i; });
 
+
+/* ==================================================================
+   MARKS — the game's own icon set.
+   The bench, the forge strip and the spec sheet carried their meaning in
+   emoji: a hiker, a bow, a knot, a bandage, a bag of money. Emoji are
+   full-colour bitmaps on most platforms, so a five-colour ink palette had
+   twenty-odd holes punched straight through it, at exactly the places the
+   player looks hardest — the line that says what a piece of gear will do.
+   These are line drawings on a 16x16 grid that take the colour of the text
+   they sit in. mark() passes anything it does not recognise straight
+   through, so the typographic marks (·, star, cross, diamond) still work.
+   ================================================================== */
+const MARK_PATHS = {
+  warn:   '<path d="M8 2.2 L14.6 13.4 H1.4 Z"/><path d="M8 6.2 V9.6" class="mk-s"/><circle cx="8" cy="11.6" r=".85" class="mk-f"/>',
+  blade:  '<path d="M3 13.2 L11.4 3.4 L12.8 4.6 L4.6 14.2 Z"/><path d="M2.2 14.8 L4.6 14.2 L3 13.2 Z" class="mk-f"/>',
+  bow:    '<path d="M4.4 1.8 C10.6 5.6 10.6 10.4 4.4 14.2" class="mk-s"/><path d="M4.4 1.8 V14.2" class="mk-s"/><path d="M4.4 8 H13.6" class="mk-s"/><path d="M13.6 8 L10.8 6.6 V9.4 Z" class="mk-f"/>',
+  hook:   '<path d="M8 1.6 V7.4 C8 10.4 5.6 11.8 3.8 10.4" class="mk-s"/><path d="M3.8 10.4 L2.2 12.4 M3.8 10.4 L6 11" class="mk-s"/><path d="M8 1.6 L6.4 3.2 M8 1.6 L9.6 3.2" class="mk-s"/>',
+  rope:   '<path d="M4 3.4 C10.8 4.6 10.8 11.4 4 12.6" class="mk-s"/><path d="M12 3.4 C5.2 4.6 5.2 11.4 12 12.6" class="mk-s"/>',
+  climb:  '<circle cx="10.4" cy="3.2" r="1.6" class="mk-f"/><path d="M10.2 5.2 L7.4 8.4 L9 11 L8 14.4" class="mk-s"/><path d="M7.4 8.4 L3.6 7.2 M9.4 6.4 L12.8 8.8" class="mk-s"/>',
+  foot:   '<path d="M4.6 3.2 C6.4 3.2 7 4.8 6.8 6.6 C6.6 8.4 5.6 9.4 4.4 9.2 C3.2 9 2.8 7.6 3.2 5.8 C3.5 4.2 3.8 3.2 4.6 3.2 Z"/><path d="M10.6 7.4 C12.4 7.4 13 9 12.8 10.8 C12.6 12.6 11.6 13.6 10.4 13.4 C9.2 13.2 8.8 11.8 9.2 10 C9.5 8.4 9.8 7.4 10.6 7.4 Z"/>',
+  ear:    '<path d="M5.6 14 C5.6 11 4 10.4 4 7.2 A4 4 0 0 1 12 7.2 C12 9.4 10.4 9.6 10.4 11.2 C10.4 12.6 9.4 13.4 8.4 13" class="mk-s"/><path d="M6.6 7.4 A1.6 1.6 0 0 1 9.6 7.8" class="mk-s"/>',
+  paw:    '<ellipse cx="8" cy="10.6" rx="3.4" ry="2.8" class="mk-f"/><circle cx="4.2" cy="6.6" r="1.35" class="mk-f"/><circle cx="6.9" cy="4.6" r="1.35" class="mk-f"/><circle cx="9.9" cy="4.6" r="1.35" class="mk-f"/><circle cx="12" cy="6.8" r="1.35" class="mk-f"/>',
+  grain:  '<path d="M8 14.4 V5" class="mk-s"/><path d="M8 5 C6 5.6 4.8 7 4.8 8.8 C6.8 8.4 8 7 8 5 Z M8 5 C10 5.6 11.2 7 11.2 8.8 C9.2 8.4 8 7 8 5 Z"/><path d="M8 9 C6.4 9.4 5.4 10.6 5.4 12 C7 11.7 8 10.6 8 9 Z M8 9 C9.6 9.4 10.6 10.6 10.6 12 C9 11.7 8 10.6 8 9 Z"/>',
+  smoke:  '<path d="M4.4 11.2 A2.6 2.6 0 0 1 4.8 6.1 A3.4 3.4 0 0 1 11.3 5.6 A2.8 2.8 0 0 1 11.6 11.2 Z"/><path d="M3 13.6 H8 M10 13.6 H13.4" class="mk-s"/>',
+  kit:    '<rect x="2.4" y="5.6" width="11.2" height="8" rx="1.2" class="mk-s"/><path d="M6 5.6 V4 A1.2 1.2 0 0 1 7.2 2.8 H8.8 A1.2 1.2 0 0 1 10 4 V5.6" class="mk-s"/><path d="M8 7.8 V11.4 M6.2 9.6 H9.8" class="mk-s"/>',
+  splint: '<rect x="1.6" y="6" width="12.8" height="4" rx="2" transform="rotate(-32 8 8)" class="mk-s"/><circle cx="8" cy="8" r=".8" class="mk-f"/>',
+  scroll: '<path d="M4 2.6 H12.4 V13.4 H4 Z" class="mk-s"/><path d="M6 5.6 H10.4 M6 8 H10.4 M6 10.4 H9" class="mk-s"/>',
+  anvil:  '<path d="M2.6 6.4 H10 C11.6 6.4 12.6 7.4 13.4 8 L11.6 9.4 H6 L4.8 11 H9.8 L10.6 13.4 H4 L5.2 11 H3.4 Z"/>',
+  flask:  '<path d="M6.6 2.4 V6.4 L3 12.4 A1.4 1.4 0 0 0 4.2 14.4 H11.8 A1.4 1.4 0 0 0 13 12.4 L9.4 6.4 V2.4" class="mk-s"/><path d="M5.6 2.4 H10.4" class="mk-s"/><path d="M4.6 10.4 H11.4 L13 12.9 A1.4 1.4 0 0 1 11.8 14.4 H4.2 A1.4 1.4 0 0 1 3 12.9 Z"/>',
+  bolt:   '<path d="M9.4 1.4 L4 8.8 H7.4 L6.4 14.6 L12 6.8 H8.6 Z"/>',
+  pick:   '<path d="M2.6 5.2 C6 2.6 10 2.6 13.4 5.2 C10.4 5 7.6 6 5.2 8.4 Z"/><path d="M6.6 6.8 L11.4 14.2" class="mk-s"/>',
+  shield: '<path d="M8 1.8 L13.4 3.8 V8 C13.4 11 11 13.4 8 14.4 C5 13.4 2.6 11 2.6 8 V3.8 Z" class="mk-s"/><path d="M8 5 V11.2" class="mk-s"/>',
+  lens:   '<circle cx="6.8" cy="6.8" r="4.2" class="mk-s"/><path d="M9.9 9.9 L14 14" class="mk-s"/>',
+  pack:   '<path d="M4 6 H12 A1.6 1.6 0 0 1 13.6 7.6 V12.8 A1.6 1.6 0 0 1 12 14.4 H4 A1.6 1.6 0 0 1 2.4 12.8 V7.6 A1.6 1.6 0 0 1 4 6 Z" class="mk-s"/><path d="M6 6 V4.2 A2 2 0 0 1 10 4.2 V6" class="mk-s"/><path d="M2.4 9.6 H13.6" class="mk-s"/>',
+  swords: '<path d="M3 2.6 L10.4 11.6 M13 2.6 L5.6 11.6" class="mk-s"/><path d="M2.4 13.4 L5.2 10.6 M13.6 13.4 L10.8 10.6" class="mk-s"/>',
+  sound:  '<path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" class="mk-s"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" class="mk-s"/>',
+  slow:   '<circle cx="8" cy="8" r="5.6" class="mk-s"/><path d="M8 4.6 V8 L10.6 9.6" class="mk-s"/>',
+  seal:   '<circle cx="8" cy="8" r="5.4" class="mk-s"/><circle cx="8" cy="8" r="2.2" class="mk-f"/>'
+};
+/* aliases: the road talks about what a passive DOES, the icon table about what
+   the picture IS, and these are the four places those two names differ */
+MARK_PATHS.brace = MARK_PATHS.shield;
+MARK_PATHS.focus = MARK_PATHS.lens;
+MARK_PATHS.haul  = MARK_PATHS.pack;
+MARK_PATHS.lead  = MARK_PATHS.hook;
+function mark(k){
+  const p=MARK_PATHS[k];
+  if(!p) return k==null?"":String(k);       // typographic marks pass straight through
+  return `<svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false">${p}</svg>`;
+}
+
 /* expose */
 window.__RD_DATA = { PARTS, DIRECTIONS, TERMS, TERM_PRON, ROLES, TRAVELERS, SUPPLIES, SUPPLY_ICONS,
   WEAPON_GLYPH, ENEMIES, CHAPTERS, ROUTES, REGIONS, PAGES, INTRO, SAFETY_NOTE,
@@ -3832,6 +3900,7 @@ window.__RD_DATA = { PARTS, DIRECTIONS, TERMS, TERM_PRON, ROLES, TRAVELERS, SUPP
   BP_UNLOCK, BP_STARTING, blueprintsEarnedBy,
   AFFINITY_LEVELS, affinityLevel, affinityNext,
   ORIGINS, LANG_NAME, TWIN_ROOTS, FIGURES, FIGURE_ORDER, FIGURE_RANK,
+  MARK_PATHS, mark,
   $, $$, el, clamp, shuffle, pick, toast };
 })();
 </script>
@@ -6428,14 +6497,14 @@ function renderSeedRow(){
    roughly what it will ask of them.
    ================================================================== */
 const TERRAIN_TRAITS = {
-  hills:   [{ic:"🌾",label:"steady pace"}],
-  lowland: [{ic:"🩹",label:"recovery"}],
-  mountain:[{ic:"🧗",label:"reach & climb"}],
-  road:    [{ic:"💨",label:"stealth"}],
-  river:   [{ic:"🪢",label:"protect & descend"}],
-  forest:  [{ic:"🐾",label:"sure footing"}],
-  ruins:   [{ic:"🏹",label:"power at range"}],
-  valley:  [{ic:"📜",label:"everything, together"}]
+  hills:   [{ic:"grain",label:"steady pace"}],
+  lowland: [{ic:"splint",label:"recovery"}],
+  mountain:[{ic:"climb",label:"reach & climb"}],
+  road:    [{ic:"smoke",label:"stealth"}],
+  river:   [{ic:"rope",label:"protect & descend"}],
+  forest:  [{ic:"paw",label:"sure footing"}],
+  ruins:   [{ic:"bow",label:"power at range"}],
+  valley:  [{ic:"scroll",label:"everything, together"}]
 };
 const RISK_COLOR = { Low:"#5f9a7d", Moderate:"#bd9d5f", High:"#c06a3a",
   Extreme:"#b5322b", Legendary:"#8a3ab5" };
@@ -6467,7 +6536,7 @@ function renderCampaignMap(){
     const traits=TERRAIN_TRAITS[c.terrain]||[];
     const riskColor=RISK_COLOR[c.risk]||"var(--gold)";
     const label = i===0?"Prologue":"Ch. "+i;
-    const glyph = isLocked? "🔒" : isDone? "✓" : (i===0?"P":i);
+    const glyph = isLocked? "" : isDone? "\u2713" : (i===0?"P":i);
     const titleBits = [c.name, c.risk+" risk", traits.map(t=>t.label).join(", ")];
     if(isLocked) titleBits.push("locked — finish the current road first");
     else if(isDone) titleBits.push("recovered");
@@ -6487,8 +6556,10 @@ function renderCampaignMap(){
       <circle r="18" class="mn-circ"/>
       ${isNow?'<circle r="24" class="mn-ring"/>':""}
       <text class="mn-glyph" y="6" text-anchor="middle">${glyph}</text>
+      ${isLocked?`<g class="mn-lock" transform="translate(-8,-8)"><rect x="3.4" y="7" width="9.2" height="7" rx="1.4"/><path d="M5.8 7 V5.2 A2.2 2.2 0 0 1 10.2 5.2 V7"/></g>`:""}
       <text class="mn-label" y="35" text-anchor="middle">${label}</text>
-      <text class="mn-traits" y="49" text-anchor="middle">${traits.map(t=>t.ic).join(" ")}</text>
+      <g class="mn-traits" transform="translate(${-8*traits.length - 2*(traits.length-1)},41)">${
+        traits.map((t,ti)=>`<g transform="translate(${ti*20},0)">${D.MARK_PATHS[t.ic]||""}</g>`).join("")}</g>
     </g>`;
   });
   svg+=`</svg>`;
@@ -6981,7 +7052,7 @@ function renderGloss(q, filter){
               ${p.src?`<div class="small muted gloss-src">from <i>${p.src}</i></div>`:''}
               ${used.length?`<div class="small gloss-used">seen in ${shown}${used.length>5?` and ${used.length-5} more`:''}</div>`:''}
             </div>
-            <button class="icon-btn sm" data-say="${p.text.replace(/[-\/]/g,' ')}" aria-label="Pronounce">🔊</button>`;
+            <button class="icon-btn sm" data-say="${p.text.replace(/[-\/]/g,' ')}" aria-label="Pronounce"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
           return row; });
       section(kind.charAt(0).toUpperCase()+kind.slice(1)+"es", rows);
     });
@@ -6993,7 +7064,7 @@ function renderGloss(q, filter){
         row.innerHTML=`<div><b>${known?t.spell:'▨ '+t.spell.replace(/./g,'▨').slice(0,t.spell.length)}</b>
           <div class="small">${known?t.def+' · '+t.system:'Build this term to record it.'}</div>
           ${known?`<div class="small muted">${t.note}</div>`:''}</div>
-          ${known?`<button class="icon-btn sm" data-say="${t.spell}" aria-label="Pronounce">🔊</button>`:''}`;
+          ${known?`<button class="icon-btn sm" data-say="${t.spell}" aria-label="Pronounce"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:''}`;
         return row; });
     section("Terms recorded ("+completed.size+"/"+Object.keys(TERMS).length+")", rows);
   }
@@ -7001,7 +7072,7 @@ function renderGloss(q, filter){
     const rows=DIRECTIONS.filter(d=>match(d.term)||match(d.mean)).map(d=>{
       const row=el("div","gloss-row");
       row.innerHTML=`<div><b>${d.term}</b><div class="small">${d.mean}</div></div>
-        <button class="icon-btn sm" data-say="${d.term}" aria-label="Pronounce">🔊</button>`;
+        <button class="icon-btn sm" data-say="${d.term}" aria-label="Pronounce"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
       return row; });
     section("Directional terms", rows);
   }
@@ -7607,7 +7678,7 @@ function openCommission(){
       <div class="small muted comm-grants">${bp.grants.map(g=>({climb:"opens the high routes",smoke:"slips patrols & ambushes",shoot:"strikes at range",cut:"cuts snags & barricades",heal:"mends the squad",descend:"opens rope descents"}[g]||g)).join(" · ")}</div>
       ${why?`<div class="small comm-why">${why}</div>`:""}
       ${madeThisTrip?`<div class="small comm-again">already on the bench ×${madeThisTrip} — forging another adds a charge</div>`:""}
-      ${variants.length?`<div class="comm-variants">${variants.map(v=>`<span class="variant-btn" data-var="${v.id}" role="button" tabindex="0">${bm.forged<=v.req+1?'✨ ':''}${v.name}</span>`).join("")}</div>`:""}`;
+      ${variants.length?`<div class="comm-variants">${variants.map(v=>`<span class="variant-btn" data-var="${v.id}" role="button" tabindex="0">${bm.forged<=v.req+1?'\u2726 ':''}${v.name}</span>`).join("")}</div>`:""}`;
     card.onclick=(e)=>{
       const vb=e.target.closest('.variant-btn');
       Audio2.sfx.clink(); FX.buzz(12);
@@ -9422,41 +9493,41 @@ function craftSpec(item){
     const folds=clamp(n(m.folds,1),1,5);
     sp.strikeSpan = 0.40+folds*0.055;
     sp.momentumFloor = 1.20+folds*0.10;
-    sp.notes.push({ic:"🗡", txt:`Folded <b>${folds}×</b> — Strike sweeps <b>${Math.round(sp.strikeSpan*100)}%</b> of the road ahead, and momentum can never fall below <b>×${sp.momentumFloor.toFixed(2)}</b>.`});
-    if(n(m.worstFold,100)<60) sp.notes.push({ic:"⚠️", txt:`Its sloppiest fold graded <b>${m.worstFold}%</b> — that pass is the weak line in the edge.`});
+    sp.notes.push({ic:"blade", txt:`Folded <b>${folds}×</b> — Strike sweeps <b>${Math.round(sp.strikeSpan*100)}%</b> of the road ahead, and momentum can never fall below <b>×${sp.momentumFloor.toFixed(2)}</b>.`});
+    if(n(m.worstFold,100)<60) sp.notes.push({ic:"warn", txt:`Its sloppiest fold graded <b>${m.worstFold}%</b> — that pass is the weak line in the edge.`});
   } else if(craft==="align"){
     const read=clamp(n(m.balanceRead,60),0,100)/100;
     if(m.balanceLean==="reach"){
       sp.gateLeadMult = 1+(0.18+read*0.30);
-      sp.notes.push({ic:"🪝", txt:`Balanced for <b>reach</b> — thrown ahead, it buys <b>${Math.round((sp.gateLeadMult-1)*100)}%</b> more road to read each rune gate over.`});
+      sp.notes.push({ic:"hook", txt:`Balanced for <b>reach</b> — thrown ahead, it buys <b>${Math.round((sp.gateLeadMult-1)*100)}%</b> more road to read each rune gate over.`});
     } else {
       sp.hazardShrug = 0.10+read*0.22;
-      sp.notes.push({ic:"🪝", txt:`Balanced for <b>stability</b> — it anchors the line, and <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards glance off the squad.`});
+      sp.notes.push({ic:"hook", txt:`Balanced for <b>stability</b> — it anchors the line, and <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards glance off the squad.`});
     }
-    if(n(m.probesUsed,5)<=2) sp.notes.push({ic:"👂", txt:`Found on <b>${m.probesUsed} probe${m.probesUsed===1?"":"s"}</b> — a smith's ear.`});
+    if(n(m.probesUsed,5)<=2) sp.notes.push({ic:"ear", txt:`Found on <b>${m.probesUsed} probe${m.probesUsed===1?"":"s"}</b> — a smith's ear.`});
   } else if(craft==="tension"){
     const best=m.bestDraw||"power";
     if(best==="power"){ sp.strikeSpan+=0.10;
-      sp.notes.push({ic:"🏹", txt:`Tuned for <b>power</b> — Strike reaches <b>${Math.round(sp.strikeSpan*100)}%</b> of the road.`}); }
+      sp.notes.push({ic:"bow", txt:`Tuned for <b>power</b> — Strike reaches <b>${Math.round(sp.strikeSpan*100)}%</b> of the road.`}); }
     else if(best==="control"){ sp.strikeMomentum=0.45;
-      sp.notes.push({ic:"🏹", txt:`Tuned for <b>accuracy</b> — every Strike also surges momentum by <b>+0.45</b>.`}); }
+      sp.notes.push({ic:"bow", txt:`Tuned for <b>accuracy</b> — every Strike also surges momentum by <b>+0.45</b>.`}); }
     else { sp.extraStrike=1;
-      sp.notes.push({ic:"🏹", txt:`Tuned for <b>speed</b> — the limb recovers fast enough for <b>one extra Strike</b> per road.`}); }
+      sp.notes.push({ic:"bow", txt:`Tuned for <b>speed</b> — the limb recovers fast enough for <b>one extra Strike</b> per road.`}); }
   } else if(craft==="fold"){
     const pleats=clamp(n(m.pleats,4),3,6), leaks=Math.max(0,n(m.leaks,0));
     sp.phaseSec = clamp(2.0+pleats*0.68-leaks*0.55, 1.2, 7.0);
-    sp.notes.push({ic:"☁", txt:`<b>${pleats} pleats</b> — Vanish holds the squad untouchable for <b>${sp.phaseSec.toFixed(1)}s</b>.`});
-    if(leaks) sp.notes.push({ic:"⚠️", txt:`<b>${leaks} pleat${leaks>1?"s":""} folded out of order</b> — the shell leaks, and the haze thins ${(leaks*0.55).toFixed(1)}s early.`});
+    sp.notes.push({ic:"smoke", txt:`<b>${pleats} pleats</b> — Vanish holds the squad untouchable for <b>${sp.phaseSec.toFixed(1)}s</b>.`});
+    if(leaks) sp.notes.push({ic:"warn", txt:`<b>${leaks} pleat${leaks>1?"s":""} folded out of order</b> — the shell leaks, and the haze thins ${(leaks*0.55).toFixed(1)}s early.`});
   } else if(craft==="fit"){
     const cons=clamp(n(m.consistency,60),0,100)/100;
     if(m.angle==="steep"){ sp.hazardShrug=0.08+cons*0.14;
-      sp.notes.push({ic:"🧗", txt:`<b>Steep bite</b> — deep grip on rock; <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards fail to land.`}); }
+      sp.notes.push({ic:"climb", txt:`<b>Steep bite</b> — deep grip on rock; <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards fail to land.`}); }
     else if(m.angle==="shallow"){ sp.ledgeSpeed=0.10+cons*0.14;
-      sp.notes.push({ic:"🧗", txt:`<b>Shallow bite</b> — the upper ledge is walked <b>${Math.round(sp.ledgeSpeed*100)}%</b> faster.`}); }
+      sp.notes.push({ic:"climb", txt:`<b>Shallow bite</b> — the upper ledge is walked <b>${Math.round(sp.ledgeSpeed*100)}%</b> faster.`}); }
     else { sp.hazardShrug=0.05+cons*0.08; sp.ledgeSpeed=0.05+cons*0.08;
-      sp.notes.push({ic:"🧗", txt:`<b>Balanced bite</b> — a little of both: some grip, some speed on the ledge.`}); }
+      sp.notes.push({ic:"climb", txt:`<b>Balanced bite</b> — a little of both: some grip, some speed on the ledge.`}); }
     if(cons<0.6){ sp.slipChance=0.16;
-      sp.notes.push({ic:"⚠️", txt:`The three claws don't agree with each other — the set can skate on a climb.`}); }
+      sp.notes.push({ic:"warn", txt:`The three claws don't agree with each other — the set can skate on a climb.`}); }
   } else if(craft==="pack"){
     const p=m.packed||{};
     const band=n(p.bandage,0), tonic=n(p.tonic,0), salve=n(p.salve,0), splint=n(p.splint,0);
@@ -9467,23 +9538,45 @@ function craftSpec(item){
     else sp.notes.push({ic:"✚", txt:`A plain case — Mend restores the standard amount.`});
     if(salve) sp.notes.push({ic:"·", txt:`${salve} salve${salve>1?"s":""} tucked in the gaps.`});
     if(splint){ sp.hazardShrug+=Math.min(0.15,splint*0.05);
-      sp.notes.push({ic:"🩹", txt:`<b>${splint} splint${splint>1?"s":""}</b> — <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards are shrugged off.`}); }
-    if(n(m.balance,100)<62) sp.notes.push({ic:"⚠️", txt:`The case hangs badly (<b>${m.balance}%</b> balance) — it rattles, and the squad walks a touch slower for it.`});
+      sp.notes.push({ic:"splint", txt:`<b>${splint} splint${splint>1?"s":""}</b> — <b>${Math.round(sp.hazardShrug*100)}%</b> of hazards are shrugged off.`}); }
+    if(n(m.balance,100)<62) sp.notes.push({ic:"warn", txt:`The case hangs badly (<b>${m.balance}%</b> balance) — it rattles, and the squad walks a touch slower for it.`});
   } else if(craft==="weave"){
     const weak=(m.weakSpots||[]).length, loose=(m.looseSpots||[]).length;
     sp.slipChance = clamp(weak*0.10+loose*0.05, 0, 0.6);
-    if(!weak && !loose) sp.notes.push({ic:"🪢", txt:`<b>Not one weak spot</b> — this rope will not slip, on any descent.`});
-    else sp.notes.push({ic:"⚠️", txt:`<b>${weak} scar${weak===1?"":"s"}${loose?` and ${loose} loose turn${loose===1?"":"s"}`:""}</b> — a <b>${Math.round(sp.slipChance*100)}%</b> chance the rope gives on a climb or descent.`});
-    if(m.tempo==="fast") sp.notes.push({ic:"⚡", txt:`Braided at the <b>fast</b> tempo — the only tempo that can reach a masterwork.`});
+    if(!weak && !loose) sp.notes.push({ic:"rope", txt:`<b>Not one weak spot</b> — this rope will not slip, on any descent.`});
+    else sp.notes.push({ic:"warn", txt:`<b>${weak} scar${weak===1?"":"s"}${loose?` and ${loose} loose turn${loose===1?"":"s"}`:""}</b> — a <b>${Math.round(sp.slipChance*100)}%</b> chance the rope gives on a climb or descent.`});
+    if(m.tempo==="fast") sp.notes.push({ic:"bolt", txt:`Braided at the <b>fast</b> tempo — the only tempo that can reach a masterwork.`});
     else if(m.tempo==="slow") sp.notes.push({ic:"·", txt:`Braided <b>slow</b> — safe hands, but a slow braid is capped short of perfect.`});
   }
-  // a masterwork is not merely a bigger number: it removes the failure mode
+  /* THE GRADE REACHES THE PASSIVES.
+     The masterwork note promised "whatever it does, it does at 150%" and that was
+     true of exactly three things — Strike, Vanish and Mend all scale by tierMult()
+     where they are used. Everything the piece does while the player is just
+     walking — the momentum floor, the braced shrug, the reading room a thrown
+     hook buys, the speed of the high ledge — read the raw spec and ignored the
+     grade entirely, so a masterwork rope and a serviceable one anchored the line
+     exactly as well. The grade is applied here, to the passives only: the three
+     ability numbers are deliberately left alone because their call sites already
+     multiply by tierMult, and doing it twice would pay the grade twice. */
+  const g = item.qtier==="masterwork" ? 1.5 : item.qtier==="fine" ? 1.25
+          : item.qtier==="flawed" ? 0.6 : 1;
+  if(g!==1){
+    // floors and lead multipliers scale their ADVANTAGE, not their whole value —
+    // ×0.6 of a momentum floor of 1.7 would be 1.02, i.e. no floor at all
+    if(sp.momentumFloor>1) sp.momentumFloor = clamp(1+(sp.momentumFloor-1)*g, 1, 2.6);
+    sp.gateLeadMult = clamp(1+(sp.gateLeadMult-1)*g, 1, 1.9);
+    sp.hazardShrug  = clamp(sp.hazardShrug*g, 0, 0.5);
+    sp.ledgeSpeed   = clamp(sp.ledgeSpeed*g, 0, 0.45);
+    sp.strikeSpan   = clamp(sp.strikeSpan*g, 0.25, 0.95);
+  }
   if(item.qtier==="masterwork"){
     sp.slipChance=0;
-    sp.notes.push({ic:"★", txt:`<b>Masterwork</b> — it cannot slip, fade, or catch. Whatever it does, it does at <b>150%</b>.`});
+    sp.notes.push({ic:"★", txt:`<b>Masterwork</b> — it cannot slip, fade, or catch. Every number above is already the masterwork number: <b>half again</b> what an ordinary piece of this pattern would do.`});
+  } else if(item.qtier==="fine"){
+    sp.notes.push({ic:"★", txt:`<b>Fine work</b> — the numbers above are a <b>quarter</b> better than a serviceable piece of this pattern would manage.`});
   } else if(item.qtier==="flawed"){
     sp.slipChance=Math.max(sp.slipChance,0.22);
-    sp.notes.push({ic:"⚠️", txt:`The flaw in the build shows: it does <b>60%</b> of what it should, and it can fail outright.`});
+    sp.notes.push({ic:"warn", txt:`The flaw in the build shows in every number above — they are already the reduced ones, about <b>60%</b> of what this pattern is worth — and it can fail outright.`});
   }
   return sp;
 }
@@ -9505,7 +9598,7 @@ function buildSpecSheet(bp, cur, qtier, isMaster, decodeClean){
     }).join("");
   }
   html += (spec.notes.length?spec.notes:[{ic:"·",txt:"A plain piece — it does what the blueprint promises, no more."}])
-    .map(nt=>`<li><span class="ss-ic">${nt.ic}</span><span>${nt.txt}</span></li>`).join("");
+    .map(nt=>`<li><span class="ss-ic">${D.mark(nt.ic)}</span><span>${nt.txt}</span></li>`).join("");
   html += `</ul>`;
   // the lesson: exactly one actionable thing, chosen in priority order
   let lesson=null;
@@ -9778,11 +9871,11 @@ function renderForecast(){
   const f=E.getFlow(); const wrap=$('#forecast-lines'); wrap.innerHTML="";
   const caps=squadCapabilities(f);
   const lines=[];
-  if(caps.climb) lines.push({ic:"🪝", txt:`With a hook or claws in hand, <b>upper ledges and rope descents</b> open up.`});
-  if(caps.smoke) lines.push({ic:"💨", txt:`A smoke shell lets the squad <b>slip a torch-lit patrol</b> without a fight.`});
-  if(caps.shoot) lines.push({ic:"🏹", txt:`A bow can <b>snuff a distant alarm-lantern</b> before it rings.`});
-  if(caps.cut)   lines.push({ic:"🗡️", txt:`A blade can <b>cut a barricade or alarm rope</b> to force a shortcut.`});
-  if(caps.heal)  lines.push({ic:"🧰", txt:`A field kit lets you <b>recover a faltering squad-mate</b> instead of losing ground.`});
+  if(caps.climb) lines.push({ic:"hook", txt:`With a hook or claws in hand, <b>upper ledges and rope descents</b> open up.`});
+  if(caps.smoke) lines.push({ic:"smoke", txt:`A smoke shell lets the squad <b>slip a torch-lit patrol</b> without a fight.`});
+  if(caps.shoot) lines.push({ic:"bow", txt:`A bow can <b>snuff a distant alarm-lantern</b> before it rings.`});
+  if(caps.cut)   lines.push({ic:"blade", txt:`A blade can <b>cut a barricade or alarm rope</b> to force a shortcut.`});
+  if(caps.heal)  lines.push({ic:"kit", txt:`A field kit lets you <b>recover a faltering squad-mate</b> instead of losing ground.`});
   // road perks from variants/reagents (flawed builds lose theirs)
   const PERK_LINES={
     stormproof:`Lacquered packs: a storm on the road <b>cannot soak the squad</b>.`,
@@ -9795,22 +9888,22 @@ function renderForecast(){
   perkSet.forEach(p=>{ if(PERK_LINES[p]) lines.push({ic:"❖", txt:PERK_LINES[p]}); });
   // quality warnings
   const flawed=f.forged.filter(it=>it.qtier==="flawed");
-  if(flawed.length) lines.push({ic:"⚠️", txt:`${flawed.length} tool${flawed.length>1?'s are':' is'} <b>flawed</b> — ${flawed.map(x=>x.name.toLowerCase()).join(", ")} may slip, break, or fade in the cavern.`});
+  if(flawed.length) lines.push({ic:"warn", txt:`${flawed.length} tool${flawed.length>1?'s are':' is'} <b>flawed</b> — ${flawed.map(x=>x.name.toLowerCase()).join(", ")} may slip, break, or fade in the cavern.`});
   const fine=f.forged.filter(it=>it.qtier==="fine"||it.qtier==="masterwork");
-  if(fine.length) lines.push({ic:"✨", txt:`${fine.length} <b>fine</b> tool${fine.length>1?'s':''} may reveal a <b>hidden shortcut or Lexicon fragment</b>.`});
+  if(fine.length) lines.push({ic:"✦", txt:`${fine.length} <b>fine</b> tool${fine.length>1?'s':''} may reveal a <b>hidden shortcut or Lexicon fragment</b>.`});
   // THE SPEC, CARRIED FORWARD. The forecast now names what each piece's BUILD does
   // on this road — the same lines the bench printed, so the promise is kept in view
   // right up to the moment the squad walks out of the gate.
   const SPEC=window.__RD_PREP&&window.__RD_PREP.craftSpec;
   if(SPEC) f.forged.filter(it=>it.qtier!=="ruined"&&it.craftMeta).forEach(it=>{
     const sc=SPEC(it); const key=(sc.notes||[])[0];
-    if(key) lines.push({ic:it.qtier==="masterwork"?"★":"⚒", txt:`<b>${it.genName}</b> · ${key.txt}`});
+    if(key) lines.push({ic:it.qtier==="masterwork"?"★":"anvil", txt:`<b>${it.genName}</b> · ${key.txt}`});
   });
   // gaps
   if(!caps.climb) lines.push({ic:"▲", txt:`No climbing gear — the <b>high routes stay closed</b>, and you'll take the low path.`});
   if(!f.forged.length) lines.push({ic:"▲", txt:`Nothing forged — the squad enters light and every hazard bites harder.`});
   lines.forEach(l=>{ const row=el("div","forecast-line");
-    row.innerHTML=`<span class="fl-ic">${l.ic}</span><div>${l.txt}</div>`; wrap.appendChild(row); });
+    row.innerHTML=`<span class="fl-ic">${D.mark(l.ic)}</span><div>${l.txt}</div>`; wrap.appendChild(row); });
 }
 
 /* ---------- turn forged gear into mission-ready stats + emergent route ---------- */
@@ -10261,6 +10354,12 @@ function computeForgePassives(f){
     gainMult:1 + ((f.vigil && f.vigil.gain) || 0),   // how fast momentum builds per completed term
     valueMult:1 + ((f.vigil && f.vigil.value) || 0), // pickup / ink value
     chips:[],
+    /* WHO GETS THE CREDIT. Every passive here is real and fires on the road, but
+       until now none of them could say which piece paid for it — so the gear
+       debrief told a player that the rope they braided without a single weak spot
+       "never came into play", while it silently held every descent of the run.
+       ownerFor records the piece behind each passive so the road can name it. */
+    ownerFor:{},
     // itemFor: the exact item credited when a capability actually does something —
     // this is what makes gear feel present instead of a stat line (see DEPTH_PLAN §4)
     itemFor:{
@@ -10284,22 +10383,23 @@ function computeForgePassives(f){
   if(P.cutClear){
     const it=P.itemFor.cut, sc=P.specFor.cut;
     P.momentumFloor = (sc && sc.momentumFloor) ? sc.momentumFloor : 1.6;
+    P.ownerFor.floor = it;
     const folds=it&&it.craftMeta&&it.craftMeta.folds;
-    P.chips.push({ic:"🗡",label:it?it.genName:"Keen edge",
+    P.chips.push({ic:"blade",label:it?it.genName:"Keen edge",
       desc:`clears snags · momentum never drops below ×${P.momentumFloor.toFixed(2)}${folds?` (${folds} folds)`:""}`, itemId:it&&it.id}); }
   if(P.climbFast){ const it=P.itemFor.climb, sc=P.specFor.climb;
-    P.ledgeSpeed=(sc&&sc.ledgeSpeed)||0;
-    P.chips.push({ic:"🧗",label:it?it.genName:"Climbing gear",
+    P.ledgeSpeed=(sc&&sc.ledgeSpeed)||0; P.ownerFor.ledge=it;
+    P.chips.push({ic:"climb",label:it?it.genName:"Climbing gear",
       desc:P.ledgeSpeed>0.02?`opens the swift upper ledge · ${Math.round(P.ledgeSpeed*100)}% faster along it`:"opens the swift upper ledge", itemId:it&&it.id}); }
   if(P.surefoot){ const it=P.itemFor.climb;
-    P.chips.push({ic:"👣",label:it?it.genName:"Sure-foot",desc:"scree & mud can't slow the squad", itemId:it&&it.id}); }
+    P.chips.push({ic:"foot",label:it?it.genName:"Sure-foot",desc:"scree & mud can't slow the squad", itemId:it&&it.id}); }
   if(P.heal){ const it=P.itemFor.heal, sc=P.specFor.heal;
     P.healMult=1.6*((sc&&sc.mendPer)||1);
     P.chips.push({ic:"✚",label:it?it.genName:"Field kit",desc:"terms heal the squad far more", itemId:it&&it.id}); }
   if(P.smoke){ const it=P.itemFor.smoke, sc=P.specFor.smoke;
     P.phaseSec=(sc&&sc.phaseSec)||5.0;
     const pl=it&&it.craftMeta&&it.craftMeta.pleats;
-    P.chips.push({ic:"☁",label:it?it.genName:"Smoke shell",
+    P.chips.push({ic:"smoke",label:it?it.genName:"Smoke shell",
       desc:`saves you from one wrong gate · ${P.phaseSec.toFixed(1)}s phase${pl?` (${pl} pleats)`:""}`, itemId:it&&it.id}); }
   /* THE FAILURE MODES ARE REAL NOW. A rope with missed beats, or a claw set that
      doesn't agree with itself, carries a live chance of giving out — the number
@@ -10307,31 +10407,48 @@ function computeForgePassives(f){
   P.slipChance = ["climb","descend"].reduce((mx,k)=>{
     const sc=P.specFor[k]; return Math.max(mx, (sc&&sc.slipChance)||0); }, 0);
   if(P.slipChance>0.01){
-    const it=P.itemFor.climb||P.itemFor.descend;
-    P.chips.push({ic:"⚠️",label:"Untrustworthy line",
+    const it=P.itemFor.climb||P.itemFor.descend; P.ownerFor.slip=it;
+    P.chips.push({ic:"warn",label:"Untrustworthy line",
       desc:`${Math.round(P.slipChance*100)}% chance the ${it&&it.bpId==="rope"?"rope":"gear"} gives on a climb`, itemId:it&&it.id}); }
   // hazards that simply fail to land, bought with a steep bite or a stable join
-  P.hazardShrug = clamp(Object.keys(P.specFor).reduce((a,k)=>{
-    const sc=P.specFor[k]; return a+((sc&&sc.hazardShrug)||0); }, 0), 0, 0.55);
-  if(P.hazardShrug>0.03) P.chips.push({ic:"🛡",label:"Braced",desc:`${Math.round(P.hazardShrug*100)}% of hazards glance off`});
+  let shrugSum=0, shrugBest=0;
+  Object.keys(P.specFor).forEach(k=>{
+    const v=(P.specFor[k]&&P.specFor[k].hazardShrug)||0;
+    shrugSum+=v;
+    if(v>shrugBest){ shrugBest=v; P.ownerFor.shrug=P.itemFor[k]; }
+  });
+  P.hazardShrug = clamp(shrugSum, 0, 0.55);
+  if(P.hazardShrug>0.03) P.chips.push({ic:"brace",label:"Braced",desc:`${Math.round(P.hazardShrug*100)}% of hazards glance off`,
+    itemId:P.ownerFor.shrug&&P.ownerFor.shrug.id});
   // a hook thrown for reach buys time to READ a gate rather than guess at it
-  P.gateLeadMult = Object.keys(P.specFor).reduce((mx,k)=>{
-    const sc=P.specFor[k]; return Math.max(mx,(sc&&sc.gateLeadMult)||1); }, 1);
-  if(P.gateLeadMult>1.02) P.chips.push({ic:"🪝",label:"Long line",desc:`${Math.round((P.gateLeadMult-1)*100)}% more road to read each gate over`});
+  P.gateLeadMult=1;
+  Object.keys(P.specFor).forEach(k=>{
+    const v=(P.specFor[k]&&P.specFor[k].gateLeadMult)||1;
+    if(v>P.gateLeadMult){ P.gateLeadMult=v; P.ownerFor.lead=P.itemFor[k]; }
+  });
+  if(P.gateLeadMult>1.02) P.chips.push({ic:"lead",label:"Long line",desc:`${Math.round((P.gateLeadMult-1)*100)}% more road to read each gate over`,
+    itemId:P.ownerFor.lead&&P.ownerFor.lead.id});
   // a masterwork on the bench is felt on every step of the road
   const masters=forged.filter(it=>it.qtier==="masterwork");
   if(masters.length){ P.gainMult*=1+0.12*masters.length;
     P.chips.push({ic:"★",label:masters.length===1?masters[0].genName:`${masters.length} masterworks`,
       desc:`flawless work — momentum builds ${Math.round(12*masters.length)}% faster`, itemId:masters[0].id}); }
-  // control/reach traits sharpen the scholar's eye — momentum builds faster
+  /* These four lines used to assign where they meant to multiply, and the bug ran
+     the wrong way round: gainMult already held the Vigil's study bonus and a
+     compounding 12% per masterwork, and then `P.gainMult=1.35` threw both away.
+     A player who studied the night before and forged two masterworks measured
+     1.43, and then any build carrying two points of control or reach — which is
+     nearly every build — knocked them back to 1.35. At one point of focus it was
+     worse: 1.18, below where they started. The best possible preparation was
+     being deleted by an ordinary trait bonus. They compound now. */
   const focus=(tr.control||0)+(tr.reach||0);
-  if(focus>=2){ P.gainMult=1.35; P.chips.push({ic:"🔎",label:"Scholar's poise",desc:"terms build momentum 35% faster"}); }
-  else if(focus>=1){ P.gainMult=1.18; }
+  if(focus>=2){ P.gainMult*=1.35; P.chips.push({ic:"focus",label:"Scholar's poise",desc:"terms build momentum 35% faster"}); }
+  else if(focus>=1){ P.gainMult*=1.18; }
   // power/protect traits turn found lore into more ink
   const haul=(tr.power||0)+(tr.protect||0);
-  if(haul>=2){ P.valueMult=1.3; P.chips.push({ic:"🎒",label:"Strong packs",desc:"road finds are worth 30% more"}); }
+  if(haul>=2){ P.valueMult*=1.3; P.chips.push({ic:"haul",label:"Strong packs",desc:"road finds are worth 30% more"}); }
   // a well-stocked bench (many tools) lends steadier morale on the road
-  if(forged.length>=3) P.chips.push({ic:"⚒",label:"Full bench",desc:"a tool for every turn — steadier morale"});
+  if(forged.length>=3) P.chips.push({ic:"anvil",label:"Full bench",desc:"a tool for every turn — steadier morale"});
   if(!P.chips.length) P.chips.push({ic:"◦",label:"Bare-handed",desc:"nothing forged — the words alone must carry them"});
   P.smokeSaves = P.smoke?1:0;
   return P;
@@ -10357,6 +10474,47 @@ function flashItem(item, verb, txt){
       tEl.textContent = `· ${n} use${n===1?"":"s"}`; }
   }
   return `<b>${item.genName}</b> ${txt}`;
+}
+
+/* ==================================================================
+   PASSIVE CREDIT.
+   Everything the bench bought that is not a button — the momentum floor
+   catching a fall, a hazard glancing off a braced join, the high ledge
+   running faster under a shallow claw bite, the extra road a thrown hook
+   buys to read a gate over — used to happen in silence, or under a
+   caption that said "forged gear" without naming any of it. So the gear
+   debrief could tell a player that the rope they braided without a single
+   weak spot "never came into play this road", while it held every descent
+   of the run.
+   These fire constantly, so saying it every time would be noise, which is
+   the opposite of what a passive should feel like. The rule is: name it
+   in full the FIRST time it does something on a road, tally every time
+   after that, and let the debrief add them up. One sentence per kind of
+   help, per journey.
+   ================================================================== */
+function creditPassive(item, verb, txt, popTxt){
+  if(!M || M.done) return;
+  M._passives = M._passives || {};
+  const first = !M._passives[verb];
+  M._passives[verb] = (M._passives[verb]||0) + 1;
+  if(first){
+    caption(item ? flashItem(item, verb, txt) : txt);
+  } else if(item){
+    item.tally=item.tally||{}; item.tally[verb]=(item.tally[verb]||0)+1;
+  }
+  if(popTxt) pop(M.cv.width*0.30, M.laneY-70, popTxt);
+}
+/* Every momentum loss in the game runs through here, so the floor can say when
+   it caught something. A floor of 1.0 is no floor and stays quiet. */
+function dropMomentum(mult){
+  const raw = M.momentum*mult;
+  const floor = M.forge.momentumFloor;
+  M.momentum = clamp(raw, floor, MOMENTUM_MAX);
+  if(floor > 1.02 && raw < floor - 0.02){
+    creditPassive(M.forge.ownerFor && M.forge.ownerFor.floor, "held the floor",
+      `takes the shock — the fall should have left them at &times;${raw.toFixed(2)} and stops at &times;${M.momentum.toFixed(2)}.`,
+      "floor held");
+  }
 }
 
 /* ==================================================================
@@ -10471,7 +10629,7 @@ function updateLieutenant(dt){
   if(B.erosion>=1){
     B.erosion=0.45;
     B.hits=(B.hits||0)+1;
-    M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
+    dropMomentum(0.55);
     statGain(L.hurt);
     caption(L.strike);
     Audio2.sfx.bad(); FX.buzz(30); pulseMomentum();
@@ -10525,7 +10683,7 @@ function updateBossPhase(dt){
     if(B.erosion>=1){
       // a collapse costs the squad dearly but is always recoverable — never a hard fail
       B.erosion=0.4;
-      M.momentum=clamp(M.momentum*0.4, M.forge.momentumFloor, MOMENTUM_MAX);
+      dropMomentum(0.4);
       statGain({stamina:-14, safety:-10});
       caption("A half-built word unravels mid-step — the Stripping catches them. The squad staggers, but holds.");
       Audio2.sfx.bad(); FX.buzz(34); pulseMomentum();
@@ -11007,9 +11165,9 @@ function computeAbilities(f){
    raid use AND a road use, and the button label says which one it will do right
    now — so the hint is never a lie. */
 const ABILITY_META={
-  strike:{name:"Strike", glyph:"⚔", hint:"clear the road ahead", raidHint:"cut down the ambush"},
-  vanish:{name:"Vanish", glyph:"☁", hint:"phase & draw in parts", raidHint:"slip the ambush"},
-  mend:  {name:"Mend",   glyph:"✚", hint:"restore the squad",    raidHint:"restore the squad"}
+  strike:{name:"Strike", mk:"swords", hint:"clear the road ahead", raidHint:"cut down the ambush"},
+  vanish:{name:"Vanish", mk:"smoke",  hint:"phase & draw in parts", raidHint:"slip the ambush"},
+  mend:  {name:"Mend",   mk:"kit",    hint:"restore the squad",    raidHint:"restore the squad"}
 };
 function abilityHint(kind){
   const meta=ABILITY_META[kind];
@@ -11028,7 +11186,7 @@ function renderAbilityBar(){
     // eight seconds — the button that owns the key now says so permanently
     const KEY={strike:"1",vanish:"2",mend:"3"};
     btn.innerHTML=`<span class="ab-charge">&times;${left}</span>
-      <span class="ab-name">${meta.glyph} ${meta.name}</span>
+      <span class="ab-name">${D.mark(meta.mk)} ${meta.name}</span>
       <kbd class="ab-key">${KEY[kind]||""}</kbd>
       <span class="ab-hint">${abilityHint(kind)}</span>`;
     btn.onclick=()=>useAbility(kind);
@@ -11503,7 +11661,7 @@ function ageCaption(dt){
   M.capT-=dt;
   if(M.capT<=0){ const c=$('#mission-caption'); if(c) c.classList.add('dim'); }
 }
-/* THE FORGED-GEAR STRIP is pinned open on demand (G, or the ⚒ button) and
+/* THE FORGED-GEAR STRIP is pinned open on demand (G, or the anvil button) and
    otherwise only flickers a single chip into view when that item does something. */
 function setGearStripOpen(on){
   if(!M) return;
@@ -11712,7 +11870,7 @@ function renderForgeStrip(){
     if(c.itemId) chip.dataset.item=c.itemId;
     const item=c.itemId ? (M.f.forged||[]).find(it=>it.id===c.itemId) : null;
     const n = item ? Object.values(item.tally||{}).reduce((a,b)=>a+b,0) : 0;
-    chip.innerHTML=`<span class="fc-ic">${c.ic}</span><span><b>${c.label}</b> &mdash; <span class="fc-desc">${c.desc}</span>${item?` <span class="fc-tally">${n?`· ${n} use${n===1?"":"s"}`:""}</span>`:""}</span>`;
+    chip.innerHTML=`<span class="fc-ic">${D.mark(c.ic)}</span><span><b>${c.label}</b> &mdash; <span class="fc-desc">${c.desc}</span>${item?` <span class="fc-tally">${n?`· ${n} use${n===1?"":"s"}`:""}</span>`:""}</span>`;
     strip.appendChild(chip);
   });
 }
@@ -11890,7 +12048,22 @@ function tick(t){
     const weatherPenalty = (M.weather!=="clear") ? clamp(1-(M.weatherProt/140),0.4,1) : 1;
     const tired = M.stats.stamina<15 ? 0.55 : clamp(0.5+M.stats.stamina/140,0.5,1.1);
     // a shallow claw bite is bought precisely for this: the upper ledge, walked faster
-    const laneSpd = LANES[M.lane].spd * ((M.lane===0 && M.forge.ledgeSpeed) ? (1+M.forge.ledgeSpeed) : 1);
+    const onFastLedge = (M.lane===0 && M.forge.ledgeSpeed>0.02);
+    const laneSpd = LANES[M.lane].spd * (onFastLedge ? (1+M.forge.ledgeSpeed) : 1);
+    /* The high ledge is the one advantage a player can be standing inside without
+       ever noticing it. Three seconds up there is long enough that the speed is
+       real rather than a lane change, so that is when the claws get named — once,
+       and then every eight seconds after it as a silent tally. */
+    if(onFastLedge){
+      M.ledgeT=(M.ledgeT||0)+dt;
+      if(M.ledgeT>=3 && !M._ledgeSaid){ M._ledgeSaid=true;
+        creditPassive(M.forge.ownerFor&&M.forge.ownerFor.ledge, "ran the ledge",
+          `bites shallow and lets them run the high ledge <b>${Math.round(M.forge.ledgeSpeed*100)}%</b> faster than the road below.`, null);
+        M.ledgeT=0;
+      } else if(M._ledgeSaid && M.ledgeT>=8){ M.ledgeT=0;
+        creditPassive(M.forge.ownerFor&&M.forge.ownerFor.ledge, "ran the ledge", "", null);
+      }
+    } else M.ledgeT=0;
     const slowPen = M.slowT>0?0.55:1;
     const forkPace = M.paceT>0 ? M.paceMult : 1;
     // MOMENTUM drives the pace: a full chain of terms makes the squad fly (up to ~2.2×)
@@ -12026,8 +12199,10 @@ function tick(t){
           } else if(M.forge.hazardShrug>0 && Math.random()<M.forge.hazardShrug){
             // BRACED. A steep claw bite or a stable hook join buys a real chance
             // that a hazard simply fails to land — the percentage the bench quoted.
-            caption("Braced hard on forged gear — the hazard glances off and the line does not break stride.");
-            statGain({morale:2}); pop(sx,M.laneY-70,"glanced off"); Audio2.sfx.clink(); FX.buzz(9);
+            statGain({morale:2}); Audio2.sfx.clink(); FX.buzz(9);
+            creditPassive(M.forge.ownerFor && M.forge.ownerFor.shrug, "braced",
+              `takes it on the join — the hazard glances off and the line does not break stride.`,
+              "glanced off");
           } else {
             const counter=hazardCounter(h.kind);
             if(counter && counter.negate){
@@ -12287,7 +12462,7 @@ function coolMomentum(dt){
 function knockMomentum(){                 // a hazard hit costs pace and breaks the chain
   FX.shake(9,260); FX.impact("#b5322b",0.34,180);
   Audio2.setMood(M && M.boss ? "boss" : "danger");
-  M.momentum=clamp(M.momentum*0.6, M.forge.momentumFloor, MOMENTUM_MAX);
+  dropMomentum(0.6);
   if(M.combo.length){ M.combo=[]; M.comboBadT=0.4; }
   // a clean hit is a brake you can feel: the burst dies, the streak resets, flow ends
   M.streak=0; exitFlow("hit"); brakePace();
@@ -12402,6 +12577,13 @@ const GATE_CLEAR_BEFORE=0.17, GATE_CLEAR_AFTER=0.04;
    more road to read the gate over — the bench choice paying out in thinking time */
 function gateLead(){ return GATE_LEAD * ((M && M.diff) ? M.diff.gateLead : 1)
                             * ((M && M.forge && M.forge.gateLeadMult) || 1); }
+/* Reading room is the least visible thing the bench can buy and one of the most
+   valuable, so the first gate of a road that opens early says who bought it. */
+function creditGateLead(){
+  if(!M || !M.forge || (M.forge.gateLeadMult||1) <= 1.02) return;
+  creditPassive(M.forge.ownerFor && M.forge.ownerFor.lead, "read ahead",
+    `is thrown long — the gate opens <b>${Math.round((M.forge.gateLeadMult-1)*100)}%</b> further up the road, and they get that much longer to read it.`, null);
+}
 function gateClearBefore(){ return GATE_CLEAR_BEFORE * ((M && M.diff) ? M.diff.gateLead : 1); }
 function inGateCorridor(p){
   if(!M || !M.gate || M.gate.resolved) return false;
@@ -12507,6 +12689,7 @@ function openGate(){
   const mh=$('#mission-hint'); if(mh) mh.classList.add('fade');
   caption("A rune gate spans the road — move to the right path before you reach it. The road ahead is clear; only the choice matters.");
   Audio2.sfx.page();
+  creditGateLead();
 }
 function resolveGate(){
   const G=M.gate; if(!G||G.resolved) return;
@@ -12543,7 +12726,7 @@ function resolveGate(){
     caption(`Smoke covers a wrong read — no cost this once. The path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}).`);
     pop(M.cv.width*0.30,M.laneY-88,"smoke saved!"); Audio2.sfx.clink();
   } else {
-    M.momentum=clamp(M.momentum*0.55, M.forge.momentumFloor, MOMENTUM_MAX);
+    dropMomentum(0.55);
     scoreWrong();
     M.stats.morale=clamp(M.stats.morale-7,0,100); M.stats.stamina=clamp(M.stats.stamina-5,0,100);
     /* A wrong gate used to name the right answer and nothing else, which tells
@@ -13437,17 +13620,33 @@ function renderGearDebrief(f){
   panel.style.display="";
   host.innerHTML="";
   const gearIcon = (k)=> (window.__RD_PREP && window.__RD_PREP._gearIcon) ? window.__RD_PREP._gearIcon(k) : "";
+  /* THE ONE BUILD DECISION THAT MATTERED. Every piece knows how it was made —
+     the folds, the pleats, the bite angle, the weak spots. The debrief's job is
+     to put that sentence next to what the piece actually did, so the next trip
+     to the bench is an informed one rather than a repeat. */
+  const SPEC=(window.__RD_PREP && window.__RD_PREP.craftSpec) || null;
+  const MARK=(D && D.mark) ? D.mark : (k)=>String(k||"");
   items.forEach(it=>{
     const tally=it.tally||{};
     const uses=Object.values(tally).reduce((a,b)=>a+b,0);
     const verbs=Object.keys(tally);
-    const verdict = uses>=3 ? "earned its ember many times over" : uses>=1 ? "earned its ember" : "never came into play this road";
+    /* "never came into play" was a lie for half the bench: the momentum floor,
+       the braced join, the reading room and the fast ledge all fired without
+       ever being credited to anything, so a perfectly braided rope read as
+       wasted embers. They are tallied now, and the verdict can be honest. */
+    const verdict = uses>=6 ? "carried this road"
+                  : uses>=3 ? "earned its ember many times over"
+                  : uses>=1 ? "earned its ember"
+                  : "never came into play this road — the wrong tool for this terrain, or the road never asked";
     const carrier = it.assignedTo && TRAVELERS[it.assignedTo] ? TRAVELERS[it.assignedTo].name : (it.assignedTo||"unassigned");
+    const sp = SPEC ? SPEC(it) : null;
+    const head = sp && sp.notes && sp.notes.length ? sp.notes[0] : null;
     const row=el("div","debrief-row");
     row.innerHTML=`<div class="db-ico">${gearIcon(it.icon)}</div>
       <div class="db-body">
         <div class="db-name">${it.genName||it.name} <span class="db-tier ${it.qtier}">${it.qtier}</span></div>
         <div class="small muted">carried by ${carrier}${it.makerMark?` &middot; stamped ${it.makerMark.text}${it.makerMark.matched?" (a true match)":""}`:""}</div>
+        ${head?`<div class="db-build">${MARK(head.ic)} ${head.txt}</div>`:""}
         <div class="db-uses">${uses? verbs.map(v=>`${v} &times;${tally[v]}`).join(" &middot; ") : "no activations recorded"}</div>
         <div class="db-verdict">${verdict}</div>
       </div>`;
@@ -13545,7 +13744,7 @@ function showResult(){
     const uc=$('#unlock-card'); if(uc){ uc.style.display="none"; uc.innerHTML=""; }
     const cons=$('#consequences'); cons.innerHTML="";
     consequenceLines(f,grade,st).forEach(c=>{
-      const row=el("div","consq"); row.innerHTML=`<span class="ic">${c.ic}</span><div>${c.txt}</div>`; cons.appendChild(row);
+      const row=el("div","consq"); row.innerHTML=`<span class="ic">${D.mark(c.ic)}</span><div>${c.txt}</div>`; cons.appendChild(row);
     });
     FX.stagger($$('#consequences .consq'),{stagger:120,y:10});
     renderHeirloomPick(f, cons);
@@ -13674,12 +13873,12 @@ function consequenceLines(f,grade,st){
   (f.forged||[]).forEach(it=>{
     const carrier = it.assignedTo && TRAVELERS[it.assignedTo] ? TRAVELERS[it.assignedTo].name : null;
     const q = it.qtier==="masterwork"?"was flawless from the first step":it.qtier==="fine"?"performed at its best":it.qtier==="ok"?"did its job":"held together, flaws and all";
-    lines.push({ ic: it.qtier==="masterwork"?"★":it.qtier==="fine"?"✨":it.qtier==="flawed"?"⚠":"🛠",
+    lines.push({ ic: it.qtier==="masterwork"?"★":it.qtier==="fine"?"✦":it.qtier==="flawed"?"warn":"anvil",
       txt: carrier? `The <b>${it.name.toLowerCase()}</b> carried by <b>${carrier}</b> ${q}.` : `The <b>${it.name.toLowerCase()}</b> went unused — no one was armed with it.` });
   });
   // escorts who weren't term-builders still contributed
   const escorts=f.members.filter(id=>!f.builders.includes(id)).map(id=>TRAVELERS[id]).filter(Boolean);
-  if(escorts.length) lines.push({ic:"⚔", txt:`Escorts ${escorts.slice(0,3).map(e=>e.name.split(' ')[0]).join(", ")}${escorts.length>3?" and others":""} kept the squad safe on the road.`});
+  if(escorts.length) lines.push({ic:"swords", txt:`Escorts ${escorts.slice(0,3).map(e=>e.name.split(' ')[0]).join(", ")}${escorts.length>3?" and others":""} kept the squad safe on the road.`});
   // terms forged on the road by chaining parts — the heart of the Word Road
   if(M && M.termsBuilt && M.termsBuilt.length){
     const uniq=[...new Set(M.termsBuilt)];
@@ -13694,12 +13893,12 @@ function consequenceLines(f,grade,st){
       lines.push({ic:"✦", txt:`Sharp eyes on the road gathered <b>${got} find${got>1?"s":""}</b>${lexCt?`, including <b>${lexCt} word part${lexCt>1?"s":""}</b> spotted along the way`:""} — each one steadied the squad or filled the coffers.`});
     }
     (M.matsFound||[]).forEach(nm=>{
-      lines.push({ic:"⛏", txt:`<b>${nm}</b> was found on the road — it now waits at the workshop bench, ready to be forged.`});
+      lines.push({ic:"pick", txt:`<b>${nm}</b> was found on the road — it now waits at the workshop bench, ready to be forged.`});
     });
   }
   if(M){
     (M.reagentsFound||[]).forEach(nm=>{
-      lines.push({ic:"⚗", txt:`<b>${nm}</b> joined the school's stores — the bench can fold it into a future build.`});
+      lines.push({ic:"flask", txt:`<b>${nm}</b> joined the school's stores — the bench can fold it into a future build.`});
     });
     if(M.cachesMarked) lines.push({ic:"◈", txt:`<b>${M.cachesMarked} cache${M.cachesMarked>1?"s":""}</b> marked for the Kalamos Guild — honest maps, paid in reputation.`});
   }
@@ -13792,6 +13991,9 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _state:()=>M,
   _forceRaid:()=>{ if(M && !M.done && (!M.raid||M.raid.resolved)) banditRaid(); return M&&M.raid; },
   _use:(k)=>useAbility(k),
+  _drop:(m)=>{ dropMomentum(m); return M&&M.momentum; },
+  _credit:(item,verb,txt)=>creditPassive(item,verb,txt,null),
+  _passives:()=>M&&Object.assign({},M._passives||{}),
   _setSurge:(v)=>{ setSurgeHeld(v); return M&&M.surgeHeld; },
   _surging:()=>M&&M.surging,
   _difficultyAt:(p)=>difficultyAt(p),
@@ -14792,7 +14994,7 @@ function rollLoot(rank){
     const rg=window.__RD_REAGENTS||{};
     const ids=Object.keys(rg);
     if(ids.length){ const id=pick(ids);
-      loot.push({kind:"reagent", id, glyph:"⚗", name:rg[id].name, note:rg[id].note}); }
+      loot.push({kind:"reagent", id, glyph:"\u25c8", name:rg[id].name, note:rg[id].note}); }
   }
   return loot;
 }
@@ -15639,7 +15841,7 @@ function ensureScreens(){
     <div class="backdrop" id="hall-bg"></div>
     <header class="topbar">
       <button class="icon-btn" id="hall-back" aria-label="Back to the workshop">&larr;</button>
-      <span class="brand">&#924; The Hall of Records</span>
+      <span class="brand">&#920; The Hall of Records</span>
       <span class="spacer"></span>
     </header>
     <div class="content">
