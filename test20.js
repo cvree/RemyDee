@@ -33,7 +33,7 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   });
   assert(bad === 0, 'every trophy has a name, glyph, group and a sane progress pair');
   const tiers = new Set(M._ach.map(a => a.t));
-  assert([...tiers].every(t => ['bronze','silver','gold','jade'].includes(t)), 'tiers are valid');
+  assert([...tiers].every(t => ['bronze','silver','gold','laurel'].includes(t)), 'tiers are valid');
 
   console.log('\n== relics are wired to real numbers, not labels ==');
   const S = E.S();

@@ -1,6 +1,6 @@
 /* test10.js — the campaign map (spot-to-spot progression, values/traits hinted,
-   locked steps visibly locked) and the Jian Radicida title-progression rename
-   (Lord Jian -> Jian Radicida, the Root-Slayer -> Verbum Ultimum). */
+   locked steps visibly locked) and the Kanon Radicida title-progression rename
+   (Lord Kanon -> Kanon Radicida, the Root-Slayer -> Verbum Ultimum). */
 const { boot, sleep, until, assert, summary } = require('./testlib');
 
 (async () => {
@@ -57,12 +57,12 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(nodes[2].classList.contains('locked'), 'everything past the frontier stays locked');
 
   /* ================= THE ROOT-SLAYER'S TITLE PROGRESSION ================= */
-  assert(D.ENEMIES.eraser.name === 'Jian Radicida', 'the revealed title is Jian Radicida');
+  assert(D.ENEMIES.eraser.name === 'Kanon Radicida', 'the revealed title is Kanon Radicida');
   assert(/root-slayer/i.test(D.ENEMIES.eraser.note), 'his epithet, the Root-Slayer, is present in his description');
   assert(D.ENEMIES.eraser.raidName && D.ENEMIES.eraser.raidName !== D.ENEMIES.eraser.name,
     'his enforcers raid under a distinct name — he does not personally storm every ambush');
-  assert(D.INTRO.some(l => /Lord Jian/.test(l) && !/Radicida/.test(l)),
-    'the opening cinematic still knows him only as Lord Jian — the reveal has not happened yet');
+  assert(D.INTRO.some(l => /Lord Kanon/.test(l) && !/Radicida/.test(l)),
+    'the opening cinematic still knows him only as Lord Kanon — the reveal has not happened yet');
   const ch7 = D.CHAPTERS.find(c => c.id === 'ch7');
   assert(/Radicida/.test(ch7.story) && /Verbum Ultimum/.test(ch7.story),
     'chapter seven\'s aftermath names both Jian Radicida and his final form, Verbum Ultimum');
