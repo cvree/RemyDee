@@ -928,10 +928,15 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .forge-prompt b{color:var(--gold-soft);}
 
 /* step 1 — decode: answer chips */
-.decode-opts{display:grid;grid-template-columns:1fr;gap:10px;max-width:520px;margin:0 auto;width:100%;}
-@media(min-width:560px){.decode-opts.cols2{grid-template-columns:1fr 1fr;}}
-.decode-opt{padding:14px 16px;border-radius:12px;background:var(--parch);border:2px solid transparent;
-  font-weight:700;font-size:.98rem;color:var(--ink);cursor:pointer;text-align:left;
+/* A two-column grid holding three options lays them out 2 + 1, and a lone chip
+   under a pair reads as a rendering fault rather than a third choice. Wrapping
+   flex centres whatever is left over, so three answers are a row of three and
+   four are two clean pairs. */
+.decode-opts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:560px;margin:0 auto;width:100%;}
+.decode-opts .decode-opt{flex:1 1 100%;}
+@media(min-width:560px){.decode-opts.cols2 .decode-opt{flex:1 1 150px;max-width:260px;}}
+.decode-opt{padding:14px 16px;border-radius:var(--r-lg);background:var(--parch);border:2px solid transparent;
+  font-weight:700;font-size:.98rem;color:var(--ink);cursor:pointer;text-align:center;
   transition:transform .12s var(--ease),box-shadow .12s,background .2s,border-color .2s;
   box-shadow:0 4px 12px var(--shadow);}
 .decode-opt:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--shadow);}
@@ -1137,7 +1142,16 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
    ============================================================ */
 #missionCanvas{display:block;width:100%;height:100%;background:#d7dcc9;cursor:crosshair;touch-action:none;}
 /* ---- Word Road HUD: momentum multiplier + live term builder ---- */
-.word-hud{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:6;display:flex;
+/* THE SKY IS ONE COLUMN.
+   The momentum readout sat at top:64px and grew downward as the combo filled,
+   the rune-gate prompt was pinned at 118px and the lieutenant's pressure meter
+   at 166px. Three fixed offsets over one variable-height element: on a real
+   road, a two-part combo put the gate prompt straight through the middle of
+   the mnemonic banner, and the single most important instruction on screen —
+   which word the gate wants — was unreadable underneath the thing telling you
+   the boss was stealing prefixes. They stack in one flex column now, so
+   whatever is showing keeps its own line and nothing can land on anything. */
+.word-hud{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:6;display:flex;
   flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:min(92%,560px);}
 .momentum{display:flex;align-items:center;gap:9px;padding:5px 12px;border-radius:999px;
   background:rgba(20,16,10,.5);border:1px solid rgba(189,157,95,.5);box-shadow:0 4px 12px rgba(0,0,0,.4);
@@ -1203,12 +1217,12 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   color:rgba(243,236,216,.6);font-style:italic;}
 .study-card .sc-bar{display:block;height:3px;margin-top:6px;border-radius:2px;background:var(--gold);
   transition:width .08s linear;}
-.gate-prompt{position:absolute;top:118px;left:50%;transform:translateX(-50%);z-index:6;pointer-events:none;
-  display:none;padding:7px 16px;border-radius:10px;background:rgba(24,21,16,.72);border:1px solid var(--gold);
+.gate-prompt{pointer-events:none;
+  display:none;padding:7px 16px;border-radius:var(--r-lg);background:rgba(24,21,16,.82);border:1px solid var(--gold);
   color:var(--papyrus);font-weight:700;font-size:.82rem;letter-spacing:.02em;text-align:center;
-  box-shadow:0 6px 18px rgba(0,0,0,.5);max-width:min(90%,520px);}
+  box-shadow:0 6px 18px rgba(0,0,0,.5);max-width:min(96%,520px);}
 .gate-prompt.show{display:block;animation:gpIn .35s var(--ease-back);}
-@keyframes gpIn{0%{transform:translate(-50%,-8px);opacity:0;}100%{transform:translate(-50%,0);opacity:1;}}
+@keyframes gpIn{0%{transform:translateY(-8px);opacity:0;}100%{transform:none;opacity:1;}}
 .gate-prompt b{color:var(--gold-soft);}
 /* forged-gear readout: what each tool you made actually does on THIS road.
    CLUTTER RULE: the road itself is the thing worth looking at, so the strip is
@@ -1391,9 +1405,8 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
      unreadable pile with the gate prompt, the one thing you must read, at the
      bottom of it. Each gets its own lane, and the gate outranks the hint. */
   .word-hud{top:56px;max-width:94vw;}
-  .gate-prompt{top:126px;max-width:94vw;font-size:.92rem;}
-  .mission-hint{top:196px;font-size:.66rem;max-width:92vw;}
-  .gate-prompt.show ~ .mission-hint{opacity:0;}
+  .gate-prompt{font-size:.92rem;}
+  .mission-hint{top:206px;font-size:.66rem;max-width:92vw;}
   .term-banner{max-width:96%;padding:6px 12px 7px;}
   /* a thumb needs somewhere to press that is not the steering surface */
   .pace-btn{min-height:44px;} .ability-btn{min-height:44px;}
@@ -1426,8 +1439,8 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .term-banner .tb-parts{display:block;font-size:.66rem;color:rgba(243,236,216,.72);letter-spacing:.03em;margin-top:2px;}
 .term-banner .tb-def{display:block;font-size:.8rem;color:var(--papyrus);margin-top:2px;line-height:1.3;}
 /* while the word is being read, the meters step back rather than crowd it */
-.word-hud{transition:opacity .25s var(--ease);}
-.word-hud.hushed{opacity:.22;}
+.word-hud .momentum,.word-hud .combo-build{transition:opacity .25s var(--ease);}
+.word-hud.hushed .momentum,.word-hud.hushed .combo-build{opacity:.22;}
 /* the run recap on the collapse card — what the walk actually taught */
 .collapse-learned{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0 6px;}
 .collapse-learned .cl-stat{padding:6px 9px;border-radius:10px;background:rgba(90,63,28,.07);
@@ -1482,10 +1495,9 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .timer-bar{height:8px;border-radius:5px;background:var(--papyrus-3);overflow:hidden;margin-bottom:14px;}
 .timer-bar > i{display:block;height:100%;background:var(--cinnabar);width:100%;}
 /* ---- THE ARCHIVE'S PRESSURE (final boss, Phase I) ---- */
-.boss-erosion{position:absolute;top:166px;left:50%;transform:translateX(-50%);z-index:6;
-  display:none;flex-direction:column;align-items:center;gap:3px;pointer-events:none;
-  background:rgba(20,14,8,.55);border:1px solid var(--cinnabar);border-radius:9px;padding:6px 14px;
-  min-width:220px;}
+.boss-erosion{display:none;flex-direction:column;align-items:center;gap:3px;pointer-events:none;
+  background:rgba(20,14,8,.72);border:1px solid var(--cinnabar);border-radius:var(--r-lg);padding:6px 14px;
+  min-width:220px;max-width:min(96%,520px);}
 .boss-erosion.show{display:flex;}
 .be-lab{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:#e2a08a;}
 .be-track{width:100%;height:6px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden;}
@@ -2346,11 +2358,11 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
       </div>
     </section>
 
-    <!-- ============ FORGE (Hidden Reed Preparation Trial) ============ -->
+    <!-- ============ FORGE (the bench at Kalamos) ============ -->
     <section class="screen" id="s-forge">
       <div class="backdrop" id="forge-bg"></div>
       <header class="topbar">
-        <span class="brand">Hidden Reed Workshop</span>
+        <span class="brand">The Kalamos Bench</span>
         <span class="spacer"></span>
         <span class="stat"><span class="k">Forged</span> <span id="forge-count">0</span>/<span id="forge-max">3</span></span>
         <button class="icon-btn" id="forge-help" title="How the trial works" aria-label="Help">?</button>
@@ -2429,7 +2441,7 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
 
     <!-- ============ MISSION ============ -->
     <section class="screen" id="s-mission">
-      <canvas id="missionCanvas" width="1280" height="720"></canvas>
+      <canvas id="missionCanvas" data-nospark width="1280" height="720"></canvas>
       <div class="mission-top">
         <span class="who" id="mission-who"></span>
         <div class="prep-bars" id="mission-prep"></div>
@@ -2453,17 +2465,18 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
           <span class="mo-lab" id="mo-lab">momentum</span>
         </div>
         <div class="combo-build" id="combo-build" aria-live="polite"></div>
+        <!-- the gate prompt and the pressure meter STACK under the combo rather
+             than sitting at fixed offsets; see the note on .word-hud -->
+        <div class="gate-prompt" id="gate-prompt"></div>
+        <div class="boss-erosion" id="boss-erosion">
+          <span class="be-lab">Radicida strikes at the root</span>
+          <div class="be-track"><i id="be-fill"></i></div>
+        </div>
       </div>
       <!-- hover a drifting word-part to read its meaning and study it -->
       <div class="study-card" id="study-card"></div>
       <!-- FOCUS: the road slows and the edges close in while you read -->
       <div class="road-focus" id="road-focus" aria-hidden="true"></div>
-      <div class="gate-prompt" id="gate-prompt"></div>
-      <!-- THE ARCHIVE'S PRESSURE — final boss, Phase I (The Stripping) only -->
-      <div class="boss-erosion" id="boss-erosion">
-        <span class="be-lab">Radicida strikes at the root</span>
-        <div class="be-track"><i id="be-fill"></i></div>
-      </div>
       <div class="mini-challenge" id="mini-challenge">
         <div class="mini-card">
           <div class="mini-stakes" id="mini-stakes"><span class="ms-dot"></span> The squad waits in the open — hesitation drains their strength.</div>
@@ -2552,7 +2565,7 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
         <div class="pace-row">
           <div class="ability-bar" id="ability-bar"></div>
           <button class="pace-btn" id="pace-btn" type="button" title="Hold to surge (Space)">
-            <span class="pb-glyph">&#9889;</span><span class="pb-name">Surge</span><kbd class="pb-key">space</kbd><span class="pb-hint">burn stamina for speed</span>
+            <span class="pb-glyph"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.4 1.4 L4 8.8 H7.4 L6.4 14.6 L12 6.8 H8.6 Z"/></svg></span><span class="pb-name">Surge</span><kbd class="pb-key">space</kbd><span class="pb-hint">burn stamina for speed</span>
           </button>
         </div>
       </div>
@@ -3434,7 +3447,7 @@ const CHAPTERS = [
 
   { id:"ch1", num:1, name:"Chapter One — Garden of Roots", house:"Garden of Roots",
     dest:"Riverbend villages", risk:"Low", enemy:"blank", terrain:"lowland", season:"spring",
-    intro:"Word spreads that the Reed School names things rightly again. A small company sets out to aid nearby villages — a diver with a ruined ear, a falconer fighting pollen season, a miller whose spoiled grain has sickened half the mill house, a ferrywoman who has crossed one cold river too many. The Silent Archive begins confiscating local reference scrolls, calling the words themselves dangerous in untrained hands.",
+    intro:"Word spreads that the School of Kalamos names things rightly again. A small company sets out to aid nearby villages — a diver with a ruined ear, a falconer fighting pollen season, a miller whose spoiled grain has sickened half the mill house, a ferrywoman who has crossed one cold river too many. The Silent Archive begins confiscating local reference scrolls, calling the words themselves dangerous in untrained hands.",
     story:"Melia verifies each recovered root against the old records. &ldquo;Confident-sounding is not the same as true,&rdquo; she reminds you. The villagers keep their scrolls a little longer for it — proof, small as it is, that naming a thing correctly can still matter more than owning it.",
     builders:["mei","fen","bo","cai","duan","ai"], members:["mei","fen","bo","cai","duan","ai"] },
 
@@ -4293,13 +4306,25 @@ function spotlight(elm){
 /* wire all [data-spot] within a root */
 function spotlightAll(root){ $$("[data-spot]", root).forEach(spotlight); }
 
-/* ================= ClickSpark (ink motes on click) ================= */
+/* ================= ClickSpark (ink motes on click) =================
+   This was bound to window and fired on every pointerdown anywhere, so ink
+   motes burst out of the page while you scrolled the Lexicon, dragged a tray
+   tile across the assembly, or held the mouse down to steer on the road. An
+   effect that happens on every interaction is not an effect, it is texture
+   noise — and on the road it fired on the same frames the game most wanted the
+   player watching the corridor. It answers to buttons and the deliberate
+   surfaces that opt in with [data-spark] now, and nothing else. */
 let sparkBound=false;
+const SPARK_SEL='button, .btn, [role="button"], [data-spark], .tile, .comm-card, .mat-card';
 function bindClickSpark(){
   if(sparkBound) return; sparkBound=true;
   window.addEventListener("pointerdown",(e)=>{
     if(reduced() || quality==="low") return;
-    if(e.target && e.target.closest && e.target.closest("input,textarea,select")) return;
+    const t=e.target;
+    if(!t || !t.closest) return;
+    if(t.closest("input,textarea,select")) return;
+    if(t.closest("[data-nospark]")) return;
+    if(!t.closest(SPARK_SEL)) return;
     clickSpark(e.clientX, e.clientY);
   }, {passive:true});
 }
@@ -5870,11 +5895,26 @@ window.__RD_QE = (function(){
   function noteRecent(id){ if(!id)return; recent.push(id); if(recent.length>7) recent.shift(); }
   function freshFilter(ids){ const f=ids.filter(i=>!recent.includes(i)); return f.length?f:ids; }
 
-  function pickPart(kind, avoid){
+  function pickPart(kind, avoid, pool){
     let ids=kind?kindOf(kind):Object.keys(PARTS);
+    /* The pool narrows, it never empties: a concept pool the player has not met
+       any of yet would otherwise turn the bench into a question about a part
+       introduced three chapters later. */
+    if(pool && pool.length){
+      const seen=pool.filter(p=>PARTS[p] && metPart(p));
+      if(seen.length) ids=seen;
+      else { const any=pool.filter(p=>PARTS[p]); if(any.length) ids=any; }
+    }
     if(avoid&&avoid.length){ const f=ids.filter(p=>!avoid.includes(p)); if(f.length) ids=f; }
     ids=freshFilter(ids);
     const id=weightedPick(ids); noteRecent(id); return id;
+  }
+  /* "met" is deliberately loose — seen once on the road counts. The point is to
+     avoid asking about a part the campaign has not reached, not to gate on
+     mastery, which the weighting already handles. */
+  function metPart(id){
+    const m=E.S().mastery.parts[id];
+    return !!(m && ((m.seen||0)>0 || (m.correct||0)>0 || (m.wrong||0)>0));
   }
   /* distractor PARTS of the same kind with a DISTINCT meaning — never two-correct */
   /* Distractors of the same kind, each with a DISTINCT meaning — distinct from
@@ -6017,6 +6057,7 @@ window.__RD_QE = (function(){
   /* ==================================================================
      generate(opts) → normalized question
      opts: { types?:[...], conceptBias?:"reach|stealth|power|control|protect|recover",
+             pool?:[partId...]  (overrides the concept's own pool),
              prefer?:"prefix|root|suffix", allowTF?:bool }
      ================================================================== */
   const ALL_TYPES=["partMeaning","meaningPart","termDef","defTerm","spelling","cvRule",
@@ -6026,6 +6067,30 @@ window.__RD_QE = (function(){
      the Daily Trial, where curiosity pays instead of costing stamina. */
   const LORE_TYPES=["figureDeed","figureGift","mythBuster","chronology"];
   const BIAS_KIND={reach:"root",stealth:"prefix",power:"suffix",control:"root",protect:"root",recover:"suffix"};
+  /* CONCEPT POOLS.
+     conceptBias used to mean nothing but a part of speech: "recover" resolved to
+     "suffix" and the bench then asked, on a field kit whose request text reads
+     "read the suffix on the healer's list", which part means visual examination.
+     The order in the fiction is written by a person — a healer, a ropewright, a
+     fletcher — and the word on it should be one of theirs. These pools are the
+     vocabulary each of those hands would actually use, so the decode belongs to
+     the thing being made. Every id here is a real part in the corpus, and the
+     pool is advisory: if the player has met none of it yet, the old behaviour
+     (any part of the right kind) takes over rather than asking them something
+     they have never seen. */
+  const CONCEPT_POOL={
+    recover: ["plasty","stasis","poiesis","ant","penia","pathy","algia"],   // a healer's list
+    control: ["tomy","ectomy","centesis","puncture","lysis","crit","scopy"],// a cutting hand
+    power:   ["hyper","tachy","poly","megaly","rrhage","ectasis","electr"], // force and excess
+    reach:   ["angi","bronch","enter","arteri","phleb","ven","peri"],       // channels and what runs through them
+    stealth: ["a","hypo","sub","endo","intra","hemi","penia"],              // under, within, absent
+    protect: ["anti","peri","oste","cutane","stasis","globin","ous"]        // what holds and what covers
+  };
+  /* A pool crosses parts of speech on purpose — a healer writes -algia and a
+     smith writes -tomy, and neither of them cares that BIAS_KIND calls one
+     concept a "root". So the pool wins over the kind where they disagree,
+     which is nearly always: control maps to "root" and every cutting word in
+     the language is a suffix. */
 
   function generate(o){
     o=o||{};
@@ -6044,6 +6109,7 @@ window.__RD_QE = (function(){
       if(!types.length) types=["partMeaning"];
     }
     const kind = o.prefer || BIAS_KIND[o.conceptBias] || null;
+    const pool = o.pool || (o.conceptBias ? CONCEPT_POOL[o.conceptBias] : null) || null;
     // some types need a term with 2+ parts; drop cvRule if none learned
     const multiTerms=learnedTerms().filter(t=>TERMS[t].build.length>=2);
     if(!multiTerms.length) types=types.filter(t=>t!=="cvRule");
@@ -6051,14 +6117,14 @@ window.__RD_QE = (function(){
 
     /* -------- PART-based forms -------- */
     if(type==="partMeaning"){
-      const id=focus||pickPart(kind); const p=PARTS[id];
+      const id=focus||pickPart(kind,null,pool); const p=PARTS[id];
       const wrongs=distractParts(id,nWrong).map(w=>PARTS[w].mean);
       return norm({ type, conceptIds:[id], prompt:`What does <b>${p.text}</b> mean?`,
         options:opts(p.mean, wrongs), explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`,
         pron:p.pron });
     }
     if(type==="meaningPart"){
-      const id=focus||pickPart(kind); const p=PARTS[id];
+      const id=focus||pickPart(kind,null,pool); const p=PARTS[id];
       const wrongs=distractParts(id,nWrong).map(w=>PARTS[w].text);
       /* When two tongues share a meaning, name the one being asked for —
          otherwise "which part means vein?" has two honest answers and the
@@ -7499,7 +7565,7 @@ const BLUEPRINTS = {
   smoke: {
     id:"smoke", name:"Fictional smoke shell", icon:"smoke", gear:"smoke",
     eyebrow:"Decode the request", concept:"stealth",
-    request:"To slip the torch-lit patrol you need a smoke shell (a made-up device of the Reed School). Read the prefix that names how thick to fold it.",
+    request:"To slip the torch-lit patrol you need a smoke shell (a made-up device of the Kalamos bench). Read the prefix that names how thick to fold it.",
     craft:"fold", test:"conceal",
     grants:["smoke"],
     base:{stealth:2},
@@ -7605,7 +7671,7 @@ const BLUEPRINTS = {
       {id:"reedwax", name:"Reed-wax die", icon:"kit",
         story:"Soft, forgiving, quick to press — it will not hold forever.",
         traits:{recover:2,control:1,protect:-1}, quality:"forgiving", flavor:"mends readily, wears through"},
-      {id:"jadedie", name:"Carved jade die", icon:"kit",
+      {id:"basaltdie", name:"Carved basalt die", icon:"kit",
         story:"Unyielding. What it seals stays sealed.",
         traits:{control:2,protect:2,speed:-1}, quality:"unyielding", flavor:"holds a term against anything, slow to press"}
     ]
@@ -10814,29 +10880,29 @@ function dropMomentum(mult){
    losable fights that cannot end a run outright.
    ================================================================== */
 const LIEUTENANTS = {
-  ch2:{ id:"praefixa", name:"Sable Wu", title:"PRAEFIXA, THE PREFIX-THIEF",
+  ch2:{ id:"praefixa", name:"Sable Corvina", title:"PRAEFIXA, THE PREFIX-THIEF",
     mode:"prefix",
     open:`A figure keeps pace with the caravan, just off the road. "They call me <b>Praefixa</b>. I take only the first syllable. <i>Bradycardia</i> — take away <b>brady-</b> and what is left tells you nothing about how slow the heart runs."`,
     onset:`<b>The Thieving.</b> Every gate ahead asks for a <b>prefix</b>. Name it true and she loses her grip.`,
     meter:"Praefixa picks at the front of every word",
     strike:`A prefix goes missing mid-sentence — the squad argues about what was meant and loses the thread.`,
-    reel:`Sable Wu drops back, empty-handed. "You keep giving them <i>back</i>," she spits. Every word you have named holds.`,
+    reel:`Sable Corvina drops back, empty-handed. "You keep giving them <i>back</i>," she spits. Every word you have named holds.`,
     hurt:{stamina:-11, morale:-9} },
-  ch4:{ id:"terminus", name:"Warden Mo", title:"TERMINUS, THE SUFFIX-WARDEN",
+  ch4:{ id:"terminus", name:"Warden Murus", title:"TERMINUS, THE SUFFIX-WARDEN",
     mode:"suffix",
     open:`A warden steps into the ford and does not move. "<b>Terminus</b>. I hold the ends of words. Without me you may say <i>cardi-</i> all day and never say what is <b>wrong</b> with it."`,
     onset:`<b>The Sealing.</b> Every gate ahead asks for a <b>suffix</b> — the part that says what is happening. Name it and the ford opens.`,
     meter:"Terminus seals the end of every word",
     strike:`A word stops halfway. The squad knows the organ and not the affliction, and wastes the crossing arguing.`,
-    reel:`Warden Mo steps aside. "You finish what you start," he says, almost approving. The ford runs clear.`,
+    reel:`Warden Murus steps aside. "You finish what you start," he says, almost approving. The ford runs clear.`,
     hurt:{stamina:-10, safety:-11} },
-  ch6:{ id:"bilingua", name:"Silent Ke", title:"BILINGUA, THE TONGUE-CUTTER",
+  ch6:{ id:"bilingua", name:"Silent Kyra", title:"BILINGUA, THE TONGUE-CUTTER",
     mode:"origin",
     open:`She does not speak at first. Then: "<b>Bilingua</b>. Two tongues for one vein is waste. <i>Phleb-</i> or <i>ven-</i>, choose, and I will burn the other." — She does not understand that keeping both is why the meaning survived at all.`,
     onset:`<b>The Cutting.</b> She names a tongue and demands a part from it — Greek, then Latin, then Greek again. Give her the wrong language and she takes the word.`,
     meter:"Bilingua cuts one tongue away",
     strike:`She severs a root mid-step. The squad reaches for the other tongue's word and finds a gap where it should have been.`,
-    reel:`Silent Ke goes still. Both words are still standing, and she has no argument left. She turns back toward the Archive.`,
+    reel:`Silent Kyra goes still. Both words are still standing, and she has no argument left. She turns back toward the Archive.`,
     hurt:{stamina:-12, morale:-8} }
 };
 function lieutenantFor(f){
