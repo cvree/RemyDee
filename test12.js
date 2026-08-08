@@ -8,8 +8,10 @@
    by pairing remedies, forever.
 
    Five claims:
-     1. EVERY PATTERN DECLARES TWO TRIALS — one to work the piece, one to prove
-        it — and both name real archetypes and teach themselves in a line.
+     1. ONE TRIAL PER PATTERN — exactly one, naming a real archetype and
+        teaching itself in a line. Two was one too many: a player who had just
+        packed a field kit by pairing remedies was then handed a mortar and told
+        to grind a draught before they could see what they had made.
      2. THE SAME EVERY TIME — the pairing never varies, not between calls and
         not between two real crafts of the same pattern. Nothing rolls dice.
      3. THE OLD BENCH IS GONE — no craft canvas, no scrap apron, no rubric, and
@@ -30,36 +32,41 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   const BPS = P._blueprints();
   const IDS = Object.keys(BPS);
 
-  /* ================= 1. EVERY PATTERN DECLARES TWO TRIALS ================= */
-  console.log('\n== a pattern is worked with a trial, and proved with one ==');
+  /* ================= 1. ONE TRIAL PER PATTERN ================= */
+  console.log('\n== a pattern is worked with exactly one trial ==');
   assert(typeof P.benchTrial === 'function', 'the bench says which trial a pattern is built with');
+  const TABLE = P._benchTrials();
   for (const id of IDS) {
-    for (const phase of ['build', 'proof']) {
-      const t = P.benchTrial(id, phase);
-      assert(!!t, `${id}/${phase}: has a trial at all`);
-      assert(typeof MG.ARCH[t.type] === 'function', `${id}/${phase}: names a real archetype (${t.type})`);
-      assert(!!t.title && !!t.brief, `${id}/${phase}: names itself and teaches itself in one line`);
-      /* FAILURE HAS TO MEAN SOMETHING, AND IT HAS TO BE SAID OUT LOUD. */
-      assert(!!t.stakes, `${id}/${phase}: states what failing costs before a hand moves`);
-    }
+    const t = P.benchTrial(id);
+    assert(!!t, `${id}: has a trial at all`);
+    assert(typeof MG.ARCH[t.type] === 'function', `${id}: names a real archetype (${t.type})`);
+    assert(!!t.title && !!t.brief, `${id}: names itself and teaches itself in one line`);
+    /* FAILURE HAS TO MEAN SOMETHING, AND IT HAS TO BE SAID OUT LOUD. */
+    assert(!!t.stakes, `${id}: states what failing costs before a hand moves`);
     /* The build screen also carries a sentence saying this is the pattern's
        permanent task — the whole point is that it can be learned. */
-    assert(!!P.benchTrial(id, 'build').line, `${id}: the build step says what working this pattern always asks`);
+    assert(!!t.line, `${id}: the build step says what working this pattern always asks`);
+    /* AND THERE IS NO SECOND ONE. A pattern that grew a `proof` (or any other
+       nested trial) back would put two unrelated games between the player and
+       one piece, which is the exact thing this table exists to prevent. */
+    const nested = Object.keys(TABLE[id]).filter((k) => TABLE[id][k] && typeof TABLE[id][k] === 'object');
+    assert(nested.length === 0,
+      `${id}: declares one trial and no others (found: ${nested.join(', ') || 'none'})`);
   }
   /* An unknown pattern must still build something rather than throwing. */
-  const fallback = P.benchTrial('no-such-pattern', 'build');
+  const fallback = P.benchTrial('no-such-pattern');
   assert(fallback && typeof MG.ARCH[fallback.type] === 'function',
     'a pattern the table has never heard of still gets a real trial');
 
   /* ================= 2. THE SAME EVERY TIME ================= */
   console.log('\n== the same pattern asks the same thing, every time ==');
   for (const id of IDS) {
-    const a = P.benchTrial(id, 'build'), b = P.benchTrial(id, 'build');
+    const a = P.benchTrial(id), b = P.benchTrial(id);
     assert(a.type === b.type && a.title === b.title,
       `${id}: asked twice, the bench names the same task both times (${a.type})`);
   }
   /* And it is not one task wearing eight hats: the patterns genuinely differ. */
-  const buildTypes = IDS.map((id) => P.benchTrial(id, 'build').type);
+  const buildTypes = IDS.map((id) => P.benchTrial(id).type);
   assert(new Set(buildTypes).size >= 5,
     `the eight patterns are worked at least five different ways (${new Set(buildTypes).size})`);
 
@@ -97,12 +104,12 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(!!well.build && !!badly.build, 'both pieces carry the grade the build trial came back with');
   assert(well.build.type === badly.build.type,
     `two blades in a row were ground by the same trial (${well.build.type})`);
-  assert(well.build.type === P.benchTrial('blade', 'build').type,
+  assert(well.build.type === P.benchTrial('blade').type,
     'and it is the trial the table names for that pattern');
   assert(well.finalQ > badly.finalQ,
     `a flawless hand ships a better blade than a rough one (${well.finalQ.toFixed(2)} vs ${badly.finalQ.toFixed(2)})`);
   assert(well.qtier === 'masterwork',
-    `a clean decode + a flawless build + a clean proof is a MASTERWORK (got ${well.qtier})`);
+    `a clean decode + a flawless build is a MASTERWORK (got ${well.qtier})`);
   assert(badly.qtier !== 'masterwork', `and a rough one is not (got ${badly.qtier})`);
 
   /* THE PIECE REMEMBERS. craftMeta is what the road reads to make two pieces of

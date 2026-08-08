@@ -7,9 +7,16 @@
 > where you click sucks. Only use the new games. And the games should not pop up
 > during the walk. The games are only for crafting the weapon."
 
-Three separate faults, and they share a root: the trials library and the bench
-were built at different times and never reconciled, so the game shipped two
-parallel sets of hand-skill interactions with no rule about which belonged where.
+and then, after the first cut of this pass:
+
+> "Mortar game bugged, infinite loop. I like the memory game being for the field
+> kit. NO DOUBLE GAMES PER ACTIVITY — why am I doing the memory game then doing
+> the mortar activity. One activity per item. Think fluidity and utter fun."
+
+Faults that share a root: the trials library and the bench were built at
+different times and never reconciled, so the game shipped two parallel sets of
+hand-skill interactions with no rule about which belonged where — and then, in
+fixing that, kept one interaction too many per piece.
 
 ## 1. The old crafts are gone
 
@@ -28,21 +35,21 @@ had been rewritten out from under them.
 All of it is deleted: the seven crafts, `craftHeat`, the apron, the rubric, and
 the eleven debug hooks that existed only to test them.
 
-## 2. One fixed trial per pattern, forever
+## 2. One fixed trial per pattern, forever — and exactly one
 
-`BENCH_TRIAL` is a single table in the forge module. Each pattern names the trial
-it is **worked** with and the trial it is **proved** with, and nothing rolls dice.
+`BENCH_TRIAL` is a single table in the forge module. Each pattern names the one
+trial it is worked with, and nothing rolls dice.
 
-| pattern | worked by | proved by |
-|---|---|---|
-| Short blade | `trace` — one stroke down the grinding channel | `sweetspot`/whet — strike the stone where the edge runs true |
-| Grappling hook | `sweetspot`/balance — weigh the head on the steelyard | `struggle` — hang your weight on it |
-| Recurve bow | `track` — hold the limb to its curve while it takes the tiller | `aim` — put it on the mark |
-| Smoke shell | `sequence` — the fold order, watched once, laid from memory | `flow` — let it draw |
-| Climbing claws | `needle` — drive each claw as the pointer crosses its seat | `struggle` — hang off them |
-| Field kit | `match` — pair each remedy with what it treats before it is packed | `rhythm`/pestle — draw a draught from it |
-| Reinforced rope | `rhythm`/pestle — braid on the beat, hold through the lay | `track` — follow the strain |
-| Lexicon seal | `trace` — cut the die | `sweetspot`/kettle — press it at heat |
+| pattern | worked by |
+|---|---|
+| Short blade | `trace` — one stroke down the grinding channel |
+| Grappling hook | `sweetspot`/balance — weigh the head on the steelyard |
+| Recurve bow | `track` — hold the limb to its curve while it takes the tiller |
+| Smoke shell | `sequence` — the fold order, watched once, laid from memory |
+| Climbing claws | `needle` — drive each claw as the pointer crosses its seat |
+| Field kit | `match` — pair each remedy with what it treats before it is packed |
+| Reinforced rope | `rhythm`/pestle — braid on the beat, hold through the lay |
+| Lexicon seal | `trace` — cut the die |
 
 That is the whole point of the change. **A task you meet once is a puzzle; a task
 you meet every time you build a bow is a craft you can get good at.** The variable
@@ -51,8 +58,19 @@ bow is worked the same way. What changes is your hand."* — and the spec sheet'
 "one thing away" line is now genuinely actionable, because the next blade is
 ground on the same channel as this one.
 
-Seven of the ten archetypes carry a build; eight of ten are reached across builds
-and proofs together.
+### The proof was one game too many
+
+The first cut of this pass gave every pattern *two* trials — one to shape the
+piece, one to prove it — and it read as exactly what it was: a second game bolted
+onto the end of the first. You packed the field kit by pairing remedies, which is
+a good minute, and were then handed a mortar and told to grind a draught out of
+it before you were allowed to see what you had made. Two unrelated skills, back
+to back, between a player and one object.
+
+Step 4 is the proving **animation** again. That is the right shape for it: the
+last beat of making a thing is watching the thing you made be a thing, not being
+examined a second time. Nothing between the build and the verdict moves the
+grade, which is precisely what makes the trial at step 3 matter.
 
 ## 3. The walk is not interrupted
 
@@ -88,16 +106,37 @@ not have to change.
 
 ## The masterwork gate
 
-Four conditions became three, because the rubric and the heat crack went with the
-old bench:
+Four conditions became two, the rubric and the heat crack having gone with the old
+bench and the proof clause with the second trial:
 
 1. the build trial at or above the bar (88%, or 80% in relax mode),
-2. a piece that survives its own proof (tier 3+),
-3. a clean decode — you understood the word the commission asked for.
+2. a clean decode — you understood the word the commission asked for.
 
-Plus the final quality itself at 0.88. Clause 3 is the one that keeps this a
+Plus the final quality itself at 0.88. Clause 2 is the one that keeps this a
 vocabulary game: you cannot hammer your way to a perfect tool without knowing the
 term it was ordered against.
+
+## The mortar hung, and why that was a whole class of bug
+
+The rhythm archetype builds a bar of music with three kinds of beat: strikes,
+held pours, and **rests you are supposed to not play**. A rest played correctly
+is a rest you never touch, so nothing in the input path ever reaches it — and the
+sweep that catches notes sailing past scored those (`n.q = 1`) without resolving
+them (`n.judged` stayed false). The bar ends on `notes.every(n => n.judged)`.
+
+So any bar containing a rest could never end. At the difficulties the bench asks
+for, that is most of them: 38 of 40 seeds. The rope hung, and so did anything
+else worked on the mortar. Fixed where it lives — every note now resolves, and a
+struck rest is tracked on its own `struck` flag so the misfire count still means
+what it says.
+
+**The class of bug is the real finding.** Six of the ten archetypes advance only
+on player input, so any of them can be left open by a hand that stops arriving,
+and a future edit can reintroduce the same stall wearing a different object. So
+`play()` now carries a deadman: a trial that runs past a ceiling — four times the
+longest bar any archetype can generate — resolves ROUGH rather than hanging. A
+player who walked away has not earned a good piece, but the library must never
+take the tab down with it, and must never refuse the caller an answer.
 
 ## One new guard
 
@@ -116,6 +155,15 @@ guard on the proof. `test18` §4 holds it.
   keeps the spec sections; the masterwork gate is retested against the three
   conditions above.
 - `test33` loses the activity pools, the chest trial and the road trials, and
-  gains the assertion that matters most: **no trial ever opens on the road.**
+  gains the two assertions that matter most: **no trial ever opens on the road**,
+  and **every trial ends**. The mortar is driven forward in time across forty
+  seeds with no input at all and must resolve every time (with the fix reverted,
+  31 of 40 hang); then all ten archetypes are played by nobody against a lowered
+  ceiling and must each still hand back a real grade.
+- `test12` gains the rule as a rule: a pattern that grew a second nested trial
+  back fails the suite.
 
-27 suites, 1,070 assertions, zero window errors.
+27 suites, 1,066 assertions, zero window errors. Checked in Chromium: the rope's
+mortar opens, plays, and ends 5.5s after the last tap at the player's real 90s
+ceiling — the bar ending itself, not the deadman catching it — and the field kit
+goes memory board → verdict with no second game in between.

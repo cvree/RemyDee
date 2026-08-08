@@ -1,9 +1,9 @@
 /* test18.js — THE MAKER'S PASS.
 
    Four claims, one per section:
-     1. THE MASTERWORK GATE — a perfect piece needs three things at once: a build
-        trial at or above the bar, a piece that survives its own proof, and a
-        clean decode. Any one of them missing denies it.
+     1. THE MASTERWORK GATE — a perfect piece needs two things at once: a build
+        trial at or above the bar, and a clean decode. Either one missing denies
+        it. There is no second trial to pass; there is one trial per piece.
      2. THE SPEC — how a piece was built reaches the road: folds set the strike
         corridor, pleats set the phase window, a scarred rope really can slip.
      3. AND IT LANDS — those numbers arrive on a running road, named in the
@@ -31,9 +31,9 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
     const ch = D.CHAPTERS[1];
     E.S().unlockedBps = ['kit', 'blade', 'hook', 'smoke', 'rope', 'claws', 'bow'];
 
-    /* Drive one commission with a chosen decode and a chosen build score. The
-       proof runs for real at whatever tier setAuto is holding, which is what
-       lets the proof clause be tested separately from the build clause. */
+    /* Drive one commission with a chosen decode and a chosen build score. Step 4
+       is a proving animation, not a trial, so nothing between the build and the
+       verdict can move the grade. */
     const runOne = async (decodeOk, buildScore) => {
       const flow = { chapter: ch, builders: [], members: ch.members.slice(0, 3), idx: 0, results: {}, forged: [], route: null, stats: {} };
       E.setFlow(flow);
@@ -51,17 +51,14 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
     MG.setAuto(4);
     const perfect = await runOne(true, 0.99);
     assert(perfect.qtier === 'masterwork',
-      `a clean decode + a build past the bar + a clean proof ships a MASTERWORK (got ${perfect.qtier} at q=${perfect.finalQ})`);
+      `a clean decode + a build past the bar ships a MASTERWORK (got ${perfect.qtier} at q=${perfect.finalQ})`);
     assert(perfect.build && perfect.build.score >= bar, 'the masterwork carries the build grade that earned it');
 
-    // the proof is a real gate, not a formality: the same build, fumbled at the
-    // proof, does not ship as a masterwork
-    MG.setAuto(1);
-    const unproved = await runOne(true, 0.99);
-    assert(unproved.qtier !== 'masterwork',
-      `a flawless build that fails its proof is not a masterwork (got ${unproved.qtier})`);
-    assert(unproved.finalQ < perfect.finalQ, 'a bad proof visibly costs final quality');
-    MG.setAuto(4);
+    /* ONE TRIAL PER PIECE. Step 4 must not open a second one — a player who has
+       just packed a field kit by pairing remedies is not then handed a mortar. */
+    const veils = window.document.querySelectorAll('.mg-veil').length;
+    assert(veils === 0, 'the proof step opens no trial of its own');
+    assert(perfect.proof === undefined, 'and records no second grade — there is nothing to record');
 
     const sloppyWord = await runOne(false, 0.99);
     assert(sloppyWord.qtier !== 'masterwork',
