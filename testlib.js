@@ -7,7 +7,7 @@ function mockCtx() {
   const grad = { addColorStop() {} };
   return new Proxy({}, {
     get(t, k) {
-      if (k === 'canvas') return { width: 560, height: 414 };  // 360 work area + 54px scrap apron
+      if (k === 'canvas') return { width: 560, height: 360 };
       if (k === 'createLinearGradient' || k === 'createRadialGradient' || k === 'createPattern') return () => grad;
       if (k === 'measureText') return () => ({ width: 10 });
       if (k === 'getImageData') return () => ({ data: new Uint8ClampedArray(4) });
@@ -61,10 +61,11 @@ async function boot(file) {
   });
   // let boot() + loader timeout run
   await new Promise((r) => setTimeout(r, 700));
-  /* The Trials are hand-skill challenges that sit in the middle of the chest,
-     cache and forge flows. jsdom has no hands, so every trial resolves at a
-     clean grade by default and the suites drive the flows around them. A test
-     that wants to prove a grade CHANGES an outcome sets its own tier. */
+  /* The Trials are hand-skill challenges, and they sit in the middle of the
+     forge flow — one to work a piece, one to prove it. jsdom has no hands, so
+     every trial resolves at a clean grade by default and the suites drive the
+     bench around them. A test that wants to prove a grade CHANGES an outcome
+     sets its own tier. */
   if (dom.window.__RD_MG && dom.window.__RD_MG.setAuto) dom.window.__RD_MG.setAuto(2);
   return { dom, window: dom.window, errors };
 }

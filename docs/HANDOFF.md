@@ -28,7 +28,9 @@ Modules talk through globals: `window.__RD_DATA`, `__RD_ENG`, `__RD_QE`,
 editing across blocks.
 
 Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
-`DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`.
+`DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`, `TRIALS_PASS.md`,
+`BENCH_PASS.md` — read `BENCH_PASS.md` first, it is the most recent and it
+deleted a lot of what the older ones describe.
 
 ### How to verify anything
 
@@ -38,19 +40,23 @@ node syntaxcheck.js                   # parses all 10 script blocks
 for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33; do node test$t.js | tail -1; done
 ```
 
-27 jsdom suites, **1142 assertions, all passing, zero window errors**.
+27 jsdom suites, **1070 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
 
-**The Trials need a headless escape hatch.** `__RD_MG` sits in the middle of the
-chest, cache, slide, spring and forge-proof flows, and it is a hand-skill
-challenge that jsdom cannot play. `testlib.js` calls `__RD_MG.setAuto(2)` after
-boot, which resolves every trial instantly at a clean grade; a suite that wants
-to prove a grade *changes* an outcome sets its own tier (`setAuto(0)` /
-`setAuto(4)`) and puts it back afterwards. Anything that opens a chest or fires
-a road event is now asynchronous — `await until(...)`, do not assert on the
-next line.
+**The Trials need a headless escape hatch.** `__RD_MG` runs the forge's build
+and proof steps, and it is a hand-skill challenge that jsdom cannot play.
+`testlib.js` calls `__RD_MG.setAuto(2)` after boot, which resolves every trial
+instantly at a clean grade; a suite that wants to prove a grade *changes* an
+outcome sets its own tier (`setAuto(0)` / `setAuto(4)`) and puts it back
+afterwards. Anything that crafts a piece is asynchronous — `await until(...)`,
+do not assert on the next line.
+
+**Trials happen at the bench and nowhere else.** The road, the chest, the spring
+and the cache used to open them and no longer do; `test33` §8 fails if one ever
+comes back. If you need a moment on the road to ask something of the player, ask
+it of their *kit* — that is what the walk is for.
 
 **Look at it in a real browser. This is not optional.** Playwright with the
 preinstalled Chromium:
@@ -111,9 +117,22 @@ window and fired on every pointerdown in the document. And `conceptBias`
 resolved to a part of speech, so a field kit's order asked about visual
 examination; each concept carries a vocabulary pool now.
 
+**5. The bench pass — one task per weapon, and only at the bench.** See
+`docs/BENCH_PASS.md`. The seven hand-written canvas crafts at the forge (and the
+heat layer, the scrap apron and the rubric that served them — ~1,400 lines) are
+deleted; every pattern is now worked and proved by a **fixed pair of trials**
+named in `BENCH_TRIAL`, the same two every time you build that pattern. `MG.run`
+and its `ACTS` pools are gone with every caller outside the forge: the road's
+spring, cache and rockslide, and the chest ceremony, all read the kit again
+instead of stopping the walk to grade your hands. `buildMeta` keeps `craftSpec`
+fed from the two decisions that survived — the stock chosen and the trial earned.
+
 ### What is left — verified, not speculation
 
 **Art.**
+- Step 3 of the forge is now a card and a quality bar with the trial opening
+  over it, so between trials the panel is sparse. It is only on screen for the
+  ~600ms the bar takes to fill, but it could carry the piece being made.
 - Settings still ships iOS pill toggles and a native range input with Chrome's
   default accent; the Hall of Records still opens on five KPI stat tiles over a
   card grid under tab pills. Those two screens are the most generic in the game.
@@ -127,9 +146,9 @@ examination; each concept carries a vocabulary pool now.
   says 2/3/4. The decode chips and the gate prompt were brought in line; the
   rest were not, because pills and seals legitimately want round.
 
-**Performance.** The road holds 59.9fps with a 16.7ms median frame. Still open:
-`rubPaint` builds attribute selectors in a template literal every bench frame,
-and the bench felt and `drawHeat` gradients are rebuilt per frame.
+**Performance.** The road holds 59.9fps with a 16.7ms median frame. The bench's
+own per-frame offenders went with the old crafts; the trials' stages have never
+been profiled.
 
 **Learning design.**
 - Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
