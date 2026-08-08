@@ -37,10 +37,10 @@ deleted a lot of what the older ones describe.
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34; do node test$t.js | tail -1; done
 ```
 
-27 jsdom suites, **1066 assertions, all passing, zero window errors**.
+28 jsdom suites, **1104 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -131,6 +131,50 @@ Step 4 is the proving animation again: **one trial per piece** is a hard rule, a
 a bar containing an unplayed rest (it scored the note without resolving it), so
 the mortar hung; fixed, and `play()` now carries a deadman ceiling because six of
 the ten archetypes advance only on player input.
+
+**6. The road stops shouting, and the difficulty starts being felt.** Three
+player complaints, one pass — `test34` covers all of it.
+
+*Clutter.* A word-part takes ten seconds or more to cross the field and offers
+were going out every 1.7–2.8s in twos and threes, so a dozen unrelated roots
+could be in the air at once. The fix is a **field cap** rather than a slower
+clock: `spawnOffer` and `spawnHazard` return `false` when the road is already
+full and the drip retries in half a second, so the interval is a floor and the
+ceiling is what the player actually sees. Measured on a live Chapter Three road:
+average word-parts on screen **3.30 → 1.95, peak 9 → 4**. Treasure moved out of
+the offer's own slots into the unused band — on a two-part offer it was eating
+the decision.
+
+*The gate was too close.* `GATE_LEAD` 0.18 → **0.26, and it scales with
+`M.paceLive`**, because a fixed distance is a shrinking amount of reading time
+exactly when the player is doing well and the road is running fast. The gate now
+records the lead it opened at (`M.gate.lead`) so the cleared corridor covers its
+own whole approach. Two latent bugs fell out of this: a gate opened near the
+destination was planted **past** it and could never be reached (true at 0.18
+too — the last road-plan gate at 0.93 was never once resolved), so `openGate`
+clamps to `progressCeiling()` and `buildRoadPlan` keeps gates out of the last
+stretch; and a hazard drawn inside a gate corridor was dropped rather than
+moved, which on a narrow canvas silently emptied the road of hazards for every
+gate approach.
+
+*Difficulty that could not be felt.* Three causes. The adaptive tier ramped
+confidence over 24 answers onto a compressed band and so lived within a few
+hundredths of 0.42 forever — it is the full band over 12 answers now. The
+chapter number fed nothing: `campaignDepth()` is published on `diffTune()` and
+moves density, bite, the clock, the field cap and the vocabulary, but never the
+affordances the *setting* promised (Gentle still dims a door at the Archive).
+And the setting could not be felt in the vocabulary at all — `diffTune().reach`
+now decides how unfamiliar the parts on offer are, from a narrow drill of what
+the player has met to a wide reach into what they have not, and `gateDistractors`
+picks the confusable end of the pool on a demanding road. That last one needed a
+guard: a wrong door reading "under, below" against `hypo-` is not hard, it is
+ambiguous, so near-synonyms are excluded from the pool outright. `test34` proves
+no gate anywhere in the corpus can offer one.
+
+*And the seeded-road box takes a chapter number.* A bare `0`–`7` typed into it
+opens the campaign up to that chapter, filling in the served chapters, bench
+patterns and recovered pages the skipped roads would have paid out. A base-36
+road code still queues a shared road; the two can't be confused.
 
 ### What is left — verified, not speculation
 
