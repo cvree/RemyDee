@@ -123,9 +123,13 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   /* ---- THE GATE CORRIDOR: nothing blocks a thinking beat ---- */
   const g = MI._forceGate();
   assert(g, 'a rune gate opened');
+  // the corridor is measured against the lead THIS gate opened at, not a fixed
+  // distance — the lead moves with the difficulty, the forged gear and the pace
+  const lead = MI._gateLead();
   assert(MI._inGateCorridor(g.p - 0.04), 'the approach to a gate is a protected corridor');
-  assert(MI._inGateCorridor(g.p - 0.08), 'the corridor covers the whole read-and-decide window');
-  assert(!MI._inGateCorridor(g.p - 0.3), 'the corridor is local to the gate, not the whole road');
+  assert(MI._inGateCorridor(g.p - lead * 0.9), 'the corridor covers the whole read-and-decide window, however long the lead is');
+  assert(!MI._inGateCorridor(g.p - lead * 1.2), 'the corridor is local to the gate, not the whole road');
+  assert(lead < 0.5, `the corridor can never be most of the road (lead ${lead.toFixed(2)})`);
   const hazBefore = MI._hazards().length;
   assert(MI._spawnHazardAt(g.p - 0.03, 1, 'rock') === null, 'a hazard cannot spawn in the gate corridor');
   assert(MI._hazards().length === hazBefore, 'and none was added');

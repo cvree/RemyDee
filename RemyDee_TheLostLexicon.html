@@ -2165,7 +2165,8 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <p class="small muted diff-lede">
             This changes the <b>road</b>, never the words. Every term is real and verified at
             every setting &mdash; what moves is how dense the hazards are, how fast the squad
-            tires, how long you get to read a rune gate, and how many answers a question offers.
+            tires, how long you get to read a rune gate, how many answers a question offers,
+            and how many word-parts you have never met before the road puts in front of you.
             You can change it whenever you like from Settings.
           </p>
           <div class="diff-grid" id="diff-grid"></div>
@@ -4961,13 +4962,13 @@ function freshMastery(){
 const DIFFS=[
   { key:"easy",     name:"Gentle",    glyph:"◔", tier:0.10,
     lede:"Learn first, survive second.",
-    note:"Hazards are soft and rare, the squad's strength drains slowly, gates hang far up the road, and one wrong door is always dimmed for you." },
+    note:"Hazards are soft and rare, the road stays uncluttered, the squad's strength drains slowly, and it works the word-parts you have already met rather than piling on new ones. One wrong door is always dimmed for you." },
   { key:"steady",   name:"Steady",    glyph:"◑", tier:0.42,
     lede:"The road as it was meant to be walked.",
-    note:"A fair fight. Hazards bite, stamina is a real clock, and you get a proper look at every gate before you must choose." },
+    note:"A fair fight. Hazards bite, stamina is a real clock, new roots arrive at the pace you can absorb them, and you get a proper look at every gate before you must choose." },
   { key:"hard",     name:"Demanding", glyph:"◕", tier:0.86,
     lede:"For someone who already knows their roots.",
-    note:"Dense, hard-hitting roads. Stamina burns fast, gates arrive close and offer a fourth answer, and nothing is dimmed for you." },
+    note:"Dense, hard-hitting roads. Stamina burns fast, unfamiliar roots keep arriving, the wrong doors at a gate are the ones that look right, and nothing is dimmed for you." },
   { key:"adaptive", name:"The road that learns", glyph:"◍", tier:null,
     lede:"It finds your level, and keeps finding it.",
     note:"Starts at Steady and moves with you — every answer, every arrival and every collapse nudges it. Where it has settled is always shown on the results page." }
@@ -5005,15 +5006,30 @@ function noteSkillRun(outcome){
   sk.runs=(sk.runs||0)+1;
   S.runCount=(S.runCount||0)+1;   // the clock the review scheduler counts in
 }
-/* rating → tier. Deliberately compressed: even a struggling player still
-   meets hazards, and even a fluent one is never given an unsurvivable road. */
+/* rating → tier. It used to be compressed so hard — confidence ramping over
+   two dozen answers onto a band only 0.10..0.96 wide, all of it anchored at
+   Steady — that an adaptive road spent almost its whole life within a few
+   hundredths of 0.42, and the setting read as cosmetic because in practice it
+   never moved. The band is the full range now and confidence arrives inside a
+   single road, so playing well is felt on the road you are playing well on. */
 function adaptiveTier(){
   const sk=skillState();
   // confidence ramps in over the first handful of answers so a new player
   // is not judged by their first two guesses
-  const conf=clamp((sk.answers||0)/24,0,1)*0.75 + clamp((sk.runs||0)/3,0,1)*0.25;
-  const target=clamp(0.10 + sk.rating*0.86, 0.10, 0.96);
+  const conf=clamp((sk.answers||0)/12,0,1)*0.7 + clamp((sk.runs||0)/2,0,1)*0.3;
+  const target=clamp(0.10 + sk.rating*0.90, 0.10, 1);
   return 0.42 + (target-0.42)*clamp(conf,0,1);
+}
+/* HOW DEEP INTO THE CAMPAIGN THIS ROAD IS — 0 at the Prologue, 1 at the Great
+   Archive. The difficulty SETTING says how hard the player wants the road to
+   be; this says how hard the story has earned the right to be, and the two are
+   kept separate on purpose. Depth is allowed to move what the road does to you
+   (how thick the hazards come, how hard they bite, how fast the clock runs) and
+   which word-parts it puts in front of you — but never the affordances the
+   setting promises, so Gentle still dims a false door at the Archive gates. */
+function campaignDepth(){
+  const n=(CHAPTERS.length-1)||1;
+  return clamp((S.chapter||0)/n, 0, 1);
 }
 function diffKey(){
   const k=(S.settings && S.settings.difficulty) || "adaptive";
@@ -5048,13 +5064,20 @@ function diffTune(){
     const v=M2.bonus(k)||0; return Math.max(-cap, Math.min(cap, v)); };
   const rGate=rb("gateLead",0.45), rDrain=rb("drain",0.40),
         rStart=rb("startMul",0.25), rHeal=rb("heal",0.60), rDecay=rb("momentumDecay",0.45);
+  /* The campaign's own escalation, folded in beside the setting. `depth` is
+     published so every downstream system reads the same number, and `reach` is
+     the one figure that decides how unfamiliar the word-parts on this road are
+     allowed to be — the difference between drilling twenty roots you know and
+     meeting ones you have never seen. */
+  const depth=campaignDepth();
   return {
-    tier:t, key:diffKey(), band:tierBandName(t),
+    tier:t, key:diffKey(), band:tierBandName(t), depth,
+    reach: clamp(t*0.68 + depth*0.46, 0, 1),
     relics:{gateLead:rGate, drain:rDrain, startMul:rStart, heal:rHeal, momentumDecay:rDecay},
-    density:  lerp(0.62, 1.55),   // hazard spawn rate
-    dmg:      lerp(0.45, 1.40),   // hazard bite
-    drain:    lerp(0.55, 1.50) * (1+rDrain),  // the run's real timer
-    startMul: lerp(1.22, 0.86) * (1+rStart),  // how much the squad sets out with
+    density:  lerp(0.55, 1.85) * (1+depth*0.45),   // hazard spawn rate
+    dmg:      lerp(0.42, 1.75) * (1+depth*0.40),   // hazard bite
+    drain:    lerp(0.50, 1.70) * (1+depth*0.30) * (1+rDrain),  // the run's real timer
+    startMul: lerp(1.24, 0.82) * (1+rStart),  // how much the squad sets out with
     gateLead: lerp(1.55, 0.72) * (1+rGate),   // how much road you get to read a gate over
     choices:  t>=0.72 ? 4 : 3,    // answers offered per question
     mercyDim: t<0.28,             // one wrong door dimmed at every gate
@@ -5751,7 +5774,7 @@ function codeToSeed(code){
 window.__RD_ENG = {
   Audio2, Save, S:()=>S, setS:(v)=>{S=v;}, newGame, freshMastery,
   applySettings, persist, go, refreshTopbars,
-  DIFFS, DIFF_BY_KEY, diffKey, diffTier, diffTune, tierBandName,
+  DIFFS, DIFF_BY_KEY, diffKey, diffTier, diffTune, tierBandName, campaignDepth,
   skillState, noteSkillAnswer, noteSkillRun, adaptiveTier,
   markPartSeen, markPartResult, seenParts, weakParts, dueParts,
   portraitSVG, remySVG, radixSVG, walkerSVG, buildBackdrop,
@@ -9703,7 +9726,8 @@ window.__RD_MG = {
 "use strict";
 const D = window.__RD_DATA;
 const { $, $$, el, clamp, shuffle, pick, toast,
-        PARTS, DIRECTIONS, TERMS, TERM_PRON, TRAVELERS, ROLES, ENEMIES, CHAPTERS, REGIONS, INTRO, SAFETY_NOTE } = D;
+        PARTS, DIRECTIONS, TERMS, TERM_PRON, TRAVELERS, ROLES, ENEMIES, CHAPTERS, REGIONS, INTRO, SAFETY_NOTE,
+        blueprintsEarnedBy } = D;
 const E = window.__RD_ENG;
 const FX = window.FX;
 const { Audio2, Save, applySettings, persist, go, refreshTopbars,
@@ -9944,20 +9968,52 @@ function renderPath(){
     (aff.grant? `<div class="path-grant">✦ ${aff.grant}</div>` : "");
   renderSeedRow();
 }
+/* JUMP TO A CHAPTER.
+   A plain number typed into the seeded-road box is read as a chapter, not as a
+   road code: 2 opens the campaign up to Chapter Two, 7 opens everything up to
+   Chapter Seven. Every chapter BEFORE the one named counts as walked, so the
+   bench patterns, the recovered pages and the party ladder all sit exactly
+   where they would have had the player got there the long way round — a jump
+   forward, never a half-built save.
+
+   The two inputs can't be confused: a road code is the seven-character base-36
+   string seedToCode() prints (0000A7C), and a bare one- or two-digit number is
+   never one of those. */
+function unlockThroughChapter(n){
+  const st=S();
+  const idx=clamp(n,0,CHAPTERS.length-1);
+  st.chapter=Math.max(st.chapter||0, idx);
+  CHAPTERS.slice(0, idx).forEach(c=>{ if(!st.servedChapterIds.includes(c.id)) st.servedChapterIds.push(c.id); });
+  // everything the skipped chapters would have paid out, derived rather than guessed
+  st.unlockedBps = blueprintsEarnedBy(st.servedChapterIds);
+  st.pages = Math.max(st.pages||0, idx);
+  persist();
+  const ch=CHAPTERS[idx];
+  toast(idx===0 ? "The campaign is back at the Prologue."
+                : `Unlocked through ${ch.name.replace(/^.*?—\s*/,"")} — chapters up to ${idx} are open.`);
+  showHub();
+}
 /* SEEDED CONTRACTS — enter a shared code here and the NEXT road you prepare
    (weather, hazard deck, event order, gate distractors) will match it exactly. */
 function renderSeedRow(){
   const host=$('#path-seed-row'); if(!host) return;
   const queued=S().pendingSeed;
+  const maxCh=CHAPTERS.length-1;
   host.innerHTML = `<span class="pr-k">Seeded road</span>
-    <span class="pr-v"><input type="text" id="path-seed-input" maxlength="8" placeholder="enter a code" class="seed-input" value="${queued!=null?E.seedToCode(queued):""}"/>
+    <span class="pr-v"><input type="text" id="path-seed-input" maxlength="8" placeholder="code or 0&ndash;${maxCh}" class="seed-input" value="${queued!=null?E.seedToCode(queued):""}"/>
     <button class="btn ghost small-btn" id="path-seed-btn" type="button">Set</button>
     ${queued!=null?'<button class="btn ghost small-btn" id="path-seed-clear" type="button">Clear</button>':""}</span>
-    <span class="pr-sub">${queued!=null? `Code ${E.seedToCode(queued)} queued — your next road will match it exactly.` : "Leave blank for a random road, or enter a friend's code to walk the same one."}</span>`;
+    <span class="pr-sub">${queued!=null? `Code ${E.seedToCode(queued)} queued — your next road will match it exactly.` : `Enter a friend's code to walk the same road — or just a number (0&ndash;${maxCh}) to open the campaign up to that chapter.`}</span>`;
   const btn=$('#path-seed-btn');
   if(btn) btn.onclick=()=>{
-    const inp=$('#path-seed-input'); const raw=(inp&&inp.value)||"";
-    const seed=E.codeToSeed(raw);
+    const inp=$('#path-seed-input'); const txt=String((inp&&inp.value)||"").trim();
+    // a bare number is a chapter to unlock, not a road to walk
+    if(/^\d{1,2}$/.test(txt)){
+      const n=parseInt(txt,10);
+      if(n>CHAPTERS.length-1){ toast(`There are only ${CHAPTERS.length-1} chapters after the Prologue.`); return; }
+      unlockThroughChapter(n); return;
+    }
+    const seed=E.codeToSeed(txt);
     if(seed==null){ toast("That doesn't look like a valid road code."); return; }
     S().pendingSeed=seed; persist(); renderSeedRow();
     toast(`Road code ${E.seedToCode(seed)} queued for your next expedition.`);
@@ -12673,12 +12729,21 @@ function pickRoadPart(kindFilter, langFilter){
   const V=(M && M.f && M.f.vigil) || null;
   const shaky=new Set((V&&V.shaky)||[]);
   const held=new Set((V&&V.studied)||[]);
-  const sorted=ids.slice().sort((a,b)=>{
-    const sa=(shaky.has(a)?3:0)+(weak.has(a)?2:0)+(held.has(a)?1:0)+(seen.has(a)?0:1);
-    const sb=(shaky.has(b)?3:0)+(weak.has(b)?2:0)+(held.has(b)?1:0)+(seen.has(b)?0:1);
-    return sb-sa || Math.random()-0.5;
-  });
-  return pick(sorted.slice(0, Math.min(10, sorted.length)));
+  /* AND DIFFICULTY DECIDES WHICH ROOTS YOU MEET AT ALL.
+     Every road used to draw from the same top-ten shortlist, weighted only by
+     what the player had fumbled — so a Gentle Prologue and a Demanding approach
+     to the Archive put the same unfamiliar words in front of you, and the
+     setting could not be felt in the one place it matters most: the vocabulary.
+     `reach` (the difficulty setting and the chapter number together, see
+     diffTune) now decides the appetite for the unfamiliar. At reach 0 the road
+     drills a narrow set of parts the player has already seen; at reach 1 it
+     reaches deep into ones they have never met, out of a much wider pool. */
+  const reach=(M && M.diff && M.diff.reach!=null) ? M.diff.reach : E.diffTune().reach;
+  const score=(id)=>(shaky.has(id)?3:0)+(weak.has(id)?2:0)+(held.has(id)?1:0)
+                  + (seen.has(id) ? (1-reach)*1.8 : reach*3.4);
+  const sorted=ids.slice().sort((a,b)=> score(b)-score(a) || Math.random()-0.5);
+  const shortlist=Math.round(6+reach*10);      // 6 on the gentlest road, 16 on the harshest
+  return pick(sorted.slice(0, Math.min(shortlist, sorted.length)));
 }
 
 /* Relaxed pace is the accessibility softener and stays exactly what it was.
@@ -12706,10 +12771,19 @@ function difficultyAt(progress){
   const D=E.diffTune();
   return {
     // the within-road ramp is unchanged in shape; the difficulty setting decides
-    // where that ramp starts and how steep it is allowed to get
+    // where that ramp starts and how steep it is allowed to get, and the chapter
+    // number decides how hard that whole band sits (see campaignDepth)
     density: D.density * (1 + p*p*0.85*flatten),
     dmg:     D.dmg     * (1 + p*p*0.42*flatten),
-    tier:    D.tier
+    tier:    D.tier,
+    depth:   D.depth||0,
+    /* HOW MUCH THE ROAD IS ALLOWED TO HOLD AT ONCE. Density used to move only
+       the interval between spawns, which a full field silently swallowed — so a
+       denser setting produced the same crowded screen as a sparse one. It moves
+       the ceiling too now, and that ceiling is the thing the player actually
+       sees: three obstacles in the air on a gentle Prologue road, eight on a
+       demanding approach to the Archive. */
+    field:   Math.round(clamp(1.6 + D.density*(1 + p*p*0.85*flatten)*2.4, 3, 8))
   };
 }
 
@@ -13089,6 +13163,16 @@ function pressLieutenant(amount, wasReal){
 
 const BOSS_TERM_ID="electrocardiogram";       // electr/o + cardi/o + -gram — a record that cannot be argued with
 const BOSS_P1_END=0.34, BOSS_CHORUS_AT=0.90;
+/* HOW FAR THIS ROAD WILL ACTUALLY LET THEM WALK — the destination, or the
+   Archive's threshold while the Chorus is still to be sung, or nowhere at all on
+   the Endless Road. The walk reads it to cap progress and the gates read it so a
+   gate is never planted beyond the last step the squad will take: a gate opens a
+   full lead ahead, and one planted past the finish line is a question they arrive
+   without ever being asked. */
+function progressCeiling(){
+  if(M && M.endless) return Infinity;
+  return (M && M.boss && !M.boss.lt && !M.boss.chorusDone) ? BOSS_CHORUS_AT : 1;
+}
 function isBossRoad(f){ return !!(f && f.chapter && f.chapter.id==="ch7"); }
 /* per-frame boss state — phase transitions, the Stripping's erosion pressure,
    and the trigger for the Chorus. Called once a tick whenever M.boss exists. */
@@ -13810,15 +13894,18 @@ function useAbility(kind){
 /* the road ahead: four rune gates, and surprises drawn at random */
 function buildEvents(r,enemy,size){
   const pool=shuffle(["oasis","cache","scholar","storm","bandits"]);
+  /* Gates sit in the body of the road, never in its tail — see GATE_LATEST:
+     a gate opens a full lead ahead of the squad, and one drawn at 0.93 would
+     open past the destination and be walked away from unanswered. */
   const ev=[
-    {at:0.13, type:"gate"},
-    {at:0.25, type:pool[0]},
-    {at:0.37, type:"gate"},
-    {at:0.51, type:"gate"},
-    {at:0.62, type:pool[1]},
-    {at:0.74, type:"gate"},
-    {at:0.84, type: enemy? "bandits" : pool[2]},
-    {at:0.93, type:"gate"}
+    {at:0.12, type:"gate"},
+    {at:0.24, type:pool[0]},
+    {at:0.35, type:"gate"},
+    {at:0.47, type:"gate"},
+    {at:0.58, type:pool[1]},
+    {at:0.69, type:"gate"},
+    {at:0.82, type: enemy? "bandits" : pool[2]},
+    {at:0.92, type:pool[3]}
   ];
   // never two bandit raids back to back from the same draw
   if(enemy && pool[1]==="bandits") ev[4].type=pool[2]==="bandits"?pool[3]:pool[2];
@@ -13871,6 +13958,18 @@ function buildRoadPlan(f, seedIn){
     if(bi>=0 && evs[bi].at<0.45){
       const li=evs.length-2;
       const t=evs[bi].type; evs[bi].type=evs[li].type; evs[li].type=t;
+    }
+    /* AND A GATE BELONGS IN THE BODY OF IT. A rune gate opens a full lead ahead
+       of the squad; one drawn into the last stretch would open past the
+       destination, be read on the approach, and then be walked away from
+       unanswered at the arrival. Late gates trade places with an earlier
+       flavour beat, so the tail of the road still has something in it. */
+    const GATE_LATEST=0.72;
+    for(let i=evs.length-1;i>=0;i--){
+      if(evs[i].type!=="gate" || evs[i].at<=GATE_LATEST) continue;
+      const j=evs.findIndex(e=>e.type!=="gate" && e.at<=GATE_LATEST);
+      if(j<0) break;
+      const t=evs[i].type; evs[i].type=evs[j].type; evs[j].type=t;
     }
     // scout intel: name up to two of the drawn flavor beats + gear hints for the bench
     const intel=[], hints=new Set();
@@ -14353,14 +14452,44 @@ function comboNeeds(){
   });
   return {kinds, finishes};
 }
+/* HOW MUCH IS ALLOWED TO BE IN THE AIR AT ONCE.
+   A word-part takes ten seconds or more to cross the field, and offers were
+   going out every 1.7-2.8s in twos and threes — so a dozen or more roots could
+   be on screen together, none of them related to the one before. The road read
+   as confetti, and a choice you cannot pick out of the noise is not a choice.
+   The field is capped instead of the clock: a new offer only goes out when the
+   last one is nearly spent, so what the player sees is one live decision plus
+   the tail of the one before it. The cap rises with the difficulty setting and
+   the chapter, which is where a denser road is supposed to be felt. */
+function liveOf(list){
+  let n=0;
+  for(const o of list){
+    if(o.got||o.hit||o.passed) continue;
+    if(screenX(o.p)>-40) n++;
+  }
+  return n;
+}
+function lexemeCap(){
+  const r=(M.diff&&M.diff.reach!=null)?M.diff.reach:0.4;
+  return r>=0.66 ? 5 : r>=0.36 ? 4 : 3;
+}
 /* An OFFER: two or three word-parts in the air at the same distance, in
    different bands, at most one of which finishes a real term. The player has to
    read them and pick — which is the whole game — rather than sweep up whatever
-   drifts past. Hazards are unchanged; this only shapes the word-parts. */
+   drifts past. Hazards are unchanged; this only shapes the word-parts.
+   Returns false when the field is already full, so the caller can come back
+   sooner rather than dropping an offer on top of the last one. */
 function spawnOffer(){
+  const cap=lexemeCap();
+  const live=liveOf(M.pickups);
+  // an offer of one is not an offer — wait for room for the whole decision
+  const room=cap-live;
+  if(room<2) return false;
   const need=comboNeeds();
   const bands=shuffle([0,1,2]);
-  const n = 2 + (Math.random()<0.45 ? 1 : 0);
+  // two doors is the decision. A third only appears on a road demanding enough
+  // that reading three of them at speed is the point, and only with room for it.
+  const n = (room>=3 && (M.diff.reach||0)>=0.6 && Math.random()<0.35) ? 3 : 2;
   const dist = Math.random()*90;
   const used=new Set(M.combo);
   // the piece that would complete a real word, if one is available
@@ -14368,9 +14497,6 @@ function spawnOffer(){
   winner = winner.length ? pick(winner) : null;
   for(let i=0;i<n;i++){
     const lane=bands[i];
-    // one slot in every offer can be treasure rather than a word, so the bands
-    // keep their identities (DEPTH_PLAN §3.1) without diluting the choice
-    if(i===n-1 && Math.random()<0.22){ spawnPickup(lane, lane===0?"shard":lane===2?"ink":"reagent", dist+i*14); continue; }
     let partId=null;
     if(i===0 && winner) partId=winner;
     else {
@@ -14383,10 +14509,21 @@ function spawnOffer(){
     }
     spawnPickup(lane, "lexeme", dist+i*14, partId);
   }
+  /* Treasure used to take one of the offer's own slots, which on a two-part
+     offer left a single word in the air and nothing to choose between. It rides
+     in the band the offer did not use instead, so the bands keep their
+     identities (DEPTH_PLAN §3.1) without ever eating the decision. */
+  if(n<3 && Math.random()<0.18){
+    const lane=bands[2];
+    spawnPickup(lane, lane===0?"shard":lane===2?"ink":"reagent", dist+40);
+  }
   // when the chain is empty there is nothing to complete, so keep the road honest
-  // by making sure at least one root is on offer to start one
-  if(!M.combo.length && !M.pickups.some(pk=>!pk.got && pk.partId && PARTS[pk.partId].kind==="root"))
-    spawnPickup(bands[2], "lexeme", dist+150, pickRoadPart("root"));   // a band this offer did not use
+  // by making sure at least one root is on offer to start one — but never past
+  // the field cap, which is the whole point of the cap
+  if(!M.combo.length && room>n
+     && !M.pickups.some(pk=>!pk.got && pk.partId && PARTS[pk.partId].kind==="root"))
+    spawnPickup(bands[n%3], "lexeme", dist+150, pickRoadPart("root"));
+  return true;
 }
 /* weighted, weather-aware hazard deck — refilled when empty, rebuilt when weather turns */
 /* run one draw of `fn` through a seed-derived, isolated RNG (swapped in and
@@ -14408,20 +14545,27 @@ function buildHazardDeck(){
   Object.keys(w).forEach(k=>{ for(let i=0;i<w[k];i++) deck.push(k); });
   return withRoadSeed(()=>shuffle(deck));
 }
-function spawnHazard(){
+function spawnHazard(cap){
+  // the road holds only so much at once, and how much is the difficulty setting
+  // and the chapter talking (difficultyAt().field) — see liveOf
+  if(cap!=null && liveOf(M.hazards)>=cap) return false;
   if(!M.hazardDeck || !M.hazardDeck.length) M.hazardDeck=buildHazardDeck();
   const k=M.hazardDeck.pop();
-  const def=HAZARDS[k]; if(!def) return;
-  if(def.needEnemy && !M.enemy) return;
+  const def=HAZARDS[k]; if(!def) return true;
+  if(def.needEnemy && !M.enemy) return true;
   withRoadSeed(()=>{
   const lane=def.lanes[Math.floor(Math.random()*def.lanes.length)];
-  const p=spawnAheadP(Math.random()*120);
-  // NOTHING blocks the approach to a rune gate — a gate asks the player to think,
-  // and stacking a reflex dodge on top of that is what made gates feel terrible.
-  if(inGateCorridor(p)) return;
+  let p=spawnAheadP(Math.random()*120);
+  /* NOTHING blocks the approach to a rune gate — a gate asks the player to think,
+     and stacking a reflex dodge on top of that is what made gates feel terrible.
+     The hazard is moved out past the arch rather than dropped: on a narrow screen
+     the draw lands close enough that dropping it would silently empty the road of
+     hazards for the whole of every gate approach. */
+  if(inGateCorridor(p)) p = M.gate.p + GATE_CLEAR_AFTER + Math.random()*0.06;
   const u = clamp(LANES[lane].u + (Math.random()-0.5)*0.09, 0.03, 0.97);
   M.hazards.push({p, lane, u, kind:k, hit:false, passed:false});
   });
+  return true;
 }
 /* what the bench answers on the road: gear/perks counter specific hazards */
 function hazardCounter(kind){
@@ -14528,8 +14672,7 @@ function tick(t){
     // Only the FINAL boss does that — a lieutenant road runs the full distance,
     // and keying this on `M.boss` alone capped chapters two, four and six short
     // of arrival forever.
-    const holdForChorus = M.boss && !M.boss.lt && !M.boss.chorusDone;
-    const progressCap = M.endless ? Infinity : (holdForChorus ? BOSS_CHORUS_AT : 1);
+    const progressCap = progressCeiling();
     M.progress = clamp(M.progress + dt*spd, 0, progressCap);
     if(M.boss){ if(M.boss.lt) updateLieutenant(dt); else updateBossPhase(dt); }
     if(M.gate) updateGate(dt);
@@ -14601,8 +14744,17 @@ function tick(t){
        it or you didn't. A choice only exists when two or three parts are in the
        air at once, in different bands, and only some of them continue the word
        you are holding. They arrive in offers now. */
-    M.spawnPickT-=dt; if(M.spawnPickT<=0){ M.spawnPickT=1.7+Math.random()*1.1; spawnOffer(); }
-    M.spawnHazT-=dt;  if(M.spawnHazT<=0){ M.spawnHazT=(1.9+Math.random()*1.4)/diffCurve.density; spawnHazard(); }
+    /* The clock is now a floor, not the whole story: both drips also ask the
+       field whether there is room (spawnOffer / spawnHazard return false when
+       there isn't) and come back in half a second if there is not. That is what
+       keeps a slow road from silting up while still letting a demanding one run
+       genuinely thick — the ceiling moves with the difficulty, the interval
+       alone never could. */
+    M.spawnPickT-=dt;
+    if(M.spawnPickT<=0) M.spawnPickT = spawnOffer() ? (3.4+Math.random()*1.6) : 0.5;
+    M.spawnHazT-=dt;
+    if(M.spawnHazT<=0) M.spawnHazT = spawnHazard(diffCurve.field)
+      ? (2.6+Math.random()*1.6)/diffCurve.density : 0.5;
 
     // hazards crossing the squad
     const sx=M.cv.width*0.30;
@@ -14992,20 +15144,37 @@ function completeTerm(){
    is burned off by the gate's rune-light when it opens.
    GATE_LEAD is how far ahead of the squad a gate appears the moment it opens — it
    used to be 0.075, which at typical road speed gave barely a second and a half to
-   read a prompt and steer. It's now roughly 2.4x farther out (~4-5s of real reading
-   time at normal pace, more if the squad isn't surging), and the corridor widths
-   below scale with it so the whole approach — not just the last stretch — stays
-   clear of hazards while the player is deciding. */
-const GATE_LEAD=0.18;
-const GATE_CLEAR_BEFORE=0.17, GATE_CLEAR_AFTER=0.04;
+   read a prompt and steer. It went to 0.18, and that was still too close in the one
+   case that matters: a player doing WELL. Momentum, a rush and a surge together
+   move the road at better than twice its base speed, and a fixed DISTANCE turns
+   into half the reading TIME exactly when the gates are hardest and the player has
+   most earned the room to think. So the lead is longer, and it scales with how fast
+   the road is actually running — which makes it a promise about seconds rather than
+   about road. The gate may open just off the right-hand edge and scroll in; the
+   prompt is up in the HUD from the instant it opens, so the reading starts
+   immediately either way.
+
+   The cleared corridor still covers the WHOLE approach, however long that is: a
+   reflex dodge stacked on top of a decision is what made gates feel terrible, and
+   that is as true four seconds out as one. It costs the road nothing, because new
+   hazards are drawn further ahead than a gate ever opens and simply land beyond
+   the arch (see spawnHazard) — what the corridor really does is burn off whatever
+   was already standing between the squad and the choice. */
+const GATE_LEAD=0.26;
+const GATE_CLEAR_BEFORE=0.26, GATE_CLEAR_AFTER=0.04;
 /* how far ahead THIS run's gates open. Gentle hangs them far up the road so there
    is time to think; Demanding puts them close, which is the difference between
    recall and fluency. The cleared corridor scales with it so the approach to a
    gate is never stacked with a reflex dodge (Design Rule 2). */
 /* a hook balanced for reach throws the line further ahead, which literally buys
    more road to read the gate over — the bench choice paying out in thinking time */
-function gateLead(){ return GATE_LEAD * ((M && M.diff) ? M.diff.gateLead : 1)
-                            * ((M && M.forge && M.forge.gateLeadMult) || 1); }
+function gateLead(){
+  // a fast road eats reading time; the lead buys it back, so the seconds the
+  // player gets to think are roughly the same whether they are strolling or flying
+  const pace = clamp((M && M.paceLive) || 1, 1, 1.9);
+  return GATE_LEAD * pace * ((M && M.diff) ? M.diff.gateLead : 1)
+                          * ((M && M.forge && M.forge.gateLeadMult) || 1);
+}
 /* Reading room is the least visible thing the bench can buy and one of the most
    valuable, so the first gate of a road that opens early says who bought it. */
 function creditGateLead(){
@@ -15013,7 +15182,13 @@ function creditGateLead(){
   creditPassive(M.forge.ownerFor && M.forge.ownerFor.lead, "read ahead",
     `is thrown long — the gate opens <b>${Math.round((M.forge.gateLeadMult-1)*100)}%</b> further up the road, and they get that much longer to read it.`, null);
 }
-function gateClearBefore(){ return GATE_CLEAR_BEFORE * ((M && M.diff) ? M.diff.gateLead : 1); }
+/* The cleared corridor is measured from the lead THIS gate actually opened at,
+   so a gate thrown long by a reach-balanced hook, or by a road running fast,
+   clears the whole of its own longer approach rather than the first part of it. */
+function gateClearBefore(){
+  if(M && M.gate && M.gate.lead) return M.gate.lead*0.98;
+  return GATE_CLEAR_BEFORE * ((M && M.diff) ? M.diff.gateLead : 1);
+}
 function inGateCorridor(p){
   if(!M || !M.gate || M.gate.resolved) return false;
   return p > M.gate.p-gateClearBefore() && p < M.gate.p+GATE_CLEAR_AFTER;
@@ -15054,8 +15229,53 @@ function pickCompletionGate(){
   const shown=build.map((p,i)=> i===slot ? "___" : (PARTS[p]?PARTS[p].text:"?"));
   return { termId, targetId, slot, skeleton:shown.join(" + "), def:TERMS[termId].def, spell:TERMS[termId].spell };
 }
+/* HOW HARD THE WRONG DOORS ARE.
+   A gate used to take its two false doors at random out of every part of the
+   right kind, which on the whole meant they looked nothing like the answer — so
+   the hardest road in the game asked a question a beginner could pass by shape.
+   The one lever that actually makes a gate demanding is how CONFUSABLE the wrong
+   answers are, so difficulty picks that end of the pool: an easy road offers
+   doors that plainly are not it, a demanding one offers the ones you have to
+   read properly.
+
+   Confusable is not the same as ambiguous, and the difference is the whole
+   integrity of the gate. A door reading "under, below" against hypo- is not a
+   hard question, it is an unfair one — it has two right answers and it punishes
+   the player for reading carefully. So near-synonyms come OUT of the pool (the
+   caller has already dropped exact meaning matches), and what is left is made
+   hard the honest way: doors that read like the answer without being it. */
+function gateDistractors(pool, targetId, count, harsh){
+  const T=PARTS[targetId]||{};
+  const words=(s)=>String(s||"").toLowerCase().split(/[^a-z]+/).filter(w=>w.length>3);
+  const tWords=new Set(words(T.mean));
+  let usable=pool.filter(id=>!words((PARTS[id]||{}).mean).some(w=>tWords.has(w)));
+  if(usable.length<count) usable=pool;    // never leave a gate without three doors
+  const sim=(id)=>{
+    const P2=PARTS[id]||{}; let s=0;
+    const a=String(T.stem||T.text||""), b=String(P2.stem||P2.text||"");
+    let i=0; while(i<a.length && i<b.length && a[i]===b[i]) i++;
+    s += i*1.5;                                              // hyper- against hypo-
+    if(P2.lang && T.lang && P2.lang===T.lang) s += 1.1;      // the same tongue
+    if(P2.sense && T.sense && P2.sense===T.sense) s += 2.2;  // the same body system
+    if(Math.abs(a.length-b.length)<=1) s += 0.6;
+    return s;
+  };
+  const scored=usable.map(id=>({id, s:sim(id)+Math.random()*0.9}));
+  scored.sort((x,y)=> harsh ? y.s-x.s : x.s-y.s);
+  return scored.slice(0, count).map(o=>o.id);
+}
 function openGate(){
   if(M.gate) return;
+  /* Plant it where the squad will actually walk over it. A gate that opens a
+     full lead past the destination scrolls in, is read, and is then left behind
+     at the arrival unanswered — the worst possible outcome, because the player
+     did the thinking and got nothing for it. On the rare road with no room left
+     for a real approach, no gate opens at all rather than a cramped one. */
+  const lead0=gateLead();
+  const ceil=progressCeiling();
+  const room=isFinite(ceil) ? (ceil-0.015)-M.progress : lead0;
+  if(room<0.05) return;
+  const lead=Math.min(lead0, room);
   const reach=[1,2]; if(M.caps.climb) reach.unshift(0);
   // Phase I of the final boss (The Stripping) — Radicida slays ROOTS, the part
   // that carries a term's actual meaning. Every gate here asks you to prove you
@@ -15066,8 +15286,10 @@ function openGate(){
                   : (ltMode==="prefix" || ltMode==="suffix") ? ltMode : null;
   // Bilingua does not care which KIND of part it is — she cares which tongue
   const forceLang = (ltMode==="origin") ? bilinguaWants(B0) : null;
-  // A demanding road starts asking you to FINISH words rather than just name parts
-  const completion = (!forceKind && M.diff.tier>=0.55 && Math.random() < (M.diff.tier-0.45)*1.1)
+  // A demanding road starts asking you to FINISH words rather than just name
+  // parts — and so does a late chapter, whatever the setting (see campaignDepth)
+  const press = clamp(M.diff.tier + (M.diff.depth||0)*0.35, 0, 1);
+  const completion = (!forceKind && press>=0.55 && Math.random() < (press-0.45)*1.1)
     ? pickCompletionGate() : null;
   // targetId stays adaptive (weighted to THIS player's weak/unseen parts) even
   // on a seeded road; only the distractor set and lane placement — the part
@@ -15080,7 +15302,8 @@ function openGate(){
   const kind=PARTS[targetId].kind;
   const pool=Object.keys(PARTS).filter(id=>id!==targetId && PARTS[id].kind===kind && PARTS[id].mean!==PARTS[targetId].mean);
   const gateRoll = withRoadSeed(()=>{
-    const distract=shuffle(pool).slice(0,2);
+    // the wrong doors get harder to tell apart as the road does — see gateDistractors
+    const distract=gateDistractors(pool, targetId, 2, press>=0.5);
     const rest=shuffle(distract);
     const laneIds=[null,null,null];
     const ansLane=pick(reach);
@@ -15091,7 +15314,7 @@ function openGate(){
   const {laneIds, ansLane, askMeaning}=gateRoll;    // 60%: prompt a meaning, lanes show parts
   const kindWord=kind==="prefix"?"prefix":kind==="suffix"?"suffix":"root";
   M.gate={
-    p: M.progress+gateLead(), laneIds, ansLane, targetId, kind, conceptId:targetId,
+    p: M.progress+lead, lead, laneIds, ansLane, targetId, kind, conceptId:targetId,
     form: completion ? "completion" : (askMeaning?"meaning":"reading"),
     completion, reask: !!(reaskId && reaskId===targetId),
     // a completion gate always shows the candidate PARTS — the player supplies the meaning
@@ -16590,6 +16813,15 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _rushBoost:()=>rushBoost(),
   _gearStrip:(on)=>{ setGearStripOpen(on); return M&&M.gearPinned; },
   _ageCaption:(dt)=>{ ageCaption(dt||0.05); return M&&M.capT; },
+  /* --- how crowded the road is allowed to be (headless tests) --- */
+  _pickups:()=>M&&M.pickups,
+  _spawnOffer:()=>spawnOffer(),
+  _spawnHazard:(cap)=>spawnHazard(cap),
+  _lexemeCap:()=>lexemeCap(),
+  _liveLexemes:()=>M?M.pickups.filter(pk=>!pk.got && pk.type==="lexeme" && screenX(pk.p)>-40).length:0,
+  _pickRoadPart:(kind)=>pickRoadPart(kind),
+  _gateDistractors:(pool,target,n,harsh)=>gateDistractors(pool,target,n,harsh),
+  _progressCeiling:()=>progressCeiling(),
   /* --- pause menu hooks (headless tests) --- */
   GATE_LEAD:()=>GATE_LEAD,
   _gateLead:()=>gateLead(),
