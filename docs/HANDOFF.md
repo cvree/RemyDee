@@ -40,7 +40,7 @@ node syntaxcheck.js                   # parses all 10 script blocks
 for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33; do node test$t.js | tail -1; done
 ```
 
-27 jsdom suites, **1070 assertions, all passing, zero window errors**.
+27 jsdom suites, **1066 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -120,12 +120,17 @@ examination; each concept carries a vocabulary pool now.
 **5. The bench pass — one task per weapon, and only at the bench.** See
 `docs/BENCH_PASS.md`. The seven hand-written canvas crafts at the forge (and the
 heat layer, the scrap apron and the rubric that served them — ~1,400 lines) are
-deleted; every pattern is now worked and proved by a **fixed pair of trials**
-named in `BENCH_TRIAL`, the same two every time you build that pattern. `MG.run`
+deleted; every pattern is now worked by **exactly one fixed trial**
+named in `BENCH_TRIAL`, the same one every time you build that pattern. `MG.run`
 and its `ACTS` pools are gone with every caller outside the forge: the road's
 spring, cache and rockslide, and the chest ceremony, all read the kit again
 instead of stopping the walk to grade your hands. `buildMeta` keeps `craftSpec`
 fed from the two decisions that survived — the stock chosen and the trial earned.
+Step 4 is the proving animation again: **one trial per piece** is a hard rule, and
+`test12` fails if a pattern grows a second one. The rhythm archetype could not end
+a bar containing an unplayed rest (it scored the note without resolving it), so
+the mortar hung; fixed, and `play()` now carries a deadman ceiling because six of
+the ten archetypes advance only on player input.
 
 ### What is left — verified, not speculation
 

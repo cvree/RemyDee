@@ -70,17 +70,94 @@ const { boot, sleep, until, assert, summary } = require('./testlib.js');
   ['run', 'ACTS', 'pickFor'].forEach((k) =>
     assert(MG[k] === undefined, `${k} is gone — the library no longer chooses for its caller`));
 
-  /* And the one caller left uses all of it: every pattern's build and proof
-     between them must exercise a real spread of the library, or nine of the ten
-     archetypes are dead code. */
+  /* And the one caller left spreads itself across the library: eight patterns,
+     one trial each, and they must not all be the same trial. */
   const P = window.__RD_PREP;
   const bench = new Set();
-  Object.keys(P._blueprints()).forEach((id) => {
-    bench.add(P.benchTrial(id, 'build').type);
-    bench.add(P.benchTrial(id, 'proof').type);
-  });
+  Object.keys(P._blueprints()).forEach((id) => bench.add(P.benchTrial(id).type));
   bench.forEach((t) => assert(typeof MG.ARCH[t] === 'function', `the bench asks for a real archetype (${t})`));
-  assert(bench.size >= 7, `the bench reaches most of the library (${bench.size}/${TYPES.length} archetypes in use)`);
+  assert(bench.size >= 6, `the bench reaches most of the library (${bench.size}/${TYPES.length} archetypes in use)`);
+
+  /* ================= 3b. EVERY TRIAL ENDS =================
+     The mortar hung. A rest played correctly is a rest you never strike, so
+     nothing in the input path touched it, and the note-sweep scored those
+     without resolving them — the end condition (every note judged) could not
+     be reached and the bar ran until the player killed the tab. Two guards go
+     in: the bug is fixed where it lives, and the library now refuses to run
+     any trial past a ceiling, because SIX of the ten archetypes advance only
+     on player input and any of them can be left open by a hand that stops. */
+  console.log('\n== a trial always ends, with hands or without them ==');
+
+  /* THE MORTAR, DIRECTLY. Drive the archetype forward in time with no input at
+     all, over many seeds so bars with rests, holds and plain hits are all
+     covered, and it must resolve every time. */
+  const fakeStage = () => new Proxy({ w: 600, h: 400, briefA: 0, dt: 0, t: 0 }, {
+    get(t, k) {
+      if (k in t) return t[k];
+      if (typeof k === 'string') { t[k] = () => {}; return t[k]; }
+      return undefined;
+    },
+    set(t, k, v) { t[k] = v; return true; }
+  });
+  const noopCombo = { hit() {}, break() {}, step() {}, paint() {}, best: 0 };
+  const driveDry = async (type, seed, diff) => {
+    let out = null;
+    const api = { combo: noopCombo, diff, R: MG._rng(seed),
+      finish(score, flawless, detail) { if (!out) out = { score, flawless, detail }; } };
+    const impl = MG.ARCH[type](fakeStage(), { diff, R: MG._rng(seed), skin: 'pestle', seed }, api);
+    // 60 trial-seconds at 1/30s a step, which is many times any bar's length
+    for (let i = 0; i < 1800 && !out; i++) { try { impl.step && impl.step(1 / 30); } catch (e) {} }
+    // the archetypes end through Ender(), which defers finish() by a beat so the
+    // last hit can be seen — so the answer arrives after the stepping stops
+    await sleep(420);
+    return out;
+  };
+  let hung = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const r = await driveDry('rhythm', seed, 0.2 + (seed % 5) * 0.18);
+    if (!r) hung++;
+  }
+  assert(hung === 0, `the mortar resolves on all forty seeds, untouched (${hung} hung)`);
+
+  /* The specific shape of the bug: a bar carrying a rest. Rests appear at
+     p = 0.10 + diff*0.16 per beat past the third, so a high-difficulty bar
+     across forty seeds is certain to produce several. */
+  let sawRest = 0, restHung = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const R = MG._rng(seed), diff = 0.95;
+    const nBeats = 8 + Math.round(diff * 6);
+    let rests = 0;
+    for (let k = 0; k < nBeats; k++) {
+      if (k > 0 && k % 4 === 3 && R.chance(0.55 + diff * 0.2)) continue;
+      else if (k > 2 && R.chance(0.10 + diff * 0.16)) rests++;
+    }
+    if (!rests) continue;
+    sawRest++;
+    if (!(await driveDry('rhythm', seed, diff))) restHung++;
+  }
+  assert(sawRest > 0, `bars carrying an unplayed rest were actually generated (${sawRest} of 40 seeds)`);
+  assert(restHung === 0,
+    `and every one of them ends — an unplayed rest resolves instead of stalling the bar (${restHung} hung)`);
+
+  /* THE DEADMAN, for the other nine. Every archetype, played by nobody, must
+     still hand the caller a grade rather than sitting on the screen forever. */
+  MG.setAuto(null);
+  MG._setCeiling(0.5);                       // half a trial-second, so this is quick
+  for (const t of TYPES) {
+    const r = await Promise.race([
+      MG.play({ type: t, diff: 0.5, title: 'deadman', brief: 'nobody is playing', holdFor: 0.01 }),
+      // the ceiling ends the trial; the verdict card then plays out before the
+      // promise resolves, so allow for that on top
+      sleep(9000).then(() => null)
+    ]);
+    const v = window.document.querySelector('.mg-veil'); if (v) v.remove();
+    assert(!!r, `${t}: a trial nobody plays still resolves rather than hanging`);
+    if (r) assert(typeof r.score === 'number' && r.tier >= 0 && r.tier <= 4,
+      `${t}: and it resolves to a real grade the caller can pay out (${r.grade})`);
+    await sleep(20);
+  }
+  MG._setCeiling(null);
+  MG.setAuto(2);
 
   /* ================= 4. THE LEXICON FEED ================= */
   console.log('\n== the knowledge trials pull from what the player is learning ==');
