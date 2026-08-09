@@ -1292,13 +1292,23 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   color:#f7f1e2;border:1px solid rgba(216,189,132,.55);}
 .mission-pause-btn:hover{background:rgba(20,14,8,.94);border-color:var(--gold-soft);}
 .mission-top-btns{display:flex;gap:6px;align-items:center;flex:none;}
+/* THE THREE FACTORS. Stamina, power and speed — an icon so the row reads at a
+   glance, and a live figure under each so a bar is never the only evidence. */
 .prep-bars{display:flex;gap:9px;font-size:.66rem;flex-wrap:nowrap;}
-.prep-bars .pb{display:flex;flex-direction:column;gap:2px;min-width:52px;}
-.prep-bars .pb .lab{color:#f0dcae;letter-spacing:.06em;font-size:.64rem;font-weight:600;}
+.prep-bars .pb{display:flex;flex-direction:column;gap:2px;min-width:62px;}
+.prep-bars .pb .lab{display:flex;align-items:center;gap:3px;color:#f0dcae;
+  letter-spacing:.06em;font-size:.64rem;font-weight:600;white-space:nowrap;}
+.prep-bars .pb .lab svg.mk{opacity:.85;}
 .prep-bars .pb .bar{height:6px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden;}
 .prep-bars .pb .bar > i{display:block;height:100%;background:var(--verd-soft);border-radius:5px;transition:width .5s var(--ease);}
-/* stamina is the run's clock — when it runs low the bar says so, loudly */
+/* the readout: the number for a reserve, the status word for speed */
+.prep-bars .pb .pb-read{color:#e2d5b8;opacity:.72;font-size:.6rem;letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.1;}
+.prep-bars .pb[data-stat="speed"] .pb-read{opacity:.9;font-weight:600;}
+/* stamina is the run's clock and power is what keeps that clock honest — when
+   either breaks the bar says so, loudly */
 .prep-bars .pb.critical .lab{color:var(--cinnabar);animation:pbCrit .7s ease-in-out infinite;}
+.prep-bars .pb.critical .pb-read{color:var(--cinnabar);opacity:1;}
 @keyframes pbCrit{0%,100%{opacity:.45;}50%{opacity:1;}}
 [data-motion="reduced"] .prep-bars .pb.critical .lab{animation:none;}
 /* ===== DIFFICULTY CHOOSER — four honest cards, one of them adaptive ===== */
@@ -1359,7 +1369,12 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   .mission-top{padding:6px 8px;gap:6px;}
   .mission-top .who{display:none;}
   .prep-bars{gap:6px;}
-  .prep-bars .pb{min-width:44px;}
+  .prep-bars .pb{min-width:46px;}
+  /* at this width the word is what survives — the icon carries the identity and
+     the readout carries the value, so the label text stands down */
+  .prep-bars .pb .lab{font-size:0;gap:0;}
+  .prep-bars .pb .lab svg.mk{width:12px;height:12px;font-size:12px;}
+  .prep-bars .pb .pb-read{font-size:.58rem;}
   .pace-gauge{padding:3px 8px;gap:4px;}
   .pace-gauge .pg-lab{display:none;}
   .ability-btn .ab-hint,.pace-btn .pb-hint{display:none;}
@@ -1507,6 +1522,29 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .pause-card h3{margin:4px 0 16px;font-family:var(--font-cal);font-size:1.25rem;}
 .pause-actions{display:flex;flex-direction:column;gap:9px;}
 .pause-actions .btn{width:100%;}
+/* THE ROAD SCHOOL — the first walk, taught one option at a time. It is the
+   pause card's shape on purpose: the player will meet that card next, and a
+   lesson that looks like the interface it is describing is one less thing to
+   learn. Slightly wider, because these cards carry a list rather than a line. */
+.road-school .pause-card{max-width:470px;text-align:left;}
+.road-school .eyebrow{display:block;text-align:left;}
+.road-school h3{margin:4px 0 12px;}
+.school-body{font-size:.92rem;line-height:1.55;margin-bottom:14px;}
+.school-body p{margin:0 0 10px;}
+.school-body p:last-child{margin-bottom:0;}
+.school-opts{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:8px;}
+.school-opts li{display:flex;align-items:flex-start;gap:9px;line-height:1.45;
+  padding-bottom:8px;border-bottom:1px solid rgba(90,70,40,.14);}
+.school-opts li:last-child{border-bottom:0;padding-bottom:0;}
+.school-opts .so-ic{flex:0 0 auto;width:1.4em;font-size:1.15rem;line-height:1.3;
+  color:var(--verd-deep,#33513f);display:flex;justify-content:center;}
+.school-opts kbd{display:inline-flex;align-items:center;justify-content:center;
+  min-width:1.7em;padding:1px 5px;border-radius:4px;font-size:.76em;font-family:inherit;
+  background:rgba(51,81,63,.12);border:1px solid rgba(51,81,63,.3);}
+/* which card of how many, without making the player count */
+.school-dots{display:flex;gap:5px;justify-content:center;margin:0 0 14px;}
+.school-dots i{width:6px;height:6px;border-radius:50%;background:rgba(90,70,40,.26);}
+.school-dots i.on{background:var(--verd-deep,#33513f);}
 .pause-quit-confirm{display:none;margin-top:14px;padding-top:14px;border-top:1px dashed var(--papyrus-3,#d8cfb4);}
 .pause-quit-confirm.show{display:block;animation:screenIn .2s;}
 .pause-quit-confirm p{margin:0 0 10px;line-height:1.45;}
@@ -2503,17 +2541,20 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <!-- The hint over the sky retires after three roads, so the controls
                need a home that is always there. A pause menu is where anyone
                goes looking for them, and it costs nothing while you are walking. -->
+          <!-- every line names what the option COSTS, because the three bars in
+               the corner are the only currency on this road -->
           <div class="pause-keys">
-            <div><kbd>mouse</kbd><span>lead the squad up and down</span></div>
-            <div><kbd>click</kbd><span>lunge &mdash; reach for a part, or shove a hazard aside</span></div>
-            <div><kbd>right-click</kbd><span>focus &mdash; the road slows while you read, and they tire</span></div>
-            <div><kbd>space</kbd><span>surge &mdash; burn stamina for speed</span></div>
-            <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><span>strike, vanish, mend</span></div>
+            <div><kbd>mouse</kbd><span>lead the squad &mdash; high ledge is fast and tiring, river floor is slow and gives <b>power</b> back</span></div>
+            <div><kbd>click</kbd><span>lunge &mdash; reach for a part or shove a hazard aside; landing on something costs <b>power</b></span></div>
+            <div><kbd>right-click</kbd><span>focus &mdash; the road slows while you read, and it costs <b>stamina</b></span></div>
+            <div><kbd>space</kbd><span>surge &mdash; burn <b>stamina</b> for speed</span></div>
+            <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><span>strike, vanish, mend &mdash; the charges you forged</span></div>
             <div><kbd>W</kbd><kbd>S</kbd><kbd>shift</kbd><kbd>F</kbd><span>the same, from the keyboard alone</span></div>
             <div><kbd>G</kbd><span>show what your forged gear is doing</span></div>
           </div>
           <div class="pause-actions">
             <button class="btn verd" id="pause-resume">Resume</button>
+            <button class="btn ghost" id="pause-school">How the walk works</button>
             <button class="btn ghost" id="pause-settings">Settings</button>
             <button class="btn ghost" id="pause-gloss">Lexicon</button>
             <button class="btn ghost" id="pause-quit">Turn back to the school</button>
@@ -2524,6 +2565,27 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
               <button class="btn cinnabar-btn" id="pause-quit-yes">Yes, turn back</button>
               <button class="btn ghost" id="pause-quit-no">Stay on the road</button>
             </div>
+          </div>
+        </div>
+      </div>
+      <!-- THE ROAD SCHOOL — the first walk teaches the walk.
+           A new player used to arrive on the road with a hint pill that fired
+           once, faded after eight seconds, and named five verbs in one breath.
+           Everything the road can do was in the game and none of it was taught.
+           This runs card by card on the FIRST road only (and from the pause menu
+           forever after), with the road held still while each one is up, and it
+           is built out of the same three factors the HUD shows: what each of
+           stamina, power and speed is, and then every option the player has for
+           spending them. -->
+      <div class="pause-menu road-school" id="road-school">
+        <div class="pause-card">
+          <span class="eyebrow" id="school-step"></span>
+          <h3 id="school-title"></h3>
+          <div class="school-body" id="school-body"></div>
+          <div class="school-dots" id="school-dots" aria-hidden="true"></div>
+          <div class="pause-actions">
+            <button class="btn verd" id="school-next">Next &rarr;</button>
+            <button class="btn ghost" id="school-skip">Skip &mdash; I know the road</button>
           </div>
         </div>
       </div>
@@ -3998,21 +4060,38 @@ FIGURE_ORDER.forEach((id,i)=>{ FIGURE_RANK[id]=i; });
    twenty-odd holes punched straight through it, at exactly the places the
    player looks hardest — the line that says what a piece of gear will do.
    These are line drawings on a 16x16 grid that take the colour of the text
-   they sit in. mark() passes anything it does not recognise straight
-   through, so the typographic marks (·, star, cross, diamond) still work.
+   they sit in.
+
+   NOTHING IS ALLOWED TO COME OUT BLANK. The table used to pass anything it
+   did not recognise straight through as text, which meant four things at
+   once: the typographic marks (·, ★, ✓, ▲) rendered as bare characters in a
+   row of drawn icons; a key with no entry — `claws` was one — printed the
+   word "claws" where a picture belonged; and anything the caller made up
+   printed nothing at all. Every typographic mark now has a drawing of its
+   own, every gear key has an entry, and an unknown key falls back to a
+   drawn dot rather than to text or to emptiness.
+
+   Each drawing is answerable to the sentence it sits next to: a grappling
+   hook has flukes, a rope is a coil, a smoke shell is a canister with a
+   plume, a seal is a die that has been pressed.
    ================================================================== */
 const MARK_PATHS = {
   warn:   '<path d="M8 2.2 L14.6 13.4 H1.4 Z"/><path d="M8 6.2 V9.6" class="mk-s"/><circle cx="8" cy="11.6" r=".85" class="mk-f"/>',
   blade:  '<path d="M3 13.2 L11.4 3.4 L12.8 4.6 L4.6 14.2 Z"/><path d="M2.2 14.8 L4.6 14.2 L3 13.2 Z" class="mk-f"/>',
   bow:    '<path d="M4.4 1.8 C10.6 5.6 10.6 10.4 4.4 14.2" class="mk-s"/><path d="M4.4 1.8 V14.2" class="mk-s"/><path d="M4.4 8 H13.6" class="mk-s"/><path d="M13.6 8 L10.8 6.6 V9.4 Z" class="mk-f"/>',
-  hook:   '<path d="M8 1.6 V7.4 C8 10.4 5.6 11.8 3.8 10.4" class="mk-s"/><path d="M3.8 10.4 L2.2 12.4 M3.8 10.4 L6 11" class="mk-s"/><path d="M8 1.6 L6.4 3.2 M8 1.6 L9.6 3.2" class="mk-s"/>',
-  rope:   '<path d="M4 3.4 C10.8 4.6 10.8 11.4 4 12.6" class="mk-s"/><path d="M12 3.4 C5.2 4.6 5.2 11.4 12 12.6" class="mk-s"/>',
+  /* a grappling hook is a ring, a shank and three flukes — the old drawing was a
+     bare J with two ticks on it, which read as a fish-hook or a question mark */
+  hook:   '<circle cx="8" cy="2.6" r="1.5" class="mk-s"/><path d="M8 4.1 V9.2" class="mk-s"/><path d="M8 9.2 C8 12 6 13.4 3.6 13.2 C4.6 11.6 5.2 10.6 5.4 8.8" class="mk-s"/><path d="M8 9.2 C8 12 10 13.4 12.4 13.2 C11.4 11.6 10.8 10.6 10.6 8.8" class="mk-s"/><path d="M8 9.2 V14.2" class="mk-s"/>',
+  /* a coil of rope, not two crossing arcs — those read as an eye */
+  rope:   '<ellipse cx="8" cy="5.4" rx="5" ry="2.4" class="mk-s"/><path d="M3 5.4 C3 7.2 5.2 8.4 8 8.4 C10.8 8.4 13 7.2 13 5.4" class="mk-s"/><path d="M3 8.2 C3 10 5.2 11.2 8 11.2 C10.8 11.2 13 10 13 8.2" class="mk-s"/><path d="M13 10.6 C12.4 12.6 11 13.6 9.2 13.8" class="mk-s"/>',
   climb:  '<circle cx="10.4" cy="3.2" r="1.6" class="mk-f"/><path d="M10.2 5.2 L7.4 8.4 L9 11 L8 14.4" class="mk-s"/><path d="M7.4 8.4 L3.6 7.2 M9.4 6.4 L12.8 8.8" class="mk-s"/>',
   foot:   '<path d="M4.6 3.2 C6.4 3.2 7 4.8 6.8 6.6 C6.6 8.4 5.6 9.4 4.4 9.2 C3.2 9 2.8 7.6 3.2 5.8 C3.5 4.2 3.8 3.2 4.6 3.2 Z"/><path d="M10.6 7.4 C12.4 7.4 13 9 12.8 10.8 C12.6 12.6 11.6 13.6 10.4 13.4 C9.2 13.2 8.8 11.8 9.2 10 C9.5 8.4 9.8 7.4 10.6 7.4 Z"/>',
   ear:    '<path d="M5.6 14 C5.6 11 4 10.4 4 7.2 A4 4 0 0 1 12 7.2 C12 9.4 10.4 9.6 10.4 11.2 C10.4 12.6 9.4 13.4 8.4 13" class="mk-s"/><path d="M6.6 7.4 A1.6 1.6 0 0 1 9.6 7.8" class="mk-s"/>',
   paw:    '<ellipse cx="8" cy="10.6" rx="3.4" ry="2.8" class="mk-f"/><circle cx="4.2" cy="6.6" r="1.35" class="mk-f"/><circle cx="6.9" cy="4.6" r="1.35" class="mk-f"/><circle cx="9.9" cy="4.6" r="1.35" class="mk-f"/><circle cx="12" cy="6.8" r="1.35" class="mk-f"/>',
   grain:  '<path d="M8 14.4 V5" class="mk-s"/><path d="M8 5 C6 5.6 4.8 7 4.8 8.8 C6.8 8.4 8 7 8 5 Z M8 5 C10 5.6 11.2 7 11.2 8.8 C9.2 8.4 8 7 8 5 Z"/><path d="M8 9 C6.4 9.4 5.4 10.6 5.4 12 C7 11.7 8 10.6 8 9 Z M8 9 C9.6 9.4 10.6 10.6 10.6 12 C9 11.7 8 10.6 8 9 Z"/>',
-  smoke:  '<path d="M4.4 11.2 A2.6 2.6 0 0 1 4.8 6.1 A3.4 3.4 0 0 1 11.3 5.6 A2.8 2.8 0 0 1 11.6 11.2 Z"/><path d="M3 13.6 H8 M10 13.6 H13.4" class="mk-s"/>',
+  /* a smoke SHELL: the canister it comes out of, and the plume it makes. The old
+     drawing was a cloud sitting on a dashed line, which read as weather */
+  smoke:  '<rect x="5.6" y="10.4" width="4.8" height="4" rx="1.2" class="mk-s"/><path d="M6.6 10.4 V9" class="mk-s"/><path d="M9.4 10.4 V9" class="mk-s"/><path d="M4.6 8.2 A2.2 2.2 0 0 1 5.4 4.2 A2.9 2.9 0 0 1 10.9 3.9 A2.4 2.4 0 0 1 11.4 8.2 Z"/><path d="M8 3.6 V1.6" class="mk-s"/>',
   kit:    '<rect x="2.4" y="5.6" width="11.2" height="8" rx="1.2" class="mk-s"/><path d="M6 5.6 V4 A1.2 1.2 0 0 1 7.2 2.8 H8.8 A1.2 1.2 0 0 1 10 4 V5.6" class="mk-s"/><path d="M8 7.8 V11.4 M6.2 9.6 H9.8" class="mk-s"/>',
   splint: '<rect x="1.6" y="6" width="12.8" height="4" rx="2" transform="rotate(-32 8 8)" class="mk-s"/><circle cx="8" cy="8" r=".8" class="mk-f"/>',
   scroll: '<path d="M4 2.6 H12.4 V13.4 H4 Z" class="mk-s"/><path d="M6 5.6 H10.4 M6 8 H10.4 M6 10.4 H9" class="mk-s"/>',
@@ -4026,17 +4105,60 @@ const MARK_PATHS = {
   swords: '<path d="M3 2.6 L10.4 11.6 M13 2.6 L5.6 11.6" class="mk-s"/><path d="M2.4 13.4 L5.2 10.6 M13.6 13.4 L10.8 10.6" class="mk-s"/>',
   sound:  '<path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" class="mk-s"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" class="mk-s"/>',
   slow:   '<circle cx="8" cy="8" r="5.6" class="mk-s"/><path d="M8 4.6 V8 L10.6 9.6" class="mk-s"/>',
-  seal:   '<circle cx="8" cy="8" r="5.4" class="mk-s"/><circle cx="8" cy="8" r="2.2" class="mk-f"/>'
+  /* a seal is a die with a handle, pressed into wax — a circle with a dot in it
+     was just a circle with a dot in it */
+  seal:   '<path d="M6.4 1.8 H9.6 V4.4 H6.4 Z" class="mk-s"/><path d="M4.2 4.4 H11.8 L12.6 7.2 H3.4 Z" class="mk-s"/><ellipse cx="8" cy="11" rx="5.4" ry="3.4" class="mk-s"/><path d="M6.2 11 H9.8 M8 9.4 V12.6" class="mk-s"/>',
+  /* climbing claws: three talons on a knuckle band, the thing a `claws` icon key
+     had been asking for since the blueprint table was written */
+  claws:  '<path d="M3.6 2.4 C3.4 5.6 3.8 7.8 4.7 9.4" class="mk-s"/><path d="M8 2 C8 5.4 8 7.8 8 9.6" class="mk-s"/><path d="M12.4 2.4 C12.6 5.6 12.2 7.8 11.3 9.4" class="mk-s"/><path d="M2.8 9.6 A6.2 6.2 0 0 0 13.2 9.6 V12.2 A6.2 6.2 0 0 1 2.8 12.2 Z"/>',
+
+  /* ---- THE WALK'S THREE FACTORS. Stamina burns down, power is force in
+     reserve, speed is how fast the road is going under them. ---- */
+  stamina:'<path d="M8 1.4 C11.4 4.6 12.9 6.9 12.9 9.3 A4.9 4.9 0 0 1 3.1 9.3 C3.1 7.4 3.9 5.9 5.3 4.6 C5.3 6.3 6 7.2 7 7.5 C6.5 5.2 6.8 3.1 8 1.4 Z"/>',
+  power:  '<path d="M3.2 7.6 A1.5 1.5 0 0 1 4.7 6.1 H9.8 A3.6 3.6 0 0 1 13.4 9.7 V10.3 A3.6 3.6 0 0 1 9.8 13.9 H6.8 A3.6 3.6 0 0 1 3.2 10.3 Z" class="mk-s"/><path d="M5.6 6.1 V4.5 A1.4 1.4 0 0 1 8.4 4.5 V6.1" class="mk-s"/><path d="M8.4 6.1 V3.6 A1.4 1.4 0 0 1 11.2 3.6 V6.4" class="mk-s"/>',
+  speed:  '<path d="M3 3.4 L8.4 8 L3 12.6" class="mk-s"/><path d="M8.6 3.4 L14 8 L8.6 12.6" class="mk-s"/>',
+
+  /* ---- what the road teaches on the first walk ---- */
+  mouse:  '<rect x="4.4" y="1.9" width="7.2" height="12.2" rx="3.6" class="mk-s"/><path d="M8 4.4 V6.6" class="mk-s"/>',
+  reach:  '<circle cx="5.6" cy="8" r="3.4" class="mk-s"/><path d="M9.6 8 H13.6" class="mk-s"/><path d="M14.4 8 L11.4 6.3 V9.7 Z" class="mk-f"/>',
+  key:    '<rect x="2.2" y="3.8" width="11.6" height="8.4" rx="1.8" class="mk-s"/><path d="M5 9.8 H11" class="mk-s"/>',
+  lanes:  '<path d="M3.4 3.6 H12.6 M2.2 8 H13.8 M1 12.4 H15" class="mk-s"/>',
+  river:  '<path d="M1.6 5.6 C3.8 3.8 5.4 7.4 8 5.6 C10.6 3.8 12.2 7.4 14.4 5.6" class="mk-s"/><path d="M1.6 10.6 C3.8 8.8 5.4 12.4 8 10.6 C10.6 8.8 12.2 12.4 14.4 10.6" class="mk-s"/>',
+  ledge:  '<path d="M3 9.4 L8 4.4 L13 9.4" class="mk-s"/><path d="M3 13.2 L8 8.2 L13 13.2" class="mk-s"/>',
+  word:   '<rect x="1.2" y="5.2" width="5.6" height="5.6" rx="1.2" class="mk-s"/><rect x="9.2" y="5.2" width="5.6" height="5.6" rx="1.2" class="mk-s"/><path d="M6.8 8 H9.2" class="mk-s"/>',
+  gate:   '<path d="M2.8 14.2 V7.6 A5.2 5.2 0 0 1 13.2 7.6 V14.2" class="mk-s"/><path d="M6.2 14.2 V8.6 A1.8 1.8 0 0 1 9.8 8.6 V14.2" class="mk-s"/>',
+
+  /* ---- the typographic marks, drawn. These used to fall through mark() as bare
+     characters and sat in rows of real icons looking like a rendering failure ---- */
+  star:   '<path d="M8 1.5 L9.9 6.1 L14.8 6.5 L11.1 9.7 L12.2 14.5 L8 11.9 L3.8 14.5 L4.9 9.7 L1.2 6.5 L6.1 6.1 Z"/>',
+  check:  '<path d="M2.8 8.4 L6.2 12 L13.2 4.2" class="mk-s"/>',
+  spark:  '<path d="M8 1.3 C8.7 5.2 10.8 7.3 14.7 8 C10.8 8.7 8.7 10.8 8 14.7 C7.3 10.8 5.2 8.7 1.3 8 C5.2 7.3 7.3 5.2 8 1.3 Z"/>',
+  ring:   '<circle cx="8" cy="8" r="4.6" class="mk-s"/>',
+  dot:    '<circle cx="8" cy="8" r="2.2" class="mk-f"/>',
+  gap:    '<path d="M8 2.6 L14.2 13.2 H1.8 Z" class="mk-s"/>',
+  cross:  '<path d="M3.6 3.6 L12.4 12.4 M12.4 3.6 L3.6 12.4" class="mk-s"/>',
+  plan:   '<circle cx="8" cy="2.6" r="1.2" class="mk-f"/><path d="M8 3.4 L4.2 13.6 M8 3.4 L11.8 13.6" class="mk-s"/><path d="M5.6 9.8 H10.4" class="mk-s"/>'
 };
 /* aliases: the road talks about what a passive DOES, the icon table about what
-   the picture IS, and these are the four places those two names differ */
+   the picture IS, and these are the places those two names differ */
 MARK_PATHS.brace = MARK_PATHS.shield;
 MARK_PATHS.focus = MARK_PATHS.lens;
 MARK_PATHS.haul  = MARK_PATHS.pack;
 MARK_PATHS.lead  = MARK_PATHS.hook;
+/* every typographic mark the game hands to mark() now resolves to a drawing */
+MARK_PATHS["★"] = MARK_PATHS.star;    // ★ masterwork
+MARK_PATHS["✓"] = MARK_PATHS.check;   // ✓ done / good
+MARK_PATHS["✦"] = MARK_PATHS.spark;   // ✦ fine
+MARK_PATHS["○"] = MARK_PATHS.ring;    // ○ par
+MARK_PATHS["◦"] = MARK_PATHS.ring;    // ◦ neutral
+MARK_PATHS["·"] = MARK_PATHS.dot;     // · plain
+MARK_PATHS["▲"] = MARK_PATHS.gap;     // ▲ a gap in the kit
+MARK_PATHS["✕"] = MARK_PATHS.cross;   // ✕ removed
+MARK_PATHS["Δ"] = MARK_PATHS.plan;    // Δ blueprint
 function mark(k){
-  const p=MARK_PATHS[k];
-  if(!p) return k==null?"":String(k);       // typographic marks pass straight through
+  if(k==null || k==="") return "";
+  // an unknown key is a drawn dot, never bare text and never a hole in the row
+  const p = MARK_PATHS[k] || MARK_PATHS.dot;
   return `<svg class="mk" viewBox="0 0 16 16" aria-hidden="true" focusable="false">${p}</svg>`;
 }
 
@@ -10831,8 +10953,14 @@ const GEAR_ICON = {
   blade:'<svg viewBox="0 0 24 24"><path d="M4 20 L17 7" stroke="#c9d2d8" stroke-width="2.6" stroke-linecap="round"/><path d="M16 6 L20 2" stroke="#c9d2d8" stroke-width="2.6" stroke-linecap="round"/><path d="M13 7 L17 11" stroke="#bd9d5f" stroke-width="2.2"/><circle cx="3" cy="21" r="1.6" fill="#8a5a2b"/></svg>',
   claws:'<svg viewBox="0 0 24 24"><path d="M6 4 L5 14 M12 3 L12 14 M18 4 L19 14" stroke="#c9d2d8" stroke-width="2" stroke-linecap="round"/><path d="M4 14 Q12 20 20 14 L20 17 Q12 22 4 17 Z" fill="#6a4a2a" stroke="#3a2f1c" stroke-width="1"/></svg>',
   kit:'<svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="2" fill="#8a6a3a" stroke="#5a3f1c" stroke-width="1"/><path d="M9 8 V6 h6 v2" fill="none" stroke="#5a3f1c" stroke-width="1.4"/><path d="M12 11 V16 M9.5 13.5 H14.5" stroke="#b5322b" stroke-width="1.8"/></svg>',
-  rope:'<svg viewBox="0 0 24 24"><path d="M6 3 q6 4 0 8 q-6 4 0 8 M10 3 q6 4 0 8 q-6 4 0 8" fill="none" stroke="#8a5a2b" stroke-width="2" stroke-linecap="round"/></svg>'
+  rope:'<svg viewBox="0 0 24 24"><path d="M6 3 q6 4 0 8 q-6 4 0 8 M10 3 q6 4 0 8 q-6 4 0 8" fill="none" stroke="#8a5a2b" stroke-width="2" stroke-linecap="round"/></svg>',
+  /* the fallback: a forged tool with no picture of its own is still a forged
+     tool. Every lookup in the game used to fall back to an empty string here,
+     which is the one thing a slot reserved for an icon must never do. */
+  generic:'<svg viewBox="0 0 24 24"><path d="M15.5 3.5 a5 5 0 0 0-6.2 6.7 L3.5 16 v4.5 H8 l5.8-5.8 a5 5 0 0 0 6.7-6.2 L17 11 l-4-4 Z" fill="#8a6a3a" stroke="#3a2f1c" stroke-width="1.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="1.2" fill="#3a2f1c"/></svg>'
 };
+/* one lookup, one guarantee: an icon slot always gets an icon */
+const gearIco = (k)=> GEAR_ICON[k] || GEAR_ICON.generic;
 
 /* ---------- trait axes the mission reads ----------
    Each forged item contributes to the squad's effective stats and
@@ -11254,7 +11382,7 @@ function renderTray(){
   if(!f.forged.length){ const s=el("span","small muted"); s.textContent="nothing yet"; s.style.opacity=".7"; tray.appendChild(s); return; }
   f.forged.forEach(it=>{
     const chip=el("span","forged-chip fc-pop "+(it.qtier==="masterwork"?"q-master":it.qtier==="fine"?"q-fine":it.qtier==="flawed"?"q-flawed":""));
-    chip.innerHTML=`<span class="fc-ico">${GEAR_ICON[it.icon]||""}</span>${it.name}`;
+    chip.innerHTML=`<span class="fc-ico">${gearIco(it.icon)}</span>${it.name}`;
     tray.appendChild(chip);
   });
 }
@@ -11314,7 +11442,7 @@ function openCommission(){
     const pips = bm.fine>0 ? `<span class="comm-pips" title="fine crafts">${"★".repeat(Math.min(3,bm.fine))}</span>` : "";
     card.innerHTML=`
       ${why?`<span class="comm-badge">✦ recommended</span>`:''}
-      <div class="mc-ico">${GEAR_ICON[bp.icon]||""}</div>
+      <div class="mc-ico">${gearIco(bp.icon)}</div>
       <h4>${bp.name} ${pips}</h4>
       <div class="small muted comm-grants">${bp.grants.map(g=>({climb:"opens the high routes",smoke:"slips patrols & ambushes",shoot:"strikes at range",cut:"cuts snags & barricades",heal:"mends the squad",descend:"opens rope descents"}[g]||g)).join(" · ")}</div>
       ${why?`<div class="small comm-why">${why}</div>`:""}
@@ -11367,7 +11495,7 @@ function nextBlueprint(bpId, varId){
   const variant = varId? (BP_VARIANTS[bpId]||[]).find(v=>v.id===varId) : null;
   W.cur={ bp, variant, quality:0.6, material:null, reagent:null, buildQ:0.6, traits:{}, verdict:null };
   $('#forge-skip').style.display = f.forged.length>=1 ? "inline-flex" : "none";
-  $('#forge-blueprint').innerHTML=GEAR_ICON[bp.icon]||"";
+  $('#forge-blueprint').innerHTML=gearIco(bp.icon);
   $('#forge-blueprint').classList.remove("unfurl"); void $('#forge-blueprint').offsetWidth; $('#forge-blueprint').classList.add("unfurl");
   stepDecode();
 }
@@ -11455,7 +11583,7 @@ function stepMaterial(){
       const v=m.traits[k]; const cls=v>0?"good":"cost";
       return `<span class="trait-chip ${cls}">${v>0?"+":""}${v} ${k}</span>`;
     }).join("");
-    card.innerHTML=`<div class="mc-ico">${GEAR_ICON[m.icon]||""}</div>
+    card.innerHTML=`<div class="mc-ico">${gearIco(m.icon)}</div>
       <h4>${m.name}</h4>
       <div class="small muted">${m.story}</div>
       <div class="mc-traits">${traitChips}</div>
@@ -12085,7 +12213,9 @@ function buildSpecSheet(bp, cur, qtier, isMaster, decodeClean){
   const spec=craftSpec({craft:bp.craft, craftMeta:cur.craftMeta||{}, qtier});
   const bt=benchTrial(bp.id);
   const build=cur.build;
-  const mark=(v)=> v>=masterBar()?"★" : v>=PAR_BAR?"✓" : "○";
+  // the grade for how the piece was shaped, drawn with the same icon set as
+  // every other line in the list rather than as a loose character
+  const mark=(v)=> D.mark(v>=masterBar()?"star" : v>=PAR_BAR?"check" : "ring");
   let html=`<div class="ss-title">what you built · on the road</div><ul>`;
   if(build) html+=`<li><span class="ss-ic">${mark(build.score)}</span><span><b>${bt.title} — ${build.name}</b>, ${Math.round(build.score*100)}% — how the piece was shaped.</span></li>`;
   html += (spec.notes.length?spec.notes:[{ic:"·",txt:"A plain piece — it does what the blueprint promises, no more."}])
@@ -12283,9 +12413,9 @@ function renderWarriors(){
     const held=f.forged.filter(it=>it.assignedTo===id);
     const card=el("div","warrior-card"+(held.length?" holds":""));
     card.dataset.wid=id;
-    const wornIcon = held.length? `<div class="worn-gear">${GEAR_ICON[held[0].icon]||""}</div>` : "";
+    const wornIcon = held.length? `<div class="worn-gear">${gearIco(held[0].icon)}</div>` : "";
     const heldHtml = held.length
-      ? held.map(it=>`<span class="held-item" data-item="${it.id}"><span class="hi-ico">${GEAR_ICON[it.icon]||""}</span>${it.name}<span class="hi-x">✕</span></span>`).join("")
+      ? held.map(it=>`<span class="held-item" data-item="${it.id}"><span class="hi-ico">${gearIco(it.icon)}</span>${it.name}<span class="hi-x">✕</span></span>`).join("")
       : `<span class="ws-empty">no gear yet — tap a tool, then tap here</span>`;
     card.innerHTML=`
       <div class="warrior-hd">
@@ -12321,7 +12451,7 @@ function renderRack(){
     const row=el("div","rack-item"+(assigned?" assigned":"")+(selectedGear===it.id?" selected":""));
     const qtxt = it.qtier==="masterwork"?'<span style="color:#bd9d5f;font-weight:700">★ masterwork</span>': it.qtier==="fine"?'<span style="color:var(--verd-deep)">fine</span>': it.qtier==="ok"?"serviceable":'<span class="q-flawed">flawed</span>';
     const topTraits=Object.keys(it.traits).filter(k=>it.traits[k]>0.4).sort((a,b)=>it.traits[b]-it.traits[a]).slice(0,2).join(", ")||"basic";
-    row.innerHTML=`<div class="rack-ico">${GEAR_ICON[it.icon]||""}</div>
+    row.innerHTML=`<div class="rack-ico">${gearIco(it.icon)}</div>
       <div class="rack-meta"><div class="rm-name">${it.name}</div>
       <div class="rm-traits">${qtxt} · ${topTraits}</div></div>`;
     if(!assigned){
@@ -12361,6 +12491,15 @@ function renderForecast(){
   const f=E.getFlow(); const wrap=$('#forecast-lines'); wrap.innerHTML="";
   const caps=squadCapabilities(f);
   const lines=[];
+  /* WHAT THE PACKING BUYS, IN THE ROAD'S OWN WORDS. Everything on this screen is
+     measured in supplies and route demands; the walk is measured in stamina and
+     power. This is the sentence that joins the two, so a player packing rations
+     knows which of the three bars they are filling before they set out. */
+  const st=(f.stats&&f.stats.tot)||{};
+  const startSt=Math.round(clamp(40+(st.stamina||0)*7,10,100));
+  const startPw=Math.round(clamp(40+(((st.morale||0)+(st.safety||0))/2)*7,10,100));
+  lines.push({ic:"stamina", txt:`Rations, water and rest gear set the squad's <b>stamina</b> — the road's clock. They set out at about <b>${startSt}</b>.`});
+  lines.push({ic:"power",   txt:`Guards, armour and morale set their <b>power</b> — the reserve every lunge and every hazard spends. They set out at about <b>${startPw}</b>.`});
   if(caps.climb) lines.push({ic:"hook", txt:`With a hook or claws in hand, <b>upper ledges and rope descents</b> open up.`});
   if(caps.smoke) lines.push({ic:"smoke", txt:`A smoke shell lets the squad <b>slip a torch-lit patrol</b> without a fight.`});
   if(caps.shoot) lines.push({ic:"bow", txt:`A bow can <b>snuff a distant alarm-lantern</b> before it rings.`});
@@ -12511,7 +12650,7 @@ window.__RD_PREP = { openPrep: openForge, openForge, openAssign, unlockTech, has
   _depart:()=>depart(),
   _variants:(bpId)=>unlockedVariants(bpId),
   _blueprints:()=>BLUEPRINTS,
-  _gearIcon:(k)=>GEAR_ICON[k]||"",
+  _gearIcon:(k)=>gearIco(k),
   _reagents:()=>REAGENTS,
   _skipMark:()=>{ const skip=document.querySelector('.maker-mark .btn.ghost'); if(skip){ skip.click(); return true; } return false; },
   _pickMark:(partId)=>{ const btn=$$('.mm-opt').find(b=>b.dataset.part===partId); if(btn){ btn.click(); return true; } return false; } };
@@ -12614,15 +12753,20 @@ const LANES=[
    weighted, weather-aware deck per run — no lane is ever "the safe lane" by rote.
    Forged gear counters specific hazards (see hazardCounter) so bench choices are
    visible on the road, hazard by hazard. */
+/* EVERY HAZARD TAKES POWER. Hitting an object is the second half of the rule the
+   power bar exists to make legible — a lunge that lands spends it, and anything
+   that lands on YOU takes it. The heavier hits also cost stamina, because being
+   knocked about is tiring as well as weakening, but power is always the larger
+   number: it is the thing standing between the squad and the road. */
 const HAZARDS={
-  rock:  {lanes:[0,1], name:"falling rock",     dmg:{stamina:9, safety:7}},
-  roots: {lanes:[1],   name:"snagging roots",   dmg:{morale:5, stamina:5}, slow:2.2},
-  rapids:{lanes:[2],   name:"a rapids surge",   dmg:{stamina:11}},
-  patrol:{lanes:[1,2], name:"a torch patrol",   dmg:{safety:12, morale:7}, needEnemy:true},
-  scree: {lanes:[0],   name:"sliding scree",    dmg:{stamina:6}, slow:1.8, dropLane:true},
-  mud:   {lanes:[2],   name:"a mud slick",      dmg:{stamina:3}, slow:2.6},
-  wasps: {lanes:[1],   name:"a paper-wasp nest",dmg:{morale:8, stamina:4}},
-  branch:{lanes:[0,1], name:"a low deadfall",   dmg:{safety:6}}
+  rock:  {lanes:[0,1], name:"falling rock",     dmg:{power:11, stamina:6}},
+  roots: {lanes:[1],   name:"snagging roots",   dmg:{power:6,  stamina:5}, slow:2.2},
+  rapids:{lanes:[2],   name:"a rapids surge",   dmg:{power:7,  stamina:9}},
+  patrol:{lanes:[1,2], name:"a torch patrol",   dmg:{power:16, stamina:4}, needEnemy:true},
+  scree: {lanes:[0],   name:"sliding scree",    dmg:{power:7,  stamina:5}, slow:1.8, dropLane:true},
+  mud:   {lanes:[2],   name:"a mud slick",      dmg:{power:4,  stamina:3}, slow:2.6},
+  wasps: {lanes:[1],   name:"a paper-wasp nest",dmg:{power:9,  stamina:4}},
+  branch:{lanes:[0,1], name:"a low deadfall",   dmg:{power:8,  stamina:3}}
 };
 /* FREE MOVEMENT.
    The three ways above are TERRAIN BANDS, not rails. The squad moves continuously
@@ -13351,7 +13495,11 @@ function runMission(){
         /* A company that studied sets out steadier than one that did not. This is
            the Vigil's most legible payment: the three bars the player watches all
            run start higher, and they can see exactly how much on the summary. */
-        stats:{ stamina:clampStat(tot.stamina)+vigStat, morale:clampStat(tot.morale)+vigStat, safety:clampStat(tot.safety)+vigStat },
+        stats: roadStats(clampStat(tot.stamina)+vigStat,
+                         (clampStat(tot.morale)+clampStat(tot.safety))/2 + vigStat),
+        /* how long power has been spent, which is what makes the stamina burn
+           accelerate rather than merely increase (see the drain block) */
+        powerOutT:0,
         weatherProt: clampStat(tot.weather), speedStat: clampStat(tot.speed),
         weather:r.weather, diff:DIFF,
         lane:1, laneY:0.615, targetY:null, keyUp:false, keyDn:false, steering:false, warnedHigh:false,
@@ -13386,6 +13534,7 @@ function runMission(){
         streakParts:[], partsStudiedRun:[], capT:0,
         // ---- the run's clock: when stamina breaks, the party goes down ----
         collapsing:false, fallT:0,
+        school:null,
         endless:pendingEndless };
     pendingEndless=false;
     syncRoadInsets();
@@ -13434,20 +13583,24 @@ function runMission(){
     const walked=(S().lifetime && S().lifetime.roadsStarted) || 0;
     S().lifetime=S().lifetime||{}; S().lifetime.roadsStarted=walked+1; persist();
     const hint=$('#mission-hint');
-    if(hint && walked>=3){ hint.classList.add('fade'); }
+    /* On the very first road the school below teaches all of this properly and
+       at length; a pill repeating half of it over the sky is noise on top of a
+       lesson. Roads two and three still get the pill, as the reminder it is. */
+    if(hint && (walked>=3 || walked===0)){ hint.classList.add('fade'); }
     else if(hint){
       /* Kept to two lines on touch. The long version wrapped to three or four at
          390px and spilled out of the sky and onto the road itself, which is the
          one thing the markup comment above it promises never to do. */
       hint.innerHTML = FX.isTouch
-        ? `<b>Drag</b> up and down to lead the squad. Gather word-parts; chain them into real terms.`
-        : `Lead the squad with the <b>mouse</b> &mdash; gather word-parts and chain them into real terms. <b>Click</b> to lunge for one, or to shove a hazard aside. <b>Hold right-click</b> to slow the road while you read a gate. <b>Space</b> surges; <b>1&thinsp;2&thinsp;3</b> spend your charges. Everything here is on the keyboard too &mdash; the pause menu lists it.`;
+        ? `<b>Drag</b> up and down to lead the squad. Gather word-parts; chain them into real terms. <b>Tapping</b> something real costs <b>power</b>.`
+        : `Lead the squad with the <b>mouse</b> &mdash; gather word-parts and chain them into real terms. <b>Click</b> to lunge; landing on something real spends <b>power</b>. <b>Hold right-click</b> to slow the road while you read a gate. <b>Space</b> surges. The river floor gives power back &mdash; and at zero power, <b>stamina burns faster and faster</b>. The pause menu explains the rest.`;
       hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500);
     }
     $('#mini-challenge').classList.remove('show');
     $('#pause-menu').classList.remove('show');
     $('#pause-quit-confirm').classList.remove('show');
     const cp=$('#road-collapse'); if(cp) cp.classList.remove('show');
+    const rs=$('#road-school'); if(rs) rs.classList.remove('show');
     const tb=$('#term-banner'); if(tb) tb.classList.remove('show');
     // the destination line is read once; after that it is furniture in the
     // corner of a screen that needs its corners
@@ -13469,6 +13622,19 @@ function runMission(){
        frames and 6x the DOM queries. Keep exactly one. */
     if(roadLoop && roadLoop.kill){ try{ roadLoop.kill(); }catch(e){} }
     roadLoop = FX.raf((t)=>tick(t));
+    /* THE FIRST WALK TEACHES THE WALK. On a player's very first road the school
+       opens before they have taken a step: the three factors, then every option
+       they have for spending them. It runs once — a retry of the first road, or
+       any road after it, goes straight to walking — and the pause menu carries
+       it from then on. The boss road and the Endless Road are never anyone's
+       first road, but they are excluded anyway: neither is a place to be
+       reading a tutorial. */
+    if(walked===0 && !M.endless && !isBossRoad(f)){
+      // hold the mission this was scheduled for: a fast retry swaps M underneath
+      // a pending timer, and a lesson must never open over a road it is not about
+      const mine=M;
+      setTimeout(()=>{ if(M===mine && !M.done && !M.pausedByMenu && !M.school) schoolOpen(false); }, 620);
+    }
   }});
 }
 function bindMissionPointer(cv){
@@ -13680,7 +13846,7 @@ function computeAbilities(f){
 const ABILITY_META={
   strike:{name:"Strike", mk:"swords", hint:"clear the road ahead", raidHint:"cut down the ambush"},
   vanish:{name:"Vanish", mk:"smoke",  hint:"phase & draw in parts", raidHint:"slip the ambush"},
-  mend:  {name:"Mend",   mk:"kit",    hint:"restore the squad",    raidHint:"restore the squad"}
+  mend:  {name:"Mend",   mk:"kit",    hint:"stamina & power back", raidHint:"stamina & power back"}
 };
 function abilityHint(kind){
   const meta=ABILITY_META[kind];
@@ -13722,7 +13888,8 @@ function refreshAbilityReady(){
     const raiding = M.raid && !M.raid.resolved;
     let usableNow = left>0 && (raiding && (kind==="strike"||kind==="vanish"));
     if(!usableNow && left>0 && kind==="strike") usableNow = hazardsAhead()>=2;
-    if(!usableNow && left>0 && kind==="mend")   usableNow = M.stats.stamina<32;
+    // mend lights up for either reserve being low, not just the clock
+    if(!usableNow && left>0 && kind==="mend")   usableNow = M.stats.stamina<32 || M.stats.power<28;
     b.classList.toggle("ready", !!usableNow);
   });
 }
@@ -13786,11 +13953,40 @@ function tryLunge(atX, atY){
       h.hit=true; h.passed=true; cleared++;
     }
   });
+  /* A LUNGE THAT LANDS ON SOMETHING COSTS POWER — that is the rule the second
+     bar exists to make legible. "Something" is anything genuinely on the road at
+     that spot: a hazard shoved aside, a raider shouldered, or a word-part reached
+     for. Clicking empty sky is not free either, but it is nearly free — a click
+     with nothing under it should read as a wasted step, not as a mistake that
+     ends runs. */
+  let reached=0;
+  // raiders are placed by the closing-in maths in the draw pass; mirror it here
+  // so a shoulder into an approaching ambusher counts as landing on something
+  if(M.raid && !M.raid.resolved && M.raiders.length){
+    const frac = clamp(M.raid.t/M.raid.max,0,1);
+    const farX = M.cv.width*0.92, nearX = sx+54;
+    M.raiders.forEach((rd,i)=>{
+      const rx = nearX + (farX-nearX)*frac + rd.off*0.25*frac;
+      const ry = M.laneY + (i-1)*10;
+      if(Math.hypot(rx-M.lungeX, ry-M.lungeY) < 74) reached++;
+    });
+  }
+  M.pickups.forEach(pk=>{
+    if(pk.got) return;
+    const px=screenX(pk.p), py=objY(pk);
+    if(Math.hypot(px-M.lungeX, py-M.lungeY) < 74) reached++;
+  });
+  const landed = cleared + reached;
+  if(landed) spendPower(POWER_LUNGE_COST + (landed-1)*2, "That last shove emptied them");
+  else       spendPower(POWER_MISS_COST);
+
   if(cleared){
     bumpMomentum(0.18*M.forge.gainMult);
-    statGain({morale:3});
     pop(M.lungeX, M.lungeY-24, cleared>1?"shoved through!":"shoved aside");
     Audio2.sfx.hammer && Audio2.sfx.hammer(); FX.buzz(18); FX.shake(4,120);
+  } else if(reached){
+    pop(M.lungeX, M.lungeY-24, "reached");
+    Audio2.sfx.clink && Audio2.sfx.clink(); FX.buzz(10);
   } else {
     Audio2.sfx.step && Audio2.sfx.step(); FX.buzz(8);
   }
@@ -13828,7 +14024,9 @@ function useAbility(kind){
     // hard and rarely, a bandage case mends often and lightly. Same button, and
     // the number that comes out is the one the bench told you to expect.
     const per=tm*((sc&&sc.mendPer)||1);
-    statGain({stamina:Math.round(20*per),morale:Math.round(12*per),safety:Math.round(4*per)});
+    // mend is the one thing besides the river floor that puts power back — that is
+    // the charge's whole reason to exist now, and it says so on the button
+    statGain({stamina:Math.round(20*per), power:Math.round(16*per)});
     const shape=(sc&&sc.mendPer>1.15)?"deeply" : (sc&&sc.mendPer<0.85)?"quickly":"";
     caption(flashItem(it,"mended",`opens — bindings, warm broth, a steadier breath. The squad recovers ${shape}${tierNote(it)}`));
     pop(M.cv.width*0.30,M.laneY-70,per>1.15?"mended deep":per<0.85?"patched":"mended");
@@ -14079,6 +14277,15 @@ function finishCollapse(){
   if(body) body.innerHTML=`They went down <b>${dist}%</b> of the way to ${M.f.chapter.dest}. `
     + `Nothing found on this walk is kept — but everything you <i>read</i> stays in your Lexicon, `
     + `and the bench you forged is untouched. Walk it again.`;
+  /* WHY THE CLOCK RAN OUT, NOT JUST THAT IT DID. A run lost to an empty power
+     reserve is a run lost to a decision the player can make differently, and
+     they cannot make it differently if nobody tells them it was the decision.
+     Only shown when it was actually the story of the walk. */
+  const spent=Math.round(M.spentTotal||0);
+  if(body && spent>=5){
+    body.innerHTML += `<br><span style="color:var(--cinnabar)">They walked <b>${spent} second${spent===1?"":"s"}</b> with <b>no power left</b> — that is what made the clock run away. `
+      + `Drop to the <b>river floor</b> earlier next time: it is the only thing that puts power back.</span>`;
+  }
   if(shiftedTo && body) body.innerHTML += `<br><span style="color:var(--verd-deep)">The road eases toward <b>${shiftedTo}</b> for the next walk.</span>`;
   const learned=$('#collapse-learned');
   if(learned){
@@ -14200,13 +14407,96 @@ function setGearStripOpen(on){
   const btn=$('#mission-gear-btn'); if(btn) btn.setAttribute('aria-pressed', on?'true':'false');
   syncRoadInsets();
 }
+/* ==================================================================
+   THE THREE FACTORS THE WALK RUNS ON.
+
+   The road used to show Stamina / Morale / Safety, and only one of the
+   three was doing anything a player could feel: stamina was the clock,
+   morale went down in bad weather, and safety was a number that made
+   hazards bite slightly harder once it got low. Two of the bars were
+   weather reports.
+
+   The walk now runs on STAMINA, POWER and SPEED, and each is a different
+   kind of thing on purpose:
+
+     STAMINA is the clock. It only ever falls, it falls faster the harder
+       the road is working them, and when it reaches zero the party goes
+       down. Nothing else ends a run.
+     POWER is force in reserve. It does NOT fall with time — it falls when
+       the squad SPENDS it or has it taken: a lunge that actually lands on
+       something, and every hazard that connects. Power is what makes them
+       quick, and what stands between them and the road; at zero they are
+       running on nothing but legs, and the stamina clock starts
+       accelerating — the longer they stay spent, the faster it burns.
+     SPEED is not a reserve at all. It is a readout: how fast the road is
+       actually moving under them this instant, and why.
+
+   Morale and safety survive as views onto power, so the arrival grade, the
+   debrief lines and every `statGain({morale:…})` in the game keep working
+   and keep meaning something — they are now describing the same reserve
+   the player is watching, rather than two bars beside it.
+   ================================================================== */
+const POWER_LUNGE_COST = 6;      // a lunge that lands on something real
+const POWER_MISS_COST  = 1.5;    // a lunge into empty air still costs a little
+function roadStats(stamina, power){
+  const s = { stamina: clamp(stamina,0,100), power: clamp(power,0,100), speed: 0 };
+  // morale and safety are the same reserve seen from two older angles
+  const view = {
+    get(){ return s.power; },
+    set(v){ s.power = clamp(isFinite(v)?v:0, 0, 100); },
+    enumerable:true, configurable:true
+  };
+  Object.defineProperty(s, "morale", view);
+  Object.defineProperty(s, "safety", view);
+  return s;
+}
+/* WHAT SPEED IS DOING, AND WHY — the third bar is a live status, so it has to
+   be able to say the reason as well as the number. Reasons are checked in the
+   order the player would feel them. */
+function speedStatus(){
+  if(!M) return { pct:0, word:"—", why:"" };
+  const live = M.paceLive || M.paceNow || 1;
+  // ×0.35 (focused, on their knees) → ×2.6 (surging in flow) spread across the bar
+  const pct = clamp(Math.round(((live-0.35)/(2.6-0.35))*100), 0, 100);
+  let word = live>=1.85 ? "Flying" : live>=1.35 ? "Quick" : live>=0.9 ? "Steady"
+           : live>=0.6 ? "Labouring" : "Crawling";
+  let why = "";
+  if(M.collapsing)                 { word="Down";     why="the party has fallen"; }
+  else if(M.focusing)              { word="Reading";  why="the road is slowed while they read"; }
+  else if(M.surging)               { word="Surging";  why="burning stamina for speed"; }
+  else if(M.slowT>0)               { word="Checked";  why="a hazard broke their stride"; }
+  else if(M.stats.power<=0)        { why="no power left — legs only"; }
+  else if(M.stats.stamina<20)      { why="too tired to push"; }
+  else if(M.lane===2)              { why="the river floor is slow, and it mends them"; }
+  else if(M.lane===0 && M.forge.ledgeSpeed>0.02) { why="running the high ledge"; }
+  else if(M.flow)                  { why="in flow — every answer is compounding"; }
+  return { pct, word, why, live };
+}
+/* THE THREE BARS. Each carries its own icon so the row can be read at a glance
+   without reading the words, and each has a title that says what the factor
+   actually does — the first walk teaches this properly, but it must stay
+   answerable on the two-hundredth. */
+const PREP_FACTORS = [
+  { k:"stamina", lab:"Stamina", ic:"stamina",
+    tip:"The run's clock. It only falls — faster on the high ledge, slower on the river floor. At zero the party goes down." },
+  { k:"power",   lab:"Power",   ic:"power",
+    tip:"Force in reserve. Spent on every lunge that lands and taken by every hazard that connects. At zero, stamina starts burning faster and faster." },
+  { k:"speed",   lab:"Speed",   ic:"speed",
+    tip:"How fast the road is moving under them right now, and why." }
+];
 function renderPrepBars(){
-  const wrap=$('#mission-prep'); wrap.innerHTML="";
-  [["stamina","Stamina"],["morale","Morale"],["safety","Safety"]].forEach(([k,lab])=>{
-    const pb=el("div","pb"); pb.dataset.stat=k;
-    pb.innerHTML=`<span class="lab">${lab}</span><div class="bar"><i id="pb-${k}" style="width:${M.stats[k]}%"></i></div>`;
+  const wrap=$('#mission-prep'); if(!wrap) return;
+  wrap.innerHTML="";
+  // the per-frame node cache must not outlive the nodes it points at
+  if(M._hud) PREP_FACTORS.forEach(f=>{ delete M._hud['pb-'+f.k]; delete M._hud['pbr-'+f.k]; });
+  PREP_FACTORS.forEach(f=>{
+    const pb=el("div","pb"); pb.dataset.stat=f.k; pb.title=f.tip;
+    pb.innerHTML=`<span class="lab">${D.mark(f.ic)} ${f.lab}</span>`+
+      `<div class="bar"><i id="pb-${f.k}" style="width:${Math.round(M.stats[f.k]||0)}%"></i></div>`+
+      `<span class="pb-read" id="pbr-${f.k}"></span>`;
     wrap.appendChild(pb);
   });
+  updatePrepBars(true);
 }
 /* THE ROAD'S HUD NODES, LOOKED UP ONCE.
    These three functions run every frame and between them did eleven
@@ -14219,12 +14509,176 @@ function hudNode(id){
   if(!(id in c)) c[id]=$('#'+id);
   return c[id];
 }
-function updatePrepBars(){
-  ["stamina","morale","safety"].forEach(k=>{ const i=hudNode('pb-'+k); if(i){ i.style.width=M.stats[k]+"%";
-    i.style.background = M.stats[k]<34?"var(--cinnabar)":M.stats[k]<60?"var(--gold)":"var(--verd-soft)";
-    // stamina is the run's clock: it gets a visible warning state of its own
-    if(k==="stamina" && i.parentElement && i.parentElement.parentElement)
-      i.parentElement.parentElement.classList.toggle('critical', M.stats[k]<22); } });
+function updatePrepBars(force){
+  if(!M) return;
+  const sp = speedStatus();
+  M.stats.speed = sp.pct;
+  PREP_FACTORS.forEach(f=>{
+    const i=hudNode('pb-'+f.k); if(!i) return;
+    const v = clamp(M.stats[f.k]||0, 0, 100);
+    const w = Math.round(v)+"%";
+    if(force || i.style.width!==w) i.style.width=w;
+    /* Speed is a readout, not a reserve, so a low speed is not a warning —
+       it is amber only when something is actively holding them back. The two
+       reserves keep the honest three-step colour: green, gold, cinnabar. */
+    i.style.background = f.k==="speed"
+      ? (M.stats.power<=0 || M.slowT>0 ? "var(--gold)" : "var(--verd-soft)")
+      : (v<34?"var(--cinnabar)":v<60?"var(--gold)":"var(--verd-soft)");
+    const box = i.parentElement && i.parentElement.parentElement;
+    if(box){
+      // stamina is the run's clock; power at zero is what makes that clock run away
+      const crit = f.k==="stamina" ? v<22 : f.k==="power" ? v<=0 : false;
+      box.classList.toggle('critical', crit);
+    }
+    const read = hudNode('pbr-'+f.k);
+    if(read){
+      const txt = f.k==="speed" ? sp.word
+                : f.k==="power" && v<=0 ? "spent"
+                : Math.round(v)+"";
+      if(force || read.textContent!==txt) read.textContent=txt;
+    }
+  });
+  // the speed bar's tooltip carries the reason, so "why am I slow" is always answerable
+  const sBox = hudNode('pb-speed');
+  const sWrap = sBox && sBox.parentElement && sBox.parentElement.parentElement;
+  if(sWrap){ const t = `Speed — ${sp.word}${sp.why?`: ${sp.why}`:""} (×${(sp.live||1).toFixed(2)})`;
+    if(sWrap.title!==t) sWrap.title=t; }
+}
+/* ==================================================================
+   THE ROAD SCHOOL — the first walk teaches the walk.
+
+   Everything the road can do was already in the game, and none of it was
+   ever taught. A first-time player got a hint pill that named five verbs in
+   one sentence and faded after eight and a half seconds, and a pause menu
+   they had no reason to open. So the road's whole vocabulary — the three
+   bands, the lunge, focus, surge, the three charges, what reading a part
+   pays — was discoverable only by accident.
+
+   This runs card by card, with the road held still, on a player's very first
+   road; and it is reachable from the pause menu forever after, because "how
+   does this work again" is a question that outlives the tutorial. Each card
+   answers one question, and the last one is the only one about failing.
+
+   It is written against the three factors deliberately: every option the
+   player has is described by what it SPENDS and what it BUYS, so the bars in
+   the corner are the through-line of the lesson rather than decoration on it.
+   ================================================================== */
+function schoolCards(){
+  const touch = FX.isTouch;
+  const opt = (ic, txt)=>`<li><span class="so-ic">${D.mark(ic)}</span><span>${txt}</span></li>`;
+  const lead = touch ? "<kbd>drag</kbd> up and down" : "the <kbd>mouse</kbd> (or <kbd>W</kbd><kbd>S</kbd>)";
+  return [
+    { t:"Three things decide this road",
+      b:`<p>The squad walks on its own. Everything you do is a choice about <b>what to spend</b> — and the corner of the screen keeps score of it in three figures.</p>
+         <ul class="school-opts">
+           ${opt("stamina", "<b>Stamina</b> is the clock. It only ever falls. It falls faster the harder they are working, and when it reaches zero <b>the party goes down and the road has to be walked again</b>. Nothing else ends a run.")}
+           ${opt("power",   "<b>Power</b> is force held in reserve. It does not run down with time — it runs down when you <b>reach for something and connect</b>, and when <b>something hits them</b>. Power is what makes them quick.")}
+           ${opt("speed",   "<b>Speed</b> is not a reserve. It is a readout: how fast the road is moving under them right now, and a word for <i>why</i> — surging, reading, checked, spent.")}
+         </ul>` },
+    { t:"Where you walk is a decision",
+      b:`<p>Lead them with ${lead}. The road is one continuous slope with three kinds of footing, and each one charges a different price.</p>
+         <ul class="school-opts">
+           ${opt("ledge", "The <b>high ledge</b> is the fast line — and the most tiring. Stamina burns hardest up here.")}
+           ${opt("lanes", "The <b>trail</b> in the middle is the even trade, and where most word-parts are.")}
+           ${opt("river", "The <b>river floor</b> is slow, and it is the only place that <b>gives power back</b> and eases the stamina burn. It is where you go to recover — deliberately, at a cost in time.")}
+         </ul>` },
+    { t:"Words are the point of the walk",
+      b:`<p>Word-parts drift down the road. Gather them and they chain: two or three parts in the right order build a real term, and a built term pays in <b>momentum</b>, which is pace you keep.</p>
+         <ul class="school-opts">
+           ${opt("word", `${touch?"<b>Tap and hold</b> a part":"<b>Hover</b> a part"} to read what it means. Reading is not the slow option — it <b>pays speed too</b>, and the meaning stays on the tile every time you meet it again.`)}
+           ${opt("gate", "A <b>rune gate</b> blocks the road with a question. Answer it and you accelerate through; the harder the question, the bigger the burst.")}
+         </ul>` },
+    { t:"Reaching for something costs power",
+      b:`<p>${touch?"<b>Tap</b> the road":"<b>Click</b> the road"} to <b>lunge</b> — a short reach toward the pointer that widens what they can grab and shoves a hazard bodily out of the way.</p>
+         <ul class="school-opts">
+           ${opt("reach", "A lunge that <b>lands on something actually there</b> — a hazard, a word-part, a raider — spends a real bite of <b>power</b>. That is the whole trade: force for reach.")}
+           ${opt("dot",   "A lunge into empty air costs almost nothing. Missing is cheap; it is <b>connecting</b> that is expensive.")}
+           ${opt("warn",  "So is being hit. <b>Every hazard that lands on them takes power</b> as well — the same reserve, from the other direction.")}
+         </ul>` },
+    { t:"Buying time, and buying speed",
+      b:`<p>Two things you hold rather than press. Both are paid for out of <b>stamina</b>, and both are worth it at the right moment.</p>
+         <ul class="school-opts">
+           ${opt("focus", `<b>Focus</b> — ${touch?"<b>hold two fingers</b> on the road":"hold <kbd>right-click</kbd> or <kbd>F</kbd>"}. The road slows to a third while you read a gate. You are buying thinking time out of their legs.`)}
+           ${opt("bolt",  `<b>Surge</b> — ${touch?"hold the <b>Surge</b> button":"hold <kbd>space</kbd>"}. A genuine burst of speed, and less time to read what is coming.`)}
+           ${opt("slow",  "Neither is a pause button. The clock is running the whole time either one is held.")}
+         </ul>` },
+    { t:"What you forged, and what it does",
+      b:`<p>The gear you built at the bench arrives as three charges. They are yours to spend when the road asks for them, and there are no more once they are gone.</p>
+         <ul class="school-opts">
+           ${opt("swords", `<b>Strike</b> <kbd>1</kbd> — clear the road ahead outright.`)}
+           ${opt("smoke",  `<b>Vanish</b> <kbd>2</kbd> — slip a patrol, and draw loose parts in.`)}
+           ${opt("kit",    `<b>Mend</b> <kbd>3</kbd> — put stamina and power back into the squad.`)}
+           ${opt("pack",   `<kbd>G</kbd> shows what every forged piece is quietly doing for you.`)}
+         </ul>` },
+    { t:"How a walk is lost",
+      b:`<p>There is one failure, and one thing that leads to it. It is worth knowing both before you set out.</p>
+         <ul class="school-opts">
+           ${opt("power",   "<b>Power reaching zero does not end the run</b> — it makes the run end sooner. With nothing in reserve they are slower, hazards bite harder, and the stamina clock <b>accelerates: the longer they stay spent, the faster it burns</b>.")}
+           ${opt("river",   "The answer is the river floor. Drop down, take the slow lane, get power back, and the burn unwinds twice as fast as it built.")}
+           ${opt("stamina", "<b>Stamina reaching zero ends it.</b> The party goes down where they stand and the road is walked again from the start — though every part you <i>read</i> stays yours, and the bench you forged is untouched.")}
+         </ul>` }
+  ];
+}
+function schoolOpen(fromPause){
+  if(!M) return;
+  M.school = { i:0, cards:schoolCards(), fromPause:!!fromPause, wasPaused:!!M.paused };
+  M.paused = true;
+  const pm=$('#pause-menu'); if(fromPause && pm) pm.classList.remove('show');
+  schoolRender();
+  const box=$('#road-school'); if(box) box.classList.add('show');
+  Audio2.sfx.paper && Audio2.sfx.paper();
+}
+function schoolRender(){
+  const sc=M && M.school; if(!sc) return;
+  const c=sc.cards[sc.i]; if(!c) return schoolClose();
+  const step=$('#school-step'), title=$('#school-title'), body=$('#school-body'),
+        dots=$('#school-dots'), next=$('#school-next'), skip=$('#school-skip');
+  if(step)  step.textContent = `The walk — ${sc.i+1} of ${sc.cards.length}`;
+  if(title) title.textContent = c.t;
+  if(body)  body.innerHTML = c.b;
+  if(dots)  dots.innerHTML = sc.cards.map((_,i)=>`<i class="${i===sc.i?'on':''}"></i>`).join("");
+  const last = sc.i===sc.cards.length-1;
+  if(next) next.innerHTML = last ? (sc.fromPause?"Back to the road &rarr;":"Set out &rarr;") : "Next &rarr;";
+  if(skip) skip.style.display = last ? "none" : "";
+}
+function schoolClose(){
+  const sc=M && M.school;
+  const box=$('#road-school'); if(box) box.classList.remove('show');
+  if(!M) return;
+  M.school=null;
+  if(sc && sc.fromPause){
+    // came from the pause menu — put the pause menu back, do not resume behind it
+    const pm=$('#pause-menu'); if(pm) pm.classList.add('show');
+    M.paused=true;
+  } else {
+    M.paused = sc ? sc.wasPaused : false;
+    if(!M.paused) caption("The road is yours. Gather the parts, chain them into terms, and mind what you are spending.");
+  }
+}
+function bindRoadSchool(){
+  const next=$('#school-next'); if(next) next.onclick=()=>{
+    const sc=M && M.school; if(!sc) return;
+    if(sc.i>=sc.cards.length-1){ schoolClose(); return; }
+    sc.i++; schoolRender(); Audio2.sfx.paper && Audio2.sfx.paper();
+  };
+  const skip=$('#school-skip'); if(skip) skip.onclick=schoolClose;
+}
+/* POWER IS SPENT, NOT DRAINED. Everything that takes power comes through here so
+   there is exactly one place that knows what running out means. `why` is what the
+   road says the first time it happens. */
+function spendPower(amount, why){
+  if(!M || M.done) return 0;
+  const before = M.stats.power;
+  M.stats.power = clamp(before - Math.max(0, amount), 0, 100);
+  const spent = before - M.stats.power;
+  if(M.stats.power<=0 && before>0){
+    // the moment it breaks is a moment the player must not miss
+    caption(`<b>Power is spent.</b> ${why||"There is nothing left to shove with"} — from here they are running on legs alone, and <b>stamina burns faster the longer they stay this way</b>. Drop to the <b>river floor</b> to get some back.`);
+    Audio2.sfx.bad && Audio2.sfx.bad();
+    FX.buzz(24);
+  }
+  updatePrepBars();
+  return spent;
 }
 /* ==================================================================
    ACCELERATION — the feel of getting a word right.
@@ -14620,6 +15074,11 @@ function tick(t){
     coolMomentum(dt);
     const weatherPenalty = (M.weather!=="clear") ? clamp(1-(M.weatherProt/140),0.4,1) : 1;
     const tired = M.stats.stamina<15 ? 0.55 : clamp(0.5+M.stats.stamina/140,0.5,1.1);
+    /* POWER IS WHAT MAKES THEM QUICK. A full reserve pushes the road along;
+       an empty one leaves them walking it. This is the second of the three
+       factors reaching the speed the player can see, so a bar draining is
+       never merely a bar draining. */
+    const strong = clamp(0.68 + (M.stats.power/100)*0.32, 0.68, 1);
     // a shallow claw bite is bought precisely for this: the upper ledge, walked faster
     const onFastLedge = (M.lane===0 && M.forge.ledgeSpeed>0.02);
     const laneSpd = LANES[M.lane].spd * (onFastLedge ? (1+M.forge.ledgeSpeed) : 1);
@@ -14665,7 +15124,7 @@ function tick(t){
        road to a little over a third — enough to actually read a rune gate — and
        drains stamina the whole while, so it is a cost, not a pause button. */
     const focusPen = M.focusing ? 0.38 : 1;
-    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * laneSpd * slowPen * finalStretch * M.paceLive * 1.55 * focusPen;
+    const spd = (0.0135 + M.speedStat/9500) * weatherPenalty * tired * strong * laneSpd * slowPen * finalStretch * M.paceLive * 1.55 * focusPen;
     // the final boss holds the road at the Archive's threshold until the Chorus is sung;
     // the Endless Road has no destination at all, so progress simply never caps
     // The road holds at 0.90 so Radicida's Chorus can play before the waystation.
@@ -14691,13 +15150,31 @@ function tick(t){
     const drainMul = M.diff.drain * (M.flow?1.35:1);
     // the river floor is the tactical recovery lane — walking it actually mends the squad
     let stamDrain = (3.6-cushion*2.4 + (M.lane===0?1.1:0) - (M.lane===2?1.9:0))*drainMul/momoEase;
-    let safeDrain = (1.5-cushion*1.0 - (M.lane===2?0.7:0))*drainMul/momoEase;
+
+    /* WHEN POWER IS GONE, THE CLOCK RUNS AWAY.
+       This is the one place the three factors are wired to each other, and it is
+       deliberately not a flat penalty. Every second spent at zero power adds to
+       the burn, so the longer they walk on nothing the faster the stamina goes —
+       a squad that ignores an empty reserve does not merely walk slower, it runs
+       out of road. The ramp reaches ×2.6 after about twelve seconds and holds
+       there, and it unwinds twice as fast as it built once power comes back, so
+       recovering is felt immediately rather than being punished twice. */
+    if(M.stats.power<=0){ M.powerOutT = Math.min(12, (M.powerOutT||0) + dt);
+                          M.spentTotal = (M.spentTotal||0) + dt; }   // for the post-mortem
+    else                 M.powerOutT = Math.max(0, (M.powerOutT||0) - dt*2);
+    const spentBurn = 1 + (M.powerOutT/12)*1.6;
+    stamDrain *= spentBurn;
     M.stats.stamina = clamp(M.stats.stamina - dt*stamDrain,0,100);
-    if(M.weather!=="clear") M.stats.morale = clamp(M.stats.morale - dt*(2.4-cushion*1.5)*drainMul/momoEase,0,100);
-    M.stats.safety = clamp(M.stats.safety - dt*Math.max(0.2,safeDrain),0,100);
+
+    /* POWER COMES BACK ONLY ON THE RIVER FLOOR, and slowly. It is a reserve you
+       spend and then go and earn back by choosing the slow lane — which is the
+       trade the road wants a player making. Nothing else refills it passively;
+       terms, mends and cleared hazards still pay it through statGain(). */
+    if(M.lane===2) M.stats.power = clamp(M.stats.power + dt*3.2, 0, 100);
+
     // belt and braces: the run's clock must always be a real number, because a
     // NaN here silently disables the collapse and the arrival alike
-    ["stamina","morale","safety"].forEach(k=>{
+    ["stamina","power"].forEach(k=>{
       if(!isFinite(M.stats[k])) M.stats[k]=0;
     });
     updatePrepBars();
@@ -14711,6 +15188,13 @@ function tick(t){
       caption("They are running on empty — drop to the <b>river floor</b> to recover, or build a term to catch your breath. If stamina breaks, the party falls.");
       Audio2.sfx.bad && Audio2.sfx.bad();
     } else if(M.stats.stamina>34 && M._staminaWarned){ M._staminaWarned=false; }
+    /* The same courtesy for the second factor: one warning while there is still
+       power left to manage, rather than a surprise at zero. */
+    if(M.stats.power<24 && M.stats.power>0 && !M._powerWarned){
+      M._powerWarned=true;
+      caption("<b>Power is running low.</b> Lunging costs it and every hazard takes it — take the <b>river floor</b> to build it back, or stop shoving and start reading. At zero, stamina burns faster the longer they stay spent.");
+      Audio2.sfx.bad && Audio2.sfx.bad();
+    } else if(M.stats.power>42 && M._powerWarned){ M._powerWarned=false; }
 
     /* THE LINE GIVES. A rope braided with missed beats, or a claw set whose three
        angles disagree, carries a real chance of failing — the exact percentage the
@@ -14796,7 +15280,13 @@ function tick(t){
               const soft = M.stats.safety<15 ? 1.35 : 1;
               const mult = (counter && counter.half) ? 0.5 : 1;
               const flowBite = M.flow?1.3:1;   // the road stops being careful with you in flow
-              Object.keys(hz.dmg).forEach(k=>{ M.stats[k]=clamp(M.stats[k]-hz.dmg[k]*rel*soft*mult*diffCurve.dmg*flowBite,0,100); });
+              // the power share goes through spendPower() so running dry on a hit
+              // announces itself the same way running dry on a lunge does
+              Object.keys(hz.dmg).forEach(k=>{
+                const amt = hz.dmg[k]*rel*soft*mult*diffCurve.dmg*flowBite;
+                if(k==="power") spendPower(amt, `${hz.name} went straight through them`);
+                else M.stats[k]=clamp(M.stats[k]-amt,0,100);
+              });
               if(hz.slow) M.slowT=hz.slow*mult;
               if(hz.dropLane){ M.targetY=clamp(M.targetY+M.cv.height*0.13, roadMinY(), roadMaxY()); M.laneFlashT=0.5;
                 caption("The scree carries them bodily down the slope!"); }
@@ -14823,10 +15313,10 @@ function tick(t){
     if(t-lastStep>420){ lastStep=t; if(!FX.reduced()) Audio2.sfx.step&&Audio2.sfx.step(); }
     if(!M.endless && M.progress>=1 && !M.arriving){ arrive(); }
   } else if(M.questionOpen){
-    // the cost of hesitation — no timer, but the open road drains them
-    M.stats.stamina=clamp(M.stats.stamina - dt*2.6*rel,0,100);
-    M.stats.morale =clamp(M.stats.morale  - dt*1.5*rel,0,100);
-    M.stats.safety =clamp(M.stats.safety  - dt*1.1*rel,0,100);
+    /* The cost of hesitation — no timer, but the open road drains them. It is
+       paid in stamina alone: standing still is tiring, not weakening, and power
+       is only ever spent by doing something or having something done to you. */
+    M.stats.stamina=clamp(M.stats.stamina - dt*3.4*rel,0,100);
     updatePrepBars();
   }
   if(M.arriving) updateArrival(dt);
@@ -16767,6 +17257,9 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     if(inGateCorridor(p)) return null;
     M.hazards.push({p, lane, u:LANES[lane].u, kind, hit:false, passed:false}); return M.hazards.length; },
   _hazards:()=>M&&M.hazards,
+  HAZARDS,
+  _screenX:(p)=>screenX(p),
+  _objY:(o)=>objY(o),
   _study:(partId)=>{ if(!M) return null;
     const pk={p:M.progress+0.1, lane:1, u:LANES[1].u, type:"lexeme", partId, hover:0.4, got:false, read:true};
     M.pickups.push(pk); studyPart(pk, 100, 100); return {studied:E.studiedCount(), affinity:E.affinity()}; },
@@ -16813,6 +17306,17 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _rushBoost:()=>rushBoost(),
   _gearStrip:(on)=>{ setGearStripOpen(on); return M&&M.gearPinned; },
   _ageCaption:(dt)=>{ ageCaption(dt||0.05); return M&&M.capT; },
+  /* --- the road school: the first walk's lesson --- */
+  _school:()=>M&&M.school,
+  _schoolOpen:(fromPause)=>{ schoolOpen(!!fromPause); return M&&M.school; },
+  _schoolNext:()=>{ const b=$('#school-next'); if(b) b.onclick&&b.onclick(); return M&&M.school; },
+  _schoolClose:()=>{ schoolClose(); return M&&M.school; },
+  _schoolCards:()=>schoolCards(),
+  /* --- the three factors the walk runs on --- */
+  _factors:()=>PREP_FACTORS.map(f=>f.k),
+  _speedStatus:()=>speedStatus(),
+  _spendPower:(n,why)=>spendPower(n,why),
+  _lunge:(x,y)=>tryLunge(x,y),
   /* --- how crowded the road is allowed to be (headless tests) --- */
   _pickups:()=>M&&M.pickups,
   _spawnOffer:()=>spawnOffer(),
@@ -16864,6 +17368,9 @@ function bindPauseMenu(){
   const resume=$('#pause-resume'); if(resume) resume.onclick=closePauseMenu;
   const settings=$('#pause-settings'); if(settings) settings.onclick=()=>window.__RD_SCREENS.openSettings();
   const gloss=$('#pause-gloss'); if(gloss) gloss.onclick=()=>window.__RD_SCREENS.openGloss();
+  // "how does this work again" outlives the first road, so the lesson does too
+  const school=$('#pause-school'); if(school) school.onclick=()=>schoolOpen(true);
+  bindRoadSchool();
   const quit=$('#pause-quit'); if(quit) quit.onclick=()=>{ const qc=$('#pause-quit-confirm'); if(qc) qc.classList.add('show'); };
   const quitYes=$('#pause-quit-yes'); if(quitYes) quitYes.onclick=abandonMission;
   const quitNo=$('#pause-quit-no'); if(quitNo) quitNo.onclick=()=>{ const qc=$('#pause-quit-confirm'); if(qc) qc.classList.remove('show'); };
@@ -16903,7 +17410,9 @@ function boot(){
       return;
     }
     if(E.current()==="s-mission" && M && !M.done){
-      if(M.pausedByMenu) closePauseMenu();
+      // a tutorial you cannot dismiss with Escape is a tutorial that has trapped you
+      if(M.school) schoolClose();
+      else if(M.pausedByMenu) closePauseMenu();
       else if(!M.paused) openPauseMenu();
     }
   });

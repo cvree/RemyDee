@@ -219,3 +219,106 @@ ceiling, confidence ramp and non-drift when fixed, the per-run snapshot, the liv
 stamina clock, completion gates, the re-ask loop, the flow state's entry and
 exit, the results panel's reporting, and save/migration of both the setting and
 the adaptive read.
+
+---
+
+# The Three Factors Pass — what shipped
+
+Two complaints, one shape: the road's HUD was showing numbers that did not
+decide anything, and the road never taught anyone what it could do.
+
+Measured against `NORTH_STAR.md`: Pillar II (*a system the player cannot see is
+a system they cannot aim at*) and Design Rule 2 (*no unfair walls*).
+
+## 10. The walk runs on stamina, power and speed
+
+The road showed **Stamina / Morale / Safety**, and only one of the three was
+doing anything a player could feel. Stamina was the clock. Morale fell in bad
+weather. Safety was a number that made hazards bite slightly harder once it got
+low. Two of the three bars were weather reports.
+
+The walk now runs on three things that are deliberately three *different kinds*
+of thing:
+
+| | what it is | what moves it |
+|---|---|---|
+| **Stamina** | the clock | falls with time — faster on the high ledge, in flow, while focusing or surging; slower on the river floor and at high momentum. Zero ends the run. |
+| **Power** | force in reserve | **never falls with time.** Falls when a lunge *lands on something real* (−6, +2 per extra thing), and when a hazard connects (−4 to −16). Returns on the river floor (+3.2/s) and from Mend. |
+| **Speed** | a readout, not a reserve | how fast the road is moving *right now*, with a word for why: Flying / Quick / Steady / Labouring / Crawling, overridden by Surging, Reading, Checked, Down. |
+
+Everything is wired through them:
+
+- **Speed is governed by the other two.** `tired` (stamina) and `strong` (power,
+  ×0.68–×1.00) both multiply the road's scroll rate. An empty reserve is a
+  measurably shorter walk in the same number of seconds.
+- **Power at zero does not end a run — it makes the run end sooner.** `powerOutT`
+  counts the seconds spent at zero and the stamina drain multiplies by
+  `1 + (powerOutT/12)×1.6`, reaching ×2.6 after twelve seconds and holding. It
+  unwinds at twice the rate it built, so recovering is felt at once.
+- **Every hazard in the table now takes power**, not just the three that used to
+  touch morale or safety.
+- **Morale and safety survive as accessor views onto power**, so the arrival
+  grade, the debrief lines and every `statGain({morale:…})` in the game keep
+  working — and now describe the same reserve the player is watching.
+- **Mend** is the only charge that puts power back, and the button says so.
+- **The bench forecast** names which of the two reserves your packing is filling,
+  and the number you will set out with.
+- **The collapse card** reports how many seconds the run was spent at zero power
+  when that is what killed it, and points at the river floor.
+
+Two warnings fire once each, with time left to act on them: at 20 stamina, and at
+24 power.
+
+## 11. The first walk teaches the walk
+
+Everything the road can do was already in the game and none of it was ever
+taught. A first-time player got a hint pill that named five verbs in one sentence
+and faded after 8.5 seconds, plus a pause menu they had no reason to open.
+
+**The road school** runs card by card on a player's very first road, with the
+road held still, and is reachable from the pause menu forever after. Seven cards:
+
+1. the three factors, and what kind of thing each one is
+2. the three bands — high ledge, trail, river floor — and what each charges
+3. word-parts, chaining, reading a part, rune gates
+4. the lunge, and that *connecting* is what costs power, not clicking
+5. focus and surge — the two things you hold, both paid in stamina
+6. the three forged charges, and `G`
+7. how a walk is actually lost, and that empty power is what leads there
+
+Every card describes an option by **what it spends and what it buys**, so the
+bars in the corner are the through-line of the lesson rather than decoration on
+it. Escape dismisses it; it never opens twice; the hint pill stands down on the
+first road so the two are not competing.
+
+## 12. No blank icons
+
+`mark()` passed anything it did not recognise straight through as text. That
+meant the typographic marks (`·` `★` `✓` `▲` `✦` `○` `✕` `Δ`) rendered as bare
+characters in rows of drawn icons, `claws` — which had no entry — printed the
+*word* "claws" where a picture belonged, and every `GEAR_ICON[k]||""` left an
+empty box.
+
+- Every typographic mark now has a drawing, and resolves through the same table.
+- `claws` has an icon; so do the three factors and the eight the school needs.
+- An unknown key falls back to a drawn dot. `GEAR_ICON` falls back to a generic
+  forged tool. **No icon slot can come out empty or as text.**
+- Four drawings that did not read as their description were redrawn: the
+  grappling **hook** (was a bare J that read as a fish-hook) now has a ring,
+  shank and three flukes; **rope** (was two crossing arcs that read as an eye) is
+  a coil; **smoke** (was a cloud on a dashed line that read as weather) is a
+  canister with a plume; **seal** (was a circle with a dot in it) is a die with a
+  handle, pressed.
+
+---
+
+`test35.js` covers all three: that every icon key the game asks for — including
+the typographic marks, an unknown key and an unknown gear key — comes back as a
+drawing; that the HUD is exactly stamina/power/speed with an icon and a readout
+each; that stamina falls with time and power does not; that a landing lunge costs
+power and a missed one is nearly free; that every hazard takes power; that the
+burn genuinely *accelerates* the longer power stays at zero; that the river floor
+returns power and unwinds the burn; that speed always reports a reason; that a
+squad with no power covers less road in the same time; and that the road school
+opens on the first walk, teaches every option the walk offers, advances, closes,
+hands the road back, and is reachable from the pause menu afterwards.
