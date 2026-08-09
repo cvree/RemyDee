@@ -41,6 +41,14 @@ const ptr = (window, target, type, x, y) => {
   await until(() => !!MI._state(), 6000, 'mission start');
   const M = MI._state();
 
+  /* The very first road a player ever walks now opens with the road school —
+     the tutorial that teaches the three factors and every option on the walk
+     (covered in full by test35.js). It holds the road still while it is up, so
+     dismiss it here: everything below measures a road actually in motion. */
+  await until(() => !!MI._school(), 4000, 'the road school opens on a first walk');
+  MI._schoolClose();
+  assert(!MI._school(), 'school: dismissed, and the road is walking again');
+
   /* ================= 1. THE PLAYFIELD IS NEVER UNDER THE HUD ================= */
   const band0 = MI._band();
   assert(band0 && band0.bot > band0.top, 'band: the road has a real walkable band');
