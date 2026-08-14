@@ -29,18 +29,19 @@ editing across blocks.
 
 Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 `DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`, `TRIALS_PASS.md`,
-`BENCH_PASS.md` — read `BENCH_PASS.md` first, it is the most recent and it
-deleted a lot of what the older ones describe.
+`BENCH_PASS.md`, `HALL_PASS.md` — read `BENCH_PASS.md` first (it deleted a lot
+of what the older ones describe) and `HALL_PASS.md` second, it is the most
+recent.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36; do node test$t.js | tail -1; done
 ```
 
-28 jsdom suites, **1104 assertions, all passing, zero window errors**.
+30 jsdom suites, **1217 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -176,6 +177,30 @@ opens the campaign up to that chapter, filling in the served chapters, bench
 patterns and recovered pages the skipped roads would have paid out. A base-36
 road code still queues a shared road; the two can't be confused.
 
+**7. The Training Hall grew the two modes it was missing.** See
+`docs/HALL_PASS.md`. The Hall taught recall twice and construction and transfer
+not at all — those two live only inside the campaign, where they cost stamina
+and cannot be repeated, so free practice could not reach half the promise.
+**Rune Forge** (word building: BUILD / FINISH / BREAK / REPAIR, ten forges, a
+strike that clangs and a blade that cracks) and **Spirit Trial** (applied
+recall: DECODE / SPOT / IMPOSTOR / REPAIR / CHAIN, twelve spirits, three lives,
+a fuse) join Reed Slice and Seal Match, and either can break into a shared
+**Mastery Rush** — twenty seconds, no hints, earned the first time a session's
+streak reaches five, where the spectacle escalates and the difficulty does not.
+Every card instruction is under five words now and the paragraphs are gone.
+`wordOf()` spells a build from the two clauses the game teaches and reproduces
+all 78 terms letter for letter, which is what lets REPAIR show a word the corpus
+does not carry; the six terms whose junction letters fuse are kept out of BREAK,
+where there would be no honest place to cut. Four defects fell out of it: the
+wisp's entrance class was named `rush` and inherited `position:absolute` from
+the Mastery Rush overlay, so the spirit stood on its own sign; the arcade stage
+had no width inside a centred flex column, so every mode came out a different
+size and the Rush covered part of the screen; the Rush clock collapsed to zero
+width and the twenty seconds could not be seen running out; and Reed Slice's
+bomb was still the hanzi 爆 asking for a Chinese serif — the last CJK codepoint
+in the game, in the one mode nobody re-read after the culture pass. `test36`
+covers all of it, including that no CJK codepoint returns to the Hall.
+
 ### What is left — verified, not speculation
 
 **Art.**
@@ -189,8 +214,9 @@ road code still queues a shared road; the two can't be confused.
   case with a wax seal that cracks. (Note the fiction is Mediterranean now: a
   sealed wooden *capsa* with a wax *sphragis*.)
 - No `writing-mode` anywhere.
-- `sfx.pour` and `sfx.bow` are defined with zero call sites; `page()` still
-  serves seven distinct meanings across twelve call sites.
+- `page()` still serves seven distinct meanings across twelve call sites.
+  (`sfx.pour` and `sfx.bow` found homes in the Hall pass: the forge quenches
+  with one, the spirit bows out with the other.)
 - Border radii are still a mix of 2/3/8/9/10/12/14/20px against a token set that
   says 2/3/4. The decode chips and the gate prompt were brought in line; the
   rest were not, because pills and seals legitimately want round.
@@ -200,6 +226,9 @@ own per-frame offenders went with the old crafts; the trials' stages have never
 been profiled.
 
 **Learning design.**
+- The road still draws its goal-pole omega with `"Noto Serif SC"` in the font
+  stack (`drawGoal`). Harmless — it falls through to a serif — but it is the
+  same stale reference the Hall pass cleared out of the arcade.
 - Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
 - Around 24 terms and 19 parts are never introduced by a traveler — they exist
   only as quiz material. `paraplegia` and `para-` just joined that list.
