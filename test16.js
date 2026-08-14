@@ -156,7 +156,12 @@ const ptr = (window, target, type, x, y) => {
   buildIds.forEach(id => MI._pushCombo(id));
   const banner = doc.getElementById('term-banner');
   assert(banner.classList.contains('show'), 'learning: completing a real term raises the banner');
-  assert(banner.innerHTML.includes(D.TERMS[termId].spell), 'learning: the banner names the word that was just built');
+  /* A real term's letters are stamped in one span each, so the word no longer
+     appears as a contiguous run of innerHTML. textContent is the stronger check
+     anyway: it is exactly what this aria-live region announces. */
+  assert(banner.textContent.includes(D.TERMS[termId].spell), 'learning: the banner names the word that was just built');
+  assert(banner.querySelectorAll('.tb-ltr').length === D.TERMS[termId].spell.length,
+    'learning: a real term arrives one letter at a time — the word being made, not a notice appearing');
   assert(banner.innerHTML.includes(D.TERMS[termId].def), 'learning: the banner gives its meaning, so the reward IS the lesson');
   buildIds.forEach(id => assert(banner.innerHTML.includes(D.PARTS[id].mean),
     `learning: the banner shows what the part "${D.PARTS[id].text}" contributed`));

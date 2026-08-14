@@ -1140,6 +1140,11 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   background:linear-gradient(90deg,var(--verd-soft),var(--gold));transition:width .25s var(--ease);}
 .mo-lab{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(243,236,216,.7);}
 .combo-build{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;min-height:26px;}
+/* the builder takes the piece: it flinches when the mote flying up from the road
+   arrives, which is what makes the arc read as a delivery rather than a flourish */
+.combo-build.took{animation:comboTook .28s cubic-bezier(.16,1,.3,1);}
+@keyframes comboTook{0%{transform:scale(1);}38%{transform:scale(1.13);}100%{transform:scale(1);}}
+[data-motion="reduced"] .combo-build.took{animation:none;}
 .combo-tok{display:inline-flex;align-items:center;padding:3px 9px;border-radius:7px;font-family:var(--font-read);
   font-weight:700;font-size:.8rem;color:#f6f0dc;box-shadow:0 3px 8px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.25);
   animation:tokPop .3s var(--ease-back);}
@@ -1362,6 +1367,29 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   background:var(--gold);border:2px solid var(--ink);transition:left .6s var(--ease);transform:translateX(-50%);}
 .road-level .rl-ticks{display:flex;justify-content:space-between;font-size:.58rem;letter-spacing:.06em;
   text-transform:uppercase;color:var(--ink-soft);margin-top:5px;}
+/* ==================================================================
+   THE MARKS WALL — the five numbers you are actually competing against.
+
+   A debrief that only reports the run just walked gives a player nothing
+   to come back for. These are lifetime bests, so every one of them is
+   either "you moved this today" or "here is what you have to beat", and
+   the row a road just moved is stamped so the eye finds it first.
+   ================================================================== */
+.marks-panel{padding:13px 16px 14px;text-align:left;margin-top:14px;}
+.marks-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:9px;margin-top:9px;}
+.mark-cell{padding:8px 9px 9px;border-radius:4px;border:1px solid var(--ink-line);
+  background:rgba(90,63,28,.05);position:relative;}
+.mark-cell .mk-v{display:block;font-family:var(--font-cal);font-weight:900;font-size:1.24rem;
+  line-height:1.05;color:var(--verd-deep);}
+.mark-cell .mk-l{display:block;font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);margin-top:2px;}
+.mark-cell .mk-run{display:block;font-size:.62rem;color:var(--ink-soft);margin-top:4px;}
+/* a best this road actually moved */
+.mark-cell.fresh{border-color:var(--cinnabar);background:rgba(181,50,43,.07);}
+.mark-cell.fresh .mk-v{color:var(--cinnabar);}
+.mark-cell.fresh .mk-new{position:absolute;top:-8px;right:6px;font-size:.5rem;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:800;padding:2px 6px;border-radius:999px;
+  background:var(--cinnabar);color:#f6efdc;}
 /* NARROW SCREENS get the same road, not a squeezed one: the chapter title and the
    ability hints drop away so the control rail stays one row and the top strip stops
    pushing the pause button off the edge. The walkable band re-measures either way. */
@@ -1388,7 +1416,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   .word-hud{top:56px;max-width:94vw;}
   .gate-prompt{font-size:.92rem;}
   .mission-hint{top:206px;font-size:.66rem;max-width:92vw;}
-  .term-banner{max-width:96%;padding:6px 12px 7px;}
+  .term-banner{top:54px;max-width:96%;padding:6px 12px 7px;}
   /* a thumb needs somewhere to press that is not the steering surface */
   .pace-btn{min-height:44px;} .ability-btn{min-height:44px;}
   .mission-pause-btn{width:44px;height:44px;}
@@ -1407,7 +1435,13 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .pace-gauge.brake .pg-arrow{opacity:1;transform:translateY(1px) rotate(180deg);color:#e2726a;}
 /* THE LEARNING BEAT — the built term and what it means, held in clear sky for a
    moment so the reward and the lesson are the same event */
-.term-banner{position:absolute;top:6px;left:50%;transform:translate(-50%,-6px);z-index:9;pointer-events:none;
+/* THE BANNER SITS WHERE THE METERS DO, NOT ON TOP OF THE BAR.
+   At top:6px it covered the mission-top strip — which carries stamina, the run's
+   actual clock — for three and a half seconds, and the term that opened it had
+   just healed the squad. So the one moment the player most wants to see stamina
+   move was the one moment it was hidden. It takes the word-hud's place instead,
+   which is what the .hushed rule below was already written for. */
+.term-banner{position:absolute;top:58px;left:50%;transform:translate(-50%,-6px);z-index:9;pointer-events:none;
   opacity:0;transition:opacity .3s var(--ease),transform .3s var(--ease-back);
   padding:7px 18px 8px;border-radius:12px;text-align:center;max-width:min(94%,620px);
   background:rgba(22,19,15,.93);border:1px solid var(--gold);box-shadow:0 10px 28px rgba(0,0,0,.55);}
@@ -1422,6 +1456,55 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 /* while the word is being read, the meters step back rather than crowd it */
 .word-hud .momentum,.word-hud .combo-build{transition:opacity .25s var(--ease);}
 .word-hud.hushed .momentum,.word-hud.hushed .combo-build{opacity:.22;}
+/* ==================================================================
+   THE CREST — the road's one loud voice.
+
+   Momentum crossing a named tier and a lifetime best being broken are
+   the two things on the road worth interrupting for, and neither had
+   anywhere to appear: they would have gone into the caption strip at
+   the bottom, which is where the road murmurs, or into a floating pop,
+   which is where it counts pennies. The crest sits in clear sky over
+   the squad, arrives with weight, and leaves quickly — it must never be
+   on screen long enough to hide a hazard, so the whole life of it is
+   under two seconds and it never covers the lanes.
+   ================================================================== */
+.road-crest{position:absolute;top:34%;left:50%;z-index:11;pointer-events:none;
+  opacity:0;transform:translate(-50%,-50%) scale(.72);text-align:center;
+  padding:8px 26px 10px;border-radius:4px;
+  background:linear-gradient(180deg,rgba(28,23,17,.95),rgba(18,14,10,.95));
+  border:1px solid var(--gold);box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 4px rgba(216,189,132,.08);}
+.road-crest.show{animation:crestIn 1.7s cubic-bezier(.16,1,.3,1) forwards;}
+.road-crest .rc-kicker{display:block;font-size:.54rem;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(216,189,132,.78);margin-bottom:1px;}
+.road-crest .rc-word{display:block;font-family:var(--font-cal);font-weight:900;
+  font-size:clamp(20px,3.4vw,34px);line-height:1.05;letter-spacing:.02em;color:var(--gold-soft);
+  text-shadow:0 2px 0 rgba(0,0,0,.45);}
+.road-crest .rc-sub{display:block;font-size:.68rem;color:rgba(243,236,216,.74);margin-top:2px;}
+/* a broken record is not a tier — it gets the school's red and says so */
+.road-crest.mark{border-color:var(--cinnabar);box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 4px rgba(181,50,43,.16);}
+.road-crest.mark .rc-kicker{color:#e8918a;}
+.road-crest.mark .rc-word{color:#f3ecd8;}
+@keyframes crestIn{
+  0%  {opacity:0;transform:translate(-50%,-50%) scale(.72);}
+  9%  {opacity:1;transform:translate(-50%,-50%) scale(1.10);}
+  16% {opacity:1;transform:translate(-50%,-50%) scale(.98);}
+  22% {opacity:1;transform:translate(-50%,-50%) scale(1.02);}
+  74% {opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-64%) scale(1.04);}
+}
+[data-motion="reduced"] .road-crest.show{animation:none;opacity:1;transform:translate(-50%,-50%) scale(1);}
+/* the momentum meter earns a band colour as it climbs, so the tier the crest
+   just named stays legible in the HUD for as long as the player holds it */
+.momentum.t3{border-color:rgba(216,189,132,.9);}
+.momentum.t4{border-color:var(--gold);box-shadow:0 0 0 2px rgba(216,189,132,.22);}
+.momentum.t5{border-color:#f3ecd8;box-shadow:0 0 0 3px rgba(243,236,216,.28);}
+/* THE LETTERS LAND. A real medical term completing is the whole promise of the
+   game paying out; the banner used to fade in as one block, which reads as a
+   notification. Stamped letter by letter, it reads as the word being made. */
+.term-banner .tb-ltr{display:inline-block;opacity:0;transform:translateY(-.22em) scale(1.5);}
+.term-banner.show .tb-ltr{animation:ltrStamp .26s cubic-bezier(.16,1,.3,1) forwards;}
+@keyframes ltrStamp{to{opacity:1;transform:none;}}
+[data-motion="reduced"] .term-banner .tb-ltr{opacity:1;transform:none;animation:none;}
 /* the run recap on the collapse card — what the walk actually taught */
 .collapse-learned{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:12px 0 6px;}
 .collapse-learned .cl-stat{padding:6px 9px;border-radius:10px;background:rgba(90,63,28,.07);
@@ -2651,6 +2734,8 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
       </div>
       <!-- the built term and its meaning, held in clear sky: the reward IS the lesson -->
       <div class="term-banner" id="term-banner" aria-live="polite"></div>
+      <!-- the road's one loud voice: a momentum tier crossed, or a lifetime best broken -->
+      <div class="road-crest" id="road-crest" aria-live="assertive"></div>
       <!-- the control hint lives in the empty sky, never over the road itself -->
       <div class="mission-hint" id="mission-hint">Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.</div>
       <!-- Word Road HUD: momentum multiplier, the term you are assembling, and gate prompts -->
@@ -2804,6 +2889,8 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <h2 id="result-title"></h2>
           <div class="result-line" id="result-summary"></div>
           <div class="reward-grid" id="reward-grid"></div>
+          <!-- the five lifetime bests, and which of them this road just moved -->
+          <div class="panel marks-panel" id="marks-panel" style="display:none;"></div>
           <!-- where the road is running, and whether it just moved -->
           <div class="panel road-level" id="road-level" style="display:none;"></div>
           <div class="panel" style="padding:16px;text-align:left;">
@@ -4875,6 +4962,10 @@ const Audio2 = (function(){
     n.start();
   }
   const vary=(f)=> f*(0.98+Math.random()*0.04); // subtle pitch variation
+  /* The ladder cues are indexed by a game counter the caller does not sanitise —
+     a chain length, a tier number — and one NaN reaching a table lookup is a
+     silent undefined frequency and an oscillator that never sounds. */
+  const clampIdx=(n,len)=>{ n=Math.round(Number(n)); if(!isFinite(n)||n<0) n=0; return Math.min(n,len-1); };
   /* The loud cues used to play straight over the music at full level, so a chest
      opening and a drone and a pluck all fought for the same air. The big moments
      lean on the music for a beat instead. */
@@ -4915,6 +5006,82 @@ const Audio2 = (function(){
     page(){ noise(0.4,0.13,2200); setTimeout(()=>tone(784,0.3,"sine",0.2),120); },
     chime(){ tone(784,0.2,"sine",0.22); setTimeout(()=>tone(1047,0.3,"sine",0.2),120); setTimeout(()=>tone(1318,0.4,"sine",0.16),260); },
     whoosh(){ noise(0.4,0.12,500); },
+    /* ---- THE CHAIN LADDER ----
+       Gathering the second piece of a word used to sound exactly like gathering
+       the first: one clink at 1400Hz, every time, forever. That is the single
+       loudest thing the road was not saying. A chain is a sentence being built,
+       and a sentence has intonation — so each piece climbs one step of a major
+       pentatonic, which is the scale with no wrong note in it, and the ear hears
+       an unfinished phrase asking to be finished. completeTerm answers it.
+
+       The ladder is deliberately long enough (ten rungs) that it never repeats a
+       pitch inside a chain, and the low harmonic underneath thickens as it goes,
+       so a four-piece chain is not just higher than a two-piece — it is bigger. */
+    chain(step){
+      const L=[523.25,587.33,659.25,783.99,880,1046.5,1174.7,1318.5,1568,1760];
+      const k=clampIdx(step,L.length);
+      const f=L[k];
+      noise(0.03,0.10,vary(3000));
+      tone(vary(f),0.13,"triangle",0.20);
+      // the body under the note: a fifth below, arriving a hair late, growing
+      // with the chain so a long word has weight the short one does not
+      if(k>0) setTimeout(()=>tone(vary(f*0.5),0.20,"sine",0.06+k*0.022),22);
+    },
+    /* THE LADDER LANDS. Every piece gathered climbs a rung and leaves the phrase
+       hanging; this is the phrase finishing. It starts from the rung the chain
+       actually reached, so a three-piece word resolves from higher up and sounds
+       like the bigger thing it was — and a REAL term gets the octave over the
+       top of it, which is the one interval nothing else in the game plays.
+       That is the whole contract of the mode in a second of audio: chains feel
+       unfinished, words feel finished, and real words feel earned. */
+    chainResolve(step, real){
+      const L=[523.25,587.33,659.25,783.99,880,1046.5,1174.7,1318.5,1568,1760];
+      const f=L[clampIdx(step,L.length)];
+      duck(real?0.5:0.35, real?620:420);
+      tone(f,0.14,"triangle",0.24);
+      setTimeout(()=>tone(f*1.5,0.16,"triangle",0.22),85);
+      setTimeout(()=>{
+        tone(f*2,real?0.55:0.30,"sine",0.22);
+        if(real){ tone(f*3,0.5,"sine",0.10); noise(0.4,0.05,3600); }
+      },175);
+    },
+    /* a chain that cannot continue: the ladder falls off its last rung rather
+       than simply stopping, so a broken word is heard as a break and not as
+       silence the player has to infer from a tile disappearing */
+    chainBreak(){
+      tone(vary(392),0.10,"triangle",0.15);
+      setTimeout(()=>tone(vary(294),0.16,"sine",0.13),70);
+      noise(0.10,0.06,700);
+    },
+    /* MOMENTUM CROSSING A NAMED TIER. Struck low, answered high — a bell being
+       rung rather than a pitch going up, because this is an arrival at a place
+       the player can name ("flying"), not a meter ticking. */
+    tier(n){
+      duck(0.4,460);
+      const root=[0,0,196,262,330,392][clampIdx(n,6)]||330;
+      noise(0.09,0.16,vary(420));
+      tone(root,0.30,"sine",0.24);
+      setTimeout(()=>tone(root*3,0.26,"triangle",0.17),80);
+      setTimeout(()=>tone(root*4,0.44,"sine",0.13),170);
+    },
+    /* THREADED IT. A hazard that goes past the shoulder — air moving, nothing
+       struck. Two bands of noise, the second darker and later, which is what a
+       thing passing actually sounds like. */
+    graze(){
+      noise(0.16,0.10,vary(2200));
+      setTimeout(()=>noise(0.20,0.08,vary(700)),50);
+    },
+    /* A LIFETIME BEST, BROKEN. Nothing else in the game plays a rising fourth
+       twice, so the player learns this one cue means "that was the best you have
+       ever done" without ever being told. */
+    record(){
+      duck(0.55,760);
+      tone(659,0.14,"triangle",0.24);
+      setTimeout(()=>tone(880,0.14,"triangle",0.24),100);
+      setTimeout(()=>tone(1047,0.16,"triangle",0.22),200);
+      setTimeout(()=>{ tone(1397,0.5,"sine",0.20); tone(1760,0.5,"sine",0.10); },310);
+      setTimeout(()=>noise(0.45,0.05,3400),310);
+    },
     /* ---- the meta layer's cues ---- */
     // a trophy: a struck bell, then the fifth above it, then the octave —
     // rising and settled, so it reads as an arrival rather than a ping
@@ -5199,6 +5366,13 @@ function migrate(st){
         if(m && m.ef==null){ m.ef=2.5; m.reps=0; m.ivl=0; m.due=0; m.lapses=0; } });
     }
     if(typeof st.lifetime!=="object" || !st.lifetime) st.lifetime = m8.lifetime;
+    /* The marks arrived after v8 shipped and do not justify a schema bump: a save
+       without them is not wrong, it is merely a player who has not set any. Seed
+       the momentum mark from the lifetime tally that predates it so a returning
+       player's best road still counts as the bar to beat. */
+    if(!st.marks || typeof st.marks!=="object") st.marks = m8.marks;
+    Object.keys(m8.marks).forEach(k=>{ if(typeof st.marks[k]!=="number" || !isFinite(st.marks[k])) st.marks[k]=0; });
+    if(!st.marks.momentum && st.lifetime && st.lifetime.bestMomentum>0) st.marks.momentum=st.lifetime.bestMomentum;
     st.ver=8;
     // backfill mastery entries for any PARTS/TERMS added since this save was written,
     // so returning players' weak/seen tracking covers the newly learnable content
@@ -5422,6 +5596,15 @@ function newGame(){
     srs:{},                    // part id → {ease, reps, due, lapses} — the review scheduler
     lore:{ seen:[], correct:{} },  // history-of-medicine cards encountered
     lifetime:{ answers:0, correct:0, terms:0, runs:0, perfectCrafts:0, bestMomentum:0, bossesFelled:0 },
+    /* ---- THE MARKS: five lifetime bests the road can beat while you walk ----
+       `records` above is the Hall's leaderboard — a list of past scores. These
+       are different and deliberately kept apart: one number each, for the five
+       things a player can feel themselves getting better at, so the road has
+       something to shout at the moment it happens rather than only in a table
+       afterwards. Zero means "never set", which is what lets the first run put
+       the bar down in silence instead of announcing five records in ninety
+       seconds (see beatMark). */
+    marks:{ chain:0, momentum:0, realTerms:0, streak:0, distance:0, graze:0 },
     finished:false
   };
 }
@@ -6042,6 +6225,52 @@ function markStudied(partId){
 function affinity(){ return affinityLevel(studiedCount()); }
 
 /* ==================================================================
+   THE MARKS — five lifetime bests, and the rule for announcing them.
+
+   Every long-lived game that keeps people coming back has a number the
+   player is quietly trying to beat, and this one had none: the road
+   tracked bestMomentum inside a single run, threw it at the result
+   screen, and forgot it. So a player could have the best walk of their
+   life and the game would never say so.
+
+   Three rules make a personal best land instead of nag:
+
+   1. A mark of ZERO has never been set, so beating it is silent. The
+      first run puts the bar down; every run afterwards can clear it.
+      Otherwise a new player is told they broke five records in their
+      first ninety seconds, which teaches them the words mean nothing.
+   2. A mark announces AT MOST ONCE PER RUN. Momentum climbs through its
+      old best and keeps climbing; the shout belongs to the crossing, not
+      to every frame after it.
+   3. The stored value keeps rising silently after the shout, so the bar
+      the next run has to clear is the real one.
+
+   `beatMark` returns the previous best when this call broke it and
+   should be announced, and null every other time — which is exactly the
+   condition the caller wants to branch on.
+   ================================================================== */
+function marks(){
+  if(!S.marks || typeof S.marks!=="object") S.marks=newGame().marks;
+  return S.marks;
+}
+let markShouted={};
+function resetMarkShouts(){ markShouted={}; }
+function beatMark(key, value){
+  const mk=marks();
+  const v=Number(value);
+  if(!isFinite(v) || v<=0) return null;
+  const prev=Number(mk[key])||0;
+  if(v<=prev) return null;
+  mk[key]=v;
+  persist();
+  if(prev<=0) return null;          // rule 1: the bar had never been set
+  if(markShouted[key]) return null; // rule 2: one shout per run
+  markShouted[key]=true;
+  return prev;
+}
+function markValue(key){ return Number(marks()[key])||0; }
+
+/* ==================================================================
    SEEDED CONTRACTS — a small, fast PRNG plus a shareable code so two
    players (or the same player twice) can generate the identical road.
    ================================================================== */
@@ -6074,6 +6303,7 @@ window.__RD_ENG = {
   partyFor, commitParty, benchCapacityFor,
   unlockedBps, unlockBp, bpUnlockedBy,
   studiedCount, markStudied, affinity,
+  marks, beatMark, markValue, resetMarkShouts,
   mulberry32, seedToCode, codeToSeed,
   getFlow:()=>flow, setFlow:(f)=>{flow=f;}
 };
@@ -10256,8 +10486,28 @@ function renderPath(){
     (nextBp ? row("Next unlock", `<b class="pr-gold">${nextBp.name}</b>`, "finish this road and the bench learns it") : "") +
     row("Lexicon affinity", `${aff.name}`,
         nx ? `${studied} / ${nx.need} parts read — next: ${nx.name}` : (aff.grant||"every level earned"))+
-    (aff.grant? `<div class="path-grant">✦ ${aff.grant}</div>` : "");
+    (aff.grant? `<div class="path-grant">✦ ${aff.grant}</div>` : "")+
+    hubMarksRow();
   renderSeedRow();
+}
+/* THE MARKS, CARRIED BETWEEN ROADS.
+   The debrief shows the whole wall; the hub shows only the two that a player can
+   hold in their head while deciding whether to walk another one — the number of
+   real words they got out of a single road, and the longest chain they have ever
+   built. Both are things you beat with vocabulary rather than with steering,
+   which is the point of putting them where the next expedition starts.
+
+   Silent until the bar exists: a player who has never finished a road is not
+   shown two zeroes and told they are records. */
+function hubMarksRow(){
+  const terms=E.markValue("realTerms"), chain=E.markValue("chain");
+  if(!terms && !chain) return "";
+  const bits=[];
+  if(terms) bits.push(`<b class="pr-gold">${terms}</b> real term${terms===1?"":"s"} in one road`);
+  if(chain) bits.push(`<b class="pr-gold">${chain}</b>-piece chain`);
+  return `<div class="path-row"><span class="pr-k">Your marks</span>
+    <span class="pr-v">${bits.join(" · ")}</span>
+    <span class="pr-sub">the best you have walked — the road will tell you when you beat it</span></div>`;
 }
 /* JUMP TO A CHAPTER.
    A plain number typed into the seeded-road box is read as a chapter, not as a
@@ -10581,12 +10831,26 @@ function tileEl(id, inSlot){
   t.innerHTML=`<span class="part">${p.text}</span><span class="kind"${solved?'':' style="visibility:hidden"'}>${solved?p.kind:'\u00A0'}</span>`;
   return t;
 }
+/* ONE LANGUAGE FOR BUILDING A WORD, IN BOTH PLACES IT HAPPENS.
+   The bench builds terms a piece at a time and so does the road, and they
+   sounded nothing like each other: the builder played one flat snap per tile
+   however many were down, the road climbs a ladder. The ladder belongs here
+   more than anywhere — this is where a player first learns that pieces add up
+   to a word — so the two surfaces now teach the same thing with the same
+   sound, and a player arriving on the road already knows what the rising
+   phrase means. */
+function placePart(id){
+  builderState.placed.push(id);
+  const step=builderState.placed.length-1;
+  if(Audio2.sfx.chain) Audio2.sfx.chain(step); else Audio2.sfx.snap();
+  FX.buzz(10+Math.min(8,step*4));
+}
 function renderTray(){
   const tray=$('#tray'); tray.innerHTML="";
   builderState.trayIds.forEach(id=>{
     if(builderState.placed.includes(id)) return;
     const t=tileEl(id,false);
-    t.onclick=()=>{ if(builderState.solved)return; builderState.placed.push(id); Audio2.sfx.snap(); FX.buzz(10); syncBuilder(true); };
+    t.onclick=()=>{ if(builderState.solved)return; placePart(id); syncBuilder(true); };
     enableDrag(t,id);
     tray.appendChild(t);
   });
@@ -10646,7 +10910,7 @@ function enableDrag(tile,id){
       window.removeEventListener('pointerup',up);
       const a=$('#assembly'); const r=a.getBoundingClientRect();
       const over = ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
-      if(over && !builderState.placed.includes(id)){ builderState.placed.push(id); Audio2.sfx.snap(); FX.buzz(10); syncBuilder(true); }
+      if(over && !builderState.placed.includes(id)){ placePart(id); syncBuilder(true); }
     };
     window.addEventListener('pointermove',move);
     window.addEventListener('pointerup',up);
@@ -10727,8 +10991,16 @@ function onBuildSuccess(){
   /* FX.shake and FX.impact existed for the art pass and were wired into four
      places, none of them here — the moment the player's word is sealed, which
      is the signature beat of the whole game, did not move the frame at all. */
-  Audio2.sfx.stamp(); FX.buzz(40);
-  FX.shake(7,200); FX.impact("#b5322b",0.22,240);
+  /* And the ladder the placing built, landing. The stamp is the wax; the
+     resolve is the word — the same phrase the road plays when a chain closes,
+     so the bench and the walk agree about what finishing a word sounds like.
+     A term named first time, with no support, gets the full weight. */
+  const clean = bAttempts<=1 && !bSupportUsed;
+  Audio2.sfx.stamp(); FX.buzz(40+(clean?14:0));
+  if(Audio2.sfx.chainResolve)
+    setTimeout(()=>Audio2.sfx.chainResolve(builderState.needed.length-1, true), 110);
+  FX.shake(clean?10:7, clean?260:200);
+  FX.impact("#b5322b", clean?0.30:0.22, clean?300:240);
   FX.inkBloom($('#assembly'));
   let acc=1-(bAttempts-1)*0.22-bSupportUsed*0.12;
   const accuracy=clamp(acc,0.35,1);
@@ -13674,7 +13946,7 @@ function runMission(){
         lane:1, laneY:0.615, targetY:null, keyUp:false, keyDn:false, steering:false, warnedHigh:false,
         phaseT:0, sweepT:0, gateSweepT:0, studiedRun:0,
         pointer:{x:0,y:0,over:false},
-        pickups:[], hazards:[], pops:[], raiders:[],
+        pickups:[], hazards:[], pops:[], raiders:[], flights:[],
         spawnPickT:0.7, spawnHazT:1.4,
         events:(f.roadPlan && f.roadPlan.events)? f.roadPlan.events.map(e=>({at:e.at,type:e.type})) : buildEvents(r,enemy,size),
         evIdx:0,
@@ -13691,6 +13963,9 @@ function runMission(){
         forge:computeForgePassives(f),
         momentum:1.0, moT:0, surgeT:0, combo:[], comboBadT:0,
         gate:null, termsBuilt:[], realTermsBuilt:0, bestMomentum:1.0,
+        /* the run's own tallies for the five marks, plus the record of which
+           momentum gears this walk has already announced */
+        bestChain:0, grazes:0, marksBroken:0, tierHit:{},
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
         maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"",
@@ -13706,6 +13981,9 @@ function runMission(){
         school:null,
         endless:pendingEndless };
     pendingEndless=false;
+    /* a fresh road may shout each mark once again — and must never inherit a
+       crest left mid-animation by the road before it */
+    E.resetMarkShouts(); clearCrest();
     syncRoadInsets();
     M.laneY = laneYpx(1); M.targetY = M.laneY;
     M.forge.momentumFloor0=M.forge.momentumFloor;   // the honest floor, restored when flow breaks
@@ -14388,7 +14666,13 @@ function startEndlessRoad(){
 function endEndlessRoad(){
   if(M.done) return; M.done=true; M.paused=true;
   if(M._unbind){ M._unbind(); M._unbind=null; }
+  clearCrest();
   const distance=+M.progress.toFixed(2), terms=M.realTermsBuilt||0, best=+M.bestMomentum.toFixed(1);
+  /* Distance is the Endless Road's own number and it is only meaningful once the
+     walk is over, so unlike the other four marks it is set here rather than as
+     it climbs — and it is set silently, because the panel that is about to open
+     says it better than a crest over a squad that has already fallen. */
+  E.beatMark("distance", distance);
   const scoreVal = distance*10 + terms*4;
   const s=S();
   const isNewBest = scoreVal > (s.endlessScore||0);
@@ -14396,11 +14680,17 @@ function endEndlessRoad(){
   if(window.__RD_META) window.__RD_META.recordScore("endless", scoreVal,
     {label:`${distance} distance · ${terms} terms`, depth:distance});
   persist();
-  Audio2.sfx.bad(); FX.buzz(30);
+  /* A best run should not be announced with the failure cue. The Endless Road
+     always ends by falling over, so `bad()` was the only sound it ever made —
+     including on the run that beat everything the player had done before. */
+  if(isNewBest && Audio2.sfx.record) Audio2.sfx.record(); else Audio2.sfx.bad();
+  FX.buzz(30);
   const dEl=$('#er-dist'), bEl=$('#er-body'), panel=$('#endless-result');
   if(dEl) dEl.textContent=`${distance} distance walked`;
+  const broke=M.marksBroken||0;
   if(bEl) bEl.innerHTML = `<b>${terms}</b> term${terms===1?"":"s"} built · top momentum <b>&times;${best}</b>`
-    + (isNewBest ? `<br><span style="color:var(--gold)">New best run.</span>` : `<br>Best so far: ${s.endlessBest||0} distance · ${s.endlessTerms||0} terms.`);
+    + (isNewBest ? `<br><span style="color:var(--gold)">New best run.</span>` : `<br>Best so far: ${s.endlessBest||0} distance · ${s.endlessTerms||0} terms.`)
+    + (broke ? `<br><span style="color:var(--cinnabar)">You beat <b>${broke}</b> of your own marks out there.</span>` : "");
   if(panel){ panel.classList.add('show');
     const cont=$('#er-continue'); if(cont) cont.onclick=()=>{ panel.classList.remove('show'); window.__RD_SCREENS.showHub(); }; }
 }
@@ -14419,7 +14709,7 @@ function beginCollapse(){
   M.keyUp=false; M.keyDn=false;
   M.paceNow=0; M.paceLive=0; updatePaceGauge(true);   // the road has stopped; the gauge says so
   if(M._unbind){ M._unbind(); M._unbind=null; }
-  hideTermBanner();
+  hideTermBanner(); clearCrest();
   const gp=$('#gate-prompt'); if(gp) gp.classList.remove('show');
   const sc=$('#study-card'); if(sc) sc.classList.remove('show');
   const pb=$('#pace-btn'); if(pb){ pb.classList.remove('active'); pb.classList.add('starved'); }
@@ -14466,6 +14756,20 @@ function finishCollapse(){
       const d=el("div","cl-stat"); d.innerHTML=`<span class="cl-v">${v}</span><span class="cl-l">${l}</span>`;
       learned.appendChild(d);
     });
+    /* A LOST RUN CAN STILL HAVE BEEN YOUR BEST AT SOMETHING.
+       Going down at 40% having built the longest chain of your life is a
+       genuinely different experience from going down at 40% having built
+       nothing, and the card treated them identically. The marks are already
+       banked by the time this renders — they are set as they happen, not on
+       arrival — so a failed walk keeps every record it earned, which is the
+       reason to keep walking after one. */
+    const broke=M.marksBroken||0;
+    if(broke){
+      const note=el("div","small");
+      note.style.cssText="grid-column:1/-1;margin-top:2px;color:var(--cinnabar);font-weight:700;";
+      note.innerHTML=`✦ And you still beat <b>${broke}</b> of your own best${broke===1?"":"s"} on the way down — that is kept.`;
+      learned.appendChild(note);
+    }
   }
   /* NO UNFAIR WALLS (NORTH_STAR, Design Rule 2). A fixed difficulty will not move
      on its own, so after a road has put the party down twice the card offers to
@@ -14886,9 +15190,23 @@ function updatePaceGauge(force){
    sky for a moment. The reward for chaining a word and the lesson the chain
    teaches are deliberately the same event. */
 let termBannerTimer=null;
+/* The word arrives letter by letter. It used to fade in whole, which reads as a
+   notification appearing; stamped, it reads as the word being built — which is
+   what the player just did with their hands, and the point of the whole game.
+   Only the REAL terms get it: a coined chain is a near miss the player should
+   read and move past, not a ceremony. Escaped, because a term's spelling is
+   data and this is the one place it is written into innerHTML character by
+   character. */
+function stampLetters(word){
+  return String(word).split("").map((ch,i)=>{
+    const safe = ch===" " ? "&nbsp;" : ch.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    return `<span class="tb-ltr" style="animation-delay:${(i*32)}ms">${safe}</span>`;
+  }).join("");
+}
 function showTermBanner(word, parts, def, real){
   const b=$('#term-banner'); if(!b) return;
-  b.innerHTML=`<span class="tb-word">${word}</span><span class="tb-tag${real?"":" coined"}">${real?"real term":"coined"}</span>
+  const head = (real && !FX.reduced()) ? stampLetters(word) : word;
+  b.innerHTML=`<span class="tb-word">${head}</span><span class="tb-tag${real?"":" coined"}">${real?"real term":"coined"}</span>
     <span class="tb-parts">${parts}</span>
     ${def?`<span class="tb-def">${def}</span>`:""}`;
   b.classList.add('show');
@@ -14921,8 +15239,15 @@ function enterFlow(){
   M.momentum=Math.max(M.momentum, 2.2);
   const mo=$('#momentum'); if(mo) mo.classList.add('flow');
   caption(`<b>Flow — ${M.streak} right in a row.</b> Everything on the road is worth more and the squad keeps its pace &mdash; but the road stops being gentle. One hit ends it.`);
-  pop(M.cv.width*0.30, M.laneY-128, "FLOW!");
-  Audio2.sfx.great && Audio2.sfx.great(); FX.buzz(34);
+  /* Flow is the largest thing that happens on a road — the value of everything
+     changes, the floor rises, the road stops being careful — and it announced
+     itself with a floating pop the same size as "+3 ink". It gets the crest,
+     because if anything on this road is worth interrupting for, it is the state
+     the player just talked their way into. */
+  crest(`${M.streak} right in a row`, "FLOW", "worth more, and the road stops being gentle — one hit ends it");
+  Audio2.sfx.great && Audio2.sfx.great();
+  if(Audio2.sfx.tier) setTimeout(()=>Audio2.sfx.tier(4), 120);
+  FX.buzz(34); FX.shake(7,260); FX.impact("#d8bd84",0.24,340);
 }
 function exitFlow(reason){
   if(!M || !M.flow) return;
@@ -14934,6 +15259,179 @@ function exitFlow(reason){
     : "The flow breaks. Build it again: four right in a row.");
   pop(M.cv.width*0.30, M.laneY-108, "flow lost", true);
 }
+
+/* ==================================================================
+   THE CREST — the road interrupting itself, twice a run at most.
+
+   Everything the road had to say, it said in the caption strip along
+   the bottom or in a floating pop over the squad. Both are murmurs, and
+   they are right for a murmur: a reagent found, a passive credited, an
+   ink tally. Neither is any use for the two things that are genuinely
+   worth stopping the eye — crossing into a faster gear, and beating the
+   best you have ever done.
+
+   The crest is queued rather than shown, because those two things
+   frequently land on the same frame (a long chain both completes a word
+   and breaks the chain record), and two banners fighting over the same
+   patch of sky is worse than either alone. One at a time, in order, and
+   the queue is dropped entirely when the run ends.
+   ================================================================== */
+/* A REALLY good moment can fire three of these at once — a long chain completes
+   a real word, which crosses a momentum gear, which breaks a record, which takes
+   the streak to five. Played end to end that is seven seconds of banner over a
+   road that is still moving, which turns the best thing that can happen to a
+   player into the thing that makes them crash. So the queue is short: the two
+   most recent arrivals, and the rest are dropped rather than delayed. Dropping
+   is right and delaying is not — a crest that appears five seconds after the
+   thing it is about is worse than no crest, because the player has to work out
+   what it is referring to. */
+const CREST_QUEUE_MAX=2;
+let crestQ=[], crestT=null;
+function crest(kicker, word, sub, kind){
+  if(!M || M.done) return;
+  crestQ.push({kicker, word, sub, kind});
+  if(crestQ.length>CREST_QUEUE_MAX) crestQ=crestQ.slice(-CREST_QUEUE_MAX);
+  if(!crestT) crestNext();
+}
+function crestNext(){
+  const node=$('#road-crest');
+  crestT=null;
+  if(!node) { crestQ=[]; return; }
+  const c=crestQ.shift();
+  if(!c){ node.classList.remove('show'); return; }
+  node.className="road-crest"+(c.kind?" "+c.kind:"");
+  node.innerHTML=`<span class="rc-kicker">${c.kicker}</span><span class="rc-word">${c.word}</span>`
+    +(c.sub?`<span class="rc-sub">${c.sub}</span>`:"");
+  // the animation has to be restarted, not merely re-added, or a second crest
+  // inside the same run inherits the first one's finished state and never plays
+  void node.offsetWidth;
+  node.classList.add('show');
+  crestT=setTimeout(crestNext, FX.reduced()? 1200 : 1750);
+}
+function clearCrest(){
+  crestQ=[]; if(crestT){ clearTimeout(crestT); crestT=null; }
+  const node=$('#road-crest'); if(node) node.classList.remove('show');
+}
+
+/* ==================================================================
+   THE GEARS — momentum crossing a named tier.
+
+   Momentum ran from ×1 to ×5 as a bar that filled and a word in small
+   caps that changed under it, and the player was never once told they
+   had arrived anywhere. It is the single most important number on the
+   road — it multiplies ink, it drives the pace, it decides the grade —
+   and it changed gear in total silence.
+
+   Each tier is crossed at most once per run. Falling back below one and
+   climbing through it again is NOT a second arrival: the road would
+   spend the whole of a good run shouting, and the words would stop
+   meaning anything. This is the same restraint the marks use, for the
+   same reason.
+   ================================================================== */
+const MOMENTUM_TIERS=[
+  {at:2, name:"ROLLING",     sub:"the road opens up — everything found is worth more"},
+  {at:3, name:"FLYING",      sub:"the caravan has its legs under it"},
+  {at:4, name:"UNSTOPPABLE", sub:"nothing on this road is keeping up"},
+  {at:5, name:"PERFECT",     sub:"the highest gear the road has"}
+];
+function checkMomentumTier(){
+  if(!M) return;
+  M.tierHit=M.tierHit||{};
+  MOMENTUM_TIERS.forEach(T=>{
+    if(M.momentum < T.at - 0.0001 || M.tierHit[T.at]) return;
+    M.tierHit[T.at]=true;
+    crest(`momentum ×${T.at}`, T.name, T.sub);
+    if(Audio2.sfx.tier) Audio2.sfx.tier(T.at); else Audio2.sfx.great();
+    FX.buzz(16+T.at*6);
+    FX.shake(3+T.at*1.6, 200+T.at*20);
+    FX.impact("#d8bd84", 0.10+T.at*0.035, 240+T.at*30);
+  });
+}
+
+/* ==================================================================
+   THE MARKS ON THE ROAD — a lifetime best, broken while you walk.
+
+   The engine owns the numbers and the once-per-run rule (E.beatMark);
+   this is only the road's voice for them. Every one of the five is a
+   thing the player did with their hands or their vocabulary, never a
+   thing they were given, so beating one always means they got better.
+   ================================================================== */
+function shoutMark(key, value, kicker, word, fmt){
+  const prev=E.beatMark(key, value);
+  if(prev==null) return false;
+  const was=fmt?fmt(prev):prev;
+  crest(kicker, word, `your best was ${was}`, "mark");
+  if(Audio2.sfx.record) Audio2.sfx.record(); else Audio2.sfx.great();
+  FX.buzz(46); FX.shake(9,300); FX.impact("#b5322b",0.24,320);
+  M.marksBroken=(M.marksBroken||0)+1;
+  return true;
+}
+/* the chain is measured while it is still being built, so the shout lands on
+   the piece that broke the record rather than on the word that banks it */
+function noteChain(n){
+  if(!M || n<2) return;
+  M.bestChain=Math.max(M.bestChain||0, n);
+  shoutMark("chain", n, "longest chain", `${n} PIECES`, (p)=>`${p} pieces`);
+}
+
+/* ==================================================================
+   THE PIECE GOES INTO THE WORD.
+
+   Walking through a word-part made a noise, printed its name where it
+   had been standing, and — somewhere else entirely, up in the HUD — a
+   tile silently appeared in the term under construction. Those are the
+   same event and the player had to infer it. Nothing on the road
+   connected the thing they reached for to the word it went into, which
+   is the one causal link the whole mode is built on.
+
+   So the piece flies there. An arc from where it was picked up to the
+   builder itself, arriving as the tile appears, and the builder takes
+   the hit. It is the cheapest possible fix for the most important
+   confusion on the road, and under reduced motion it simply does not
+   happen — the tile appearing is still correct, merely quieter.
+   ================================================================== */
+/* Where the builder actually is, in canvas coordinates — measured, because the
+   HUD is DOM laid out over a canvas that is authored at a fixed height and
+   stretched, so the two coordinate systems only agree by accident.
+
+   It falls back to the top of the walkable band rather than returning nothing.
+   A rect can legitimately measure zero for a frame — during a resize, before
+   first layout, on a screen that has not been shown — and dropping the flight
+   in those frames would make the one cue that explains the mode the only cue
+   that intermittently does not appear. The fallback is where the HUD sits
+   anyway, so the arc is right even when the measurement is not available. */
+function comboAnchor(){
+  if(!M || !M.cv) return null;
+  const fallback={ x:M.cv.width*0.5, y:Math.max(24, bandTopPx()-54) };
+  const rc=M.cv.getBoundingClientRect(); if(!rc.width || !rc.height) return fallback;
+  const n=$('#combo-build'); if(!n) return fallback;
+  const r=n.getBoundingClientRect(); if(!r.width && !r.height) return fallback;
+  return { x:(r.left+r.width/2-rc.left)*(M.cv.width/rc.width),
+           y:(r.top +r.height/2-rc.top )*(M.cv.height/rc.height) };
+}
+function flyToWord(txt, x0, y0, kind){
+  if(!M || FX.reduced()) return;
+  const a=M._anchor || comboAnchor();
+  if(!a) return;
+  // the arc rises out of the road before it turns for the HUD, so it reads as
+  // the piece being lifted rather than dragged across the picture
+  M.flights.push({ txt, kind:kind||"root", t:0, dur:0.42,
+    x0, y0, x1:a.x, y1:a.y,
+    cx:(x0+a.x)/2, cy:Math.min(y0,a.y)-90-Math.random()*40 });
+}
+function stepFlights(dt){
+  if(!M.flights.length) return;
+  M.flights.forEach(fl=>{
+    const was=fl.t; fl.t+=dt;
+    // the builder takes the hit at the moment of arrival, not at the moment of pickup
+    if(was<fl.dur && fl.t>=fl.dur){
+      const cb=$('#combo-build');
+      if(cb){ cb.classList.remove('took'); void cb.offsetWidth; cb.classList.add('took'); }
+    }
+  });
+  M.flights=M.flights.filter(fl=>fl.t < fl.dur+0.12);
+}
+
 /* a right answer anywhere on the road feeds one streak — gates, chained terms and
    the popup challenges all count, so the walk rewards being right, not being lucky */
 function scoreCorrect(power, label){
@@ -14944,8 +15442,26 @@ function scoreCorrect(power, label){
   // a streak compounds the burst: three right in a row is a genuinely different ride
   const streakBonus=Math.min(0.55, Math.max(0,M.streak-1)*0.14);
   rush((power||0.5)+streakBonus, label);
+  /* The streak had a ceiling nobody could see past: flow at four, and then
+     nothing ever again, however long you held it. Five, eight and twelve are
+     named so a long streak keeps arriving somewhere, and the lifetime mark
+     gives the whole thing a number to beat. */
+  const NAMED={6:["six right",   "SURE HAND",  "the road is not catching you out"],
+               9:["nine right",  "SCHOLAR",    "you are reading these faster than they come"],
+               13:["thirteen right","LEXICOGRAPHER","this is what fluency looks like"],
+               20:["twenty right","THE LEXICON ITSELF",""]};
+  const nm=NAMED[M.streak];
   if(M.streak===FLOW_AT) enterFlow();
+  else if(nm){
+    crest(nm[0], nm[1], nm[2]);
+    if(Audio2.sfx.tier) Audio2.sfx.tier(Math.min(5,2+Math.floor(M.streak/6)));
+    FX.buzz(24);
+  }
+  // the small pop is for the streaks that have no name of their own — a crest
+  // and a pop saying the same thing in the same second is the road talking over
+  // itself, which is exactly what the crest exists to stop
   else if(M.streak>=3) pop(M.cv.width*0.30, M.laneY-108, `${M.streak} in a row!`);
+  shoutMark("streak", M.streak, "answer streak", `${M.streak} IN A ROW`, (p)=>`${p} in a row`);
 }
 function scoreWrong(){
   if(!M||M.done) return;
@@ -14970,7 +15486,14 @@ function updateMomentumMeter(){
   const v=M.momentum.toFixed(1);
   if(mx && mx.textContent!=="×"+v) mx.textContent="×"+v;
   if(fill) fill.style.width=clamp((M.momentum-1)/(MOMENTUM_MAX-1)*100,0,100)+"%";
-  if(mo) mo.classList.toggle('hot', M.momentum>=2.5);
+  if(mo){ mo.classList.toggle('hot', M.momentum>=2.5);
+    /* the band the crest just named, held in the HUD for as long as the player
+       holds the gear — a celebration that vanishes teaches nothing about where
+       you currently are */
+    mo.classList.toggle('t3', M.momentum>=3 && M.momentum<4);
+    mo.classList.toggle('t4', M.momentum>=4 && M.momentum<5);
+    mo.classList.toggle('t5', M.momentum>=5);
+  }
   if(lab){ const w=M.flow?"in flow":M.momentum>=4?"unstoppable":M.momentum>=3?"flying":M.momentum>=2?"rolling":"momentum";
     if(lab.textContent!==w) lab.textContent=w; }
 }
@@ -15219,7 +15742,7 @@ function tick(t){
   if(M.collapsing){ updateCollapse(dt); draw(t); return; }
   // the walkable band tracks the real interface, a few times a second
   M._insetT=(M._insetT||0)-dt;
-  if(M._insetT<=0){ M._insetT=0.25; syncRoadInsets(); }
+  if(M._insetT<=0){ M._insetT=0.25; syncRoadInsets(); M._anchor=comboAnchor(); }
   ageCaption(dt);
   // free vertical movement: mouse leads, W/S and arrows travel, touch drags
   if(M.laneFlashT>0) M.laneFlashT=Math.max(0,M.laneFlashT-dt);
@@ -15469,7 +15992,42 @@ function tick(t){
             }
           }
         } else {
-          statGain({morale:1});
+          /* THREADED IT.
+             A hazard the squad slipped past used to pay one silent point of
+             morale, which is the game noticing something the player did not.
+             Steering out of a rockslide by a hand's breadth is one of the few
+             genuinely skilful things the road asks for, and it was the only one
+             that produced no feedback at all — so the road rewarded surviving
+             and said nothing about doing it well.
+
+             "Close" is measured against the same hit radius the collision uses,
+             so the cue can never disagree with the hit: inside HIT_R it is a
+             hit, and the band just outside it is the graze. It pays a sliver of
+             momentum (never enough to substitute for knowing a word — Pillar I)
+             and it feeds a mark, because threading a road cleanly is a real
+             skill worth having a number for. */
+          /* HOW CLOSE IS CLOSE. Measured live on a Chapter Three road, a band of
+             2.1 hit-radii called six hazards in forty-seven seconds a thread,
+             which is most of them — and a reward that fires for ordinary play is
+             not a reward, it is wallpaper. 1.8 makes the band about a quarter of
+             a lane's spacing, which is the width of "it went past their
+             shoulder" rather than "it went past in the next lane". */
+          const gapPx=Math.abs(objY(h)-M.laneY);
+          const close = !h.hit && gapPx < HIT_R*1.8 && !M.phaseT;
+          if(close){
+            M.grazes=(M.grazes||0)+1;
+            statGain({morale:2});
+            bumpMomentum(0.05*M.forge.gainMult);
+            if(Audio2.sfx.graze) Audio2.sfx.graze();
+            FX.buzz(7);
+            // the pop rides the gap: the tighter the thread, the louder it reads
+            pop(sx, M.laneY - (objY(h)>M.laneY? -34 : 34), gapPx<HIT_R*1.4?"threaded it!":"close", false);
+            /* the mark is the run's tally, not this single dodge — one lucky
+               swerve is not a record, twenty of them in a road is */
+            shoutMark("graze", M.grazes, "clean threads", `${M.grazes} THREADED`, (p)=>`${p} in a road`);
+          } else {
+            statGain({morale:1});
+          }
         }
       }
     });
@@ -15525,6 +16083,7 @@ function tick(t){
   // pops age
   M.pops.forEach(pp=>pp.age+=dt);
   M.pops=M.pops.filter(pp=>pp.age<1.3);
+  stepFlights(dt);
 
   draw(t);
 }
@@ -15621,7 +16180,9 @@ function collectPickup(pk,px,py){
       statGain({morale:3});
       pop(px,py-22,`known · +${ink} ink`, false);
     }
-    pop(px,py, part.text, false);
+    /* the piece itself goes up to the builder — the pop stays for the numbers,
+       which are a different kind of information and belong where they land */
+    flyToWord(part.text, px, py, part.kind);
     // the heart of it: the gathered part tries to extend the term you're forging
     pushCombo(pk.partId);
   } else if(pk.type==="reagent"){
@@ -15693,6 +16254,9 @@ function bumpMomentum(amt){
   M.moT=4.5;                              // fresh decay grace after every gain
   if(M.momentum>M.bestMomentum) M.bestMomentum=M.momentum;
   pulseMomentum();
+  // arriving in a higher gear is an event; the meter filling is not
+  checkMomentumTier();
+  shoutMark("momentum", M.momentum, "top momentum", `×${M.momentum.toFixed(1)}`, (p)=>`×${Number(p).toFixed(1)}`);
 }
 function coolMomentum(dt){
   if(M.moT>0){ M.moT=Math.max(0,M.moT-dt); return; }
@@ -15720,10 +16284,22 @@ function pushCombo(partId){
   if(shape==="broken"){
     // the piece can't extend this word — start a fresh chain from it if it can lead one
     M.combo = comboShape([partId])==="broken" ? [] : [partId];
-    M.comboBadT=0.5; Audio2.sfx.page&&Audio2.sfx.page(); updateWordHud();
+    /* The ladder falls off its rung. A chain that cannot continue used to make
+       the same page-rustle as turning a page, which is a neutral sound — the
+       player had to read the tiles to find out something had gone wrong. */
+    M.comboBadT=0.5;
+    (Audio2.sfx.chainBreak||Audio2.sfx.page).call(Audio2.sfx);
+    if(M.combo.length) setTimeout(()=>{ if(M&&!M.done) Audio2.sfx.chain&&Audio2.sfx.chain(0); },150);
+    updateWordHud();
     return;
   }
-  M.combo=trial; Audio2.sfx.clink(); FX.buzz(8);
+  M.combo=trial;
+  /* EACH PIECE CLIMBS. The rung is the position in the chain, so the ear is
+     told how long the word is getting without looking away from the road —
+     and an unfinished ladder is a question the next piece answers. */
+  if(Audio2.sfx.chain) Audio2.sfx.chain(M.combo.length-1); else Audio2.sfx.clink();
+  FX.buzz(8+Math.min(10,M.combo.length*3));
+  noteChain(M.combo.length);
   if(shape==="complete") completeTerm();
   else updateWordHud();
 }
@@ -15742,7 +16318,15 @@ function completeTerm(){
   const ids=M.combo.slice();
   const realId=TERM_BY_SIG[ids.join("+")];
   const n=ids.length;
-  FX.shake(realId?5:3,150); FX.impact(realId?"#d8bd84":"#7d9a8a", realId?0.30:0.18, 170);
+  /* THE WHOLE PROMISE OF THE GAME, PAYING OUT.
+     A real medical term completing is the thing every other system on the road
+     exists to produce, and it landed at shake(5) — one notch above a coined
+     chain that means nothing. It is scaled by the LENGTH of the word now as
+     well as by its reality, because a three-piece real term is a genuinely
+     harder thing to have assembled than a two-piece one, and the hands that
+     did it should feel the difference. */
+  FX.shake(realId? 5+n*2.6 : 3, realId? 200+n*40 : 150);
+  FX.impact(realId?"#d8bd84":"#7d9a8a", realId? Math.min(0.5,0.22+n*0.09) : 0.18, realId? 260+n*40 : 170);
   /* MASTERY IS ONLY EVER PAID FOR A REAL WORD.
      This used to record every completed chain as a correct answer for every part
      in it. Only 55 of the 1,290 two-part chains the road can produce are real
@@ -15780,6 +16364,11 @@ function completeTerm(){
   showTermBanner(label, partTrail, realId?TERMS[realId].def:coinedGloss(ids), !!realId);
   if(realId){ M.realTermsBuilt++;
     caption(`✦ ${TERMS[realId].spell} — ${TERMS[realId].def}. Momentum ×${M.momentum.toFixed(1)}!`);
+    /* how many real words came out of one road is the purest measure the game
+       has of the skill it is actually teaching, so it is the mark that matters
+       most — and the only one a player cannot reach by steering well */
+    shoutMark("realTerms", M.realTermsBuilt, "real terms this road",
+      `${M.realTermsBuilt} REAL TERMS`, (p)=>`${p} in a road`);
   } else {
     caption(`${label} — not a word anyone uses, but the pieces fit: ${coinedGloss(ids)}. ×${M.momentum.toFixed(1)}`);
   }
@@ -15788,7 +16377,14 @@ function completeTerm(){
   if(M.boss && !M.boss.lt && M.boss.phase===1 && realId) M.boss.erosion=clamp(M.boss.erosion-0.45,0,1);
   if(M.boss && M.boss.lt && realId) pressLieutenant(0.42, true);
   pop(M.cv.width*0.30, M.laneY-88, `×${M.momentum.toFixed(1)}  +${ink} ink`);
-  Audio2.sfx.great(); FX.buzz(22);
+  /* the ladder the gathering built, landing. `great()` is the game's generic
+     "that worked" and it played here identically whether the player had chained
+     two pieces of nonsense or four pieces of a real word — the resolve starts
+     from the rung the chain actually reached and only opens the octave for a
+     word that exists. */
+  if(Audio2.sfx.chainResolve) Audio2.sfx.chainResolve(n-1, !!realId);
+  else Audio2.sfx.great();
+  FX.buzz(realId? 22+n*6 : 18);
   M.combo=[]; updateWordHud();
 }
 
@@ -16655,6 +17251,33 @@ function draw(t){
     ctx.fillText(pp.txt, pp.x, pp.y - pp.age*34);
     ctx.restore();
   });
+  /* THE PIECE IN FLIGHT — from where it was gathered to the word it joins.
+     Drawn last of the road layer and above the pops, because it is the only
+     thing on screen whose whole job is to be followed by the eye. It shrinks
+     into the builder rather than merely stopping there, so the arrival reads
+     as the piece being taken rather than as a label winking out. */
+  if(M.flights && M.flights.length){
+    ctx.save(); ctx.textAlign="center"; ctx.textBaseline="middle";
+    M.flights.forEach(fl=>{
+      const p=clamp(fl.t/fl.dur,0,1);
+      // ease-out so it leaves the road fast and settles into the HUD
+      const e=1-Math.pow(1-p,2.4), m=1-e;
+      const x=m*m*fl.x0 + 2*m*e*fl.cx + e*e*fl.x1;
+      const y=m*m*fl.y0 + 2*m*e*fl.cy + e*e*fl.y1;
+      const sc=1 - e*0.55;
+      ctx.globalAlpha = p>=1 ? clamp(1-(fl.t-fl.dur)/0.12,0,1) : 1;
+      const col = fl.kind==="prefix" ? "#b5322b" : fl.kind==="suffix" ? "#33513f" : "#8a6a2b";
+      ctx.font=`800 ${Math.max(7,Math.round(15*sc))}px 'Noto Sans',sans-serif`;
+      const w=ctx.measureText(fl.txt).width + 16*sc, h=22*sc;
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x-w/2, y-h/2, w, h, 4*sc);
+      else ctx.rect(x-w/2, y-h/2, w, h);
+      ctx.fillStyle="rgba(243,236,216,.94)"; ctx.fill();
+      ctx.strokeStyle=col; ctx.lineWidth=1.5*sc; ctx.stroke();
+      ctx.fillStyle=col; ctx.fillText(fl.txt, x, y);
+    });
+    ctx.restore();
+  }
   // rune gate spanning the road
   if(M.gate) drawGate(ctx,W,H,t);
   // destination banner
@@ -16970,6 +17593,7 @@ function arrive(){
   if(M.done||M.arriving) return;
   M.arriving=true; M.arriveT=0; M.paused=true;
   if(M._unbind){ M._unbind(); M._unbind=null; }
+  clearCrest();
   caption(`${M.f.chapter.dest} ahead — the waystation banner comes into view!`);
   Audio2.sfx.chime(); FX.buzz(24);
   spawnArrivalConfetti();
@@ -17048,6 +17672,55 @@ function renderGearDebrief(f){
     host.appendChild(row);
   });
 }
+/* ==================================================================
+   THE MARKS WALL, at the end of a road.
+
+   The debrief could tell you exactly how this expedition went and
+   absolutely nothing about whether it was any good BY YOUR OWN
+   STANDARDS — a player who had just walked the best road of their life
+   read the same four tiles as one who had scraped through, and left
+   with nothing to aim at next time.
+
+   Five bests, each of them a thing the player did rather than a thing
+   they were given, and each row says both what the record is and what
+   this road managed against it. `M` is read defensively because a result
+   screen reached by any route other than a finished walk (a debug entry,
+   a restored save) must still render — the same reason summaryLine is
+   written the way it is.
+   ================================================================== */
+const MARK_ROWS=[
+  { key:"realTerms", label:"Real terms",  run:(m)=>m.realTermsBuilt||0 },
+  { key:"chain",     label:"Longest chain", run:(m)=>m.bestChain||0, unit:" pieces" },
+  { key:"momentum",  label:"Top momentum", run:(m)=>+(m.bestMomentum||0).toFixed(1), fmt:(v)=>"×"+Number(v).toFixed(1) },
+  { key:"streak",    label:"Answer streak", run:(m)=>m.bestStreak||0, unit:" in a row" },
+  { key:"graze",     label:"Clean threads", run:(m)=>m.grazes||0 }
+];
+function renderMarks(){
+  const panel=$('#marks-panel'); if(!panel) return;
+  const mk=E.marks();
+  const run=M||{};
+  const rows=MARK_ROWS.map(R=>{
+    const best=Number(mk[R.key])||0;
+    const mine=Number(R.run(run))||0;
+    // the stored best already includes this run, so "fresh" is: this run
+    // reached the record, and the record is not merely the floor
+    const fresh = best>0 && mine>=best;
+    const show=(v)=>R.fmt?R.fmt(v):(v+(R.unit||""));
+    return `<div class="mark-cell${fresh?" fresh":""}">${fresh?'<span class="mk-new">best</span>':''}
+      <span class="mk-v">${show(best)}</span>
+      <span class="mk-l">${R.label}</span>
+      <span class="mk-run">${fresh?"set on this road":`this road: ${show(mine)}`}</span></div>`;
+  }).join("");
+  const broke=(run.marksBroken||0);
+  panel.style.display="";
+  panel.innerHTML=`<span class="eyebrow">Your marks</span>
+    <div class="small" style="margin-top:3px;color:var(--ink-soft)">${
+      broke ? `You beat <b>${broke}</b> of your own best${broke===1?"":"s"} on this road.`
+            : "The best you have walked, in the five things the road actually measures."}</div>
+    <div class="marks-row">${rows}</div>`;
+  FX.stagger($$('#marks-panel .mark-cell'),{stagger:70,y:8});
+}
+
 /* ==================================================================
    WHERE THE ROAD IS RUNNING — shown after every arrival.
    For a fixed setting this is a quiet confirmation. For the adaptive
@@ -17132,6 +17805,7 @@ function showResult(){
        quality; the panel below always says what level the road is running at, and
        flags it when the road has just moved — a difficulty the player cannot see
        is a difficulty the player cannot trust (NORTH_STAR, Pillar II). */
+    renderMarks();
     const bandBefore = E.tierBandName();
     const movedTo = noteRunOutcome(overall);
     renderRoadLevel(movedTo, bandBefore);
@@ -17464,6 +18138,17 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _pace:()=>M&&{now:M.paceNow, live:M.paceLive, target:M.paceTarget, rushT:M.rushT, rushPow:M.rushPow,
     streak:M.streak, flow:M.flow},
   _flowAt:()=>FLOW_AT,
+  /* --- the satisfaction pass: gears, marks, the crest, pieces in flight --- */
+  MOMENTUM_TIERS,
+  _bump:(a)=>{ bumpMomentum(a==null?0.5:a); return M&&{momentum:M.momentum, tierHit:Object.assign({},M.tierHit||{})}; },
+  _crestNode:()=>{ const n=$('#road-crest'); return n?{cls:n.className, txt:n.textContent, queued:crestQ.length}:null; },
+  _clearCrest:()=>{ clearCrest(); return crestQ.length; },
+  _flights:()=>M&&(M.flights||[]).map(f=>({txt:f.txt, t:f.t, dur:f.dur, kind:f.kind})),
+  _stepFlights:(dt)=>{ stepFlights(dt||0.05); return M&&M.flights.length; },
+  _flyToWord:(txt,kind)=>{ flyToWord(txt, 100, 300, kind); return M&&M.flights.length; },
+  _grazes:()=>M&&(M.grazes||0),
+  _marksBroken:()=>M&&(M.marksBroken||0),
+  _bestChain:()=>M&&(M.bestChain||0),
   _scoreCorrect:(p)=>{ scoreCorrect(p==null?0.5:p,"test"); return M&&{streak:M.streak, flow:M.flow}; },
   _scoreWrong:()=>{ scoreWrong(); return M&&{streak:M.streak, flow:M.flow}; },
   _reask:()=>(M&&M.reask&&M.reask.length)?M.reask.slice():debtQueue().slice(),
