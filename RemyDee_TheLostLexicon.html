@@ -2734,8 +2734,11 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
       </div>
       <!-- the built term and its meaning, held in clear sky: the reward IS the lesson -->
       <div class="term-banner" id="term-banner" aria-live="polite"></div>
-      <!-- the road's one loud voice: a momentum tier crossed, or a lifetime best broken -->
-      <div class="road-crest" id="road-crest" aria-live="assertive"></div>
+      <!-- The road's one loud voice: a momentum tier crossed, or a lifetime best
+           broken. Polite, not assertive: the gate prompt is the thing a player
+           must read, and an assertive region would cut across it mid-sentence
+           to announce a congratulation. -->
+      <div class="road-crest" id="road-crest" aria-live="polite"></div>
       <!-- the control hint lives in the empty sky, never over the road itself -->
       <div class="mission-hint" id="mission-hint">Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.</div>
       <!-- Word Road HUD: momentum multiplier, the term you are assembling, and gate prompts -->
@@ -13965,7 +13968,7 @@ function runMission(){
         gate:null, termsBuilt:[], realTermsBuilt:0, bestMomentum:1.0,
         /* the run's own tallies for the five marks, plus the record of which
            momentum gears this walk has already announced */
-        bestChain:0, grazes:0, marksBroken:0, tierHit:{},
+        bestChain:0, grazes:0, marksBroken:0, tierHit:{}, stopT:0,
         questionOpen:false,
         challengesDone:0, challengesWon:0, encounters:0, avoided:0, defeated:0,
         maxChallenges: size>=3?3:2, particles:[], t0:performance.now(), lastCap:"",
@@ -14689,7 +14692,13 @@ function endEndlessRoad(){
   if(dEl) dEl.textContent=`${distance} distance walked`;
   const broke=M.marksBroken||0;
   if(bEl) bEl.innerHTML = `<b>${terms}</b> term${terms===1?"":"s"} built · top momentum <b>&times;${best}</b>`
-    + (isNewBest ? `<br><span style="color:var(--gold)">New best run.</span>` : `<br>Best so far: ${s.endlessBest||0} distance · ${s.endlessTerms||0} terms.`)
+    /* `endlessBest` only moves when the SCORE improves, and the score is
+       distance plus four times the terms — so a walk that went further than any
+       before it but named nothing left "best so far" quoting a shorter road.
+       The distance mark is the honest furthest, and it is what a player means
+       when they ask how far they have ever got. */
+    + (isNewBest ? `<br><span style="color:var(--gold)">New best run.</span>`
+                 : `<br>Furthest walked: ${E.markValue("distance")||s.endlessBest||0} · best haul: ${s.endlessTerms||0} terms.`)
     + (broke ? `<br><span style="color:var(--cinnabar)">You beat <b>${broke}</b> of your own marks out there.</span>` : "");
   if(panel){ panel.classList.add('show');
     const cont=$('#er-continue'); if(cont) cont.onclick=()=>{ panel.classList.remove('show'); window.__RD_SCREENS.showHub(); }; }
@@ -15247,7 +15256,7 @@ function enterFlow(){
   crest(`${M.streak} right in a row`, "FLOW", "worth more, and the road stops being gentle — one hit ends it");
   Audio2.sfx.great && Audio2.sfx.great();
   if(Audio2.sfx.tier) setTimeout(()=>Audio2.sfx.tier(4), 120);
-  FX.buzz(34); FX.shake(7,260); FX.impact("#d8bd84",0.24,340);
+  FX.buzz(34); FX.shake(7,260); FX.impact("#d8bd84",0.24,340); hitstop(80);
 }
 function exitFlow(reason){
   if(!M || !M.flow) return;
@@ -15345,6 +15354,7 @@ function checkMomentumTier(){
     FX.buzz(16+T.at*6);
     FX.shake(3+T.at*1.6, 200+T.at*20);
     FX.impact("#d8bd84", 0.10+T.at*0.035, 240+T.at*30);
+    hitstop(30+T.at*10);
   });
 }
 
@@ -15362,7 +15372,7 @@ function shoutMark(key, value, kicker, word, fmt){
   const was=fmt?fmt(prev):prev;
   crest(kicker, word, `your best was ${was}`, "mark");
   if(Audio2.sfx.record) Audio2.sfx.record(); else Audio2.sfx.great();
-  FX.buzz(46); FX.shake(9,300); FX.impact("#b5322b",0.24,320);
+  FX.buzz(46); FX.shake(9,300); FX.impact("#b5322b",0.24,320); hitstop(90);
   M.marksBroken=(M.marksBroken||0)+1;
   return true;
 }
@@ -15733,13 +15743,46 @@ function hazardCounter(kind){
 
 /* ---------- the tick ---------- */
 let lastStep=0;
+/* ==================================================================
+   HITSTOP — the road holding still for a twelfth of a second.
+
+   The frame could be shaken and washed with colour, and both were wired
+   up, but nothing could stop it. Stopping is the oldest and strongest
+   impact cue there is: the moment a real word closes, the picture holds
+   for two or three frames and then releases, and the release is what
+   the hand reads as force. Without it a shake is a wobble.
+
+   It is implemented on the road's own clock rather than by pausing,
+   because a pause would stop the DRAW too and the player would see a
+   dropped frame instead of an impact. The simulation gets dt=0 and the
+   frame is still painted, which is the difference between a freeze and
+   a stutter.
+
+   It is capped hard and refuses to stack. A hitstop long enough to
+   notice as a hitch is a bug, and a road that stops four times in a
+   second is unplayable — so the ceiling is 110ms, a running stop can
+   only ever be extended to the longest single request, and reduced
+   motion turns it off entirely.
+   ================================================================== */
+const HITSTOP_MAX=0.11;
+function hitstop(ms){
+  if(!M || M.done || FX.reduced() || FX.quality==="low") return;
+  M.stopT=Math.min(HITSTOP_MAX, Math.max(M.stopT||0, (ms||60)/1000));
+}
 function tick(t){
   if(!M||M.done) return;
-  const dt=Math.min(0.05,(t-(M._lt||t))/1000); M._lt=t;
-  const rel=relaxMult();
+  let dt=Math.min(0.05,(t-(M._lt||t))/1000); M._lt=t;
+  /* the stop eats real time and hands the simulation nothing, so everything
+     downstream — movement, spawns, the clock, the pace — simply does not
+     advance, while draw() below still runs */
   // THE COLLAPSE runs its own little loop: the walk is over, but the party still
-  // has to fall down in front of you before the round is called.
+  // has to fall down in front of you before the round is called. It is checked
+  // BEFORE the stop, because the stop is a cue about the live walk and the walk
+  // is over — a hazard that both lands and empties the tank would otherwise hold
+  // its own 70ms in front of the fall it caused.
   if(M.collapsing){ updateCollapse(dt); draw(t); return; }
+  if(M.stopT>0){ M.stopT=Math.max(0, M.stopT-dt); draw(t); return; }
+  const rel=relaxMult();
   // the walkable band tracks the real interface, a few times a second
   M._insetT=(M._insetT||0)-dt;
   if(M._insetT<=0){ M._insetT=0.25; syncRoadInsets(); M._anchor=comboAnchor(); }
@@ -16070,6 +16113,13 @@ function tick(t){
     // walk-through collection: reach is a radius now, Vanish widens it, and so does a Surge
     // a live lunge is extra reach, decaying over its own short window
     const reachBonus = (M.phaseT>0?90:0) + (M.surging?55:0) + lungeReach();
+    /* THE REACH WAS INVISIBLE, AND THREE THINGS BOUGHT IT.
+       Surging widens the collect radius by 55px, a lunge by up to 120, and
+       Vanish by 90 — and none of them showed. So the strongest reason to hold
+       Surge (sweeping up a cluster you could not otherwise have taken) was a
+       thing the player could only discover by accident, and a lunge that just
+       missed looked identical to one that landed. Published for draw(). */
+    M.reachNow=reachBonus;
     M.pickups.forEach(pk=>{
       if(pk.got) return;
       const px=screenX(pk.p);
@@ -16265,6 +16315,9 @@ function coolMomentum(dt){
 }
 function knockMomentum(){                 // a hazard hit costs pace and breaks the chain
   FX.shake(9,260); FX.impact("#b5322b",0.34,180);
+  // taking one square stops the road too — the same cue as landing a word, which
+  // is right: both are the road being struck, and the player should feel each
+  hitstop(70);
   Audio2.setMood(M && M.boss ? "boss" : "danger");
   dropMomentum(0.6);
   if(M.combo.length){ M.combo=[]; M.comboBadT=0.4; }
@@ -16327,6 +16380,9 @@ function completeTerm(){
      did it should feel the difference. */
   FX.shake(realId? 5+n*2.6 : 3, realId? 200+n*40 : 150);
   FX.impact(realId?"#d8bd84":"#7d9a8a", realId? Math.min(0.5,0.22+n*0.09) : 0.18, realId? 260+n*40 : 170);
+  // the road holds for a breath on a real word, and longer on a longer one —
+  // this is the beat the whole mode exists to produce
+  if(realId) hitstop(42+n*16);
   /* MASTERY IS ONLY EVER PAID FOR A REAL WORD.
      This used to record every completed chain as a correct answer for every part
      in it. Only 55 of the 1,290 two-part chains the road can produce are real
@@ -17069,12 +17125,56 @@ function draw(t){
     }
     ctx.restore();
   }
+  /* THE REACH, DRAWN. A soft ring around the squad whenever something has
+     widened it — a surge, a lunge, a smoke phase. It is drawn UNDER the pickups
+     and the walkers so it never obscures a decision, and it only appears while
+     the reach is actually wider than a walk, so it reads as the advantage
+     switching on rather than as permanent furniture. */
+  if(M.reachNow>2 && !FX.reduced()){
+    const r=HIT_R+M.reachNow;
+    /* Drawn at a strength that can actually be seen against tan ground. The
+       first version sampled at eight points of luminance over the background,
+       which is a thing that is technically on the screen and effectively is
+       not. It is a ring the player is supposed to aim with. */
+    const a=clamp(M.reachNow/110,0.35,1);
+    const col = M.phaseT>0 ? "168,188,198" : "216,189,132";
+    ctx.save();
+    ctx.beginPath();
+    if(ctx.ellipse) ctx.ellipse(W*0.30, M.laneY, r*0.86, r, 0, 0, 6.28);
+    else ctx.arc(W*0.30, M.laneY, r, 0, 6.28);
+    // a wash inside it, so the area you can take from reads as an area
+    ctx.fillStyle=`rgba(${col},${(0.10*a).toFixed(3)})`; ctx.fill();
+    /* Two passes. Gold on tan is the lowest-contrast pair in the palette and the
+       canvas is authored at 720 and displayed at about 510, so a single 2.5px
+       gold stroke arrives as a 1.8px suggestion. A dark stroke underneath gives
+       the bright one an edge to sit on, which is the same trick the pickup
+       tiles use to stay readable over three different grounds. */
+    ctx.setLineDash([9,8]); ctx.lineDashOffset=-(t*0.03)%17;
+    ctx.strokeStyle=`rgba(38,32,24,${(0.42*a).toFixed(3)})`; ctx.lineWidth=5; ctx.stroke();
+    ctx.strokeStyle=`rgba(${col},${(0.95*a).toFixed(3)})`;   ctx.lineWidth=2.4; ctx.stroke();
+    ctx.setLineDash([]); ctx.lineDashOffset=0;
+    ctx.restore();
+  }
   // pickups
   M.pickups.forEach(pk=>{
     if(pk.got) return;
     const x=screenX(pk.p), y=objY(pk) - 26;
     if(x<-40||x>W+40) return;
     drawPickup(ctx,x,y,pk.type,t,pk.partId);
+    /* IN REACH, SO SAY SO. Whether a part is takeable from where the squad is
+       standing right now was information the player could only get by trying.
+       A part inside the live radius gets a ring, which turns a road full of
+       drifting labels into a road with a set of things you can currently have. */
+    if(pk.type==="lexeme" && !pk.hover){
+      const rr=HIT_R+(M.reachNow||0);
+      if(Math.abs(objY(pk)-M.laneY)<rr && x < W*0.30+30+(M.reachNow||0) && x > W*0.30-160){
+        ctx.save();
+        ctx.globalAlpha=0.30+Math.sin(t*0.008)*0.10;
+        ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(x,y,24,0,6.28); ctx.stroke();
+        ctx.restore();
+      }
+    }
     if(pk.hover>0){
       ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=3;
       ctx.beginPath(); ctx.arc(x,y,20,-1.57,-1.57+6.28*Math.min(1,pk.hover/0.35)); ctx.stroke();
@@ -18139,8 +18239,10 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     streak:M.streak, flow:M.flow},
   _flowAt:()=>FLOW_AT,
   /* --- the satisfaction pass: gears, marks, the crest, pieces in flight --- */
-  MOMENTUM_TIERS,
+  MOMENTUM_TIERS, HITSTOP_MAX,
   _bump:(a)=>{ bumpMomentum(a==null?0.5:a); return M&&{momentum:M.momentum, tierHit:Object.assign({},M.tierHit||{})}; },
+  _hitstop:(ms)=>{ hitstop(ms); return M&&M.stopT; },
+  _stopT:()=>M&&(M.stopT||0),
   _crestNode:()=>{ const n=$('#road-crest'); return n?{cls:n.className, txt:n.textContent, queued:crestQ.length}:null; },
   _clearCrest:()=>{ clearCrest(); return crestQ.length; },
   _flights:()=>M&&(M.flights||[]).map(f=>({txt:f.txt, t:f.t, dur:f.dur, kind:f.kind})),

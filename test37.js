@@ -194,7 +194,52 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(MI._grazes() > grazes0, 'graze: threading it is counted');
   assert(M.momentum >= mo0, 'graze: and pays a sliver of momentum rather than nothing');
 
-  /* ================= 6. THE WALL AT THE END ================= */
+  /* ================= 6. HITSTOP ================= */
+  console.log('\n== the road holding still ==');
+  assert(typeof MI.HITSTOP_MAX === 'number' && MI.HITSTOP_MAX <= 0.15,
+    'hitstop: the ceiling is short enough to read as force rather than as a hitch');
+  MI._hitstop(60);
+  assert(Math.abs(MI._stopT() - 0.06) < 0.001, 'hitstop: a request is held in seconds');
+  MI._hitstop(20);
+  assert(Math.abs(MI._stopT() - 0.06) < 0.001,
+    'hitstop: a shorter request never shortens a stop already running');
+  MI._hitstop(9000);
+  assert(MI._stopT() === MI.HITSTOP_MAX,
+    'hitstop: and no caller can stop the road for longer than the ceiling, whatever it asks for');
+
+  /* the simulation must not advance while the road is stopped — that is the
+     whole mechanism, and it is what separates a freeze from a dropped frame */
+  const heldProgress = M.progress;
+  await sleep(90);
+  assert(M.progress === heldProgress,
+    'hitstop: the road genuinely does not move while it is stopped');
+  M.stopT = 0;
+
+  /* reduced motion turns it off outright: a player who asked for less motion
+     asked for less motion, and a stopped frame is motion */
+  const wasReduced = window.FX.reduced();
+  window.FX.setReduced(true);
+  M.stopT = 0;
+  MI._hitstop(80);
+  assert(MI._stopT() === 0, 'hitstop: reduced motion never stops the road');
+  window.FX.setReduced(wasReduced);
+
+  /* ================= 7. THE REACH, MADE VISIBLE ================= */
+  console.log('\n== how far the squad can actually reach ==');
+  M.surgeHeld = false; M.surging = false; M.phaseT = 0;
+  MI._stepMove(0.05);
+  await sleep(120);
+  const walkReach = M.reachNow || 0;
+  assert(walkReach === 0,
+    'reach: a plain walk has no bonus reach, so the ring is not permanent furniture');
+  MI._setSurge(true);
+  await until(() => MI._surging(), 2000, 'surging');
+  await sleep(160);
+  assert((M.reachNow || 0) > 0,
+    'reach: holding Surge genuinely widens the collect radius, and now publishes it to be drawn');
+  MI._setSurge(false);
+
+  /* ================= 8. THE WALL AT THE END ================= */
   console.log('\n== the debrief remembers ==');
   assert(typeof MI._marksBroken() === 'number',
     'debrief: the run counts how many of its own bests it beat');

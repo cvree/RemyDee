@@ -29,19 +29,20 @@ editing across blocks.
 
 Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 `DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`, `TRIALS_PASS.md`,
-`BENCH_PASS.md`, `HALL_PASS.md` — read `BENCH_PASS.md` first (it deleted a lot
-of what the older ones describe) and `HALL_PASS.md` second, it is the most
-recent.
+`BENCH_PASS.md`, `HALL_PASS.md`, `FEEL_PASS.md` — read `BENCH_PASS.md` first (it
+deleted a lot of what the older ones describe), then `HALL_PASS.md`, then
+`FEEL_PASS.md`, which is the most recent and is about what the road *says*
+rather than what it does.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37; do node test$t.js | tail -1; done
 ```
 
-30 jsdom suites, **1217 assertions, all passing, zero window errors**.
+31 jsdom suites, **1272 assertions, all passing, zero window errors**.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -200,6 +201,32 @@ width and the twenty seconds could not be seen running out; and Reed Slice's
 bomb was still the hanzi 爆 asking for a Chinese serif — the last CJK codepoint
 in the game, in the one mode nobody re-read after the culture pass. `test36`
 covers all of it, including that no CJK codepoint returns to the Hall.
+
+**8. The road was doing the work and never saying so.** See `docs/FEEL_PASS.md`.
+One question asked of every system on the walk — *when the player does this
+well, how do they find out?* — and seven answers came back as "they don't."
+Gathering the second piece of a word played the same 1400Hz clink as the first,
+forever, and finishing a real term played the bench's generic "that worked": the
+chain climbs a **major pentatonic** now (`sfx.chain`), lands from the rung it
+actually reached (`sfx.chainResolve`), and only a real word opens the octave —
+and the **builder plays the same ladder**, so the bench and the walk agree about
+what finishing a word sounds like. Momentum changed gear from ×1 to ×5 in
+silence; four named tiers, each crossed at most once per run. Five lifetime
+bests did not exist at all (`S().marks`), so a player could walk their best road
+ever and never be told — the three rules that keep them from nagging are in
+`E.beatMark` and they are the load-bearing part of `test37`. Nothing connected
+the part you reached for to the word it went into, which is the one causal link
+the mode is built on, so the piece flies there. Threading a hazard was the only
+skilful act on the road with no feedback at all; the band was measured live and
+set at **1.8 × HIT_R** because 2.1 called most hazards a thread. The frame could
+be shaken and washed but never **stopped** — hitstop runs on the road's own
+clock (`dt = 0`, `draw()` still runs), capped at 110ms. And the reach was
+invisible although three things widen it, so `M.reachNow` is drawn.
+
+Two defects fell out of it: the term banner sat at `top:6px` and hid **stamina**
+— the run's clock — for three and a half seconds, at exactly the moment the term
+that raised it had healed the squad; and the Endless Road, which always ends by
+falling over, played `sfx.bad()` even on the run that beat everything.
 
 ### What is left — verified, not speculation
 
