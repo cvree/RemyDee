@@ -1749,7 +1749,10 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 [data-contrast="high"] .tl-rider{opacity:.6;}
 
 /* ================= ARCADE / TRAINING HALL ================= */
-.arcade-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;max-width:820px;margin:0 auto;}
+/* Four modes, four cards, and every instruction on them is under five words —
+   the hall teaches by being played, not by being read. Two columns, so the set
+   reads as a square of four rather than a row of three and an orphan. */
+.arcade-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;max-width:660px;margin:0 auto;}
 .arcade-card{position:relative;text-align:left;cursor:pointer;border:1px solid var(--ink-line);
   border-radius:var(--r-lg);padding:22px 22px 18px;background:linear-gradient(160deg,var(--parch),var(--papyrus-2));
   box-shadow:0 6px 18px var(--shadow);transition:transform .18s var(--ease-back),box-shadow .18s var(--ease);overflow:hidden;}
@@ -1757,15 +1760,17 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 .arcade-card:focus-visible{outline:3px solid var(--gold);}
 .arcade-card .ac-glyph{position:absolute;right:-8px;top:-14px;font-size:96px;line-height:1;
   font-family:var(--font-cal);color:var(--cinnabar);opacity:.12;pointer-events:none;}
-.arcade-card h3{font-family:var(--font-cal);font-size:1.32rem;margin:0 0 4px;color:var(--ink);}
-.arcade-card .ac-sub{font-size:.82rem;color:var(--verd-deep);margin-bottom:10px;}
-.arcade-card .ac-desc{font-size:.9rem;line-height:1.45;color:var(--ink-soft);margin-bottom:14px;}
+.arcade-card h3{font-family:var(--font-cal);font-size:1.32rem;margin:6px 0 4px;color:var(--ink);}
+.arcade-card .ac-sub{font-family:var(--font-cal);font-size:1.02rem;color:var(--ink-soft);margin-bottom:16px;}
 .arcade-card .ac-foot{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--verd-deep);}
 .arcade-card .ac-best{font-family:var(--font-orn);font-size:1rem;color:var(--cinnabar-deep);font-weight:600;}
 .arcade-card .ac-tag{display:inline-block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
   background:var(--verd);color:var(--papyrus);padding:3px 8px;border-radius:20px;}
 
-.arcade-stage{max-width:860px;margin:0 auto;}
+/* the stage sits in a centred flex column, so without a width it shrinks to its
+   widest child and every mode ends up a different size — and the Mastery Rush,
+   which covers the stage, covered only part of the screen */
+.arcade-stage{position:relative;width:100%;max-width:860px;margin:0 auto;}
 .ar-hud{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
 .ar-chip{background:var(--parch);border:1px solid var(--ink-line);border-radius:20px;padding:6px 14px;
   font-size:.82rem;color:var(--ink);display:flex;gap:6px;align-items:center;}
@@ -1813,8 +1818,167 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 @keyframes sealMatch{0%{transform:rotateY(180deg) scale(1);}50%{transform:rotateY(180deg) scale(1.08);}100%{transform:rotateY(180deg) scale(1);}}
 @keyframes sealMiss{0%,100%{transform:rotateY(180deg) translateX(0);}25%{transform:rotateY(180deg) translateX(-5px);}75%{transform:rotateY(180deg) translateX(5px);}}
 [data-motion="reduced"] .seal-inner{transition:none;}
-[data-contrast="high"] .arcade-card,[data-contrast="high"] .seal-front{border-width:2px;}
-@media(max-width:560px){ .arcade-menu{grid-template-columns:1fr;} }
+
+/* ==================================================================
+   RUNE FORGE + SPIRIT TRIAL — the two halls added in this pass.
+   Both are built out of the same three pieces: a line of ASK type at the
+   top that is never longer than a breath, one object the player acts on,
+   and a reveal that opens only after the act. Nothing here explains a
+   rule in advance; every explanation is a payout.
+   ================================================================== */
+.ar-meter{position:relative;height:8px;max-width:420px;margin:0 auto 14px;border:1px solid var(--ink-line);
+  border-radius:var(--r-sm);background:rgba(20,14,8,.14);overflow:hidden;}
+.ar-meter > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--verd),var(--gold));
+  transition:width .45s var(--ease-back);}
+.ar-meter.full{box-shadow:0 0 14px rgba(216,189,132,.7);}
+.ar-ask{text-align:center;font-family:var(--font-cal);font-size:clamp(1.25rem,3.4vw,1.85rem);
+  line-height:1.2;color:var(--ink);min-height:2.6em;}
+.ar-ask .ar-kind{display:block;font-family:var(--font-read);font-size:.68rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--cinnabar-deep);margin-bottom:6px;}
+.ar-ask.flash{animation:arFlash .32s ease-out;}
+
+/* ---- the hearth: a billet on an anvil, and a hammer under it ---- */
+.forge,.spirit{max-width:720px;margin:0 auto;}
+.fg-hearth{position:relative;margin:10px 0 0;padding:14px 12px 0;border:1px solid var(--ink-line);
+  border-radius:var(--r-lg);overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 108%,#4a2a15 0%,#1d1610 52%,#100c09 100%);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.6);}
+.fg-hearth::after{content:"";position:absolute;left:50%;bottom:-46px;width:300px;height:150px;
+  transform:translateX(-50%);pointer-events:none;border-radius:50%;opacity:.45;
+  background:radial-gradient(closest-side,rgba(216,140,60,.35),transparent 70%);
+  transition:opacity .6s var(--ease),background .6s var(--ease);}
+.fg-hearth.heat1::after{opacity:.8;background:radial-gradient(closest-side,rgba(230,150,60,.5),transparent 72%);}
+.fg-hearth.heat2::after{opacity:.95;background:radial-gradient(closest-side,rgba(246,190,96,.62),transparent 74%);}
+.fg-hearth.heat3::after{opacity:1;background:radial-gradient(closest-side,rgba(255,232,180,.78),transparent 76%);}
+.fg-billet{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+  align-items:center;min-height:66px;}
+.fg-billet.empty::before{content:"Lay the pieces here.";font-family:var(--font-read);
+  font-size:.78rem;letter-spacing:.06em;color:rgba(216,189,132,.42);}
+.fg-billet.crack{animation:fgCrack .45s ease-out;}
+@keyframes fgCrack{0%{transform:translateX(0);}20%{transform:translateX(-7px) rotate(-.6deg);}
+  45%{transform:translateX(6px) rotate(.5deg);}70%{transform:translateX(-3px);}100%{transform:translateX(0);}}
+.fg-anvil{position:relative;z-index:1;display:block;width:min(210px,58%);margin:0 auto;
+  color:#4a3b2c;filter:drop-shadow(0 -8px 18px rgba(255,170,80,.28));}
+.fg-hearth.heat2 .fg-anvil{color:#5b4632;} .fg-hearth.heat3 .fg-anvil{color:#6d5236;}
+.fg-strike{display:block;margin:12px auto 0;padding:11px 30px;cursor:pointer;
+  font-family:var(--font-cal);font-size:1.12rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--papyrus);background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));
+  border:1px solid var(--ink-line);border-radius:var(--r-md);box-shadow:0 4px 14px var(--shadow);
+  transition:transform .12s var(--ease-back);}
+.fg-strike:hover{transform:translateY(-2px);} .fg-strike:active{transform:translateY(2px);}
+.fg-strike:focus-visible{outline:3px solid var(--gold);}
+.fg-strike[hidden]{display:none;}
+
+/* a piece of a word, as a thing you can pick up */
+.frag{position:relative;font-family:var(--font-cal);font-size:clamp(1rem,2.7vw,1.5rem);
+  letter-spacing:.07em;color:var(--gold-soft);background:linear-gradient(180deg,#4c3727,#291d15);
+  border:1px solid #6d5539;border-radius:var(--r-sm);padding:9px 15px;cursor:pointer;
+  box-shadow:0 2px 0 rgba(0,0,0,.5),inset 0 1px 0 rgba(255,220,170,.18);
+  transition:transform .14s var(--ease-back),box-shadow .14s var(--ease);}
+.frag:hover{transform:translateY(-3px);box-shadow:0 5px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,220,170,.3);}
+.frag:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.frag.hot{color:#fff3dd;background:linear-gradient(180deg,#8a4a1e,#5a2c11);border-color:#c07a34;
+  box-shadow:0 0 18px rgba(240,150,60,.45),inset 0 1px 0 rgba(255,230,190,.35);}
+.frag.gap{color:rgba(216,189,132,.5);border-style:dashed;background:rgba(20,14,8,.4);cursor:default;}
+.frag.dead{animation:fragBlast .42s forwards;pointer-events:none;}
+@keyframes fragBlast{0%{transform:translateY(0) rotate(0);opacity:1;}
+  100%{transform:translateY(-56px) rotate(24deg);opacity:0;}}
+.fg-tray{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:14px;min-height:52px;}
+.fg-tray .frag{background:linear-gradient(180deg,#3d2c20,#221812);}
+.fg-cut{width:16px;height:44px;padding:0;background:none;border:none;cursor:pointer;position:relative;}
+.fg-cut::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;
+  background:rgba(216,189,132,.16);border-radius:1px;transition:background .16s var(--ease);}
+.fg-cut:hover::before{background:rgba(216,189,132,.55);}
+.fg-cut.done::before{background:var(--gold);box-shadow:0 0 10px rgba(216,189,132,.8);}
+.fg-cut:focus-visible{outline:2px solid var(--gold);}
+.fg-letters{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  font-family:var(--font-cal);font-size:clamp(1.3rem,4vw,2.1rem);letter-spacing:.04em;color:var(--gold-soft);}
+.fg-word{font-family:var(--font-cal);font-size:clamp(1.5rem,5vw,2.6rem);letter-spacing:.12em;
+  color:#fff1d6;text-shadow:0 0 22px rgba(255,190,110,.75);}
+.fg-word.stamped{animation:fgStamp .42s var(--ease-back);}
+@keyframes fgStamp{0%{transform:scale(1.7);opacity:0;letter-spacing:.5em;}
+  60%{transform:scale(.96);opacity:1;}100%{transform:scale(1);letter-spacing:.12em;}}
+.fg-spark{position:absolute;left:50%;top:44%;width:4px;height:4px;border-radius:50%;
+  background:#ffdca4;pointer-events:none;z-index:3;box-shadow:0 0 8px rgba(255,190,110,.9);}
+.fg-cry{text-align:center;font-family:var(--font-cal);font-size:1.05rem;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--gold);min-height:1.5em;margin-top:8px;}
+.fg-cry.lit{animation:fgCry .7s var(--ease-back);}
+@keyframes fgCry{0%{opacity:0;transform:scale(.8);}40%{opacity:1;transform:scale(1.06);}100%{transform:scale(1);}}
+.ar-reveal{text-align:center;margin-top:10px;min-height:3.4em;font-size:.92rem;line-height:1.75;color:var(--ink-soft);}
+.ar-reveal b{font-family:var(--font-cal);font-size:1.06rem;letter-spacing:.06em;color:var(--cinnabar-deep);}
+.ar-reveal .bad{color:var(--cinnabar);}
+
+/* ---- the spirit hall: a sign, four seals, a fuse burning down ---- */
+.sp-hall{position:relative;margin:10px 0 0;padding:14px 12px 16px;border:1px solid var(--ink-line);
+  border-radius:var(--r-lg);overflow:hidden;background:linear-gradient(180deg,#16201c,#0c110f);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.5);}
+.sp-lanterns{position:absolute;inset:0 0 auto;display:flex;justify-content:space-between;
+  padding:0 18px;pointer-events:none;}
+.sp-lanterns i{width:9px;height:13px;margin-top:-4px;border-radius:0 0 6px 6px;
+  background:rgba(216,189,132,.16);transition:background .4s var(--ease),box-shadow .4s var(--ease);}
+.sp-hall.lit .sp-lanterns i{background:var(--gold-soft);box-shadow:0 0 16px rgba(216,189,132,.85);}
+.sp-wisp{display:block;width:74px;margin:2px auto 0;color:var(--verd-soft);opacity:.9;}
+.sp-wisp.sp-arrive{animation:spRush .5s var(--ease);}
+.sp-wisp.sp-leave{animation:spCalm .7s var(--ease) forwards;}
+.sp-wisp.sp-fell{animation:spFall .6s var(--ease) forwards;}
+@keyframes spRush{0%{transform:translateX(120px) scale(.7);opacity:0;}100%{transform:none;opacity:.9;}}
+@keyframes spCalm{0%{opacity:.9;}100%{opacity:0;transform:translateY(-26px) scale(.85);}}
+@keyframes spFall{0%{opacity:.9;}100%{opacity:0;transform:translateY(24px) rotate(-14deg);}}
+.sp-sign{text-align:center;font-family:var(--font-cal);font-size:clamp(1.5rem,5.4vw,2.5rem);
+  letter-spacing:.08em;color:#e9dcbb;margin:6px 0 2px;text-shadow:0 0 20px rgba(120,180,150,.35);}
+.sp-fuse{height:5px;max-width:340px;margin:8px auto 2px;background:rgba(255,255,255,.12);
+  border-radius:3px;overflow:hidden;}
+.sp-fuse > i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--verd-soft),var(--gold));}
+.sp-fuse.urgent > i{background:linear-gradient(90deg,var(--cinnabar),var(--gold));}
+.sp-seals{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px auto 0;max-width:600px;}
+.sp-seals.three{grid-template-columns:repeat(3,1fr);}
+.sp-seal{padding:13px 12px;cursor:pointer;text-align:center;line-height:1.3;
+  font-family:var(--font-read);font-size:clamp(.78rem,2vw,.95rem);color:var(--ink);
+  background:linear-gradient(160deg,var(--parch),var(--papyrus-2));
+  border:1px solid var(--ink-line);border-radius:var(--r-md);box-shadow:0 3px 10px var(--shadow);
+  transition:transform .14s var(--ease-back),box-shadow .14s var(--ease);}
+.sp-seal.word{font-family:var(--font-cal);font-size:clamp(1rem,2.8vw,1.4rem);letter-spacing:.06em;
+  color:var(--cinnabar-deep);}
+.sp-seal:hover{transform:translateY(-3px);box-shadow:0 8px 18px var(--shadow);}
+.sp-seal:focus-visible{outline:3px solid var(--gold);}
+.sp-seal.slashed{animation:spSlash .34s forwards;pointer-events:none;}
+.sp-seal.burn{animation:spBurn .38s forwards;pointer-events:none;}
+@keyframes spSlash{0%{box-shadow:inset 0 0 0 2px var(--verd);}100%{transform:scale(1.06);box-shadow:0 0 22px rgba(189,157,95,.8);}}
+@keyframes spBurn{0%{opacity:1;}100%{opacity:0;transform:scale(.86) rotate(3deg);filter:blur(2px);}}
+.sp-chain{text-align:center;font-family:var(--font-cal);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);min-height:1.4em;}
+
+/* ---- Mastery Rush: the same questions, no hints, twenty seconds ---- */
+.rush{position:absolute;inset:-10px;z-index:6;display:flex;flex-direction:column;justify-content:center;
+  padding:18px 14px;text-align:center;border-radius:var(--r-lg);
+  background:radial-gradient(120% 100% at 50% 100%,#2b1707 0%,#140d08 60%,#0c0806 100%);
+  transition:box-shadow .4s var(--ease);}
+.rush[data-i="1"]{box-shadow:inset 0 0 80px rgba(216,189,132,.18);}
+.rush[data-i="2"]{box-shadow:inset 0 0 110px rgba(230,150,60,.3);}
+.rush[data-i="3"]{box-shadow:inset 0 0 150px rgba(246,190,96,.42);}
+.rush-title{font-family:var(--font-cal);font-size:clamp(1.2rem,4vw,1.9rem);letter-spacing:.3em;
+  text-transform:uppercase;color:var(--gold);}
+.rush-sub{font-family:var(--font-read);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(216,189,132,.7);margin-top:4px;}
+.rush-ask{font-family:var(--font-cal);font-size:clamp(1.3rem,4.6vw,2.1rem);color:#f2e6c9;margin:16px 0 4px;min-height:1.3em;}
+.rush-opts{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:10px;}
+/* the overlay is a flex column: a bar with auto side margins and no width
+   collapses to nothing there, which is how the twenty seconds went invisible */
+.rush-clock{width:min(320px,100%);height:6px;margin:14px auto 4px;background:rgba(255,255,255,.16);
+  border-radius:3px;overflow:hidden;box-shadow:0 0 14px rgba(216,140,60,.35);}
+.rush-clock > i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--cinnabar),var(--gold));}
+.rush-tally{font-family:var(--font-orn);font-size:2.2rem;color:var(--gold-soft);line-height:1;margin-top:10px;}
+.rush-seal{font-family:var(--font-cal);font-size:clamp(2.4rem,9vw,4.4rem);color:var(--gold);
+  text-shadow:0 0 30px rgba(216,189,132,.8);animation:fgStamp .5s var(--ease-back);}
+[data-motion="reduced"] .fg-word.stamped,[data-motion="reduced"] .sp-wisp.sp-arrive,
+[data-motion="reduced"] .rush-seal,[data-motion="reduced"] .fg-cry.lit{animation:none;}
+[data-contrast="high"] .arcade-card,[data-contrast="high"] .seal-front,
+[data-contrast="high"] .sp-seal,[data-contrast="high"] .frag{border-width:2px;}
+@media(max-width:560px){
+  .arcade-menu{grid-template-columns:1fr;}
+  .sp-seals,.sp-seals.three{grid-template-columns:1fr;}
+  .fg-anvil{width:80%;}
+}
 
 </style>
 
@@ -2688,12 +2852,12 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
         <button class="icon-btn" id="arcade-gloss" title="Lexicon" aria-label="Lexicon">&#923;</button>
       </header>
       <div class="content">
-        <div class="section-head">
+        <div class="section-head" id="arcade-head">
           <span class="eyebrow">Free practice · every round trains the Lexicon</span>
           <h2 id="arcade-heading">The Training Hall</h2>
           <span class="divider"></span>
         </div>
-        <p class="small muted" style="max-width:640px;margin:-6px auto 20px;text-align:center;">
+        <p class="small muted" id="arcade-intro" style="max-width:640px;margin:-6px auto 20px;text-align:center;">
           No story stakes here — only reps. Weak word-parts surface more often, and every
           round you play feeds the same adaptive mastery your missions use.
         </p>
@@ -4979,6 +5143,10 @@ function migrate(st){
     }
     if(!Array.isArray(st.foundMats)) st.foundMats=[];
     if(!st.arcade) st.arcade={ slice:{best:0,plays:0}, match:{best:0,plays:0} };  // v3 → v4 backfill
+    /* The Hall grew two more modes; a save from before them has no shelf for
+       their records to sit on, and saveBest would write onto undefined. */
+    ["slice","match","forge","spirit"].forEach(k=>{
+      if(!st.arcade[k]) st.arcade[k]={best:0, plays:0}; });
     // v4 → v5 backfill: bench progression + road economy
     if(!Array.isArray(st.techniques)) st.techniques=[];
     if(!st.benchMastery || typeof st.benchMastery!=="object") st.benchMastery={};
@@ -5241,13 +5409,14 @@ function newGame(){
     reagents:{},               // road-found reagents by id → count (consumed at the bench)
     heirloom:null,             // one tool carried between missions; wears a tier per journey
     cachesMarked:0,            // caches marked for the Kalamos Guild across the campaign
-    arcade:{ slice:{best:0, plays:0}, match:{best:0, plays:0} },  // Training Hall records
+    arcade:{ slice:{best:0, plays:0}, match:{best:0, plays:0},    // Training Hall records
+             forge:{best:0, plays:0}, spirit:{best:0, plays:0} },
     reask:[],                  // word-parts missed on the road — carried into the NEXT run
     runCount:0,                // completed runs — the tick the review scheduler uses
     /* ---- v8: the meta layer ---- */
     ach:{},                    // achievement id → {at:epochMs, seen:bool}
     daily:{ date:null, seed:0, score:0, best:0, done:false, streak:0, bestStreak:0, lastDone:null, medals:{} },
-    records:{ endless:[], daily:[], slice:[], match:[], road:[] },  // Hall of Records (local leaderboards)
+    records:{ endless:[], daily:[], slice:[], match:[], forge:[], spirit:[], road:[] },  // Hall of Records
     relics:{},                 // relic id → {count, at} — collectible equipment found in chests
     chests:0,                  // lifetime chests opened
     srs:{},                    // part id → {ease, reps, due, lapses} — the review scheduler
@@ -17436,9 +17605,23 @@ document.addEventListener("DOMContentLoaded",kickoff);
 </script>
 <script>
 /* ==================================================================
-   TRAINING HALL (Arcade) — Reed Slice + Seal Match.
-   Both modes draw questions from the shared QuestionEngine and write
-   results back into the same adaptive mastery model the story uses.
+   TRAINING HALL (Arcade) — four modes, one per cognitive mode.
+
+     MEANING RECALL   Reed Slice     slash the right part
+     PAIRED RECALL    Seal Match     match the pairs
+     WORD BUILDING    Rune Forge     build the term
+     APPLIED RECALL   Spirit Trial   decode the sign
+
+   All four draw questions from the shared QuestionEngine and write results
+   back into the same adaptive mastery model the story uses.
+
+   THE RULE THIS HALL IS WRITTEN TO. An instruction is under five words
+   wherever the language allows it, the learning is revealed by the
+   interaction rather than in front of it, and every correct answer gets a
+   tactile payout — a clang, a stamp, sparks, a seal. The player should
+   almost accidentally drill medical terminology because hitting the next
+   answer feels good. Where a round can fail, the failure is drawn too: the
+   spectacle escalates with the streak and the difficulty does not.
    ================================================================== */
 (function(){
 "use strict";
@@ -17447,11 +17630,87 @@ const E  = window.__RD_ENG;
 const QE = window.__RD_QE;
 const FX = window.FX;
 const { $, $$, el, clamp, shuffle, pick } = D;
-const { PARTS } = D;
+const { PARTS, TERMS } = D;
 const { Audio2, go, persist, buildBackdrop } = E;
 const S = E.S;
 
-let A = { from:"hub", relax:false, mode:null, cleanup:null };
+let A = { from:"hub", relax:false, mode:null, cleanup:null, game:null, rush:null, rushLive:null };
+
+/* Each mode's name in one place: the menu card, the record book and the end
+   card all used to spell them out with a ternary, which is fine for two. */
+const MODE_META = {
+  slice: { name:"Reed Slice",   end:"The reeds settle" },
+  match: { name:"Seal Match",   end:"The seals are sealed" },
+  forge: { name:"Rune Forge",   end:"The forge cools" },
+  spirit:{ name:"Spirit Trial", end:"The hall stills" }
+};
+
+/* ==================================================================
+   THE PIECES, AS A PLAYER HANDLES THEM.
+   The lexicon writes a root as "cardi/o" and a suffix as "-itis", which is
+   notation for reading — not something you can hammer onto the end of a
+   word. The forge and the trial both work in bare letters, and both put
+   the hyphen back only when they are teaching where the piece sits.
+   ================================================================== */
+function bareOf(id){
+  const p=PARTS[id]; if(!p) return "";
+  return p.kind==="root" ? (p.stem || p.text.replace(/\/.*$/,"")) : p.text.replace(/-/g,"");
+}
+function fragOf(id){ return bareOf(id).toUpperCase(); }
+function signOf(id){
+  const p=PARTS[id]; if(!p) return "";
+  return p.kind==="suffix" ? "-"+fragOf(id) : p.kind==="prefix" ? fragOf(id)+"-" : fragOf(id);
+}
+/* SPELLING A BUILD THE WAY THE GAME TEACHES IT. Two clauses: the combining
+   vowel lives on in front of a consonant suffix and dies in front of a vowel
+   (nephr/o + -logy is nephrology, nephr/o + -itis is nephritis); and a vowel
+   that meets its own twin across a junction becomes one letter (cardi/o +
+   -itis is carditis, never cardiitis — the corpus says so in its own note).
+   Those two reproduce all 78 terms letter for letter, which is what lets a
+   REPAIR round show the player a word the corpus does not carry — gastr/o +
+   -ectomy — and still be spelling it correctly.
+   `fused` marks the collapsed junction: the two pieces share a letter, so
+   there is no honest place to cut, and a BREAK round refuses the word. */
+function wordOf(build){
+  const segs=[]; let word="", fused=false;
+  for(let i=0;i<build.length;i++){
+    const p=PARTS[build[i]]; if(!p) return null;
+    const R=PARTS[build[i+1]];
+    let s=bareOf(build[i]);
+    if(R && p.kind==="root" && p.cv && (R.kind==="root" || !R.vowelStart)) s+=p.cv;
+    if(word && "aeiou".indexOf(word[word.length-1])>=0 && word[word.length-1]===s[0]){
+      s=s.slice(1); fused=true;
+    }
+    segs.push({id:build[i], text:s}); word+=s;
+  }
+  return { segs, word, fused };
+}
+/* Which terms a Hall round may draw on. The Training Hall is free practice, so
+   it reaches past the campaign — but a player who has named a dozen words
+   should be forging those first, so their own list wins until it is too thin
+   to make a varied session out of. */
+function termPool(minParts){
+  const done=(S().completedTerms||[]).filter(id=>TERMS[id]);
+  const ids=done.length>=8 ? done : Object.keys(TERMS);
+  return ids.filter(id=>TERMS[id].build.length>=(minParts||2)
+                     && TERMS[id].build.every(p=>PARTS[p]));
+}
+function pickTermFrom(ids){ return (ids&&ids.length) ? (QE.pickTerm(ids)||pick(ids)) : null; }
+/* A part whose meaning belongs to it alone. "Which means slow?" is a fair
+   question; "which means vein?" has two honest answers, and the Hall is not
+   the place to litigate that — the story's question engine already names the
+   tongue when it has to. */
+function soloPart(kind){
+  const senseOf=(id)=>(PARTS[id].sense||PARTS[id].mean);
+  for(let i=0;i<8;i++){
+    const id=QE.pickPart(kind);
+    if(!id) return null;
+    const twin=Object.keys(PARTS).some(x=>x!==id
+      && (PARTS[x].mean===PARTS[id].mean || senseOf(x)===senseOf(id)));
+    if(!twin) return id;
+  }
+  return QE.pickPart(kind);
+}
 
 /* ---------------- menu ---------------- */
 function open(from){
@@ -17476,36 +17735,53 @@ function leave(){
   if(A.from==="title" && window.__RD_SCREENS) window.__RD_SCREENS.showTitle();
   else if(window.__RD_SCREENS) window.__RD_SCREENS.showHub();
 }
+function showHallHead(v){
+  const h=$('#arcade-head'), p=$('#arcade-intro');
+  if(h) h.style.display = v?"":"none";
+  if(p) p.style.display = v?"":"none";
+}
 function renderMenu(){
+  showHallHead(true);
   $('#arcade-back').onclick=leave;   // menu-level back always exits the hall
-  const st=S().arcade||{slice:{best:0,plays:0},match:{best:0,plays:0}};
+  const st=S().arcade||{};
   const menu=$('#arcade-menu'); menu.innerHTML="";
+  /* FOUR CARDS, AND EVERY INSTRUCTION ON THEM IS FOUR WORDS OR FEWER. The two
+     that were here carried a tag, a sub-line and a forty-word paragraph each,
+     which is a manual for a game whose whole argument is that you learn it by
+     playing it. What the paragraph used to say is now said by the first round.
+     The glyph is the mode's initial in the tongue the vocabulary comes from:
+     tome a cut, zeugos a yoked pair, chalkeus the smith, psyche the spirit. */
   const cards=[
-    { id:"slice", glyph:"\u03a4", tag:"Meaning recall", title:"Reed Slice",
-      sub:"Slash the part that fits the meaning",
-      desc:"A meaning appears; word-part tiles arc across the reeds. Slice the one that matches and let the rest fall. Miss nothing, dodge the bombs, build a Shadow Flow streak.",
-      best:st.slice.best },
-    { id:"match", glyph:"\u0396", tag:"Paired recall", title:"Seal Match",
-      sub:"Flip the lacquer seals to pair them",
-      desc:"Turn two seals at a time to match each part to its meaning — or each term to its definition. Fewer flips, higher seal. Calm, steady, and it hammers memory.",
-      best:st.match.best }
+    { id:"slice",  glyph:"\u03a4", tag:"Meaning recall", title:"Reed Slice",   sub:"Slash the right part." },
+    { id:"match",  glyph:"\u0396", tag:"Paired recall",  title:"Seal Match",   sub:"Match the pairs." },
+    { id:"forge",  glyph:"\u03a7", tag:"Word building",  title:"Rune Forge",   sub:"Build the term." },
+    { id:"spirit", glyph:"\u03a8", tag:"Applied recall", title:"Spirit Trial", sub:"Decode the sign." }
   ];
   cards.forEach(c=>{
+    const rec=st[c.id]||{best:0,plays:0};
     const card=el("button","arcade-card"); card.type="button";
     card.innerHTML=`<span class="ac-glyph">${c.glyph}</span>
       <span class="ac-tag">${c.tag}</span>
       <h3>${c.title}</h3>
       <div class="ac-sub">${c.sub}</div>
-      <div class="ac-desc">${c.desc}</div>
-      <div class="ac-foot"><span>Best</span><span class="ac-best">${c.best||0}</span></div>`;
-    card.onclick=()=>{ Audio2.sfx.stamp(); FX.buzz(14);
-      if(c.id==="slice") startSlice(); else startMatch(); };
+      <div class="ac-foot"><span>Best</span><span class="ac-best">${rec.best||0}</span></div>`;
+    card.onclick=()=>{ Audio2.sfx.stamp(); FX.buzz(14); startMode(c.id); };
     if(FX.tilt) FX.tilt(card,4);
     menu.appendChild(card);
   });
 }
+/* One door into each mode, so the menu, the end card's "play again" and the
+   test harness all take the same one. */
+function startMode(id){
+  if(id==="slice") startSlice();
+  else if(id==="match") startMatch();
+  else if(id==="forge") startForge();
+  else if(id==="spirit") startTrial();
+}
 function saveBest(mode, score){
   const st=S().arcade; if(!st) return false;
+  // a save from before this mode existed has no shelf for it to sit on
+  if(!st[mode]) st[mode]={best:0, plays:0};
   st[mode].plays=(st[mode].plays||0)+1;
   let nb=false;
   if(score>(st[mode].best||0)){ st[mode].best=score; nb=true; }
@@ -17514,6 +17790,10 @@ function saveBest(mode, score){
 }
 function stageMode(mode){
   A.mode=mode;
+  /* The hall's own title and its paragraph of throat-clearing are for the
+     menu. Left standing during a round they cost 150px at the top of the
+     screen and pushed the reveal — the part that teaches — below the fold. */
+  showHallHead(false);
   $('#arcade-menu').style.display="none";
   const stage=$('#arcade-stage'); stage.style.display="block"; stage.innerHTML="";
   $('#arcade-back').onclick=()=>{ if(A.cleanup){try{A.cleanup();}catch(e){}A.cleanup=null;}
@@ -17522,13 +17802,13 @@ function stageMode(mode){
   return stage;
 }
 function endCard(stage, mode, score, breakdownHTML){
+  const meta=MODE_META[mode]||{name:mode, end:"Done"};
   const nb=saveBest(mode, score);
-  if(window.__RD_META) window.__RD_META.recordScore(mode, score,
-    {label: mode==="slice"?"Reed Slice":"Seal Match"});
+  if(window.__RD_META) window.__RD_META.recordScore(mode, score, {label:meta.name});
   if(nb) Audio2.sfx.chime(); else Audio2.sfx.page();
   const snap=QE.snapshot();
   const card=el("div","ar-endcard");
-  card.innerHTML=`<h3>${mode==="slice"?"Reeds settle":"Seals sealed"}</h3>
+  card.innerHTML=`<h3>${meta.end}</h3>
     <div class="ar-score">${score}</div>
     ${nb?'<div class="ar-newbest">◆ New best ◆</div>':`<div class="small muted">Best ${S().arcade[mode].best}</div>`}
     <div class="ar-breakdown">${breakdownHTML}</div>
@@ -17538,8 +17818,7 @@ function endCard(stage, mode, score, breakdownHTML){
       <button class="btn ghost" id="ar-menu">Training Hall</button>
     </div>`;
   stage.innerHTML=""; stage.appendChild(card);
-  $('#ar-again').onclick=()=>{ Audio2.sfx.stamp();
-    if(mode==="slice") startSlice(); else startMatch(); };
+  $('#ar-again').onclick=()=>{ Audio2.sfx.stamp(); startMode(mode); };
   $('#ar-menu').onclick=()=>{ Audio2.sfx.paper();
     $('#arcade-stage').style.display="none"; $('#arcade-menu').style.display="grid"; renderMenu(); };
 }
@@ -17557,7 +17836,7 @@ function startSlice(){
     </div>
     <div class="ar-prompt" id="sl-prompt"><small>Slice the part that means</small><span id="sl-mean">…</span></div>
     <div class="ar-canvas-wrap slice-wrap"><canvas id="sliceCanvas" width="760" height="620"></canvas></div>
-    <div class="ar-banner" id="sl-banner">${A.relax?"Relaxed: a missed tile just floats back around, no lives lost.":"Read the meaning, then swipe or tap the part that fits. Let the wrong ones fall. Avoid the &#x7206; bombs."}</div>`;
+    <div class="ar-banner" id="sl-banner">${A.relax?"Relaxed: nothing is lost.":"Swipe the part that fits. Dodge the bursts."}</div>`;
 
   const cv=$('#sliceCanvas'), ctx=cv.getContext('2d');
   const W=cv.width, H=cv.height;
@@ -17608,7 +17887,7 @@ function startSlice(){
         id:it.id, ok:!!it.ok, bomb:!!it.bomb,
         x, y:H+46, r:56, vx, vy: baseVy - Math.random()*0.8,
         g:gravity, rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.06,
-        sliced:false, gone:false, label: it.bomb?"\u7206":(PARTS[it.id]?PARTS[it.id].text:"?"),
+        sliced:false, gone:false, label: it.bomb?"":(PARTS[it.id]?PARTS[it.id].text:"?"),
         color: it.bomb?"#8a241f":( PARTS[it.id]?kindColor(PARTS[it.id].kind):"#4f7261")
       });
     });
@@ -17749,11 +18028,21 @@ function startSlice(){
       // slice line
       if(t.sliced){ ctx.strokeStyle="rgba(255,255,255,0.7)"; ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(-t.r,0); ctx.lineTo(t.r,0); ctx.stroke(); }
-      // label
+      // label — or, on a bomb, a drawn burst. It used to be the hanzi 爆, the
+      // last character left in a game that stopped borrowing that alphabet, and
+      // it asked for a Chinese serif to render one glyph nobody could read.
       ctx.rotate(-t.rot);
-      ctx.fillStyle = t.bomb?"#fff":"#191510"; ctx.textAlign="center"; ctx.textBaseline="middle";
-      ctx.font=`600 ${t.bomb?34:26}px "Noto Serif SC",serif`;
-      ctx.fillText(t.label, 0, 0);
+      if(t.bomb){
+        ctx.strokeStyle="#f3ecd8"; ctx.lineWidth=4; ctx.lineCap="round";
+        for(let k=0;k<8;k++){ const a=k*Math.PI/4;
+          ctx.beginPath(); ctx.moveTo(Math.cos(a)*12,Math.sin(a)*12);
+          ctx.lineTo(Math.cos(a)*28,Math.sin(a)*28); ctx.stroke(); }
+        ctx.fillStyle="#f3ecd8"; ctx.beginPath(); ctx.arc(0,0,9,0,6.28); ctx.fill();
+      } else {
+        ctx.fillStyle="#191510"; ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.font='600 26px "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif';
+        ctx.fillText(t.label, 0, 0);
+      }
       ctx.restore();
     });
     // read-first overlay: full treatment only for the very first prompt (empty board).
@@ -17764,7 +18053,8 @@ function startSlice(){
         ctx.fillStyle="rgba(216,189,132,0.9)"; ctx.textAlign="center"; ctx.textBaseline="middle";
         ctx.font='700 22px "Noto Sans",sans-serif';
         ctx.fillText("Which part means…", W/2, H*0.34);
-        ctx.fillStyle="#f3ecd8"; ctx.font='700 46px "Noto Serif SC",serif';
+        ctx.fillStyle="#f3ecd8";
+        ctx.font='700 46px "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif';
         ctx.fillText(G.prompt, W/2, H*0.46);
         ctx.restore();
       } else {
@@ -17820,7 +18110,7 @@ function startMatch(){
       <span class="ar-chip">Flips <b id="mt-moves">0</b></span>
       <span class="ar-chip">Time <b id="mt-time">0s</b></span>
     </div>
-    <div class="ar-banner" id="mt-banner">${realMode==="termDef"?"Match each term to its definition.":"Match each word-part to its meaning."}</div>
+    <div class="ar-banner" id="mt-banner">${realMode==="termDef"?"Term to definition.":"Part to meaning."}</div>
     <div class="match-grid" id="mt-grid" style="grid-template-columns:repeat(${cols},1fr);"></div>`;
 
   const grid=$('#mt-grid');
@@ -17882,7 +18172,860 @@ function startMatch(){
   A.cleanup=()=>{ G.over=true; if(G.timer) clearInterval(G.timer); };
 }
 
-window.__RD_ARCADE = { open };
+/* ================================================================
+   MODE 3 — RUNE FORGE  (word building)
+
+   Four round shapes on a rotation, so the mode never settles into one
+   puzzle repeated ten times:
+
+     BUILD    lay a whole term out of its pieces        gastr + itis
+     FINISH   one piece is missing and named by meaning dermat + ?
+     BREAK    cut a finished word back into its pieces  hypo|glyc|emia
+     REPAIR   smash the wrong piece out and replace it  gastrectomy → gastritis
+
+   Every round ends in a strike, and both outcomes are drawn. A right
+   answer clangs, throws sparks and stamps the word into the hall; a
+   wrong one forms a blade that CRACKS, blasts the offending piece off
+   the anvil with its meaning attached, and leaves every correct piece
+   lying there to try again. Failure is a beat, never a screen.
+   ================================================================ */
+const FORGE_GOAL  = 10;
+const FORGE_KINDS = ["build","finish","break","repair"];
+
+/* A term with exactly one piece swapped for a plausible wrong one, spelled
+   by the same rule the game teaches. Shared: the forge smashes it on an
+   anvil and the spirit hall burns it off a seal, but the corruption is the
+   same corruption. */
+function makeRepair(){
+  for(let tries=0; tries<6; tries++){
+    const t=pickTermFrom(termPool(2)); if(!t) return null;
+    const need=TERMS[t].build.slice();
+    const at=Math.floor(Math.random()*need.length);
+    const real=need[at], bad=QE.distractParts(real,1)[0];
+    if(!bad) continue;
+    const broken=need.slice(); broken[at]=bad;
+    const word=wordOf(broken);
+    if(!word || word.word===TERMS[t].spell) continue;
+    return { term:t, need, at, real, bad, word };
+  }
+  return null;
+}
+
+function startForge(){
+  const stage=stageMode("forge");
+  stage.innerHTML=`
+    <div class="ar-hud">
+      <span class="ar-chip">Score <b id="fg-score">0</b></span>
+      <span class="ar-chip">Forge <b id="fg-round">1/${FORGE_GOAL}</b></span>
+      <span class="ar-chip ar-flow" id="fg-streak">Streak 0</span>
+    </div>
+    <div class="ar-meter" id="fg-meter" aria-hidden="true"><i></i></div>
+    <div class="forge">
+      <div class="ar-ask" id="fg-ask"></div>
+      <div class="fg-hearth" id="fg-hearth">
+        <div class="fg-billet empty" id="fg-billet"></div>
+        <svg class="fg-anvil" viewBox="0 0 200 56" aria-hidden="true">
+          <path d="M22 0 H148 L196 10 L150 16 H22 Z M60 16 H140 L118 34 H82 Z
+                   M70 34 H130 L146 52 H54 Z" fill="currentColor"/>
+          <path d="M22 1.5 H148" stroke="rgba(255,205,150,.5)" stroke-width="3" fill="none"/>
+        </svg>
+      </div>
+      <button class="fg-strike" id="fg-strike" type="button">Strike</button>
+      <div class="fg-tray" id="fg-tray"></div>
+      <div class="fg-cry" id="fg-cry"></div>
+      <div class="ar-reveal" id="fg-reveal"></div>
+    </div>`;
+
+  const G={ mode:"forge", score:0, streak:0, streakMax:0, done:0, cracks:0,
+            worked:new Set(), round:null, queue:[], busy:false, over:false,
+            rushed:false, stopRush:null, t0:0, firstRepair:true };
+  A.game=G;
+  const timers=new Set();
+  function later(fn, ms){
+    const id=setTimeout(()=>{ timers.delete(id); if(!G.over) fn(); }, ms);
+    timers.add(id); return id;
+  }
+  A.cleanup=()=>{ G.over=true; timers.forEach(clearTimeout); timers.clear();
+    if(G.stopRush){ try{G.stopRush();}catch(e){} G.stopRush=null; } };
+
+  /* ---- the furniture ---- */
+  function ask(kind, html){
+    const a=$('#fg-ask'); if(!a) return;
+    a.innerHTML=`<span class="ar-kind">${kind}</span>${html}`;
+    a.classList.remove("flash"); void a.offsetWidth; a.classList.add("flash");
+  }
+  function say(html){ const r=$('#fg-reveal'); if(r) r.innerHTML=html||""; }
+  function cry(text){
+    const c=$('#fg-cry'); if(!c) return; c.textContent=text||"";
+    if(text){ c.classList.remove("lit"); void c.offsetWidth; c.classList.add("lit"); }
+  }
+  function strikeOn(v){ const s=$('#fg-strike'); if(s) s.hidden=!v; }
+  function setHud(){
+    const n=$('#fg-score'); if(n) n.textContent=G.score;
+    const r=$('#fg-round'); if(r) r.textContent=`${Math.min(G.done+1,FORGE_GOAL)}/${FORGE_GOAL}`;
+    const s=$('#fg-streak'); if(s) s.textContent="Streak "+G.streak;
+    const m=$('#fg-meter'); if(m){ const bar=m.querySelector('i');
+      const pct=Math.round(100*Math.min(1,G.done/FORGE_GOAL));
+      if(bar) bar.style.width=pct+"%";
+      m.classList.toggle("full", pct>=100); }
+  }
+  /* the hearth answers the streak, not the score: three perfect and it
+     glows, five and it is white, ten and it is the brightest thing on screen */
+  function heat(){
+    const h=$('#fg-hearth'); if(!h) return;
+    h.classList.toggle("heat1", G.streak>=3 && G.streak<5);
+    h.classList.toggle("heat2", G.streak>=5 && G.streak<10);
+    h.classList.toggle("heat3", G.streak>=10);
+  }
+  function sparks(n){
+    const host=$('#fg-hearth'); if(!host || FX.reduced()) return;
+    for(let i=0;i<n;i++){
+      const s=el("i","fg-spark");
+      const a=-Math.PI/2 + (Math.random()-0.5)*2.4, d=40+Math.random()*140;
+      s.style.left=(38+Math.random()*24)+"%";
+      host.appendChild(s);
+      const kill=()=>{ if(s.parentNode) s.parentNode.removeChild(s); };
+      const anim=s.animate?s.animate(
+        [{transform:"translate(0,0) scale(1)", opacity:1},
+         {transform:`translate(${(Math.cos(a)*d).toFixed(1)}px,${(Math.sin(a)*d).toFixed(1)}px) scale(.2)`, opacity:0}],
+        {duration:380+Math.random()*420, easing:"cubic-bezier(.15,.7,.4,1)"}):null;
+      if(anim) anim.onfinish=kill; else later(kill, 700);
+    }
+  }
+  function fragEl(id, cls, onTap){
+    const b=el("button","frag"+(cls?" "+cls:"")); b.type="button";
+    b.dataset.id=id; b.textContent=fragOf(id);
+    if(onTap) b.onclick=onTap;
+    return b;
+  }
+
+  /* ---- the anvil face and the pieces beside it ---- */
+  function renderBillet(){
+    const host=$('#fg-billet'); if(!host) return;
+    const r=G.round; if(!r) return;
+    host.innerHTML="";
+    const laid=r.placed||[];
+    host.classList.toggle("empty", !laid.some(x=>x));
+    laid.forEach((id,i)=>{
+      if(id==null){ const g=el("span","frag gap"); g.textContent="?"; host.appendChild(g); return; }
+      host.appendChild(fragEl(id,"hot",()=>{
+        if(G.busy || r.kind!=="build") return;
+        r.placed.splice(i,1); Audio2.sfx.paper(); renderBillet(); renderTray();
+      }));
+    });
+  }
+  function renderTray(){
+    const host=$('#fg-tray'); if(!host) return;
+    const r=G.round; host.innerHTML="";
+    (r&&r.tray||[]).forEach(id=>{
+      if(r.kind==="build" && r.placed.indexOf(id)>=0) return;
+      host.appendChild(fragEl(id,"",()=>onTray(id)));
+    });
+  }
+  function onTray(id){
+    if(G.busy || !G.round) return;
+    const r=G.round;
+    if(r.kind==="build"){
+      r.placed.push(id); Audio2.sfx.snap(); FX.buzz(8);
+      renderBillet(); renderTray(); return;
+    }
+    if(r.kind==="finish"){
+      if(id===r.missing){ r.placed[r.at]=id; renderBillet(); renderTray();
+        later(()=>win(r.term, r.need), 140); }
+      else blast(id, "Not what finishes it.");
+      return;
+    }
+    if(r.kind==="repair" && r.phase==="swap"){
+      if(id===r.real){ r.phase="done"; Audio2.sfx.snap();
+        later(()=>win(r.term, r.need), 140); }
+      else blast(id, "That mends nothing.");
+    }
+  }
+
+  /* ---- BREAK: the word, and every place a cut could fall ---- */
+  function renderBreak(){
+    const host=$('#fg-billet'); if(!host) return;
+    const r=G.round; host.classList.remove("empty"); host.innerHTML="";
+    const wrap=el("div","fg-letters");
+    for(let i=0;i<r.spell.length;i++){
+      if(i>0){
+        const cut=el("button","fg-cut"+(r.found.indexOf(i)>=0?" done":"")); cut.type="button";
+        cut.dataset.at=i;
+        cut.setAttribute("aria-label","Cut after letter "+i);
+        cut.onclick=()=>onCut(i);
+        wrap.appendChild(cut);
+      }
+      const L=el("span","ltr"); L.textContent=r.spell[i]; wrap.appendChild(L);
+    }
+    host.appendChild(wrap);
+  }
+  function onCut(i){
+    if(G.busy || !G.round) return;
+    const r=G.round;
+    if(r.found.indexOf(i)>=0) return;
+    if(r.cuts.indexOf(i)>=0){
+      r.found.push(i); Audio2.sfx.clink(); FX.buzz(10); renderBreak();
+      if(r.found.length===r.cuts.length) win(r.term, r.need);
+      return;
+    }
+    // a cut inside a piece: name the piece it fell through, and record the miss
+    // against that piece — not knowing where a root ends IS not knowing the root
+    let n=0, hit=r.need[r.need.length-1];
+    for(let k=0;k<r.segs.length;k++){ n+=r.segs[k].text.length; if(i<n){ hit=r.segs[k].id; break; } }
+    QE.record([hit], false);
+    crack(`The cut falls inside <b>${signOf(hit)}</b> = ${PARTS[hit].mean}`);
+  }
+
+  /* ---- REPAIR: a term wearing one wrong piece ---- */
+  function renderChips(){
+    const host=$('#fg-billet'); if(!host) return;
+    const r=G.round; host.classList.remove("empty"); host.innerHTML="";
+    r.word.segs.forEach((sg,i)=>{
+      if(r.phase==="swap" && i===r.at){
+        const g=el("span","frag gap"); g.textContent="?"; host.appendChild(g); return;
+      }
+      const b=el("button","frag"+(r.phase==="swap"?" hot":"")); b.type="button";
+      b.dataset.id=sg.id; b.textContent=sg.text.toUpperCase();
+      b.onclick=()=>onSmash(i);
+      host.appendChild(b);
+    });
+  }
+  function onSmash(i){
+    if(G.busy || !G.round) return;
+    const r=G.round; if(r.kind!=="repair" || r.phase!=="smash") return;
+    const sg=r.word.segs[i];
+    if(sg.id!==r.bad){
+      QE.record([sg.id], false);
+      crack(`<b>${signOf(sg.id)}</b> = ${PARTS[sg.id].mean}. That piece is sound.`);
+      return;
+    }
+    Audio2.sfx.grind(); FX.buzz(20); FX.shake(4,160); sparks(8);
+    const host=$('#fg-billet'); const node=host?host.children[i]:null;
+    if(node) node.classList.add("dead");
+    say(`<b>${signOf(r.bad)}</b> = ${PARTS[r.bad].mean}`);
+    r.phase="swap";
+    r.tray=shuffle([r.real].concat(QE.distractParts(r.real,2)));
+    later(()=>{ renderChips(); renderTray(); }, 380);
+  }
+
+  /* ---- the four rounds ---- */
+  function roundBuild(){
+    const t=pickTermFrom(termPool(2)); if(!t) return false;
+    const T=TERMS[t], need=T.build.slice(), wrong=[];
+    need.forEach(id=>{ const d=QE.distractParts(id,1)[0];
+      if(d && need.indexOf(d)<0 && wrong.indexOf(d)<0) wrong.push(d); });
+    G.round={ kind:"build", term:t, need, placed:[],
+              tray:shuffle(need.concat(wrong.slice(0,2))) };
+    ask("Build", T.def);
+    renderBillet(); renderTray(); strikeOn(true);
+    return true;
+  }
+  function roundFinish(){
+    const t=pickTermFrom(termPool(2)); if(!t) return false;
+    const T=TERMS[t], need=T.build.slice();
+    const at=Math.floor(Math.random()*need.length), missing=need[at];
+    const wrong=QE.distractParts(missing,2); if(wrong.length<2) return false;
+    G.round={ kind:"finish", term:t, need, at, missing,
+              placed:need.map((id,i)=>i===at?null:id),
+              tray:shuffle([missing].concat(wrong)) };
+    ask("Finish", cap(short(PARTS[missing].mean)));
+    renderBillet(); renderTray(); strikeOn(false);
+    return true;
+  }
+  function roundBreak(){
+    // only words the rule can cut: where two pieces share a letter across the
+    // junction there is no honest boundary to tap, so those are never asked
+    const ids=termPool(2).filter(id=>{
+      const w=wordOf(TERMS[id].build);
+      return w && !w.fused && w.word===TERMS[id].spell
+          && w.word.length>=8 && w.segs.every(s=>s.text.length>=3);
+    });
+    const t=pickTermFrom(ids); if(!t) return false;
+    const T=TERMS[t], w=wordOf(T.build), cuts=[]; let n=0;
+    w.segs.forEach((s,i)=>{ n+=s.text.length; if(i<w.segs.length-1) cuts.push(n); });
+    G.round={ kind:"break", term:t, need:T.build.slice(), segs:w.segs, cuts, found:[],
+              spell:T.spell.toUpperCase() };
+    ask("Break", "Tap the boundaries.");
+    renderBreak(); const tray=$('#fg-tray'); if(tray) tray.innerHTML=""; strikeOn(false);
+    return true;
+  }
+  function roundRepair(){
+    const R=makeRepair(); if(!R) return false;
+    G.round={ kind:"repair", term:R.term, need:R.need, at:R.at, real:R.real, bad:R.bad,
+              word:R.word, phase:"smash", placed:null, tray:[] };
+    ask("Repair", TERMS[R.term].def);
+    if(G.firstRepair){ say("Smash the wrong piece."); G.firstRepair=false; }
+    renderChips(); const tray=$('#fg-tray'); if(tray) tray.innerHTML=""; strikeOn(false);
+    return true;
+  }
+
+  /* ---- the strike ---- */
+  function strike(){
+    if(G.busy || !G.round || G.round.kind!=="build") return;
+    const r=G.round;
+    if(!r.placed.length){ crack("Nothing on the anvil yet."); return; }
+    const bad=r.placed.findIndex((id,i)=>id!==r.need[i]);
+    if(bad<0){
+      if(r.placed.length===r.need.length){ win(r.term, r.need); return; }
+      crack("The word is not finished.");   // a true prefix: nothing to blast
+      return;
+    }
+    const id=r.placed[bad];
+    if(r.need.indexOf(id)>=0){
+      // the right piece in the wrong place: it stays in the game
+      r.placed.splice(bad,1); renderBillet(); renderTray();
+      crack(`<b>${signOf(id)}</b> belongs — but not there.`);
+      return;
+    }
+    blast(id, "");
+  }
+
+  /* ---- what a strike makes ---- */
+  function win(t, ids){
+    if(G.busy || G.over) return;
+    G.busy=true;
+    const T=TERMS[t], secs=(performance.now()-G.t0)/1000;
+    G.done++; G.streak++; G.streakMax=Math.max(G.streakMax,G.streak);
+    ids.forEach(id=>G.worked.add(id));
+    QE.record(ids, true, secs<7);
+    const mult = G.streak>=10?2 : G.streak>=5?1.5 : G.streak>=3?1.25 : 1;
+    G.score += Math.round((60 + Math.max(0, 40-secs*4)) * mult);
+    /* CLANG. The hammer, then the seal, a shove of the frame and a wash of
+       gold — the strike is the payout, so it is the loudest thing in the mode
+       and it gets louder the longer the streak runs. */
+    Audio2.sfx.hammer(); later(()=>Audio2.sfx.stamp(), 90);
+    FX.buzz(34); FX.shake(5+Math.min(7,G.streak), 220); FX.impact("#d8bd84", 0.16, 220);
+    sparks(16+Math.min(26, G.streak*3));
+    const billet=$('#fg-billet');
+    if(billet){ billet.classList.remove("empty");
+      billet.innerHTML=`<span class="fg-word stamped">${T.spell.toUpperCase()}</span>`; }
+    const tray=$('#fg-tray'); if(tray) tray.innerHTML="";
+    strikeOn(false);
+    // the micro-reveal: the pieces, named, and not one word more
+    say(ids.map(id=>`<b>${signOf(id)}</b> = ${PARTS[id].mean}`).join("<br>"));
+    if(G.streak===3){ cry("Forge heating"); Audio2.sfx.chime(); }
+    else if(G.streak===5){ cry("White hot"); Audio2.sfx.chime(); }
+    else if(G.streak===10){ cry("Master forge"); Audio2.sfx.trophy(); }
+    else cry("");
+    heat(); setHud();
+    // the animations get faster as the forge gets hotter; the questions do not
+    const wait = A.relax ? 1800 : Math.max(900, 1550 - G.streak*70);
+    if(rushDue(G) && G.done < FORGE_GOAL){
+      G.rushed=true;
+      later(()=>{ G.stopRush=masteryRush($('#arcade-stage'), (bonus)=>{
+        G.stopRush=null; G.score+=bonus; setHud(); G.busy=false; nextRound(); }); }, wait);
+    } else later(()=>{ G.busy=false; nextRound(); }, wait);
+  }
+  function crack(html){
+    G.cracks++; G.streak=0; setHud(); heat();
+    Audio2.sfx.bad(); FX.buzz(22); FX.shake(6,180);
+    const b=$('#fg-billet');
+    if(b){ b.classList.remove("crack"); void b.offsetWidth; b.classList.add("crack"); }
+    say(`<span class="bad">${html}</span>`);
+  }
+  /* A WRONG PIECE IS NOT A WRONG SCREEN. The blade forms, cracks, and the piece
+     that broke it is blasted off the anvil — named on the way out, so the miss
+     teaches — while every correct piece stays exactly where it was lying. */
+  function blast(id, why){
+    const r=G.round;
+    QE.record([id], false);
+    crack(`${why?why+" ":""}<b>${signOf(id)}</b> = ${PARTS[id].mean}`);
+    $$('#fg-tray .frag').concat($$('#fg-billet .frag'))
+      .forEach(n=>{ if(n.dataset.id===id) n.classList.add("dead"); });
+    if(r.tray){ const i=r.tray.indexOf(id); if(i>=0) r.tray.splice(i,1); }
+    if(r.placed){ const j=r.placed.indexOf(id); if(j>=0) r.placed.splice(j,1); }
+    later(()=>{ if(r!==G.round) return;
+      if(r.kind==="repair") renderChips(); else renderBillet();
+      renderTray(); }, 420);
+  }
+
+  function nextRound(){
+    if(G.over) return;
+    if(G.done>=FORGE_GOAL){ finish(); return; }
+    G.busy=false; say(""); cry("");
+    const b=$('#fg-billet'); if(b) b.classList.remove("crack");
+    if(!G.queue.length) G.queue=shuffle(FORGE_KINDS.slice());
+    const kind=G.queue.shift();
+    const made = kind==="finish" ? roundFinish()
+               : kind==="break"  ? roundBreak()
+               : kind==="repair" ? roundRepair() : roundBuild();
+    if(!made) roundBuild();
+    G.t0=performance.now();
+    setHud();
+  }
+  function finish(){
+    if(G.over) return;
+    if(A.cleanup){ try{A.cleanup();}catch(e){} }
+    G.over=true;
+    Audio2.sfx.pour();     // the quench: the session's last sound
+    endCard($('#arcade-stage'), "forge", G.score,
+      `${G.done} terms forged &middot; ${G.cracks} cracked<br>
+       Longest streak ${G.streakMax} &middot; ${G.worked.size} parts worked`);
+  }
+
+  const sb=$('#fg-strike'); if(sb) sb.onclick=strike;
+  nextRound();
+}
+
+/* ================================================================
+   MODE 4 — SPIRIT TRIAL  (applied recall)
+
+   A spirit rushes into the hall carrying a sign it cannot read. Slash the
+   seal that decodes it and the spirit recovers and goes. Five shapes of
+   sign, rotated so no two spirits in a row ask the same way:
+
+     DECODE    a term      → what it means
+     SPOT      a meaning   → the piece that carries it
+     IMPOSTOR  three terms → the one built on this root
+     REPAIR    a term with one wrong piece → smash it, replace it
+     CHAIN     three meanings in a row → three pieces → one term
+
+   No explanation screens: the word flashes with its pieces named and the
+   next spirit is already coming.
+   ================================================================ */
+const SPIRIT_GOAL  = 12;
+const SPIRIT_KINDS = ["decode","spot","impostor","repair","chain"];
+const WISP = `<svg class="sp-wisp" id="sp-wisp" viewBox="0 0 48 58" aria-hidden="true">
+  <path d="M24 3c10 0 16 9 16 20 0 11-3 17-2 24-5-3-7 2-11-1-3 5-6 0-10 3-4-4-5-5-8-2 1-7-1-13-1-24C8 12 14 3 24 3Z"
+        fill="currentColor" opacity=".5"/>
+  <circle cx="18" cy="23" r="2.6" fill="#0b0f0d"/><circle cx="30" cy="23" r="2.6" fill="#0b0f0d"/></svg>`;
+
+function startTrial(){
+  const stage=stageMode("spirit");
+  stage.innerHTML=`
+    <div class="ar-hud">
+      <span class="ar-chip">Score <b id="sp-score">0</b></span>
+      <span class="ar-chip">Spirits <b id="sp-count">1/${SPIRIT_GOAL}</b></span>
+      <span class="ar-chip">Lives <b id="sp-lives">&hearts;&hearts;&hearts;</b></span>
+      <span class="ar-chip ar-flow" id="sp-streak">Streak 0</span>
+    </div>
+    <div class="ar-meter" id="sp-meter" aria-hidden="true"><i></i></div>
+    <div class="spirit">
+      <div class="ar-ask" id="sp-ask"></div>
+      <div class="sp-hall" id="sp-hall">
+        <div class="sp-lanterns"><i></i><i></i><i></i><i></i><i></i></div>
+        ${WISP}
+        <div class="sp-sign" id="sp-sign"></div>
+        <div class="sp-fuse" id="sp-fuse"><i></i></div>
+        <div class="sp-seals" id="sp-seals"></div>
+        <div class="sp-chain" id="sp-chain"></div>
+      </div>
+      <div class="ar-reveal" id="sp-reveal"></div>
+    </div>`;
+
+  const G={ mode:"spirit", score:0, streak:0, streakMax:0, done:0, lives:3, right:0,
+            worked:new Set(), round:null, queue:[], busy:false, over:false,
+            rushed:false, stopRush:null, t:0, limit:0, clock:null };
+  A.game=G;
+  const timers=new Set();
+  function later(fn, ms){
+    const id=setTimeout(()=>{ timers.delete(id); if(!G.over) fn(); }, ms);
+    timers.add(id); return id;
+  }
+  A.cleanup=()=>{ G.over=true; timers.forEach(clearTimeout); timers.clear();
+    if(G.clock){ clearInterval(G.clock); G.clock=null; }
+    if(G.stopRush){ try{G.stopRush();}catch(e){} G.stopRush=null; } };
+
+  function say(html){ const r=$('#sp-reveal'); if(r) r.innerHTML=html||""; }
+  function chain(text){ const c=$('#sp-chain'); if(c) c.textContent=text||""; }
+  function setHud(){
+    const n=$('#sp-score'); if(n) n.textContent=G.score;
+    const c=$('#sp-count'); if(c) c.textContent=`${Math.min(G.done+1,SPIRIT_GOAL)}/${SPIRIT_GOAL}`;
+    const l=$('#sp-lives'); if(l) l.innerHTML = G.lives>0 ? "&hearts;".repeat(G.lives) : "&mdash;";
+    const s=$('#sp-streak'); if(s) s.textContent="Streak "+G.streak;
+    const m=$('#sp-meter'); if(m){ const bar=m.querySelector('i');
+      const pct=Math.round(100*Math.min(1,G.done/SPIRIT_GOAL));
+      if(bar) bar.style.width=pct+"%"; m.classList.toggle("full", pct>=100); }
+    const hall=$('#sp-hall'); if(hall) hall.classList.toggle("lit", G.streak>=3);
+  }
+  /* the classes are namespaced because the first draft called the entrance
+     "rush", which is also the Mastery Rush overlay — the spirit picked up
+     position:absolute from it and stood on top of its own sign */
+  function wisp(cls){
+    const w=$('#sp-wisp'); if(!w) return;
+    w.classList.remove("sp-arrive","sp-leave","sp-fell"); void w.offsetWidth;
+    if(cls) w.classList.add("sp-"+cls);
+  }
+
+  /* ---- one renderer for every shape of sign ---- */
+  function setRound(spec){
+    G.round=spec; G.busy=false; G.t=0; G.limit=spec.limit||0;
+    const a=$('#sp-ask');
+    if(a){ a.innerHTML=`<span class="ar-kind">${spec.kind}</span>${spec.ask}`;
+      a.classList.remove("flash"); void a.offsetWidth; a.classList.add("flash"); }
+    const sign=$('#sp-sign');
+    if(sign){ sign.innerHTML=spec.sign||""; sign.style.display=spec.sign?"":"none"; }
+    const fuse=$('#sp-fuse');
+    if(fuse){ fuse.style.display=G.limit?"":"none"; fuse.classList.remove("urgent");
+      const i=fuse.querySelector('i'); if(i) i.style.width="100%"; }
+    renderSeals();
+  }
+  function renderSeals(){
+    const host=$('#sp-seals'); if(!host) return;
+    const spec=G.round; host.innerHTML="";
+    host.className="sp-seals"+(spec.seals.length===3?" three":"");
+    spec.seals.forEach(sl=>{
+      const b=el("button","sp-seal"+(spec.wordSeals?" word":"")); b.type="button";
+      b.innerHTML=sl.label; b.dataset.ok=sl.ok?"1":"0";
+      if(sl.id) b.dataset.id=sl.id;
+      b.onclick=()=>onSeal(sl, b);
+      host.appendChild(b);
+    });
+  }
+  function burnOthers(keep){
+    $$('#sp-seals .sp-seal').forEach(n=>{ if(n!==keep) n.classList.add("burn"); });
+    if(keep) keep.classList.add("slashed");
+  }
+
+  /* ---- the five signs ---- */
+  function roundDecode(){
+    const t=pickTermFrom(termPool(2)); if(!t) return false;
+    const T=TERMS[t];
+    const others=Object.keys(TERMS).filter(x=>x!==t && TERMS[x].def!==T.def);
+    // the near miss is the point: a sibling sharing a part comes first
+    const near=others.filter(x=>TERMS[x].build.some(p=>T.build.indexOf(p)>=0));
+    const wrongs=[], seen={};
+    shuffle(near).concat(shuffle(others)).forEach(x=>{
+      const d=TERMS[x].def;
+      if(wrongs.length>=3 || seen[d] || d===T.def) return;
+      seen[d]=1; wrongs.push(d);
+    });
+    if(wrongs.length<2) return false;
+    setRound({ kind:"Decode", sign:cap(T.spell), ask:"Decode the sign.",
+      ids:T.build.slice(), limit:A.relax?0:11,
+      seals:shuffle([{label:cap(T.def), ok:true}].concat(wrongs.map(d=>({label:cap(d), ok:false})))),
+      reveal:T.build.map(id=>`<b>${signOf(id)}</b> = ${PARTS[id].mean}`).join(" &middot; ") });
+    return true;
+  }
+  function roundSpot(){
+    const id=soloPart(pick(["prefix","root","suffix"])); if(!id) return false;
+    const wrong=QE.distractParts(id,2); if(wrong.length<2) return false;
+    setRound({ kind:"Spot", sign:cap(PARTS[id].mean), ask:"Name the piece.",
+      ids:[id], wordSeals:true, limit:A.relax?0:8,
+      seals:shuffle([{label:signOf(id), ok:true, id}]
+        .concat(wrong.map(w=>({label:signOf(w), ok:false, id:w})))),
+      reveal:`<b>${signOf(id)}</b> = ${PARTS[id].mean}` });
+    return true;
+  }
+  function roundImpostor(){
+    const bySuf={};
+    termPool(2).forEach(id=>{
+      const b=TERMS[id].build, last=b[b.length-1];
+      if(PARTS[last] && PARTS[last].kind==="suffix") (bySuf[last]=bySuf[last]||[]).push(id);
+    });
+    const groups=Object.keys(bySuf).filter(k=>{
+      const means={}; let n=0;
+      bySuf[k].forEach(id=>{ const r=TERMS[id].build.find(p=>PARTS[p].kind==="root");
+        if(r && !means[PARTS[r].mean]){ means[PARTS[r].mean]=1; n++; } });
+      return n>=3;
+    });
+    if(!groups.length) return false;
+    const chosen=[], means={};
+    shuffle(bySuf[pick(groups)]).forEach(id=>{
+      if(chosen.length>=3) return;
+      const r=TERMS[id].build.find(p=>PARTS[p].kind==="root");
+      if(!r || means[PARTS[r].mean]) return;
+      means[PARTS[r].mean]=1; chosen.push({id, root:r});
+    });
+    if(chosen.length<3) return false;
+    const target=pick(chosen);
+    setRound({ kind:"Impostor", sign:"", ask:`Find the <b>${short(PARTS[target.root].mean)}</b> term.`,
+      ids:[target.root], wordSeals:true, limit:A.relax?0:9,
+      seals:shuffle(chosen.map(c=>({label:cap(TERMS[c.id].spell), ok:c.id===target.id, id:c.root}))),
+      reveal:`<b>${signOf(target.root)}</b> = ${PARTS[target.root].mean}` });
+    return true;
+  }
+  function roundRepair(){
+    const R=makeRepair(); if(!R) return false;
+    setRound({ kind:"Repair", sign:R.word.word.toUpperCase(), ask:cap(TERMS[R.term].def),
+      ids:R.need, repair:R, phase:"smash", wordSeals:true, limit:A.relax?0:12,
+      seals:R.word.segs.map(sg=>({label:sg.text.toUpperCase(), ok:sg.id===R.bad, id:sg.id})),
+      reveal:R.need.map(id=>`<b>${signOf(id)}</b> = ${PARTS[id].mean}`).join(" &middot; ") });
+    say("Smash the wrong piece.");
+    return true;
+  }
+  /* CHAIN — three retrievals inside five seconds, and the third one is only
+     answerable because the first two just happened. */
+  function roundChain(){
+    const three=termPool(3);
+    const t=pickTermFrom(three.length?three:termPool(2)); if(!t) return false;
+    const T=TERMS[t];
+    const links=T.build.map(id=>({ id, opts:shuffle([id].concat(QE.distractParts(id,2))) }));
+    if(links.some(l=>l.opts.length<2)) return false;
+    G.chainOf={ term:t, links, at:0 };
+    chainLink();
+    return true;
+  }
+  function chainLink(){
+    const C=G.chainOf, L=C.links[C.at];
+    setRound({ kind:"Chain", sign:cap(short(PARTS[L.id].mean)), ask:"Tap the piece.",
+      ids:[L.id], wordSeals:true, chainStep:true, limit:A.relax?0:5,
+      seals:shuffle(L.opts.map(o=>({label:signOf(o), ok:o===L.id, id:o}))),
+      reveal:`<b>${signOf(L.id)}</b> = ${PARTS[L.id].mean}` });
+    chain(C.at ? "Chain ×"+C.at : "");
+  }
+
+  /* ---- answering ---- */
+  function onSeal(sl, node){
+    if(G.busy || !G.round) return;
+    const r=G.round;
+    if(!sl.ok){
+      if(node) node.classList.add("burn");
+      if(sl.id){ QE.record([sl.id], false);
+        say(`<span class="bad"><b>${signOf(sl.id)}</b> = ${PARTS[sl.id].mean}</span>`); }
+      else say(`<span class="bad">Not that one.</span>`);
+      Audio2.sfx.bad(); FX.buzz(18);
+      G.streak=0; setHud();
+      return;
+    }
+    /* a repair is two acts: burn the wrong piece off the sign, then choose
+       what belongs there. The seals become the replacements in place. */
+    if(r.repair && r.phase==="smash"){
+      if(node) node.classList.add("burn");
+      Audio2.sfx.grind(); FX.buzz(14);
+      const R=r.repair;
+      say(`<b>${signOf(R.bad)}</b> = ${PARTS[R.bad].mean}`);
+      r.phase="swap";
+      const opts=shuffle([R.real].concat(QE.distractParts(R.real,2)));
+      r.seals=opts.map(o=>({label:signOf(o), ok:o===R.real, id:o}));
+      const a=$('#sp-ask');
+      if(a) a.innerHTML=`<span class="ar-kind">Repair</span>Choose the true piece.`;
+      later(renderSeals, 300);
+      return;
+    }
+    if(r.chainStep){
+      burnOthers(node);
+      Audio2.sfx.clink(); FX.buzz(12);
+      const C=G.chainOf; C.at++;
+      if(C.at<C.links.length){ chain("Chain ×"+C.at); later(chainLink, 240); return; }
+      chain("Chain ×"+C.links.length);
+      land(TERMS[C.term], TERMS[C.term].build.slice(),
+        TERMS[C.term].build.map(id=>`<b>${signOf(id)}</b> = ${PARTS[id].mean}`).join(" &middot; "));
+      return;
+    }
+    burnOthers(node);
+    const t=r.repair?r.repair.term:null;
+    land(t?TERMS[t]:null, r.ids, r.reveal);
+  }
+  /* the spirit recovers and vanishes — no explanation screen, and the next
+     one is already on its way in */
+  function land(T, ids, revealHTML){
+    G.busy=true;
+    const secs=G.t;
+    G.done++; G.right++; G.streak++; G.streakMax=Math.max(G.streakMax,G.streak);
+    (ids||[]).forEach(id=>{ if(PARTS[id]) G.worked.add(id); });
+    QE.record(ids||[], true, secs<4);
+    const mult = G.streak>=10?2 : G.streak>=5?1.5 : G.streak>=3?1.25 : 1;
+    G.score += Math.round((50 + (G.limit?Math.max(0, 50*(1-secs/G.limit)):20)) * mult);
+    Audio2.sfx.great(); FX.buzz(22); FX.impact("#bd9d5f", 0.13, 200);
+    if(G.streak>=5) FX.shake(4,150);
+    const sign=$('#sp-sign');
+    if(sign && T){ sign.style.display=""; sign.innerHTML=cap(T.spell); }
+    say(revealHTML||"");
+    Audio2.sfx.bow();      // the spirit bows out
+    wisp("leave");
+    setHud();
+    const wait = A.relax ? 1700 : Math.max(900, 1500 - G.streak*60);
+    if(rushDue(G) && G.done<SPIRIT_GOAL){
+      G.rushed=true;
+      later(()=>{ G.stopRush=masteryRush($('#arcade-stage'), (bonus)=>{
+        G.stopRush=null; G.score+=bonus; setHud(); next(); }); }, wait);
+    } else later(next, wait);
+  }
+  function timeUp(){
+    if(G.busy || !G.round) return;
+    G.busy=true; G.done++; G.streak=0;
+    const r=G.round;
+    if(!A.relax) G.lives--;
+    Audio2.sfx.bad(); FX.buzz(26); FX.shake(7,220);
+    wisp("fell");
+    say(`<span class="bad">The sign goes unread.</span> ${r.reveal||""}`);
+    setHud();
+    later(()=>{ if(G.lives<=0 && !A.relax) finish(); else next(); }, 1500);
+  }
+  function next(){
+    if(G.over) return;
+    if(G.done>=SPIRIT_GOAL || (G.lives<=0 && !A.relax)){ finish(); return; }
+    G.busy=false; say(""); chain("");
+    if(!G.queue.length) G.queue=shuffle(SPIRIT_KINDS.slice());
+    const kind=G.queue.shift();
+    const made = kind==="spot"     ? roundSpot()
+               : kind==="impostor" ? roundImpostor()
+               : kind==="repair"   ? roundRepair()
+               : kind==="chain"    ? roundChain() : roundDecode();
+    if(!made) roundDecode();
+    wisp("arrive");
+    Audio2.sfx.whoosh();
+    setHud();
+  }
+  function finish(){
+    if(G.over) return;
+    if(A.cleanup){ try{A.cleanup();}catch(e){} }
+    G.over=true;
+    endCard($('#arcade-stage'), "spirit", G.score,
+      `${G.right} signs read &middot; ${G.lives} ${G.lives===1?"life":"lives"} left<br>
+       Longest streak ${G.streakMax} &middot; ${G.worked.size} parts worked`);
+  }
+
+  /* the fuse burns on its own clock so a stalled answer costs the spirit,
+     not the frame rate */
+  G.clock=setInterval(()=>{
+    if(G.over || G.busy || !G.limit) return;
+    G.t+=0.1;
+    const left=Math.max(0, 1-G.t/G.limit);
+    const f=$('#sp-fuse');
+    if(f){ const i=f.querySelector('i'); if(i) i.style.width=(left*100).toFixed(1)+"%";
+      f.classList.toggle("urgent", left<0.34); }
+    if(left<=0) timeUp();
+  }, 100);
+
+  next();
+}
+
+/* ==================================================================
+   MASTERY RUSH — the bonus round that breaks out of either hall.
+
+   Twenty seconds, no hints, three beats per term: name the first piece,
+   name the second, then build it out of what you just named. The hall
+   answers louder with every right answer — a chime, then the lanterns,
+   then the frame moves, then the music thickens, then a seal the size of
+   the screen — and the questions do not get harder while it happens.
+   The spectacle escalates; the difficulty does not. That is the trick,
+   and it is the reason a player will chase the fifth correct answer.
+   ================================================================== */
+const RUSH_SECS = 20;
+/* When it fires: the first time a session's streak reaches five, once. Earned
+   rather than rolled, so a player can feel what caused it. */
+function rushDue(G){
+  if(A.rush===false) return false;
+  if(G.rushed) return false;
+  return A.rush===true || G.streak>=5;
+}
+function masteryRush(host, onDone){
+  const box=el("div","rush"); box.dataset.i="0";
+  box.innerHTML=`
+    <div class="rush-title">Mastery Rush</div>
+    <div class="rush-sub">No hints. 20 seconds.</div>
+    <div class="rush-clock"><i id="rush-bar"></i></div>
+    <div class="rush-ask" id="rush-ask">&nbsp;</div>
+    <div class="rush-opts" id="rush-opts"></div>`;
+  host.appendChild(box);
+  Audio2.sfx.whoosh(); FX.buzz(26);
+
+  let hits=0, misses=0, left=RUSH_SECS, term=null, step=0, placed=[], ended=false;
+  const worked=new Set();
+  const twoPart=()=>{ const p=termPool(2).filter(id=>TERMS[id].build.length===2);
+                      return p.length?p:termPool(2); };
+  const iv=setInterval(()=>{
+    left-=0.1;
+    const bar=box.querySelector('#rush-bar');
+    if(bar) bar.style.width=Math.max(0,left/RUSH_SECS*100).toFixed(1)+"%";
+    if(left<=0) end();
+  }, 100);
+
+  function ask(text){ const a=box.querySelector('#rush-ask'); if(a) a.innerHTML=text; }
+  function opts(list){
+    const host2=box.querySelector('#rush-opts'); if(!host2) return;
+    host2.innerHTML="";
+    list.forEach(o=>{
+      const b=el("button","frag"); b.type="button"; b.dataset.id=o.id;
+      b.textContent=o.label; b.onclick=()=>tap(o,b);
+      host2.appendChild(b);
+    });
+  }
+  /* the hall's answer to being right, and the only thing in the round that
+     changes as it runs */
+  function louder(){
+    hits++;
+    Audio2.sfx.clink();
+    if(hits===3){ box.dataset.i="1"; Audio2.sfx.chime(); }
+    if(hits===5) box.dataset.i="2";
+    if(hits>=5) FX.shake(4+Math.min(6,hits-5), 150);
+    if(hits===8){ box.dataset.i="3"; try{ Audio2.setMood("urgent"); }catch(e){} }
+    if(hits===10){
+      Audio2.sfx.trophy();
+      const seal=el("div","rush-seal","Ι");   // iota: the Greek numeral for ten
+      box.appendChild(seal);
+      setTimeout(()=>{ if(seal.parentNode) seal.parentNode.removeChild(seal); }, 900);
+    }
+  }
+  function miss(node){
+    misses++;
+    if(node){ node.classList.add("dead"); }
+    Audio2.sfx.bad(); FX.buzz(16);
+  }
+  function tap(o, node){
+    if(ended) return;
+    const T=TERMS[term];
+    if(step<2){
+      if(o.id!==T.build[step]){ QE.record([o.id], false); miss(node); return; }
+      QE.record([o.id], true, true); worked.add(o.id);
+      louder(); step++; render();
+      return;
+    }
+    // "Build it." — the two pieces just named, in order, with one decoy
+    const want=T.build[placed.length];
+    if(o.id!==want){ miss(node); return; }
+    placed.push(o.id); node.classList.add("hot"); node.disabled=true;
+    if(placed.length===T.build.length){
+      QE.record(T.build.slice(), true, true);
+      T.build.forEach(id=>worked.add(id));
+      louder();
+      ask(`<span class="fg-word stamped">${T.spell.toUpperCase()}</span>`);
+      step++; setTimeout(()=>{ if(!ended) render(); }, 420);
+    }
+  }
+  function render(){
+    if(ended) return;
+    if(!term || step>=3){ term=pickTermFrom(twoPart()); step=0; placed=[]; }
+    if(!term){ end(); return; }
+    A.rushLive={ term, step, hits, misses };   // the harness has no hands either
+    const T=TERMS[term];
+    if(step<2){
+      const id=T.build[step];
+      ask(cap(short(PARTS[id].mean)));
+      opts(shuffle([id].concat(QE.distractParts(id,2))).map(x=>({label:fragOf(x), id:x})));
+    } else {
+      ask("Build it.");
+      const decoy=QE.distractParts(T.build[1],1)[0];
+      const pool=T.build.concat(decoy&&T.build.indexOf(decoy)<0?[decoy]:[]);
+      opts(shuffle(pool).map(x=>({label:fragOf(x), id:x})));
+    }
+  }
+  function end(){
+    if(ended) return; ended=true;
+    clearInterval(iv); A.rushLive=null;
+    try{ Audio2.setMood("calm"); }catch(e){}
+    const bonus = hits*25 + (hits>=10 && !misses ? 150 : 0);
+    box.innerHTML=`
+      <div class="rush-title">${hits} ${misses?"struck":"perfect"}</div>
+      <div class="rush-tally">+${bonus}</div>
+      <div class="rush-sub">+${worked.size} mastered parts</div>`;
+    Audio2.sfx.stamp();
+    setTimeout(()=>{ if(box.parentNode) box.parentNode.removeChild(box);
+      if(onDone) onDone(bonus, hits); }, 1600);
+  }
+  render();
+  /* the caller's cleanup can kill the round outright — leaving the hall must
+     not leave an interval running against a screen that is gone */
+  return function stop(){
+    if(!ended){ ended=true; clearInterval(iv); }
+    A.rushLive=null;
+    try{ Audio2.setMood("calm"); }catch(e){}
+    if(box.parentNode) box.parentNode.removeChild(box);
+  };
+}
+
+function short(mean){ return String(mean||"").split(",")[0].trim(); }
+function cap(s){ s=String(s||""); return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* The Hall is played by hand, and jsdom has none — so the modes publish the
+   live round object and a switch that forces (or forbids) the Mastery Rush,
+   which is otherwise earned by a five-streak and would never fire inside a
+   suite that only answers three questions. */
+window.__RD_ARCADE = { open, startMode,
+  setRush:(v)=>{ A.rush=v; },
+  _game:()=>A.game, _rush:()=>A.rushLive, _wordOf:wordOf, _makeRepair:makeRepair };
 })();
 </script>
 
@@ -18756,7 +19899,9 @@ const MODES=[
   {id:"endless",name:"Endless Road",  unit:""},
   {id:"road",   name:"Expeditions",   unit:"pts"},
   {id:"slice",  name:"Reed Slice",    unit:""},
-  {id:"match",  name:"Seal Match",    unit:""}
+  {id:"match",  name:"Seal Match",    unit:""},
+  {id:"forge",  name:"Rune Forge",    unit:""},
+  {id:"spirit", name:"Spirit Trial",  unit:""}
 ];
 function recordScore(mode, score, detail){
   const st=S();
