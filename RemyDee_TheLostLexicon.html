@@ -2797,7 +2797,7 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
                the corner are the only currency on this road -->
           <div class="pause-keys">
             <div><kbd>mouse</kbd><span>lead the squad &mdash; high ledge is fast and tiring, river floor is slow and gives <b>power</b> back</span></div>
-            <div><kbd>click</kbd><span>lunge &mdash; reach for a part or shove a hazard aside; landing on something costs <b>power</b></span></div>
+            <div><kbd>click</kbd><span>lunge &mdash; reach for a part; landing on something costs <b>power</b></span></div>
             <div><kbd>right-click</kbd><span>focus &mdash; the road slows while you read, and it costs <b>stamina</b></span></div>
             <div><kbd>space</kbd><span>surge &mdash; burn <b>stamina</b> for speed</span></div>
             <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><span>strike, vanish, mend &mdash; the charges you forged</span></div>
@@ -12600,7 +12600,7 @@ function craftSpec(item){
     const weak=(m.weakSpots||[]).length, loose=(m.looseSpots||[]).length;
     sp.slipChance = clamp(weak*0.10+loose*0.05, 0, 0.6);
     if(!weak && !loose) sp.notes.push({ic:"rope", txt:`<b>Not one weak spot</b> — this rope will not slip, on any descent.`});
-    else sp.notes.push({ic:"warn", txt:`<b>${weak} scar${weak===1?"":"s"}${loose?` and ${loose} loose turn${loose===1?"":"s"}`:""}</b> — a <b>${Math.round(sp.slipChance*100)}%</b> chance the rope gives on a climb or descent.`});
+    else sp.notes.push({ic:"warn", txt:`<b>${weak} scar${weak===1?"":"s"}${loose?` and ${loose} loose turn${loose===1?"":"s"}`:""}</b> — a <b>${Math.round(sp.slipChance*100)}%</b> chance the rope gives if a hazard catches them on a climb or descent.`});
     if(m.tempo==="fast") sp.notes.push({ic:"bolt", txt:`Laid <b>fast and light</b> — quick lines, and less rope to carry.`});
     else if(m.tempo==="steady") sp.notes.push({ic:"·", txt:`Laid <b>steady</b> — a heavier coil, and a turn that seats deeper.`});
   }
@@ -13500,7 +13500,7 @@ function computeForgePassives(f){
   if(P.slipChance>0.01){
     const it=P.itemFor.climb||P.itemFor.descend; P.ownerFor.slip=it;
     P.chips.push({ic:"warn",label:"Untrustworthy line",
-      desc:`${Math.round(P.slipChance*100)}% chance the ${it&&it.bpId==="rope"?"rope":"gear"} gives on a climb`, itemId:it&&it.id}); }
+      desc:`${Math.round(P.slipChance*100)}% chance the ${it&&it.bpId==="rope"?"rope":"gear"} gives if a hazard catches them on a climb`, itemId:it&&it.id}); }
   // hazards that simply fail to land, bought with a steep bite or a stable join
   let shrugSum=0, shrugBest=0;
   Object.keys(P.specFor).forEach(k=>{
@@ -14151,7 +14151,9 @@ function bindMissionPointer(cv){
   const up=(e)=>{
     if(e && e.button===2) setFocus(false);
     gestureOnChrome=false; };
-  /* A click on the road is a lunge; a click on a hazard is a lunge AT it. */
+  /* A click on the road is a lunge — a reach toward the pointer for a
+     word-part or a closing raider. It does not target hazards; those are
+     dodged by moving, never cleared by a click. */
   const click=(e)=>{
     if(!M||M.done||M.paused) return;
     if(onChrome(e)) return;
@@ -14373,10 +14375,11 @@ function specOf(item){
    verbs, all pointer-first and all keyboard-mirrored:
 
      LUNGE (click, or Shift)  — a short reach toward the pointer that
-       widens the collection radius for a beat. Free, but it costs a
-       little stamina and has a cooldown, so it is a decision rather
-       than a thing to mash. Clicking ON a hazard or a raider lunges at
-       it, which is how you clear the road without spending a charge.
+       widens the collection radius for a beat, for a word-part just out
+       of reach or a raider closing in. Free, but it costs a little
+       stamina and has a cooldown, so it is a decision rather than a
+       thing to mash. It does not touch hazards — those are dealt with
+       by moving, not by clicking on them.
      FOCUS (hold right-click, or F) — the road slows while you read a
        gate. Costs stamina for as long as you hold it. This is the
        answer to "a rune gate is a thinking beat stacked on a moving
@@ -14393,22 +14396,19 @@ function tryLunge(atX, atY){
   M.lungeX=(atX==null?M.pointer.x:atX); M.lungeY=(atY==null?M.pointer.y:atY);
   M.stats.stamina=clamp(M.stats.stamina-3,0,100);
   const sx=M.cv.width*0.30;
-  /* A lunge that lands on something ahead clears it — no charge spent. It is a
-     smaller Strike you can take as often as your legs allow. */
-  let cleared=0;
-  M.hazards.forEach(h=>{
-    if(h.hit||h.passed) return;
-    const hx=screenX(h.p), hy=objY(h);
-    if(Math.hypot(hx-M.lungeX, hy-M.lungeY) < 70 && hx>sx-40 && hx<sx+M.cv.width*0.55){
-      h.hit=true; h.passed=true; cleared++;
-    }
-  });
   /* A LUNGE THAT LANDS ON SOMETHING COSTS POWER — that is the rule the second
-     bar exists to make legible. "Something" is anything genuinely on the road at
-     that spot: a hazard shoved aside, a raider shouldered, or a word-part reached
-     for. Clicking empty sky is not free either, but it is nearly free — a click
-     with nothing under it should read as a wasted step, not as a mistake that
-     ends runs. */
+     bar exists to make legible. "Something" is a word-part reached for, or a
+     raider shouldered on the way past.
+
+     A lunge does NOT touch a hazard. It used to — clicking on a hazard shoved
+     it off the road for free, no gear required, which meant the one skilful
+     thing the walk asks for (steering clear of what you shouldn't bump into)
+     could just be clicked away instead. Hazards are dealt with by moving, the
+     same as everything else on the road; the one built, charge-limited tool
+     that actually clears them ahead of time is Strike, forged at the bench.
+     Clicking empty sky (or a hazard) is not free either, but it is nearly
+     free — a click with nothing to reach for should read as a wasted step,
+     not as a mistake that ends runs. */
   let reached=0;
   // raiders are placed by the closing-in maths in the draw pass; mirror it here
   // so a shoulder into an approaching ambusher counts as landing on something
@@ -14426,15 +14426,10 @@ function tryLunge(atX, atY){
     const px=screenX(pk.p), py=objY(pk);
     if(Math.hypot(px-M.lungeX, py-M.lungeY) < 74) reached++;
   });
-  const landed = cleared + reached;
-  if(landed) spendPower(POWER_LUNGE_COST + (landed-1)*2, "That last shove emptied them");
-  else       spendPower(POWER_MISS_COST);
+  if(reached) spendPower(POWER_LUNGE_COST + (reached-1)*2, "That last reach emptied them");
+  else        spendPower(POWER_MISS_COST);
 
-  if(cleared){
-    bumpMomentum(0.18*M.forge.gainMult);
-    pop(M.lungeX, M.lungeY-24, cleared>1?"shoved through!":"shoved aside");
-    Audio2.sfx.hammer && Audio2.sfx.hammer(); FX.buzz(18); FX.shake(4,120);
-  } else if(reached){
+  if(reached){
     pop(M.lungeX, M.lungeY-24, "reached");
     Audio2.sfx.clink && Audio2.sfx.clink(); FX.buzz(10);
   } else {
@@ -15071,10 +15066,10 @@ function schoolCards(){
            ${opt("gate", "A <b>rune gate</b> blocks the road with a question. Answer it and you accelerate through; the harder the question, the bigger the burst.")}
          </ul>` },
     { t:"Reaching for something costs power",
-      b:`<p>${touch?"<b>Tap</b> the road":"<b>Click</b> the road"} to <b>lunge</b> — a short reach toward the pointer that widens what they can grab and shoves a hazard bodily out of the way.</p>
+      b:`<p>${touch?"<b>Tap</b> the road":"<b>Click</b> the road"} to <b>lunge</b> — a short reach toward the pointer that widens what they can grab.</p>
          <ul class="school-opts">
-           ${opt("reach", "A lunge that <b>lands on something actually there</b> — a hazard, a word-part, a raider — spends a real bite of <b>power</b>. That is the whole trade: force for reach.")}
-           ${opt("dot",   "A lunge into empty air costs almost nothing. Missing is cheap; it is <b>connecting</b> that is expensive.")}
+           ${opt("reach", "A lunge that <b>lands on something actually there</b> — a word-part or a raider — spends a real bite of <b>power</b>. That is the whole trade: force for reach.")}
+           ${opt("dot",   "A lunge into empty air costs almost nothing. Missing is cheap; it is <b>connecting</b> that is expensive. It cannot touch a hazard either way — those you dodge by moving.")}
            ${opt("warn",  "So is being hit. <b>Every hazard that lands on them takes power</b> as well — the same reserve, from the other direction.")}
          </ul>` },
     { t:"Buying time, and buying speed",
@@ -15931,28 +15926,16 @@ function tick(t){
       Audio2.sfx.bad && Audio2.sfx.bad();
     } else if(M.stats.power>42 && M._powerWarned){ M._powerWarned=false; }
 
-    /* THE LINE GIVES. A rope braided with missed beats, or a claw set whose three
-       angles disagree, carries a real chance of failing — the exact percentage the
-       spec sheet quoted at the bench. Checked on the upper ledge, where the gear is
-       actually load-bearing, and never more than once every few seconds so it reads
-       as an event rather than as noise. A masterwork zeroes this out entirely. */
-    if(M.forge.slipChance>0 && M.lane===0 && !M.done){
-      M.slipT=(M.slipT||0)-dt;
-      if(M.slipT<=0){
-        M.slipT=4.5;
-        if(Math.random()<M.forge.slipChance){
-          const it=(M.forge.itemFor&&(M.forge.itemFor.climb||M.forge.itemFor.descend));
-          statGain({stamina:-8,morale:-5});
-          caption(it ? flashItem(it,"slipped",`gives out on the ledge — the weak spot you braided into it, found at the worst moment. They scramble back onto the rock.`)
-                     : "The line gives out on the ledge — they scramble back onto the rock.");
-          pop(M.cv.width*0.30, M.laneY-70, "the line slips!"); Audio2.sfx.bad(); FX.buzz(24);
-          M.slowT=Math.max(M.slowT||0, 1.6);
-          // the pace pays for it, but the answer streak does NOT — this is the
-          // gear failing, not the player misreading a word
-          brakePace();
-        }
-      }
-    }
+    /* THE LINE GIVES — but only when a hazard actually catches them on it.
+       This used to be checked on its own clock, independent of anything the
+       player was doing: stand on the ledge doing everything right and a die
+       roll could still take stamina off you every few seconds. That is
+       punishment with no action behind it, which is exactly what the road is
+       not supposed to hand out. A scarred rope or a mismatched claw set still
+       carries the real percentage the bench quoted — it is just resolved
+       ONLY at the moment a hazard actually lands on them (see the hazard-hit
+       branch below), so the flaw in the gear makes an avoidable mistake cost
+       more instead of taxing a clean walk. */
 
     // spawn drips — a touch calmer so a slower road doesn't feel crowded, and the
     // hazard drip tightens as the road escalates (DEPTH_PLAN §3.3, the difficulty curve)
@@ -16015,18 +15998,30 @@ function tick(t){
               const soft = M.stats.safety<15 ? 1.35 : 1;
               const mult = (counter && counter.half) ? 0.5 : 1;
               const flowBite = M.flow?1.3:1;   // the road stops being careful with you in flow
+              // A rope braided with missed beats, or a claw set whose three angles
+              // disagree, carries the exact chance the bench quoted — but it is only
+              // rolled once something has already gone wrong (a hazard connecting on
+              // the ledge), never on a clean walk. The flaw in the gear decides how
+              // much an avoidable mistake costs, not whether one gets invented.
+              const slips = M.lane===0 && M.forge.slipChance>0 && Math.random()<M.forge.slipChance;
+              const slipMult = slips ? 1.6 : 1;
               // the power share goes through spendPower() so running dry on a hit
               // announces itself the same way running dry on a lunge does
               Object.keys(hz.dmg).forEach(k=>{
-                const amt = hz.dmg[k]*rel*soft*mult*diffCurve.dmg*flowBite;
+                const amt = hz.dmg[k]*rel*soft*mult*diffCurve.dmg*flowBite*slipMult;
                 if(k==="power") spendPower(amt, `${hz.name} went straight through them`);
                 else M.stats[k]=clamp(M.stats[k]-amt,0,100);
               });
-              if(hz.slow) M.slowT=hz.slow*mult;
+              if(hz.slow) M.slowT=hz.slow*mult*(slips?1.3:1);
               if(hz.dropLane){ M.targetY=clamp(M.targetY+M.cv.height*0.13, roadMinY(), roadMaxY()); M.laneFlashT=0.5;
                 caption("The scree carries them bodily down the slope!"); }
+              else if(slips){
+                const it=(M.forge.itemFor&&(M.forge.itemFor.climb||M.forge.itemFor.descend));
+                caption(it ? flashItem(it,"slipped",`gives right as ${hz.name} catches them — the weak spot you braided into it, found at the worst moment.`)
+                           : `The line gives right as ${hz.name} catches them — they scramble back onto the rock.`);
+              }
               else caption(counter? counter.txt : `They take ${hz.name} head-on — a wrong lane costs them.`);
-              pop(sx,M.laneY-70, counter?"glancing hit":"hit!", !counter);
+              pop(sx,M.laneY-70, slips?"the line slips!":(counter?"glancing hit":"hit!"), !counter);
               Audio2.sfx.bad(); FX.buzz(counter?16:30); updatePrepBars();
               if(!counter) knockMomentum();   // a clean hit breaks the chain and drops the multiplier
               // the noise draws the enemy: any active or pending ambush closes in faster
@@ -18200,6 +18195,10 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     if(inGateCorridor(p)) return null;
     M.hazards.push({p, lane, u:LANES[lane].u, kind, hit:false, passed:false}); return M.hazards.length; },
   _hazards:()=>M&&M.hazards,
+  _spawnPickupAt:(p,lane)=>{ if(!M) return null;
+    const pk={p, lane, u:LANES[lane].u, type:"ink", ink:1, got:false};
+    M.pickups.push(pk); return M.pickups.length; },
+  _pickups:()=>M&&M.pickups,
   HAZARDS,
   _screenX:(p)=>screenX(p),
   _objY:(o)=>objY(o),

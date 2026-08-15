@@ -6,7 +6,8 @@
    2. The road's HUD is stamina / power / speed, and each is a different KIND of
       thing: a clock that only falls, a reserve that is spent, and a readout.
    3. Stamina falls with time. Power does not — it falls when a lunge LANDS on
-      something real, and when a hazard lands on the squad.
+      a word-part or a raider, and when a hazard lands on the squad. A lunge
+      cannot touch a hazard: those are dodged by moving, never clicked away.
    4. Power at zero does not end the run; it makes the stamina clock accelerate,
       and keep accelerating the longer the squad stays spent.
    5. The river floor is the way back: it returns power and unwinds the burn.
@@ -144,23 +145,37 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(M.stats.power >= t0.pw - 0.001,
     `reserve: power does NOT fall with time — it is spent, not drained (${t0.pw} → ${M.stats.power.toFixed(1)})`);
 
-  /* ---- a lunge that lands on something spends it; one into thin air does not ---- */
-  M.hazards.length = 0;
+  /* ---- a lunge that lands on a word-part spends it; one into thin air does not ---- */
+  M.hazards.length = 0; M.pickups.length = 0;
   M.stats.power = 90; M.lungeCd = 0;
   MI._lunge(10, 10);                         // nothing whatsoever at that spot
   const afterMiss = M.stats.power;
   assert(90 - afterMiss <= 2.5,
     `power: a lunge into empty air is nearly free (${(90 - afterMiss).toFixed(1)} spent)`);
 
-  MI._spawnHazardAt(M.progress + 0.02, 1, 'rock');
-  const hz = M.hazards[M.hazards.length - 1];
-  assert(!!hz, 'power: a hazard is standing on the road to lunge at');
+  MI._spawnPickupAt(M.progress + 0.02, 1);
+  const pk = M.pickups[M.pickups.length - 1];
   M.stats.power = 90; M.lungeCd = 0;
-  MI._lunge(MI._screenX(hz.p), MI._objY(hz));
+  MI._lunge(MI._screenX(pk.p), MI._objY(pk));
   const afterHit = M.stats.power;
   assert(90 - afterHit >= 4,
     `power: a lunge that LANDS on something really there costs a bite of power (${(90 - afterHit).toFixed(1)} spent)`);
   assert(afterHit < afterMiss, 'power: connecting is what is expensive, not clicking');
+
+  /* ---- and a lunge CANNOT touch a hazard — hazards are dodged by moving,
+     never clicked away, even by an ability nobody had to build. Clicking
+     square on one costs exactly what an empty click costs, and it is still
+     standing on the road afterwards. ---- */
+  M.pickups.length = 0;
+  MI._spawnHazardAt(M.progress + 0.02, 1, 'rock');
+  const hz = M.hazards[M.hazards.length - 1];
+  assert(!!hz, 'power: a hazard is standing on the road to aim at');
+  M.stats.power = 90; M.lungeCd = 0;
+  MI._lunge(MI._screenX(hz.p), MI._objY(hz));
+  const afterHazard = M.stats.power;
+  assert(90 - afterHazard <= 2.5,
+    `power: clicking a hazard costs the same near-nothing as clicking empty air (${(90 - afterHazard).toFixed(1)} spent)`);
+  assert(!hz.hit && !hz.passed, 'power: a lunge does not clear a hazard off the road — it has to be dodged, not clicked');
 
   /* ---- and every hazard in the table takes power when it lands on them ---- */
   const noBite = Object.keys(MI.HAZARDS).filter(k => !(MI.HAZARDS[k].dmg && MI.HAZARDS[k].dmg.power > 0));
