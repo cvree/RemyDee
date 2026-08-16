@@ -29,20 +29,28 @@ editing across blocks.
 
 Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 `DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`, `TRIALS_PASS.md`,
-`BENCH_PASS.md`, `HALL_PASS.md`, `FEEL_PASS.md` — read `BENCH_PASS.md` first (it
-deleted a lot of what the older ones describe), then `HALL_PASS.md`, then
-`FEEL_PASS.md`, which is the most recent and is about what the road *says*
-rather than what it does.
+`BENCH_PASS.md`, `HALL_PASS.md`, `FEEL_PASS.md`, `WORD_PASS.md` — read
+`BENCH_PASS.md` first (it deleted a lot of what the older ones describe), then
+`HALL_PASS.md`, then `FEEL_PASS.md`, which is about what the road *says* rather
+than what it does, and then `WORD_PASS.md`, which is the most recent and asks
+the same question of the bench.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38; do node test$t.js | tail -1; done
 ```
 
-31 jsdom suites, **1272 assertions, all passing, zero window errors**.
+32 jsdom suites, **1362 assertions, zero window errors**.
+
+**One suite is intermittently red and it is not yours.** `test36`'s "ten forges
+end the session" assertion (`G().done >= 10`) fails on roughly one run in ten,
+at the same rate on `main` as on any branch — the forge session ends after a
+single successful round (`iters=2 stalls=0 done=1 over=true`), which looks like
+a session clock surviving a previous `startMode('forge')`. Re-run before you go
+hunting; if you do fix it, it is a Hall bug, not a test bug.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -228,6 +236,44 @@ Two defects fell out of it: the term banner sat at `top:6px` and hid **stamina**
 that raised it had healed the squad; and the Endless Road, which always ends by
 falling over, played `sfx.bad()` even on the run that beat everything.
 
+**9. The game is named for an act that wasn't a game.** See `docs/WORD_PASS.md`.
+The same question as the feel pass, asked of the bench: the Term Builder had two
+states, *not yet* and *done*, while every other system in the file has range —
+and for **33 of the 44 traveler builds it printed the answer before it asked the
+question**. A tier-1 tray held exactly the two tiles the hint above it had just
+named; tier 2 answered its own clue ("the clue points to inflammation of the
+stomach") underneath clues written specifically to pose that question.
+
+Distractors now run **2 / 3 / 4** across the tiers, dealt round-robin per kind —
+gastritis could previously draw both its distractors as suffixes and leave the
+root position with a single candidate. Tier 1 keeps its definition (it is the
+first teaching moment) and pays for the withdrawn hint by **glossing the tiles**;
+the glosses come off at tier 2, which is the ladder. The definition is the
+**Recall meaning** charge now, so a support button that was nearly dead has a
+reason to exist.
+
+That moved the **pretest** with it: its `tier < 3` gate existed only because
+tier 2 printed the definition, so it now runs from 12 builds to 37. And it caught
+two clues that contained their term's definition word for word — cardiology and
+ophthalmology — which made the pretest a reading test with the answer on the
+screen behind the card. Both rewritten; `test38` guards the whole corpus.
+
+The **Scribe's Seal** names what was already there: `accuracy` is 0.42 of the
+road's `overall`, the largest single share, and nothing ever said so. Four grades
+(Unbroken / True / Smudged / Overwritten) on the wax, the card and the debrief,
+with a lifetime tally at `S().seals` written lazily so old saves need no
+migration. No new economy — the feel pass's lesson applied to the bench.
+
+And the **junction went live**. The combining vowel is the one thing this subject
+teaches that nothing else does, and it was a 20px bar revealed only in
+`onBuildSuccess` — after the player could no longer act on it. The seam now draws
+on adjacency, the losing vowel is struck through on the tile that owns it, a
+dropped vowel has a sound, and the assembly reads back what the pieces spell
+(borrowing the Hall's `wordOf`, now a public export, so the two places that join
+word-parts cannot disagree). Two layout defects fell out: the rule note was wider
+than the gap it sat in and printed "DROP O" across the word, and the assembly was
+full-bleed so a two-piece word sat in about thirty empty cells.
+
 ### What is left — verified, not speculation
 
 **Art.**
@@ -259,10 +305,16 @@ been profiled.
 - Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
 - Around 24 terms and 19 parts are never introduced by a traveler — they exist
   only as quiz material. `paraplegia` and `para-` just joined that list.
-- The pretest only fires on tier 3. Tiers 1 and 2 print the definition as their
-  own prompt, which is the reason — but that is a *builder* design choice worth
-  revisiting rather than a fact of nature. A tier-2 builder that withheld the
-  definition would earn a pretest and a harder, better minute.
+- ~~The pretest only fires on tier 3.~~ **Done** — the word pass withheld the
+  tier-2 definition and the gate moved with it (12 builds → 37). What is still
+  open is the tier-1 end of the same argument: tier 1 prints the definition as
+  its prompt, which is right for a first teaching moment but means seven builds
+  never ask for retrieval at all. A tier-1 *repeat* — the same traveler met
+  again later — could withhold it and earn the guess.
+- Around 24 terms and 19 parts are still never introduced by a traveler. The word
+  pass made the tray reach further into that pool as distractors, so more of them
+  are now at least *seen* under pressure, but seeing a part as a wrong answer is
+  not being taught it.
 
 **Never audited.** A bug-hunting pass on save corruption, quota-exceeded writes,
 private-mode localStorage and long-session listener growth was commissioned

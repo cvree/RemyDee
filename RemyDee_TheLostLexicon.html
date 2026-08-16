@@ -640,7 +640,14 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .build-prompt .def{margin-top:6px;font-size:.92rem;}
 .build-prompt .def b{color:var(--cinnabar);}
 
-.assembly{position:relative;min-height:128px;border-radius:10px;margin:12px 0;
+/* The assembly was full-bleed with a 38px rule repeating across it, so on a
+   desktop a two-piece word sat in the middle of about thirty empty cells and
+   the box read as a field rather than a line of writing. Capped and centred:
+   wide enough for the longest build in the corpus, never wide enough to look
+   mostly empty. The cap does not leak the piece count — every word gets the
+   same box. */
+.assembly{position:relative;min-height:112px;border-radius:10px;margin:12px auto;
+  max-width:34rem;
   background:
     repeating-linear-gradient(90deg,transparent 0 38px,rgba(120,90,50,.05) 38px 39px),
     linear-gradient(180deg,#fbf6e8,#f0e7d0);
@@ -654,16 +661,39 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .assembly .placeholder{color:var(--verd-deep);font-style:italic;opacity:.7;font-family:var(--font-orn);font-size:1.05rem;}
 .slotted{display:flex;align-items:center;gap:2px;flex-wrap:wrap;justify-content:center;}
 /* connector stroke between placed tiles */
-.connector{width:20px;height:6px;align-self:center;position:relative;}
+/* 20px was the width of a decorative stroke; the rule note that now rides on
+   it is ~34px and nowrap, so it overhung both neighbouring tiles and printed
+   "drop o" across the word. The gap is sized to the note it has to carry. */
+.connector{width:46px;height:6px;align-self:center;position:relative;flex:0 0 46px;}
 .connector::after{content:"";position:absolute;left:0;top:50%;height:3px;width:0%;transform:translateY(-50%);
   background:var(--ink);border-radius:2px;opacity:.55;transition:width .35s var(--ease);}
 .connector.drawn::after{width:100%;}
 .connector.rule-keep::after{background:var(--verd-deep);}
 .connector.rule-drop::after{background:var(--cinnabar);}
-.connector .cv-note{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:.58rem;
-  white-space:nowrap;font-weight:700;color:var(--verd-deep);opacity:0;transition:opacity .3s;}
+.connector .cv-note{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:.58rem;
+  white-space:nowrap;font-weight:700;color:var(--verd-deep);opacity:0;transition:opacity .3s;
+  letter-spacing:.04em;text-transform:uppercase;
+  /* the note sits inside the tile band, so it carries its own ground rather
+     than reading as text printed over the two tiles either side of it */
+  background:#fbf6e8;padding:1px 3px;border-radius:2px;}
 .connector.drawn .cv-note{opacity:1;}
 .connector.rule-drop .cv-note{color:var(--cinnabar);}
+/* the vowel the junction takes away, struck through on the tile that owns it.
+   Not hidden — struck — because the point is that the player sees which
+   letter left and why, not that the tile quietly changes spelling. */
+.cv-gone{position:relative;opacity:.4;}
+.cv-gone::after{content:"";position:absolute;left:-1px;right:-1px;top:52%;height:2px;
+  background:var(--cinnabar);transform:scaleX(0);transform-origin:left center;
+  animation:cvStrike .26s var(--ease) forwards;}
+@keyframes cvStrike{to{transform:scaleX(1);}}
+.tile.cv-drops{border-bottom:2px solid rgba(181,50,43,.35);}
+/* what the placed pieces currently spell. A mirror, not a verdict — it says
+   how the rules join what is down, never whether it is the right word. */
+.build-reads{text-align:center;font-family:var(--font-orn);font-size:.92rem;
+  color:var(--verd-deep);margin:-2px 0 10px;letter-spacing:.02em;}
+.build-reads b{font-family:var(--font-cal);font-size:1.16rem;color:var(--ink);
+  letter-spacing:.01em;margin-left:.35em;}
+@media (prefers-reduced-motion: reduce){ .cv-gone::after{animation:none;transform:scaleX(1);} }
 
 .tile{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
   min-width:76px;padding:10px 14px;border-radius:9px;user-select:none;
@@ -685,6 +715,13 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .tile[data-kind="suffix"]{border-top:3px solid var(--cinnabar);}
 .tile.in-slot{box-shadow:0 3px 0 #c3ab7d,0 4px 8px var(--shadow);cursor:pointer;}
 .tile.mini{min-width:auto;padding:6px 10px;cursor:default;}
+/* the tier-1 gloss. "ROOT" is a label and wants tracking and capitals;
+   "inflammation" is a phrase and wants neither, so it drops the uppercase
+   treatment, gains a line height and is allowed to wrap on a narrow tile. */
+.tile .kind.gloss{font-size:.68rem;letter-spacing:0;text-transform:none;font-weight:600;
+  font-style:italic;line-height:1.15;margin-top:5px;max-width:11ch;white-space:normal;
+  color:var(--verd-deep);opacity:.92;}
+.tile:has(.kind.gloss){min-width:86px;}
 .tile.mini .part{font-size:.95rem;}
 .tile.placed-pop{animation:placePop .34s var(--ease-back);}
 @keyframes placePop{0%{transform:scale(.6) translateY(-8px);}60%{transform:scale(1.08);}100%{transform:scale(1);}}
@@ -738,6 +775,31 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .reveal-break{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0;}
 .reveal-def{font-size:.95rem;color:var(--ink-soft);margin-bottom:6px;}
 .reveal-plain{font-size:.88rem;color:var(--verd-deep);}
+/* THE SCRIBE'S SEAL — the grade the naming earned, on the card that opens
+   the moment it is earned. Sits under the pronunciation as one quiet line;
+   it is a verdict on how the word was reached, not a reward popup, so it
+   gets a rule above it and no animation of its own beyond the wax landing. */
+.seal-grade{display:flex;align-items:center;justify-content:center;gap:10px;
+  margin:14px auto 2px;padding:9px 14px 8px;max-width:26rem;
+  border-top:1px solid var(--gold-soft);border-bottom:1px solid var(--gold-soft);}
+.seal-grade .sg-mark{display:inline-flex;align-items:center;justify-content:center;
+  width:26px;height:26px;flex:0 0 26px;border-radius:var(--r-sm,3px);
+  font-family:var(--font-cal);font-size:.94rem;line-height:1;
+  background:var(--verd);color:#f6edd6;box-shadow:0 2px 0 rgba(0,0,0,.16);}
+.seal-grade .sg-text{text-align:left;}
+/* both are spans inside one span, so without this the grade name and the
+   reason for it ran together as a single line of prose */
+.seal-grade .sg-name,.seal-grade .sg-why{display:block;}
+.seal-grade .sg-name{font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:700;color:var(--verd-deep);margin-bottom:2px;}
+.seal-grade .sg-why{font-size:.78rem;color:var(--ink-soft);line-height:1.3;}
+.seal-grade .sg-why b{color:var(--verd-deep);font-weight:700;}
+/* the grade is carried by the word and the mark, never by the colour alone —
+   colour only deepens what the text already says */
+.seal-grade[data-seal="unbroken"] .sg-mark{background:var(--cinnabar);}
+.seal-grade[data-seal="smudged"] .sg-mark{background:#9a7d46;}
+.seal-grade[data-seal="overwritten"] .sg-mark{background:#8a7a68;}
+.seal-grade[data-seal="unbroken"]{border-color:rgba(181,50,43,.4);}
 /* THE PRETEST — a guess asked before the answer is shown. Sized so the three
    options and the question fit the card without pushing the continue button
    off a phone screen. */
@@ -2600,9 +2662,10 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
 
           <div class="tray-label">Assembly &mdash; drag parts here, left to right</div>
           <div class="assembly" id="assembly" aria-label="Word assembly area">
-            <span class="placeholder" id="assembly-ph">Prefix &middot; Root &middot; Suffix</span>
+            <span class="placeholder" id="assembly-ph">Drop the pieces here, in reading order</span>
             <div class="slotted" id="slotted"></div>
           </div>
+          <div class="build-reads" id="build-reads" aria-live="polite" hidden></div>
 
           <div class="tray-label">Word parts</div>
           <div class="tray" id="tray"></div>
@@ -2626,6 +2689,11 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <div class="reveal-pron" id="reveal-pron"></div>
           <div class="reveal-pretest" id="reveal-pretest" hidden></div>
           <div class="reveal-body" id="reveal-body">
+            <!-- inside the body, not above it: the pretest deliberately shows
+                 the word and nothing else, and a verdict sitting over that
+                 question is exactly the clutter it was built to remove. The
+                 seal lands with the card it belongs to. -->
+            <div class="seal-grade" id="reveal-seal" hidden></div>
             <div class="reveal-break" id="reveal-break"></div>
             <div class="reveal-def" id="reveal-def"></div>
             <div class="reveal-plain" id="reveal-plain"></div>
@@ -3500,7 +3568,11 @@ const TRAVELERS = {
     concern:"Hungry companies quarrel. I keep the pot full.",
     packCap:7, pace:0.9, strength:"stretches rations across long roads" },
   yun:   { name:"Eunike the Scholar", role:"scholar", color:"#6a5a8a", tier:3, term:"cardiology", 
-    clue:"The recovered page names a whole discipline — the study of the heart. Keep the o before -logy.",
+    /* the clue used to hand over the definition word for word, and the reveal
+       then asked the player to guess that same definition off a card with it
+       still on the screen behind. It points at the organ and the shape of the
+       word now; the meaning is the thing being asked for. */
+    clue:"The recovered page names a whole discipline, not an ailment — what a physician who spends their life on the heart calls their own field. Keep the o before -logy.",
     concern:"The Archive alters definitions. I check every seal.",
     packCap:5, pace:0.9, strength:"grants an extra hint from old study" },
   hua:   { name:"Hylas the Physician", role:"healer", color:"#3a6a5a", tier:2, term:"neuralgia",
@@ -3577,7 +3649,7 @@ const TRAVELERS = {
     packCap:5, pace:0.85, strength:"catches the error others miss" },
   /* ---- Lantern House companions (ch5) ---- */
   biyu:  { name:"Berenike the Lamp-Keeper", role:"scholar", color:"#8a7a5a", tier:2, term:"ophthalmology",
-    clue:"The traveling eye-healer needs her discipline's true name for the guild seal — the study of the eyes, precisely.",
+    clue:"The traveling eye-healer needs her discipline's true name for the guild seal — the whole field of the eyes, not one complaint of them.",
     concern:"Every lantern I tend guides someone else's eyes, never my own reading.",
     packCap:5, pace:0.9, strength:"keeps every lamp lit through the fog" },
   yewen: { name:"Evander the Nerve-Physician", role:"healer", color:"#3a6a6a", tier:2, term:"neuropathy",
@@ -5608,6 +5680,10 @@ function newGame(){
        the bar down in silence instead of announcing five records in ninety
        seconds (see beatMark). */
     marks:{ chain:0, momentum:0, realTerms:0, streak:0, distance:0, graze:0 },
+    /* a lifetime count per Scribe's Seal grade. Written lazily by
+       onBuildSuccess too, so an older save grows one on its next named term
+       rather than needing a migration step. */
+    seals:{},
     finished:false
   };
 }
@@ -10770,18 +10846,36 @@ let builderState=null, bAttempts=0, bSupportUsed=0, bViewedDef=false;
    definition. The pretest needs the narrower fact: was the player actually
    handed the meaning before being asked to guess it? */
 let bDefShown=false;
+/* Distractors are drawn same-kind — a look-alike is only a look-alike if it
+   could plausibly stand in the same position — and weak-first, so the tray
+   keeps asking about the parts the player keeps missing.
+
+   ONE PER POSITION BEFORE TWO ANYWHERE. This used to sort one flat pool and
+   slice it, so gastritis (a root and a suffix) could draw both its
+   distractors as suffixes and leave gastr/o as the only root on the tray:
+   the root position was not a choice at all, which is half the word. The
+   pool is per-kind now and dealt round-robin, so every position the word
+   needs has at least one wrong answer standing next to the right one before
+   any position gets a second. */
 function distractorsFor(neededIds, count){
   if(count<=0) return [];
   const need=new Set(neededIds);
   const byKind={}; Object.keys(PARTS).forEach(id=>{ const k=PARTS[id].kind; (byKind[k]=byKind[k]||[]).push(id); });
   const seen=new Set(seenParts()); const weak=new Set(weakParts());
-  const pool=[];
-  neededIds.forEach(nid=>{ const kind=PARTS[nid].kind;
-    (byKind[kind]||[]).forEach(id=>{ if(!need.has(id)) pool.push(id); }); });
-  const uniq=Array.from(new Set(pool));
-  uniq.sort((a,b)=>{ const sa=(weak.has(a)?2:0)+(seen.has(a)?1:0); const sb=(weak.has(b)?2:0)+(seen.has(b)?1:0);
-    return sb-sa || Math.random()-0.5; });
-  return uniq.slice(0,count);
+  const rank=(a,b)=>{ const sa=(weak.has(a)?2:0)+(seen.has(a)?1:0); const sb=(weak.has(b)?2:0)+(seen.has(b)?1:0);
+    return sb-sa || Math.random()-0.5; };
+  // one queue per kind the word actually uses, in the word's own order
+  const kinds=[]; neededIds.forEach(nid=>{ const k=PARTS[nid].kind; if(!kinds.includes(k)) kinds.push(k); });
+  const queues=kinds.map(k=>Array.from(new Set((byKind[k]||[]).filter(id=>!need.has(id)))).sort(rank));
+  const out=[];
+  let drained=false;
+  while(out.length<count && !drained){
+    drained=true;
+    for(let i=0;i<queues.length && out.length<count;i++){
+      if(queues[i].length){ out.push(queues[i].shift()); drained=false; }
+    }
+  }
+  return out;
 }
 function currentTraveler(){ const f=E.getFlow(); return TRAVELERS[f.builders[f.idx]]; }
 function openBuilder(){
@@ -10796,22 +10890,38 @@ function openBuilder(){
     $('#build-forrole').textContent=t.role;
     $('#build-progress').textContent=`Term ${f.idx+1} / ${f.builders.length}`;
     const needed=term.build.slice(); needed.forEach(markPartSeen);
-    const dCount = t.tier===1?0 : t.tier===2?2:3;
+    /* THE TRAY IS THE QUESTION.
+       Tier 1 used to be handed zero distractors while the line above the tray
+       named both parts it wanted and what each one meant — so the tray held
+       exactly two tiles, both of them named a second earlier, and the first
+       act of a game about building words asked nothing at all. Every tier
+       carries look-alikes now, drawn same-kind and weak-first by
+       distractorsFor, and the ladder is felt: 2 / 3 / 4. */
+    const dCount = t.tier===1?2 : t.tier===2?3:4;
     const distract=distractorsFor(needed,dCount);
     const trayIds=shuffle(needed.concat(distract));
-    builderState={ term:t.term, needed, placed:[], trayIds, solved:false };
+    /* GLOSSED — tier 1 prints each tile's meaning on the tile. That is what
+       makes withdrawing the "you need X and Y" line fair rather than cruel:
+       a player who has never seen gastr/o can still reason "inflammation of
+       the stomach" down to the piece that means stomach and the piece that
+       means inflammation, which is the actual skill. Tiers 2 and 3 take the
+       glosses away, and that removal is the difficulty curve. */
+    builderState={ term:t.term, needed, placed:[], trayIds, solved:false, glossed:t.tier===1 };
     const modeLabel = t.tier===1?"Recognition":t.tier===2?"Construction":"Application";
     $('#build-mode-label').textContent=modeLabel;
     if(t.tier===1){
       $('#build-question').innerHTML=`Build the word for <b>${term.def}</b>.`;
-      $('#build-hintline').innerHTML="Drag or tap each part into place, left to right. You need: "+
-        needed.map(id=>`<b>${PARTS[id].text}</b> (${PARTS[id].mean})`).join(", ")+".";
+      $('#build-hintline').innerHTML=`Every piece carries one idea, and the tray says what each one means. Take the ${["","one","two","three","four","five"][needed.length]||needed.length} that add up to the answer, left to right &mdash; and watch the ones that nearly do.`;
     } else if(t.tier===2){
+      /* The clue is the prompt and nothing repeats it. These clues were
+         written to pose the question — "not -itis, give me the pain term"
+         is arthralgia against arthritis — and printing the definition
+         underneath answered the very confusion the clue had just set up. */
       $('#build-question').innerHTML=`&ldquo;${t.clue}&rdquo;`;
-      $('#build-hintline').innerHTML=`The clue points to <b>${term.def}</b>. Choose only the parts you need, in order — watch for look-alikes.`;
+      $('#build-hintline').innerHTML="Name the term from what they tell you, and build it. The tray holds more pieces than the word needs &mdash; <b>Recall meaning</b> will spend a charge to tell you the meaning outright.";
     } else {
       $('#build-question').innerHTML=`&ldquo;${t.clue}&rdquo;`;
-      $('#build-hintline').innerHTML="Recall the term from the clinical clue and build it. No breakdown is shown.";
+      $('#build-hintline').innerHTML="Recall the term from the clinical clue and build it. No breakdown, no meanings &mdash; only the pieces.";
     }
     renderTray(); renderSlots(); renderBuildSupport();
     const fb=$('#build-feedback'); fb.className="build-feedback"; fb.innerHTML="";
@@ -10830,8 +10940,15 @@ function tileEl(id, inSlot){
   // Don't reveal whether a tile is a prefix/root/suffix before the term is solved —
   // that would trivialize ordering (assembly is always prefix → root → suffix).
   const solved = builderState && builderState.solved;
+  /* At tier 1 the tile carries its meaning, because the line above the tray
+     no longer names the pieces the word wants. The gloss is what the player
+     reasons over \u2014 "inflammation of the stomach" against a tray that says
+     stomach, kidney, inflammation, pain \u2014 so it replaces the kind slot
+     rather than crowding it, and gives way to prefix/root/suffix once the
+     seal is stamped and the ordering can no longer be given away. */
+  const gloss = !solved && builderState && builderState.glossed;
   t.setAttribute("aria-label", `${p.text}, ${p.mean}. ${inSlot?'Tap to remove':'Tap to place'}`);
-  t.innerHTML=`<span class="part">${p.text}</span><span class="kind"${solved?'':' style="visibility:hidden"'}>${solved?p.kind:'\u00A0'}</span>`;
+  t.innerHTML=`<span class="part">${p.text}</span><span class="kind${gloss?' gloss':''}"${(solved||gloss)?'':' style="visibility:hidden"'}>${solved?p.kind:gloss?p.mean:'\u00A0'}</span>`;
   return t;
 }
 /* ONE LANGUAGE FOR BUILDING A WORD, IN BOTH PLACES IT HAPPENS.
@@ -10843,9 +10960,17 @@ function tileEl(id, inSlot){
    sound, and a player arriving on the road already knows what the rising
    phrase means. */
 function placePart(id){
+  const prev=builderState.placed[builderState.placed.length-1];
   builderState.placed.push(id);
   const step=builderState.placed.length-1;
   if(Audio2.sfx.chain) Audio2.sfx.chain(step); else Audio2.sfx.snap();
+  /* a vowel leaving the word gets its own sound, a beat behind the rung that
+     placed the piece. The rule is the game's one signature piece of
+     knowledge and it used to happen in complete silence. */
+  if(prev && cvRule(prev,id).type==="drop"){
+    setTimeout(()=>{ (Audio2.sfx.paper||Audio2.sfx.snap)(); }, 90);
+    FX.buzz(6);
+  }
   FX.buzz(10+Math.min(8,step*4));
 }
 function renderTray(){
@@ -10867,6 +10992,34 @@ function cvRule(leftId,rightId){
   }
   return {type:"none",note:""};
 }
+/* ==================================================================
+   THE JUNCTION IS THE SIGNATURE ACT.
+   The combining vowel — gastr/o + -itis is gastritis, gastr/o + -logy is
+   gastrology — is the one piece of knowledge in this game that belongs to
+   medical terminology and to nothing else. A player who owns it can spell a
+   word they have never met. It is the most distinctive thing the game has
+   to teach.
+
+   It was a three-pixel bar and a 0.58rem note between two tiles, and both
+   were invisible until `.drawn` was added — which happened in exactly one
+   place, onBuildSuccess. So the rule was revealed only after the player had
+   already finished the word, at the moment they could no longer act on it,
+   and only to players who had got it right anyway.
+
+   Now the seam is live. Put two tiles together and the junction says what it
+   does to them, the losing vowel is struck through on the tile it belongs
+   to, and the assembly reads out the word the pieces currently spell. None
+   of that says whether the word is the RIGHT one — that is still the
+   player's problem, and stamping it is still a decision — but how the
+   pieces join stops being a secret kept until after the test.
+   ================================================================== */
+function joinedWord(ids){
+  if(!ids || ids.length<2) return null;
+  const W = window.__RD_ARCADE && window.__RD_ARCADE.wordOf;
+  if(!W) return null;
+  const r = W(ids);
+  return r && r.word ? r.word : null;
+}
 function renderSlots(){
   const slot=$('#slotted'); slot.innerHTML="";
   const ph=$('#assembly-ph'); ph.style.display=builderState.placed.length?"none":"";
@@ -10875,14 +11028,33 @@ function renderSlots(){
       const rule=cvRule(builderState.placed[idx-1],id);
       const con=el("div","connector"+(rule.type==="drop"?" rule-drop":rule.type==="keep"?" rule-keep":""));
       if(rule.note) con.innerHTML=`<span class="cv-note">${rule.note}</span>`;
-      if(builderState.solved) con.classList.add("drawn");
+      /* drawn as soon as the two pieces are adjacent, not as a reward for
+         having finished — the rule is only teachable while it can still
+         change what the player does next */
+      con.classList.add("drawn");
       slot.appendChild(con);
     }
     const t=tileEl(id,true);
+    /* the vowel this junction takes away, struck through on the tile that
+       owns it: the player watches gastr/o become gastr */
+    const nxt=builderState.placed[idx+1];
+    if(nxt && cvRule(id,nxt).type==="drop"){
+      const p=PARTS[id], span=$('.part',t);
+      if(p && p.cv && span) span.innerHTML=`${p.stem||p.text}<span class="cv-gone">/${p.cv}</span>`;
+      t.classList.add("cv-drops");
+    }
     if(builderState.solved) t.disabled=true;
     else t.onclick=()=>{ builderState.placed.splice(idx,1); Audio2.sfx.paper(); syncBuilder(); };
     slot.appendChild(t);
   });
+  /* what the pieces currently spell, joined by the rules above. Not a
+     verdict — a mirror. */
+  const read=$('#build-reads');
+  if(read){
+    const w=joinedWord(builderState.placed);
+    if(w && !builderState.solved){ read.hidden=false; read.innerHTML=`reads <b>${w}</b>`; }
+    else read.hidden=true;
+  }
 }
 function syncBuilder(pop){
   renderTray(); renderSlots();
@@ -10982,6 +11154,48 @@ function renderNamingRecord(){
     + (bSupportUsed?` · ${bSupportUsed} support used`:"")
     + (debt?` · <span class="build-cost">${debt} ember${debt>1?"s":""} owed to the bench</span>`:"");
 }
+/* ==================================================================
+   THE SCRIBE'S SEAL.
+   Every other system in this game has range. The bench runs ruined →
+   flawed → ok → fine → masterwork and tells you which you got. The road
+   runs ×1 → ×5 with four named gears and a sound for each crossing. The
+   Hall gives you three lives and a clock. The builder — the act the game
+   is named for — had exactly two states: not yet, and done.
+
+   That was never for want of a signal. `accuracy` has been computed here
+   for a long time, it survives into f.results, and at 0.42 it is the
+   single largest term in the road's `overall` — larger than the whole
+   bench. A player who named every term first time walked an easier road
+   than one who guessed their way through, and the game never once told
+   them that was why.
+
+   So the number gets a name, a face on the wax, and a sentence saying
+   what it bought. No new economy: this is the FEEL_PASS question asked of
+   the bench instead of the road — when the player does this well, how do
+   they find out?
+   ================================================================== */
+const SEAL_GRADES=[
+  { id:"unbroken",    at:1.00, name:"Unbroken",    mark:"Α",
+    why:"Named first time, unaided." },
+  { id:"true",        at:0.72, name:"True",        mark:"Β",
+    why:"Named right, with a little working." },
+  { id:"smudged",     at:0.50, name:"Smudged",     mark:"Γ",
+    why:"Named right, but the page shows the working." },
+  { id:"overwritten", at:0.00, name:"Overwritten", mark:"Δ",
+    why:"Named at last — the sheet was rewritten more than once." }
+];
+function sealFor(accuracy){
+  return SEAL_GRADES.find(g=>accuracy>=g.at-1e-9) || SEAL_GRADES[SEAL_GRADES.length-1];
+}
+/* What the seal bought, in the player's own units. termScore is 42% of the
+   road's overall — the biggest single share — so a seal is worth saying out
+   loud in terms of the walk it is about to pay for. */
+function sealPayoff(g){
+  return { unbroken:"The company sets out sure of the word.",
+           true:"The company sets out steady.",
+           smudged:"The company sets out, the word half-trusted.",
+           overwritten:"The company sets out doubting the word." }[g.id];
+}
 function onBuildSuccess(){
   builderState.solved=true;
   const f=E.getFlow(); const tid=f.builders[f.idx];
@@ -11007,7 +11221,12 @@ function onBuildSuccess(){
   FX.inkBloom($('#assembly'));
   let acc=1-(bAttempts-1)*0.22-bSupportUsed*0.12;
   const accuracy=clamp(acc,0.35,1);
-  f.results[tid]={accuracy, attempts:bAttempts, supportUsed:bSupportUsed, viewedDef:bViewedDef, solved:true, term:builderState.term};
+  const seal=sealFor(accuracy);
+  f.results[tid]={accuracy, seal:seal.id, attempts:bAttempts, supportUsed:bSupportUsed, viewedDef:bViewedDef, solved:true, term:builderState.term};
+  /* a lifetime tally, so a player who has started naming everything first
+     time can see that that is what they are now doing */
+  const seals=S().seals||(S().seals={});
+  seals[seal.id]=(seals[seal.id]||0)+1;
   const M=S().mastery.terms[builderState.term];
   M.construction=true; M.recognition=true;
   if(bViewedDef) M.definition=true;
@@ -11030,13 +11249,15 @@ function onBuildSuccess(){
    It is skipped whenever the guess would be free, because a question with an
    obvious answer is not a pretest, it is a tap between the player and the
    card. Four gates:
-     - TIER 3 ONLY. A tier-1 builder prints "Build the word for inflammation
-       of the stomach" at the top of the screen, and a tier-2 builder says
-       "the clue points to inflammation of the stomach" under it. Asking a
-       player to guess a definition that is on screen behind the card is not
-       retrieval, it is a reading test. Tier 3 is the one mode that shows the
-       clinical clue and nothing else — "no breakdown is shown" — so it is
-       the one mode where the guess costs something to make.
+     - TIER 2 AND UP. A tier-1 builder prints "Build the word for inflammation
+       of the stomach" at the top of the screen, and asking a player to guess
+       a definition that is on screen behind the card is not retrieval, it is
+       a reading test. Tier 2 used to print it too — "the clue points to
+       inflammation of the stomach" — and that hint, not anything about the
+       tier itself, was the whole reason this gate read `< 3`. The hint is
+       gone: tier 2 now shows the clinical clue and nothing else, exactly as
+       tier 3 does, so it earns the question. That moves the pretest from 12
+       builds to 37 of the campaign's 44.
      - the player spent a Recall charge and was handed the definition anyway;
      - they have already recorded this term, so this is a repeat;
      - the term has no SIBLING in the corpus — no other term sharing a
@@ -11083,9 +11304,29 @@ function showReveal(term){
   $('#reveal-plain').textContent="In plain words: "+term.plain+". Body system: "+term.system+".";
   $('#reveal-note').innerHTML="<b>Word-building rule.</b> "+term.note+
     ` <span class="muted">Naming this term is a vocabulary exercise — it is not a diagnosis of any person.</span>`;
+  /* THE SEAL, ON THE CARD THAT OPENS THE MOMENT IT IS EARNED.
+     The wax carries the grade's own mark rather than a fixed sigma, so the
+     signature beat of the game says something about the naming that caused
+     it. Read from f.results — the reveal is also opened by the Lexicon and
+     by a repeat, where there is no fresh result and no grade to give. */
+  const res = f.results && f.results[f.builders[f.idx]];
+  const grade = res && res.seal ? SEAL_GRADES.find(g=>g.id===res.seal) : null;
+  const sealEl=$('#reveal-seal');
+  if(sealEl){
+    if(grade){
+      sealEl.hidden=false;
+      sealEl.dataset.seal=grade.id;
+      sealEl.innerHTML=`<span class="sg-mark" aria-hidden="true">${grade.mark}</span>`
+        +`<span class="sg-text"><span class="sg-name">Seal: ${grade.name}</span>`
+        +`<span class="sg-why">${grade.why} ${sealPayoff(grade)}</span></span>`;
+      sealEl.setAttribute("aria-label",`Scribe's seal: ${grade.name}. ${grade.why}`);
+    } else { sealEl.hidden=true; sealEl.removeAttribute("data-seal"); }
+  }
   Audio2.sfx.great();
   const rev=$('#reveal'); rev.classList.add('show');
-  const stamp=$('#reveal-stamp'); if(stamp){ stamp.classList.remove("hit"); requestAnimationFrame(()=>stamp.classList.add("hit")); }
+  const stamp=$('#reveal-stamp');
+  if(stamp){ stamp.textContent = grade ? grade.mark : "Σ";
+    stamp.classList.remove("hit"); requestAnimationFrame(()=>stamp.classList.add("hit")); }
   const last = f.idx>=f.builders.length-1;
   $('#reveal-continue').textContent = last ? "Prepare the company →" : "Next term →";
   $('#reveal-continue').onclick=()=>{ rev.classList.remove('show');
@@ -11110,7 +11351,7 @@ function showReveal(term){
   const trav=currentTraveler();
   const repeat=(S().mastery.terms[termId] && (S().mastery.terms[termId].reps||0)>0);
   const sibs=pretestSiblings(term);
-  if(!pre || !body || !trav || trav.tier<3 || bDefShown || repeat || !sibs.length){
+  if(!pre || !body || !trav || trav.tier<2 || bDefShown || repeat || !sibs.length){
     if(pre) pre.hidden=true; body.hidden=false; return; }
 
   body.hidden=true; pre.hidden=false; pre.innerHTML="";
@@ -11361,6 +11602,9 @@ function renderSettings(){
 }
 
 window.__RD_SCREENS = { showTitle, startIntro, showHub, openChapter, openBuilder, openGloss, openSettings, renderLedger, renderChapters, showDifficulty,
+  /* the debrief lives in the MISSION block and each block is its own IIFE,
+     so the seal table has to be handed across rather than reached for */
+  SEAL_GRADES, sealFor, sealPayoff,
   _builderState:()=>builderState, _checkBuild:()=>checkBuild(), _placeCorrect:()=>{ if(builderState){ builderState.placed=builderState.needed.slice(); } } };
 })();
 </script>
@@ -18036,11 +18280,26 @@ function summaryLine(f,grade,st){
 }
 function consequenceLines(f,grade,st){
   const lines=[];
+  /* THE DEBRIEF SAYS WHICH SEAL EACH NAME CARRIED.
+     This was two outcomes either side of accuracy 0.7 — "carried your correct
+     term" or "took some correcting" — which put a first-time unaided naming
+     and one that cost two hints in the same sentence, and left the player no
+     way to see that the four grades exist at all. */
+  const SG=(window.__RD_SCREENS&&window.__RD_SCREENS.SEAL_GRADES)||[];
   f.builders.forEach(id=>{ const t=TRAVELERS[id]; if(!t)return; const res=f.results[id];
-    const good = res && res.accuracy>=0.7;
-    lines.push({ ic: good?"✓":"◦",
-      txt: good? `<b>${t.name}</b> carried your correct term to ${f.chapter.dest} — ${t.strength||'a task well done'}.`
-               : `<b>${t.name}</b> made it, though the term you gave took some correcting on the way.` });
+    const g = res && res.seal ? SG.find(x=>x.id===res.seal) : null;
+    const term = res && res.term && TERMS[res.term] ? TERMS[res.term].spell : "the term";
+    if(g){
+      const how = { unbroken:`named <b>${term}</b> first time, unaided`,
+                    true:`named <b>${term}</b> with a little working`,
+                    smudged:`named <b>${term}</b>, but the page showed the working`,
+                    overwritten:`reached <b>${term}</b> only after the sheet was rewritten` }[g.id];
+      lines.push({ ic: g.id==="unbroken"?"★":g.id==="true"?"✓":g.id==="smudged"?"◦":"warn",
+        txt: `<b>${t.name}</b> — seal <b>${g.name}</b>: you ${how}.`
+           + (g.id==="unbroken" ? ` ${t.strength||'They carried it well'}.` : "") });
+    } else {
+      lines.push({ ic:"◦", txt:`<b>${t.name}</b> reached ${f.chapter.dest} with their term unrecorded.` });
+    }
   });
   // forged gear and who carried it
   (f.forged||[]).forEach(it=>{
@@ -19811,6 +20070,9 @@ function cap(s){ s=String(s||""); return s.charAt(0).toUpperCase()+s.slice(1); }
    suite that only answers three questions. */
 window.__RD_ARCADE = { open, startMode,
   setRush:(v)=>{ A.rush=v; },
+  /* the bench spells its live junction with this too, so the two places that
+     join word-parts can never disagree about what the joined word is */
+  wordOf,
   _game:()=>A.game, _rush:()=>A.rushLive, _wordOf:wordOf, _makeRepair:makeRepair };
 })();
 </script>
