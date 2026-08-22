@@ -161,6 +161,21 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(deck2.filter(k => k === 'mud').length >= 2, 'wet weather deals more mud into the deck');
 
   /* ---- arrival → result → heirloom choice persists ---- */
+  /* The first road opens the walk school 620ms in and holds the road still
+     while it is up. This test times an arrival, so it has to be past that
+     timer AND out of the lesson before it unpauses — otherwise the tutorial
+     re-pauses the road underneath it and the walk never reaches the gate. */
+  await sleep(750);
+  const schoolBox = doc.querySelector('#road-school');
+  if (schoolBox && schoolBox.classList.contains('show')) {
+    const skip = doc.querySelector('#school-skip'), next = doc.querySelector('#school-next');
+    for (let i = 0; i < 12 && schoolBox.classList.contains('show'); i++) {
+      const btn = (skip && skip.style.display !== 'none') ? skip : next;
+      if (!btn) break;
+      btn.click();
+    }
+  }
+  assert(!schoolBox.classList.contains('show'), 'the walk school is done before the road is timed');
   M.evIdx = M.events.length;   // drain remaining planned stops — this test only checks arrival
   M.gate = null; M.paused = false; M.questionOpen = false;
   M.progress = 0.995;

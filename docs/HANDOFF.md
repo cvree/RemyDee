@@ -29,21 +29,23 @@ editing across blocks.
 
 Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 `DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`, `TRIALS_PASS.md`,
-`BENCH_PASS.md`, `HALL_PASS.md`, `FEEL_PASS.md`, `WORD_PASS.md` — read
-`BENCH_PASS.md` first (it deleted a lot of what the older ones describe), then
-`HALL_PASS.md`, then `FEEL_PASS.md`, which is about what the road *says* rather
-than what it does, and then `WORD_PASS.md`, which is the most recent and asks
-the same question of the bench.
+`BENCH_PASS.md`, `HALL_PASS.md`, `FEEL_PASS.md`, `WORD_PASS.md`,
+`VAMP_PASS.md` — read `BENCH_PASS.md` first (it deleted a lot of what the older
+ones describe), then `HALL_PASS.md`, then `FEEL_PASS.md`, which is about what
+the road *says* rather than what it does, then `WORD_PASS.md`, which asks the
+same question of the bench, and finally `VAMP_PASS.md`, the most recent, which
+withdrew hover-to-study and separated reward feedback from damage feedback —
+it supersedes `WALK_PASS.md` §2 and §5 wherever they disagree.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39; do node test$t.js | tail -1; done
 ```
 
-32 jsdom suites, **1362 assertions, zero window errors**.
+33 jsdom suites, **1397 assertions, zero window errors**.
 
 **One suite is intermittently red and it is not yours.** `test36`'s "ten forges
 end the session" assertion (`G().done >= 10`) fails on roughly one run in ten,
@@ -273,6 +275,44 @@ dropped vowel has a sound, and the assembly reads back what the pieces spell
 word-parts cannot disagree). Two layout defects fell out: the rule note was wider
 than the gap it sat in and printed "DROP O" across the word, and the assembly was
 full-bleed so a two-piece word sat in about thirty empty cells.
+
+**10. The walk was saying everything at once, and saying it wrong.** See
+`docs/VAMP_PASS.md`. Five things, all about feedback rather than systems:
+
+*Shake was congratulation.* One primitive, `FX.shake`, carried every loud moment
+in the game — flow, a momentum gear, a real term completing, and a lifetime best
+**washed in cinnabar**, the colour used everywhere else for a wound. The camera
+has a second verb now (`FX.swell`, a push-in, composed with shake in one loop)
+and a radial `FX.bloom` centred on the squad, so a reward reads as light coming
+out of the thing that earned it. Damage kept shake and got harder for it.
+
+*Hover-to-study is gone.* It put a card over the middle of the playfield and it
+drove the best rewards in the mode off **the hand that steers**. Gathering a part
+you have never met reads it instead (`readPart`) and pays more than hovering did;
+the Blank Page asks its seal question at gather time (`sealedFor`). Touch and
+mouse are finally the same mechanic.
+
+*A wrong rune gate is a wall.* It cost ×0.55 momentum and five stamina, which one
+chained word repaid in ten seconds — so the one beat that asks the player to
+*know* something was the cheapest thing on the road to fail. Now: ×0.22, −13
+stamina, −18 power, the half-built word in hand scattered, a 2.4s bar with a
+stagger back down the road, and a red slab dropped across the arch.
+
+*Items land.* Spending a forged charge was a caption and a buzz. It is a
+shockwave, a hold of up to 260ms, a bloom in the item's own colour and the piece
+naming itself and its tier on the road — every part of it scaled by quality, so a
+masterwork visibly is one.
+
+*And there is less on screen.* One reach ring instead of one per part; one voice
+per event instead of four (the banner owns the lesson, the caption stopped
+repeating it); the chain stake is `≈ 14 ink at stake` rather than a sentence; the
+control hint is one line; the locked-ledge label appears only when the squad is
+actually against the ceiling; pops are outlined, punch in, step clear of each
+other and cap at six.
+
+`test39` guards all of it. `test7` grew a step that dismisses the walk school
+before it times an arrival — the school pauses the road 620ms into a first walk
+and the test had always been racing it.
 
 ### What is left — verified, not speculation
 

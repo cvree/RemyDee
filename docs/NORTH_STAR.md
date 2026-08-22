@@ -89,9 +89,12 @@ it teeth.
 3. **The player's hand is free.** Movement is continuous and available on mouse,
    keyboard, and touch. Never lock the player to discrete positions to make the
    engine's collision math easier.
-4. **Curiosity pays.** Reaching for an optional thing (hovering a word to read its
-   definition, marking a cache) always gives *something* — knowledge, a buff, or
-   affinity. Never punish exploration.
+4. **Curiosity pays, and it pays inside the verb the player is already using.**
+   Reaching for something you do not know — gathering a word-part you have never
+   met, marking a cache — always gives *something*: knowledge, a buff, or
+   affinity. Never punish exploration, and never make the player *stop playing*
+   to learn: if the reward for curiosity needs its own separate input, it is
+   competing with the game instead of being it.
 5. **Scale the party like a difficulty curve, not a content dump.** 1 → 3 → 4 → 5 …
    The number of terms a player builds per mission is the real difficulty dial.
 6. **One new thing per mission.** Introduce a mechanic, let it breathe for a whole

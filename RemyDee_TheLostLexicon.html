@@ -1231,25 +1231,6 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   background:rgba(20,14,8,.62);padding:3px 10px;border-radius:7px;display:inline-block;}
 .combo-pending{flex-basis:100%;text-align:center;font-size:.66rem;color:var(--gold-soft,#d8b45f);
   letter-spacing:.02em;margin-top:1px;}
-/* HOVER TO STUDY — the definition card that follows the cursor on the road */
-.study-card{position:absolute;z-index:8;pointer-events:none;display:none;
-  transform:translate(-50%,-118%);min-width:120px;max-width:230px;padding:8px 11px 10px;
-  border-radius:10px;background:rgba(22,19,15,.94);border:1px solid var(--gold);
-  box-shadow:0 8px 22px rgba(0,0,0,.55);text-align:center;}
-.study-card.show{display:block;animation:scIn .16s var(--ease-back);}
-@keyframes scIn{0%{opacity:0;transform:translate(-50%,-104%);}100%{opacity:1;transform:translate(-50%,-118%);}}
-.study-card .sc-kind{display:inline-block;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;
-  padding:1px 7px;border-radius:999px;background:rgba(243,236,216,.16);color:var(--papyrus);}
-.study-card .sc-kind.k-prefix{background:rgba(181,50,43,.55);}
-.study-card .sc-kind.k-root{background:rgba(51,81,63,.6);}
-.study-card .sc-kind.k-suffix{background:rgba(138,106,43,.6);}
-.study-card .sc-text{display:block;font-family:var(--font-cal);font-size:1.05rem;color:var(--gold-soft);margin:3px 0 1px;}
-.study-card .sc-mean{display:block;font-size:.8rem;color:var(--papyrus);line-height:1.35;}
-.study-card .sc-mean.sc-sealed{color:#e2a08a;font-style:italic;font-size:.72rem;}
-.study-card .sc-note{display:block;margin-top:4px;font-size:.62rem;letter-spacing:.04em;
-  color:rgba(243,236,216,.6);font-style:italic;}
-.study-card .sc-bar{display:block;height:3px;margin-top:6px;border-radius:2px;background:var(--gold);
-  transition:width .08s linear;}
 .gate-prompt{pointer-events:none;
   display:none;padding:7px 16px;border-radius:var(--r-lg);background:rgba(24,21,16,.82);border:1px solid var(--gold);
   color:var(--papyrus);font-weight:700;font-size:.82rem;letter-spacing:.02em;text-align:center;
@@ -1309,6 +1290,19 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .ability-btn.ready{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);animation:abReady 1s ease-in-out infinite;}
 @keyframes abReady{0%,100%{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 4px var(--gold-soft),0 8px 18px rgba(0,0,0,.5);}}
 [data-motion="reduced"] .ability-btn.ready{animation:none;}
+/* THE BUTTON KICKS. Spending a charge is the loudest verb the player owns and
+   the control that did it stayed perfectly still while the road exploded. */
+.ability-btn.fired{animation:abFired .6s cubic-bezier(.16,1,.3,1);z-index:3;}
+@keyframes abFired{
+  0%{transform:scale(1);box-shadow:0 4px 10px rgba(0,0,0,.4);}
+  16%{transform:scale(1.22) translateY(-4px);
+      box-shadow:0 0 0 8px rgba(216,189,132,.5),0 10px 22px rgba(0,0,0,.55);
+      filter:brightness(1.5);}
+  100%{transform:scale(1);box-shadow:0 4px 10px rgba(0,0,0,.4);filter:none;}}
+[data-motion="reduced"] .ability-btn.fired{animation:none;}
+.ability-btn.fired .ab-charge{animation:abSpent .6s var(--ease-back);}
+@keyframes abSpent{0%{transform:scale(1.9);background:var(--gold);}100%{transform:scale(1);}}
+[data-motion="reduced"] .ability-btn.fired .ab-charge{animation:none;}
 .pace-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:0;
   pointer-events:none;}
 .pace-btn{position:relative;display:flex;flex-direction:row;align-items:center;gap:6px;pointer-events:auto;
@@ -1542,10 +1536,16 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   font-size:clamp(20px,3.4vw,34px);line-height:1.05;letter-spacing:.02em;color:var(--gold-soft);
   text-shadow:0 2px 0 rgba(0,0,0,.45);}
 .road-crest .rc-sub{display:block;font-size:.68rem;color:rgba(243,236,216,.74);margin-top:2px;}
-/* a broken record is not a tier — it gets the school's red and says so */
-.road-crest.mark{border-color:var(--cinnabar);box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 4px rgba(181,50,43,.16);}
-.road-crest.mark .rc-kicker{color:#e8918a;}
-.road-crest.mark .rc-word{color:#f3ecd8;}
+/* A broken record used to be framed in cinnabar — the colour this game uses for
+   damage in every other place it appears, from a hazard's flash to the slab that
+   drops across a refused gate. The best thing a player has ever done was being
+   presented in the visual language of a wound. It is the brightest gold on the
+   screen instead, with a wider halo than a tier crest, so it reads as louder
+   than an arrival rather than as a different kind of event. */
+.road-crest.mark{border-color:#ffe6a6;
+  box-shadow:0 14px 44px rgba(0,0,0,.6),0 0 0 5px rgba(255,222,150,.26),0 0 30px rgba(255,214,132,.34);}
+.road-crest.mark .rc-kicker{color:#ffe6a6;}
+.road-crest.mark .rc-word{color:#fff6df;text-shadow:0 2px 0 rgba(0,0,0,.45),0 0 18px rgba(255,214,132,.55);}
 @keyframes crestIn{
   0%  {opacity:0;transform:translate(-50%,-50%) scale(.72);}
   9%  {opacity:1;transform:translate(-50%,-50%) scale(1.10);}
@@ -2808,7 +2808,7 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
            to announce a congratulation. -->
       <div class="road-crest" id="road-crest" aria-live="polite"></div>
       <!-- the control hint lives in the empty sky, never over the road itself -->
-      <div class="mission-hint" id="mission-hint">Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. <b>Hover a part</b> to read its meaning. Hold <b>Space</b> to <b>Surge</b>. <b>G</b> shows your gear.</div>
+      <div class="mission-hint" id="mission-hint">Lead the squad with the <b>mouse</b> (or <b>W/S</b>) &mdash; gather word-parts and chain them into real terms. Hold <b>Space</b> to <b>Surge</b>.</div>
       <!-- Word Road HUD: momentum multiplier, the term you are assembling, and gate prompts -->
       <div class="word-hud" id="word-hud">
         <div class="momentum" id="momentum">
@@ -2825,8 +2825,6 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <div class="be-track"><i id="be-fill"></i></div>
         </div>
       </div>
-      <!-- hover a drifting word-part to read its meaning and study it -->
-      <div class="study-card" id="study-card"></div>
       <!-- FOCUS: the road slows and the edges close in while you read -->
       <div class="road-focus" id="road-focus" aria-hidden="true"></div>
       <div class="mini-challenge" id="mini-challenge">
@@ -4025,8 +4023,9 @@ function blueprintsEarnedBy(servedChapterIds){
   return out;
 }
 
-/* Lexicon Affinity — the persistent reward for READING definitions on the road
-   (hover-to-study). Reaching for knowledge is the strongest thing you can do. */
+/* Lexicon Affinity — the persistent reward for READING definitions on the road.
+   A part new to you is read the moment you gather it (see readPart); reaching
+   for a word you do not know is the strongest thing you can do. */
 const AFFINITY_LEVELS = [
   { n:0, need:0,  name:"Unlettered",     grant:"" },
   { n:1, need:8,  name:"Reader",         grant:"Every road starts at a higher momentum floor." },
@@ -4917,20 +4916,70 @@ function paintBrush(node){ if(node){ if(reduced()){ node.classList.add("painted"
    would not move. These three are the cheapest game-feel in existence
    and everything on the road and the bench now calls them.
    ================================================================== */
-let shakeH=null;
+/* ONE CAMERA, TWO VERBS — AND ONLY ONE OF THEM IS DAMAGE.
+
+   For one pass every notable moment in the game called shake(). A hazard
+   landing square shook the frame; so did a personal record, a gear change,
+   a real medical term completing and the moment the caravan entered flow.
+   The single loudest piece of physical feedback the game owns was saying
+   "something has gone wrong" on the four occasions when something had gone
+   spectacularly right, and a player reads the body before they read the
+   caption. Congratulation delivered as a punch does not feel like praise —
+   it feels like a bug.
+
+   A good moment has a different shape. It does not rattle: it LEANS IN. The
+   picture surges a little toward you, holds for a beat and settles — the same
+   move a camera makes when it wants you to look at something. So the camera
+   has two verbs now:
+
+     shake(mag,ms)          jitter — hits, wrong answers, things breaking
+     swell(strength,ms)     a push-in — words landing, gears, records, items
+
+   They compose in one loop rather than fighting over `transform`, because the
+   two do legitimately overlap: taking a hazard on the chin during a flow run
+   should shake AND keep the swell that is still settling. */
+const CAM={ shM:0, shT:0, shD:0, swM:0, swT:0, swD:0 };
+let camH=null;
+function camStep(t){
+  const f=document.getElementById("frame"); if(!f){ camH=null; return; }
+  let x=0,y=0,rot=0,sc=1;
+  let live=false;
+  if(CAM.shT>0){
+    const p=(t-CAM.shT)/CAM.shD;
+    if(p<1){ live=true;
+      // decay hard: a shake that lingers reads as a bug, not a hit
+      const d=CAM.shM*(1-p)*(1-p);
+      x+=(Math.random()*2-1)*d; y+=(Math.random()*2-1)*d; rot+=(Math.random()*2-1)*d*0.07;
+    } else CAM.shT=0;
+  }
+  if(CAM.swT>0){
+    const p=(t-CAM.swT)/CAM.swD;
+    if(p<1){ live=true;
+      /* fast attack, soft settle — the lean happens in a tenth of a second and
+         then relaxes, which is what makes it read as attention rather than as
+         the picture wobbling */
+      const k = p<0.16 ? (p/0.16) : Math.pow(1-(p-0.16)/0.84, 2.2);
+      sc += CAM.swM*0.020*k;
+      y  -= CAM.swM*2.6*k;
+    } else CAM.swT=0;
+  }
+  if(!live){ f.style.transform=""; if(camH&&camH.kill) camH.kill(); camH=null; return; }
+  f.style.transform=`translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) scale(${sc.toFixed(4)}) rotate(${rot.toFixed(3)}deg)`;
+}
+function camRun(){ if(camH) return; camH=raf(camStep); }
 function shake(mag, ms){
   if(reduced() || quality==="low") return;
-  const f=document.getElementById("frame"); if(!f) return;
-  if(shakeH && shakeH.kill) shakeH.kill();
-  const t0=performance.now(); const dur=ms||240;
-  shakeH=raf((t)=>{
-    const p=(t-t0)/dur;
-    if(p>=1){ f.style.transform=""; if(shakeH&&shakeH.kill) shakeH.kill(); shakeH=null; return; }
-    // decay hard: a shake that lingers reads as a bug, not a hit
-    const d=mag*(1-p)*(1-p);
-    f.style.transform=`translate3d(${((Math.random()*2-1)*d).toFixed(2)}px,${
-      ((Math.random()*2-1)*d).toFixed(2)}px,0) rotate(${((Math.random()*2-1)*d*0.07).toFixed(3)}deg)`;
-  });
+  if(!document.getElementById("frame")) return;
+  CAM.shM=Math.max(CAM.shM*(CAM.shT?0.5:0), mag); CAM.shT=performance.now(); CAM.shD=ms||240;
+  camRun();
+}
+/* THE POSITIVE VERB. `strength` is roughly "how big a deal is this": 1 for a
+   gear change, 2 for a real word, 3 for the biggest thing on the road. */
+function swell(strength, ms){
+  if(reduced() || quality==="low") return;
+  if(!document.getElementById("frame")) return;
+  CAM.swM=Math.max(CAM.swM*(CAM.swT?0.4:0), strength||1); CAM.swT=performance.now(); CAM.swD=ms||420;
+  camRun();
 }
 /* a single-frame wash of colour over everything — cinnabar for damage,
    gold for a reward. Blend mode does the work so it never looks like a div. */
@@ -4945,6 +4994,27 @@ function impact(color, strength, ms){
     {duration:ms||190, easing:"ease-out"}):null;
   const done=()=>{ if(o.parentNode) o.parentNode.removeChild(o); };
   if(a) a.onfinish=done; else setTimeout(done, ms||190);
+}
+/* THE WARM ONE. `impact` is a flat wash over the whole frame and it is right
+   for damage — a slap of colour, edge to edge, gone. A reward wants the
+   opposite geometry: light coming OUT of the thing that earned it. So a bloom
+   is a radial gradient centred on where it happened (the squad sits at 30% of
+   the road, hence the default), bright in the middle and nothing at the edges.
+   Same cost, entirely different meaning. */
+function bloom(color, strength, ms, xPct, yPct){
+  if(reduced()) return;
+  const f=document.getElementById("frame"); if(!f) return;
+  const o=document.createElement("div");
+  const st=strength==null?0.5:strength;
+  o.style.cssText=`position:absolute;inset:0;z-index:118;pointer-events:none;`
+    +`background:radial-gradient(circle at ${xPct==null?30:xPct}% ${yPct==null?58:yPct}%,`
+    +`${color} 0%, transparent 62%);mix-blend-mode:screen;opacity:0;`;
+  f.appendChild(o);
+  const a=o.animate?o.animate(
+    [{opacity:0,transform:"scale(.82)"},{opacity:st,transform:"scale(1)",offset:0.18},{opacity:0,transform:"scale(1.14)"}],
+    {duration:ms||420, easing:"cubic-bezier(.16,1,.3,1)"}):null;
+  const done=()=>{ if(o.parentNode) o.parentNode.removeChild(o); };
+  if(a) a.onfinish=done; else setTimeout(done, ms||420);
 }
 /* a number that leaps off the thing that produced it */
 function pop(host, text, cls){
@@ -4965,7 +5035,7 @@ window.FX = {
   track, cleanup, raf, vanta, killVanta, lenis, killLenis,
   revealText, splitText, stagger, countUp, magnetize, tilt, spotlight, spotlightAll,
   bindClickSpark, clickSpark, inkBloom, transition, to, timeline, buzz, paintBrush,
-  animate, shake, impact, pop
+  animate, shake, swell, impact, bloom, pop
 };
 })();
 </script>
@@ -5067,6 +5137,19 @@ const Audio2 = (function(){
              tone(v[0],0.12,"sine",0.3); setTimeout(()=>tone(v[1],0.12,"sine",0.3),90);
              setTimeout(()=>tone(v[2],0.25,"triangle",0.26),190); },
     bad(){ tone(vary(220),0.18,"sawtooth",0.2); setTimeout(()=>tone(vary(174),0.22,"sawtooth",0.18),90); },
+    /* A GATE SHUTTING IN YOUR FACE. `bad()` is the game's small no — a wrong tile,
+       an empty charge. A rune gate refusing to open is the largest mistake the
+       road can hand you and it needs its own weight: stone landing, then the
+       whole thing ringing shut under it. */
+    slam(){ duck(0.6,520); noise(0.10,0.42,240); tone(70,0.42,"sine",0.34);
+            setTimeout(()=>{ tone(vary(146),0.30,"sawtooth",0.22); noise(0.26,0.14,900); },70);
+            setTimeout(()=>tone(vary(110),0.5,"sawtooth",0.16),190); },
+    /* THE ARCH OPENING. Not `great()` — that is the game's general yes and it is
+       everywhere. This is a rising fifth over a bloom of air: a door giving way. */
+    open2(){ duck(0.4,460); noise(0.34,0.10,1400);
+             tone(392,0.16,"sine",0.24);
+             setTimeout(()=>tone(587,0.20,"sine",0.24),80);
+             setTimeout(()=>{ tone(880,0.42,"sine",0.22); tone(1175,0.4,"triangle",0.12); },170); },
     snap(){ tone(vary(660),0.06,"triangle",0.2); },
     stamp(){ duck(0.5,420); noise(0.14,0.3,600); tone(120,0.16,"sine",0.25); },
     paper(){ noise(0.18,0.14,vary(2600)); },
@@ -5651,7 +5734,7 @@ function newGame(){
     foundMats:[],              // rare materials discovered on the road (unlock at the bench)
     pending:[],                // travelers a capped party couldn't fit — they wait for the next chapter
     unlockedBps:["kit"],       // commission patterns known; one more opens after every chapter
-    studied:[],                // word-parts read on the road (hover-to-study) — feeds affinity
+    studied:[],                // word-parts read on the road (first gather) — feeds affinity
     emberDebt:0,               // embers forfeited this mission by shaky naming (cleared each trip)
     techniques:[],             // bench techniques learned (tempering / twinstoke / reagentcraft)
     benchMastery:{},           // per-blueprint craft record: {bpId:{forged,fine}} — unlocks variants
@@ -13866,7 +13949,7 @@ function dropMomentum(mult){
                                        term's actual meaning), and an
                                        erosion meter rises until a real
                                        naming pushes it back.
-     Phase II  The Blank Page       — hover-to-study seals its definition;
+     Phase II  The Blank Page       — a gathered word's meaning is sealed;
                                        Lexicon Affinity levels are the only
                                        scaffolding left.
      Phase III The Caravan Chorus   — his final transformation, VERBUM
@@ -14017,7 +14100,7 @@ function updateBossPhase(dt){
       caption("<b>The Stripping.</b> Radicida tears at the roots of every word — no meaning holds without one. Every gate ahead asks for a root. Name it true, and the erasure falls back.");
       Audio2.sfx.page && Audio2.sfx.page();
     } else if(B.phase===2){
-      caption("<b>The Blank Page.</b> The glossary falls silent — hovering a word no longer explains it. Only what your Lexicon Affinity has earned still lights the way.");
+      caption("<b>The Blank Page.</b> The glossary falls silent — gathering a word no longer explains it. Only what your Lexicon Affinity has earned still lights the way.");
       Audio2.sfx.page && Audio2.sfx.page();
     }
   }
@@ -14199,7 +14282,7 @@ function runMission(){
         evIdx:0,
         perks:new Set((f.stats&&f.stats.perks)||[]), perkUsed:{},
         hazardDeck:null, revealT:0,
-        fork:null, slowT:0, banditT:0, paceMult:1, paceT:0,
+        fork:null, slowT:0, gateSlamT:0, newWordT:0, itemFlare:null, banditT:0, paceMult:1, paceT:0,
         surgeHeld:false, surging:false, bandSeen:{0:false,1:false,2:false},
         // the hands: a lunge's live window and cooldown, and whether Focus is held
         lungeT:0, lungeCd:0, lungeX:null, lungeY:null, focusing:false,
@@ -14265,9 +14348,9 @@ function runMission(){
       caption(`The squad sets out${enemy?`, watchful for ${enemy.name}`:""}. ${routeOpen}`);
     }
     /* The hint was authored for a desktop mouse and said so, on a phone, where
-       there is no mouse, no hover to read a part with, no Space bar to hold and
-       no G key. Half of the instructions on the most important screen in the
-       game were wrong for the device reading them. It is written per input now. */
+       there is no mouse to lead with, no Space bar to hold and no G key. Half
+       of the instructions on the most important screen in the game were wrong
+       for the device reading them. It is written per input now. */
     /* THE HINT IS FOR A NEW PLAYER, NOT FOR EVERY ROAD FOREVER.
        It is the largest object on the screen and it sat over the sky on every
        single walk, on the third chapter as loudly as on the first. It now shows
@@ -14285,9 +14368,13 @@ function runMission(){
       /* Kept to two lines on touch. The long version wrapped to three or four at
          390px and spilled out of the sky and onto the road itself, which is the
          one thing the markup comment above it promises never to do. */
+      /* IT IS A REMINDER, NOT THE MANUAL. The desktop line had grown to six
+         sentences held over the sky for eight and a half seconds — a paragraph
+         of rules on top of a moving road, which is exactly the clutter the
+         school below exists to take off this screen. One line each. */
       hint.innerHTML = FX.isTouch
-        ? `<b>Drag</b> up and down to lead the squad. Gather word-parts; chain them into real terms. <b>Tapping</b> something real costs <b>power</b>.`
-        : `Lead the squad with the <b>mouse</b> &mdash; gather word-parts and chain them into real terms. <b>Click</b> to lunge; landing on something real spends <b>power</b>. <b>Hold right-click</b> to slow the road while you read a gate. <b>Space</b> surges. The river floor gives power back &mdash; and at zero power, <b>stamina burns faster and faster</b>. The pause menu explains the rest.`;
+        ? `<b>Drag</b> to lead them. Gather word-parts and chain them into real terms &mdash; a part new to you is <b>read</b> the moment you take it.`
+        : `Lead with the <b>mouse</b>. Gather word-parts and chain them into real terms &mdash; a new part is <b>read</b> the moment you take it. <kbd>space</kbd> surges, <kbd>Esc</kbd> explains the rest.`;
       hint.classList.remove('fade'); setTimeout(()=>hint.classList.add('fade'), 8500);
     }
     $('#mini-challenge').classList.remove('show');
@@ -14577,7 +14664,10 @@ function refreshAbilityReady(){
     const kind=order[i]; if(!kind) return;
     const left=M.abilities[kind]||0;
     b.classList.toggle("spent", left<=0);
-    b.querySelector(".ab-charge").textContent=left;
+    // it renders as "×3" and then, the first time a charge is spent, silently
+    // became "2" — the same number in a different language, on the one control
+    // whose whole job is to say how many are left
+    b.querySelector(".ab-charge").textContent="×"+left;
     const hint=b.querySelector(".ab-hint"); if(hint) hint.textContent=abilityHint(kind);
     // glow when the button is not merely usable but WANTED: a raid closing in, or
     // (for Strike) a cluster of hazards actually stacked up on the road ahead
@@ -14588,6 +14678,43 @@ function refreshAbilityReady(){
     if(!usableNow && left>0 && kind==="mend")   usableNow = M.stats.stamina<32 || M.stats.power<28;
     b.classList.toggle("ready", !!usableNow);
   });
+}
+/* ==================================================================
+   THE THING YOU MADE, LANDING.
+
+   Every charge on the ability row is a piece the player forged with their own
+   hands at the bench: they chose the pattern, they took the risk on the folds,
+   and the tier it came out at is a thing they can name. Spending one used to
+   produce a caption along the bottom, a small floating word, and a haptic buzz
+   — the same feedback weight as walking through an ink drop.
+
+   An item is the loudest verb the player owns. It gets treated like one: the
+   road holds, the frame leans in, a shockwave goes out from the squad, and the
+   piece announces ITSELF by name and by tier, because "Ashfold Cleaver
+   (masterwork)" is a sentence about a decision they made an hour ago. Better
+   gear does not merely do more — it LOOKS like it does more.
+   ================================================================== */
+const ITEM_HEFT={masterwork:1.45, fine:1.2, ok:1, flawed:0.82, ruined:0.65};
+const ITEM_LOOK={
+  strike:{ col:"243,236,216", glow:"rgba(255,236,190,.9)",  ring:"#f6e6b4" },
+  vanish:{ col:"198,214,226", glow:"rgba(198,224,240,.85)", ring:"#cfe2ee" },
+  mend:  { col:"126,196,143", glow:"rgba(150,232,170,.85)", ring:"#8fe6a0" }
+};
+function itemMoment(kind, item, head){
+  if(!M||M.done) return;
+  const heft=ITEM_HEFT[item&&item.qtier]||1;
+  const look=ITEM_LOOK[kind]||ITEM_LOOK.strike;
+  M.itemFlare={ kind, heft, t:0, dur:1.5,
+    name:(item&&item.genName)||((ABILITY_META[kind]||{}).name||"charge"),
+    tier:(item&&item.qtier)||null, head:head||"" };
+  FX.swell(1.8+heft*0.9, 560+heft*120);
+  FX.bloom(look.glow, 0.42+heft*0.16, 560+heft*120);
+  // the road genuinely stops for a moment — the one beat that has earned it
+  hitstop(90+heft*70, 0.26);
+  FX.buzz(Math.round(22+heft*16));
+  const btn=$$('.ability-btn')[Object.keys(ABILITY_META).filter(k=>(M.abilities0[k]||0)>0).indexOf(kind)];
+  if(btn && !FX.reduced()){ btn.classList.remove('fired'); void btn.offsetWidth; btn.classList.add('fired');
+    setTimeout(()=>btn.classList.remove('fired'), 620); }
 }
 /* how many unresolved hazards are stacked in the corridor Strike would clear */
 function hazardsAhead(){
@@ -14704,7 +14831,13 @@ function stepHands(dt){
 function lungeReach(){ return M.lungeT>0 ? 120*(M.lungeT/LUNGE_T) : 0; }
 function useAbility(kind){
   if(!M||M.done) return;
-  const left=M.abilities[kind]||0; if(left<=0){ Audio2.sfx.bad(); return; }
+  const left=M.abilities[kind]||0;
+  if(left<=0){
+    Audio2.sfx.bad();
+    caption(`No <b>${(ABILITY_META[kind]||{}).name||"charge"}</b> left — what you forged for this road is spent.`);
+    FX.buzz(10);
+    return;
+  }
   if(kind==="mend"){
     M.abilities.mend--;
     const it=M.forge.itemFor && M.forge.itemFor.heal;
@@ -14718,8 +14851,9 @@ function useAbility(kind){
     statGain({stamina:Math.round(20*per), power:Math.round(16*per)});
     const shape=(sc&&sc.mendPer>1.15)?"deeply" : (sc&&sc.mendPer<0.85)?"quickly":"";
     caption(flashItem(it,"mended",`opens — bindings, warm broth, a steadier breath. The squad recovers ${shape}${tierNote(it)}`));
+    itemMoment("mend", it, `+${Math.round(20*per)} stamina · +${Math.round(16*per)} power`);
     pop(M.cv.width*0.30,M.laneY-70,per>1.15?"mended deep":per<0.85?"patched":"mended");
-    (per>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(per>1?22:16); refreshAbilityReady(); return;
+    (per>1?Audio2.sfx.great:Audio2.sfx.good)(); refreshAbilityReady(); return;
   }
   // OUTSIDE a raid, Strike and Vanish still do real work on the road
   if(!M.raid || M.raid.resolved){
@@ -14743,7 +14877,11 @@ function useAbility(kind){
       statGain({morale:Math.round(6*tm),safety:Math.round(4*tm)});
       const cleared=toClear.length;
       caption(flashItem(it,"struck",`goes to work — ${cleared} obstacle${cleared>1?"s are":" is"} cut from the road${cleared<corridor.length?", though one further back slips through":""}${tierNote(it)}`));
-      pop(sx+120, M.laneY-70, cleared<corridor.length?"road half-cleared":"road cleared!"); (tm>1?Audio2.sfx.great:Audio2.sfx.good)(); FX.buzz(tm>1?28:20);
+      itemMoment("strike", it, `${cleared} cut from the road`);
+      // every obstacle that came apart says so where it stood
+      toClear.forEach(h=>{ const hx=screenX(h.p); if(hx>0&&hx<M.cv.width) pop(hx, objY(h)-30, "cut", false); });
+      pop(sx+120, M.laneY-70, cleared<corridor.length?"road half-cleared":"ROAD CLEARED");
+      (tm>1?Audio2.sfx.great:Audio2.sfx.good)();
       M.sweepT=Math.max(0.6, span);  // the sweep VFX reaches exactly as far as the blade did
       M.sweepSpan=span; refreshAbilityReady(); return;
     }
@@ -14758,7 +14896,8 @@ function useAbility(kind){
     M.phaseT=clamp(base*tm,1.2,8.0);
     statGain({safety:Math.round(6*tm)});
     caption(flashItem(it,"phased",`blooms early — for <b>${M.phaseT.toFixed(1)}s</b> nothing can touch them, and stray word-parts drift into reaching hands${tierNote(it)}`));
-    pop(sx, M.laneY-70, `phased ${M.phaseT.toFixed(1)}s!`); Audio2.sfx.clink(); FX.buzz(18);
+    itemMoment("vanish", it, `untouchable for ${M.phaseT.toFixed(1)}s`);
+    pop(sx, M.laneY-70, `phased ${M.phaseT.toFixed(1)}s`); Audio2.sfx.clink();
     refreshAbilityReady(); return;
   }
   if(kind==="strike"){
@@ -14767,14 +14906,16 @@ function useAbility(kind){
     const tm=tierMult(it);
     statGain({morale:Math.round(12*tm),safety:Math.round(8*tm)});
     caption(flashItem(it,"struck",`and bowwork cut the ambush down before it lands — no words needed today${tierNote(it)}`));
-    pop(M.cv.width*0.62,M.laneY-60,"raiders down!"); Audio2.sfx.great(); FX.buzz(26);
+    itemMoment("strike", it, "the ambush never lands");
+    pop(M.cv.width*0.62,M.laneY-60,"RAIDERS DOWN"); Audio2.sfx.great();
   } else {
     M.abilities.vanish--; M.raid.resolved=true; M.avoided++;
     const it=M.forge.itemFor && M.forge.itemFor.smoke;
     const tm=tierMult(it);
     statGain({safety:Math.round(10*tm),morale:Math.round(5*tm)});
     caption(flashItem(it,"vanished",`blooms — the squad melts sideways into haze and the ambush closes on nothing${tierNote(it)}`));
-    pop(M.cv.width*0.62,M.laneY-60,"vanished!"); Audio2.sfx.clink(); FX.buzz(18);
+    itemMoment("vanish", it, "the ambush closes on nothing");
+    pop(M.cv.width*0.62,M.laneY-60,"VANISHED"); Audio2.sfx.clink();
   }
   M.raiders=[]; refreshAbilityReady();
 }
@@ -14959,7 +15100,6 @@ function beginCollapse(){
   if(M._unbind){ M._unbind(); M._unbind=null; }
   hideTermBanner(); clearCrest();
   const gp=$('#gate-prompt'); if(gp) gp.classList.remove('show');
-  const sc=$('#study-card'); if(sc) sc.classList.remove('show');
   const pb=$('#pace-btn'); if(pb){ pb.classList.remove('active'); pb.classList.add('starved'); }
   caption("Their legs give out. One after another the party goes down in the road — this walk ends here.");
   pop(M.cv.width*0.30, M.laneY-92, "the party falls", true);
@@ -15185,6 +15325,7 @@ function speedStatus(){
   if(M.collapsing)                 { word="Down";     why="the party has fallen"; }
   else if(M.focusing)              { word="Reading";  why="the road is slowed while they read"; }
   else if(M.surging)               { word="Surging";  why="burning stamina for speed"; }
+  else if(M.gateSlamT>0)           { word="Barred";   why="the gate threw them back — they are picking themselves up"; }
   else if(M.slowT>0)               { word="Checked";  why="a hazard broke their stride"; }
   else if(M.stats.power<=0)        { why="no power left — legs only"; }
   else if(M.stats.stamina<20)      { why="too tired to push"; }
@@ -15306,7 +15447,7 @@ function schoolCards(){
     { t:"Words are the point of the walk",
       b:`<p>Word-parts drift down the road. Gather them and they chain: two or three parts in the right order build a real term, and a built term pays in <b>momentum</b>, which is pace you keep.</p>
          <ul class="school-opts">
-           ${opt("word", `${touch?"<b>Tap and hold</b> a part":"<b>Hover</b> a part"} to read what it means. Reading is not the slow option — it <b>pays speed too</b>, and the meaning stays on the tile every time you meet it again.`)}
+           ${opt("word", `<b>Gathering a part you have never met reads it</b> — its meaning lands over the squad, it goes into your Lexicon for good, and it <b>pays speed as well</b>. Reading is never the slow option, and from then on the meaning rides on the tile every time you meet it again.`)}
            ${opt("gate", "A <b>rune gate</b> blocks the road with a question. Answer it and you accelerate through; the harder the question, the bigger the burst.")}
          </ul>` },
     { t:"Reaching for something costs power",
@@ -15451,10 +15592,15 @@ function stampLetters(word){
     return `<span class="tb-ltr" style="animation-delay:${(i*32)}ms">${safe}</span>`;
   }).join("");
 }
-function showTermBanner(word, parts, def, real){
+/* `tagText` exists because the banner is used for two different jobs. Building a
+   chain that is not a word wants the tag to say "coined"; a rune gate teaching
+   the answer it just refused wants it to say what it is — and labelling hyper-,
+   a real prefix, as "coined" because the banner had only two modes was the game
+   teaching something false at the exact moment it was correcting the player. */
+function showTermBanner(word, parts, def, real, tagText){
   const b=$('#term-banner'); if(!b) return;
   const head = (real && !FX.reduced()) ? stampLetters(word) : word;
-  b.innerHTML=`<span class="tb-word">${head}</span><span class="tb-tag${real?"":" coined"}">${real?"real term":"coined"}</span>
+  b.innerHTML=`<span class="tb-word">${head}</span><span class="tb-tag${(real||tagText)?"":" coined"}">${tagText||(real?"real term":"coined")}</span>
     <span class="tb-parts">${parts}</span>
     ${def?`<span class="tb-def">${def}</span>`:""}`;
   b.classList.add('show');
@@ -15495,7 +15641,10 @@ function enterFlow(){
   crest(`${M.streak} right in a row`, "FLOW", "worth more, and the road stops being gentle — one hit ends it");
   Audio2.sfx.great && Audio2.sfx.great();
   if(Audio2.sfx.tier) setTimeout(()=>Audio2.sfx.tier(4), 120);
-  FX.buzz(34); FX.shake(7,260); FX.impact("#d8bd84",0.24,340); hitstop(80);
+  /* Flow is the best thing that happens on a road. It used to be delivered as
+     a shake — the same jolt as walking into a rockslide. It leans in now, with
+     the light coming off the squad rather than slapped across the frame. */
+  FX.buzz(34); FX.swell(2.6, 620); FX.bloom("rgba(240,198,138,.85)", 0.62, 620); hitstop(90);
 }
 function exitFlow(reason){
   if(!M || !M.flow) return;
@@ -15591,8 +15740,10 @@ function checkMomentumTier(){
     crest(`momentum ×${T.at}`, T.name, T.sub);
     if(Audio2.sfx.tier) Audio2.sfx.tier(T.at); else Audio2.sfx.great();
     FX.buzz(16+T.at*6);
-    FX.shake(3+T.at*1.6, 200+T.at*20);
-    FX.impact("#d8bd84", 0.10+T.at*0.035, 240+T.at*30);
+    // a gear change is an arrival, not an impact — the picture leans in harder
+    // the higher the gear, and never once rattles
+    FX.swell(0.7+T.at*0.42, 320+T.at*45);
+    FX.bloom("rgba(226,189,132,.8)", 0.24+T.at*0.07, 340+T.at*45);
     hitstop(30+T.at*10);
   });
 }
@@ -15611,7 +15762,10 @@ function shoutMark(key, value, kicker, word, fmt){
   const was=fmt?fmt(prev):prev;
   crest(kicker, word, `your best was ${was}`, "mark");
   if(Audio2.sfx.record) Audio2.sfx.record(); else Audio2.sfx.great();
-  FX.buzz(46); FX.shake(9,300); FX.impact("#b5322b",0.24,320); hitstop(90);
+  /* A lifetime best used to arrive as a hard shake washed in CINNABAR — the
+     colour this game uses for damage everywhere else. The best thing a player
+     had ever done was rendered in the language of a wound. Gold, and a lean. */
+  FX.buzz(46); FX.swell(2.2, 560); FX.bloom("rgba(255,222,150,.9)",0.58,560); hitstop(90);
   M.marksBroken=(M.marksBroken||0)+1;
   return true;
 }
@@ -15719,8 +15873,30 @@ function scoreWrong(){
   exitFlow("wrong");
   brakePace();
 }
+/* THE ROAD'S SMALL VOICE.
+   Pops are the most frequent piece of feedback in the game by an order of
+   magnitude — every part gathered, every charge spent, every gate resolved —
+   and they were flat green sans-serif text sliding upward. Two problems, both
+   of which the player feels without being able to name:
+
+   1. They stacked. A Surge through a cluster fires four or five inside half a
+      second, all at the same height, and they draw straight through each other
+      into an unreadable smear. Each new pop now steps clear of anything still
+      standing near it, and only the last six are kept.
+   2. They arrived. Nothing about a pop said "this just happened" — it was
+      simply present, and then drifting. They punch in with an overshoot now,
+      which is the whole difference between a label and a reaction. */
+const POP_MAX=6;
 function pop(x,y,txt,bad){
-  M.pops.push({x,y,txt,age:0,bad:!!bad});
+  // step clear of anything still on screen in the same place
+  let ty=y;
+  for(let i=0;i<6;i++){
+    const clash=M.pops.some(p=>p.age<0.7 && Math.abs(p.x-x)<130 && Math.abs((p.y-p.age*34)-ty)<20);
+    if(!clash) break;
+    ty-=22;
+  }
+  M.pops.push({x,y:ty,txt,age:0,bad:!!bad});
+  if(M.pops.length>POP_MAX) M.pops=M.pops.slice(-POP_MAX);
 }
 function statGain(gains,x,y){
   Object.keys(gains||{}).forEach(k=>{ if(M.stats[k]!=null) M.stats[k]=clamp(M.stats[k]+gains[k],0,100); });
@@ -15761,7 +15937,7 @@ function comboPendingValue(){
 function updateComboHud(){
   const cb=$('#combo-build'); if(!cb) return;
   cb.innerHTML="";
-  if(!M.combo.length){ cb.appendChild(el("span","combo-hint","gather a root, then a suffix, to forge a term")); return; }
+  if(!M.combo.length){ cb.appendChild(el("span","combo-hint","root, then suffix")); return; }
   M.combo.forEach((id,i)=>{ if(i) cb.appendChild(el("span","combo-join","+"));
     const p=PARTS[id]; cb.appendChild(el("span","combo-tok k-"+p.kind, p.text)); });
   if(PARTS[M.combo[M.combo.length-1]].kind!=="suffix"){
@@ -15781,9 +15957,11 @@ function updateComboHud(){
       cb.appendChild(el("span","combo-hint","suffix?"));
     }
   }
+  /* This was a full sentence of accounting under a live term ("bank ≈ 14 ink ·
+     ×2.6 — a hit now loses it"), on a road where the player is steering. The
+     stake is real and worth showing; the essay is not. */
   const pv=comboPendingValue();
-  if(pv){ cb.appendChild(el("span","combo-pending",
-    `bank ≈ ${pv.ink} ink · ×${pv.momentum} — a hit now loses it`)); }
+  if(pv){ cb.appendChild(el("span","combo-pending", `≈ ${pv.ink} ink at stake`)); }
 }
 function updateWordHud(){ updateMomentumMeter(); updateComboHud(); }
 function renderForgeStrip(){
@@ -15823,7 +16001,7 @@ function spawnPickup(forceLane, forceType, extra, forcePart){
      items of the same offer to land close enough to sweep up together — and an
      offer you can take all of is not a choice. Tightened so bands stay distinct. */
   const u = clamp(LANES[lane].u + (Math.random()-0.5)*0.055, 0.02, 0.98);
-  M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, u, type, partId, reagentId, hover:0, got:false, read:false});
+  M.pickups.push({p:spawnAheadP(extra||Math.random()*160), lane, u, type, partId, reagentId, got:false});
   });
 }
 /* WHAT THE CHAIN IN HAND STILL NEEDS.
@@ -16004,9 +16182,13 @@ let lastStep=0;
    motion turns it off entirely.
    ================================================================== */
 const HITSTOP_MAX=0.11;
-function hitstop(ms){
+/* The cap exists because a long freeze on a hazard reads as a dropped frame.
+   An ITEM landing is the one thing on the road that has earned a real hold —
+   the player spent something they built to make it happen — so it may raise the
+   ceiling for its own beat. */
+function hitstop(ms, cap){
   if(!M || M.done || FX.reduced() || FX.quality==="low") return;
-  M.stopT=Math.min(HITSTOP_MAX, Math.max(M.stopT||0, (ms||60)/1000));
+  M.stopT=Math.min(cap||HITSTOP_MAX, Math.max(M.stopT||0, (ms||60)/1000));
 }
 function tick(t){
   if(!M||M.done) return;
@@ -16038,6 +16220,9 @@ function tick(t){
 
   if(!M.paused){
     if(M.slowT>0) M.slowT=Math.max(0,M.slowT-dt);
+    if(M.gateSlamT>0) M.gateSlamT=Math.max(0,M.gateSlamT-dt);
+    if(M.newWordT>0) M.newWordT=Math.max(0,M.newWordT-dt);
+    if(M.itemFlare){ M.itemFlare.t+=dt; if(M.itemFlare.t>=M.itemFlare.dur) M.itemFlare=null; }
     if(M.banditT>0) M.banditT=Math.max(0,M.banditT-dt);
     if(M.revealT>0) M.revealT=Math.max(0,M.revealT-dt);
     if(M.surgeT>0) M.surgeT=Math.max(0,M.surgeT-dt);
@@ -16332,23 +16517,21 @@ function tick(t){
 
   if(!M.paused){
     const sx=M.cv.width*0.30;
-    // HOVER TO STUDY — hold the cursor over a drifting word-part to read its
-    // meaning. A part you READ is worth more than one you merely walk through,
-    // and it feeds the Lexicon Affinity track. Curiosity is the strongest build.
-    const canHover = M.pointer.over && FX.canHover();
-    let hovered=null;
-    M.pickups.forEach(pk=>{
-      if(pk.got) return;
-      const px=screenX(pk.p), py=objY(pk)-26;
-      const near = canHover && pk.type==="lexeme" &&
-        Math.hypot(M.pointer.x-px, M.pointer.y-py) < 54;
-      if(near){
-        hovered=pk;
-        pk.hover=(pk.hover||0)+dt;
-        if(pk.hover>=0.35 && !pk.read){ pk.read=true; studyPart(pk, px, py); }
-      } else if(pk.hover>0){ pk.hover=Math.max(0,pk.hover-dt*1.6); }
-    });
-    showStudyCard(hovered);
+    /* THE CURSOR IS FOR STEERING. NOTHING ELSE.
+       For one pass the road asked the player to hold the mouse still over a
+       drifting tile for 0.35s to read its meaning, and paid the best rewards in
+       the mode for doing it. Two things were wrong with that. The obvious one is
+       clutter: a card followed the cursor around the middle of the playfield,
+       over the exact band where hazards and gates have to be read, and a fill
+       ring drew on every tile the pointer brushed past. The deeper one is that
+       the mouse is the steering wheel — the road asked the player to stop
+       driving in order to learn, and then priced learning as the best thing they
+       could do. The two most valuable verbs in the mode fought each other for
+       the same hand.
+       So reading is not a separate action any more. GATHERING A PART READS IT
+       (see readPart): the reward for curiosity is folded into the road's core
+       verb, the payout for meeting a word you have never met is bigger and
+       louder than it ever was, and the playfield is clear. */
     // walk-through collection: reach is a radius now, Vanish widens it, and so does a Surge
     // a live lunge is extra reach, decaying over its own short window
     const reachBonus = (M.phaseT>0?90:0) + (M.surging?55:0) + lungeReach();
@@ -16376,78 +16559,78 @@ function tick(t){
 
   draw(t);
 }
-/* ---------- HOVER TO STUDY ----------
-   Reading a word-part on the road is the single most educationally valuable thing
-   the player can do, so it is also the strongest. A studied part pays a bigger
-   stat return, nudges momentum, and feeds Lexicon Affinity — a persistent,
-   campaign-long track whose levels reach back into the bench and the road. */
-function studyPart(pk, px, py){
-  const part=PARTS[pk.partId]; if(!part) return;
+/* ---------- THE BLANK PAGE, ASKED ONCE ----------
+   Phase II of the final boss seals the glossary: a word's meaning only comes
+   through if a Lexicon Affinity level is spent holding the page open, and each
+   level spends exactly once. This is asked at the moment a part is gathered,
+   and the answer is remembered on the pickup, so a part can never consume two
+   charges. */
+function sealedFor(pk){
+  const B=M && M.boss;
+  if(!(B && B.phase>=2)) return false;
+  if(pk.sealRevealed) return false;
+  if(B.scaffoldUsed<B.scaffold){
+    pk.sealRevealed=true; B.scaffoldUsed++;
+    const left=B.scaffold-B.scaffoldUsed;
+    caption(left>0
+      ? `Lexicon Affinity holds this meaning open against the silence — ${left} scaffold${left===1?"":"s"} left.`
+      : `Lexicon Affinity holds this meaning open — that was the last one. The page falls silent now.`);
+    return false;
+  }
+  return true;
+}
+/* ---------- MEETING A WORD ----------
+   Reading a word-part is the single most educationally valuable thing that can
+   happen on the road, so it is also the strongest — and it now happens by
+   playing the game rather than by stopping to hover.
+
+   The FIRST time a part is gathered it is READ: a full restore, a momentum
+   bump, a burst of pace, its meaning stamped over the squad in clear letters,
+   and a permanent line in the Lexicon Affinity track. Every meeting after that
+   is a plain gather, because the point of a second meeting is the repetition,
+   not the reward. That split is what keeps a road full of new vocabulary
+   exciting and a road full of familiar vocabulary fast. */
+function readPart(pk, px, py){
+  const part=PARTS[pk.partId]; if(!part) return false;
+  const known=(S().studied||[]).includes(pk.partId);
+  const style=LEXEME_STYLE[part.kind];
+  markPartSeen(pk.partId);
+  if(known){
+    // an old friend: the small gather payout, and no interruption
+    statGain({[style.stat]:5});
+    return false;
+  }
   pk.studied=true;
   const lvl=E.affinity();
-  const style=LEXEME_STYLE[part.kind];
-  // the read itself pays: a bigger restore than walking through, plus momentum
-  const gains={[style.stat]:9};
+  const gains={[style.stat]:11};
   if(lvl.n>=3) gains.morale=(gains.morale||0)+5;      // Keeper: reading lifts spirits too
   statGain(gains);
-  bumpMomentum(0.22*M.forge.gainMult);
-  // reading pays in speed too — curiosity is never the slow option
-  rush(0.3, "study");
+  bumpMomentum(0.26*M.forge.gainMult);
+  // a new word is never the slow option — meeting one kicks the caravan along
+  rush(0.34, "read");
   M.partsStudiedRun=M.partsStudiedRun||[];
   if(!M.partsStudiedRun.includes(pk.partId)) M.partsStudiedRun.push(pk.partId);
-  markPartSeen(pk.partId);
   const res=E.markStudied(pk.partId);
-  // Phase II (The Blank Page): if this part's meaning was never unsealed by a
-  // scaffold charge, the floating confirmation stays as quiet as the glossary
-  const sealedHere = M.boss && M.boss.phase>=2 && !pk.sealRevealed;
-  pop(px, py-18, sealedHere ? "read (sealed)" : "read: "+part.mean, false);
+  const sealedHere=sealedFor(pk);
+  /* THE ONE BEAT THE WHOLE MODE IS FOR. A word the player has never seen has
+     just entered their Lexicon, and the road says so with its indoor voice
+     turned all the way up — the meaning, in full, over the squad. */
+  if(sealedHere){
+    pop(px, py-20, "sealed — no meaning comes", true);
+  } else {
+    pop(px, py-20, `${part.text} — ${part.mean}`, false);
+    M.newWordT=1.0;
+    FX.swell(1.2, 420); FX.bloom("rgba(226,189,132,.75)", 0.34, 420);
+  }
   Audio2.sfx.page && Audio2.sfx.page();
   if(res && res.name){    // a new affinity level opened
     caption(`Lexicon Affinity — <b>${res.name}</b>. ${res.grant}`);
     toast(`Lexicon Affinity ${res.name} — ${res.grant}`);
     Audio2.sfx.great && Audio2.sfx.great();
+    FX.swell(2.0, 520); FX.bloom("rgba(255,222,150,.9)", 0.5, 520);
     if(res.n>=1) M.forge.momentumFloor=Math.max(M.forge.momentumFloor, 1.0+res.n*0.12);
   }
-}
-/* the definition card that follows the cursor while a part is hovered */
-function showStudyCard(pk){
-  const card=$('#study-card'); if(!card) return;
-  if(!pk){ card.classList.remove('show'); return; }
-  const part=PARTS[pk.partId]; if(!part){ card.classList.remove('show'); return; }
-  const already=(S().studied||[]).includes(pk.partId);
-  const pct=Math.min(1,(pk.hover||0)/0.35);
-  // PHASE II — THE BLANK PAGE: the final boss seals the glossary. Lexicon
-  // Affinity levels earned across the whole campaign are the only scaffolding
-  // left — each spends once, on the first new part you reach for this phase.
-  const B=M.boss;
-  let sealed=false;
-  if(B && B.phase>=2){
-    if(!pk.sealRevealed){
-      if(B.scaffoldUsed<B.scaffold){
-        pk.sealRevealed=true; B.scaffoldUsed++;
-        const left=B.scaffold-B.scaffoldUsed;
-        caption(left>0
-          ? `Lexicon Affinity holds this meaning open against the silence — ${left} scaffold${left===1?"":"s"} left.`
-          : `Lexicon Affinity holds this meaning open — that was the last one. The page falls silent now.`);
-      } else { sealed=true; }
-    }
-  }
-  const meanHtml = sealed
-    ? `<span class="sc-mean sc-sealed">sealed — the Archive has taken its meaning</span>`
-    : `<span class="sc-mean">${part.mean}</span>`;
-  card.innerHTML=`<span class="sc-kind k-${part.kind}">${part.kind}</span>
-    <b class="sc-text">${part.text}</b>
-    ${meanHtml}
-    <span class="sc-note">${pk.read ? (already?"already in your Lexicon":"studied ✓") : (sealed?"the word alone must carry them":"hold to study")}</span>
-    <i class="sc-bar" style="width:${Math.round(pct*100)}%"></i>`;
-  // place it beside the part, in canvas-relative screen space
-  const rc=M.cv.getBoundingClientRect(), host=card.parentElement.getBoundingClientRect();
-  const sx=rc.width/M.cv.width, sy=rc.height/M.cv.height;
-  const px=screenX(pk.p)*sx + (rc.left-host.left);
-  const py=(objY(pk)-26)*sy + (rc.top-host.top);
-  card.style.left=Math.round(px)+"px";
-  card.style.top =Math.round(py)+"px";
-  card.classList.add('show');
+  return true;
 }
 function collectPickup(pk,px,py){
   pk.got=true;
@@ -16455,9 +16638,9 @@ function collectPickup(pk,px,py){
     const part=PARTS[pk.partId];
     M.collected.lexeme=(M.collected.lexeme||0)+1;
     M.termsFound=M.termsFound||[]; M.termsFound.push(pk.partId);
-    const style=LEXEME_STYLE[part.kind];
-    if(pk.studied) M.studiedRun=(M.studiedRun||0)+1;   // already paid at the read
-    else statGain({[style.stat]:4});
+    // gathering IS reading: a part new to the Lexicon pays the full read, an
+    // old one pays the plain gather (see readPart)
+    if(readPart(pk, px, py)) M.studiedRun=(M.studiedRun||0)+1;
     /* A part the company held at the Vigil is worth more when they meet it on
        the road — the knowledge is the reward, and it pays in the currency the
        run actually spends. A part they fumbled pays normally: it is here to be
@@ -16553,7 +16736,10 @@ function coolMomentum(dt){
   if(M.momentum>floor) M.momentum=Math.max(floor, M.momentum-dt*M.diff.momentumDecay);
 }
 function knockMomentum(){                 // a hazard hit costs pace and breaks the chain
-  FX.shake(9,260); FX.impact("#b5322b",0.34,180);
+  /* Shake belongs HERE, and nowhere pleasant. With every celebration moved off
+     it, it can hit harder without the road feeling like it is permanently
+     vibrating: a hazard is now the hardest thing the frame does. */
+  FX.shake(13,300); FX.impact("#b5322b",0.40,200);
   // taking one square stops the road too — the same cue as landing a word, which
   // is right: both are the road being struck, and the player should feel each
   hitstop(70);
@@ -16617,8 +16803,9 @@ function completeTerm(){
      well as by its reality, because a three-piece real term is a genuinely
      harder thing to have assembled than a two-piece one, and the hands that
      did it should feel the difference. */
-  FX.shake(realId? 5+n*2.6 : 3, realId? 200+n*40 : 150);
-  FX.impact(realId?"#d8bd84":"#7d9a8a", realId? Math.min(0.5,0.22+n*0.09) : 0.18, realId? 260+n*40 : 170);
+  FX.swell(realId? 1.1+n*0.55 : 0.5, realId? 380+n*70 : 260);
+  FX.bloom(realId?"rgba(246,214,150,.9)":"rgba(160,192,178,.7)",
+           realId? Math.min(0.72,0.30+n*0.13) : 0.24, realId? 420+n*70 : 300);
   // the road holds for a breath on a real word, and longer on a longer one —
   // this is the beat the whole mode exists to produce
   if(realId) hitstop(42+n*16);
@@ -16658,14 +16845,18 @@ function completeTerm(){
      a meaning from parts, which is the whole skill, and gets it confirmed. */
   showTermBanner(label, partTrail, realId?TERMS[realId].def:coinedGloss(ids), !!realId);
   if(realId){ M.realTermsBuilt++;
-    caption(`✦ ${TERMS[realId].spell} — ${TERMS[realId].def}. Momentum ×${M.momentum.toFixed(1)}!`);
+    /* THE ROAD USED TO SAY EVERYTHING TWICE.
+       A real term put the word, its parts and its meaning in the banner up in
+       clear sky — and then printed the same word and the same meaning again in
+       the caption strip along the bottom, while a pop carried the numbers over
+       the squad and a crest queued behind both. Four surfaces, one event. The
+       banner owns the lesson; the caption is left for what the banner cannot
+       say, and on a plain real term it says nothing at all. */
     /* how many real words came out of one road is the purest measure the game
        has of the skill it is actually teaching, so it is the mark that matters
        most — and the only one a player cannot reach by steering well */
     shoutMark("realTerms", M.realTermsBuilt, "real terms this road",
       `${M.realTermsBuilt} REAL TERMS`, (p)=>`${p} in a road`);
-  } else {
-    caption(`${label} — not a word anyone uses, but the pieces fit: ${coinedGloss(ids)}. ×${M.momentum.toFixed(1)}`);
   }
   // Phase I (The Stripping): a real, complete word — root and all — is proof
   // Radicida hasn't won. It pushes the erasure back harder than a gate does.
@@ -16917,9 +17108,19 @@ function resolveGate(){
       bumpMomentum(0.3*M.forge.gainMult); statGain({morale:6});
       caption(`✦ Put right — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. That one caught you earlier.`);
     } else {
-      caption(`✦ Right gate — ${PARTS[G.targetId].text} means ${PARTS[G.targetId].mean}. Momentum ×${M.momentum.toFixed(1)}!`);
+      // the arch opening, the pop and the flare all say "right" already; the
+      // caption adds only the thing none of them can — what the word means
+      caption(`✦ ${PARTS[G.targetId].text} — ${PARTS[G.targetId].mean}.`);
     }
-    pop(M.cv.width*0.30,M.laneY-88,`gate! ×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
+    pop(M.cv.width*0.30,M.laneY-88,`×${M.momentum.toFixed(1)}`); Audio2.sfx.great(); FX.buzz(20);
+    /* THE ARCH OPENS. A right gate is the purest form of the promise — you knew
+       a word, and the road physically gave way. It gets the biggest positive
+       lean the walk has short of a real term, and the light comes off the gate
+       itself (see drawGate's flare). */
+    FX.swell(G.completion?2.4:1.8, 520); FX.bloom("rgba(150,236,168,.85)", 0.5, 520);
+    Audio2.sfx.open2 && Audio2.sfx.open2();
+    hitstop(G.completion?90:60);
+    G.burst=1;
     // Phase I (The Stripping): naming a root correctly pushes the erasure back
     if(M.boss && !M.boss.lt && M.boss.phase===1) M.boss.erosion=clamp(M.boss.erosion-0.3,0,1);
     if(M.boss && M.boss.lt) pressLieutenant(0.30, false);
@@ -16927,10 +17128,36 @@ function resolveGate(){
     M.forge.smokeSaves--; renderForgeStrip();
     caption(`Smoke covers a wrong read — no cost this once. The path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}).`);
     pop(M.cv.width*0.30,M.laneY-88,"smoke saved!"); Audio2.sfx.clink();
+    FX.swell(1.1, 380); FX.bloom("rgba(198,214,226,.8)", 0.34, 380);
   } else {
-    dropMomentum(0.55);
+    /* A WRONG GATE USED TO BE A SHRUG.
+       It cost 45% of momentum and five points of stamina, which on a road where
+       a single chained word pays both of those back inside ten seconds meant the
+       thinking beat — the one place the game asks you to actually know something
+       — was the cheapest thing on the road to get wrong. Pillar III says effort
+       must be legible in the outcome, and it was not: a player who read every
+       arch and a player who steered at random arrived at the waystation looking
+       the same.
+
+       It is a wall now. The arch does not open: they walk into it. */
+    dropMomentum(0.22);                 // momentum craters — the road stops giving
     scoreWrong();
-    M.stats.morale=clamp(M.stats.morale-7,0,100); M.stats.stamina=clamp(M.stats.stamina-5,0,100);
+    M.stats.morale=clamp(M.stats.morale-18,0,100);
+    M.stats.stamina=clamp(M.stats.stamina-13,0,100);
+    /* THE CHAIN IN YOUR HANDS IS DROPPED. The most expensive part of the
+       punishment is the one the player can watch happen: whatever word they were
+       half way through assembling scatters on the stones. */
+    const lost=M.combo.length;
+    if(lost){ M.combo=[]; M.comboBadT=0.6; }
+    /* BARRED. They are thrown back down the road and left picking themselves up
+       — the pace drops to a crawl for a couple of seconds, which on a demanding
+       road is time the stamina clock is spending for nothing. */
+    M.gateSlamT=2.4; M.slowT=Math.max(M.slowT,2.0);
+    M.progress=Math.max(0, M.progress-0.014);
+    setPace(0.55, 2.2);
+    FX.shake(20,420); FX.impact("#b5322b",0.5,300); hitstop(150); FX.buzz(60);
+    Audio2.setMood(M && M.boss ? "boss" : "danger");
+    Audio2.sfx.slam ? Audio2.sfx.slam() : Audio2.sfx.bad();
     /* A wrong gate used to name the right answer and nothing else, which tells
        the player what they should have done but not what they actually did.
        Naming the part they walked into, beside the one they wanted, is the
@@ -16941,13 +17168,21 @@ function resolveGate(){
     const tookId = G.laneIds && G.laneIds[G.flareLane];
     const took = (tookId && tookId!==G.targetId && PARTS[tookId])
       ? `You took <b>${PARTS[tookId].text}</b> (${PARTS[tookId].mean}) — ` : "";
+    /* Naming the cost is the point: NORTH_STAR's success signal is a player who
+       can say in one sentence why the run went the way it did. */
+    const cost = `Momentum craters to &times;${M.momentum.toFixed(1)}`
+      + (lost?`, the ${lost}-piece word in their hands scatters`:"")
+      + ", and the gate throws them back.";
     caption(G.completion
-      ? `${took}<b>${G.completion.spell}</b> needed ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`
-      : `${took}the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). Momentum slips.`);
+      ? `<b>Barred.</b> ${took}<b>${G.completion.spell}</b> needed ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). ${cost}`
+      : `<b>Barred.</b> ${took}the true path was ${PARTS[G.targetId].text} (${PARTS[G.targetId].mean}). ${cost}`);
     showTermBanner(PARTS[G.targetId].text,
       took ? `not ${PARTS[tookId].text} — ${PARTS[tookId].mean}` : "the gate wanted this one",
-      PARTS[G.targetId].mean, false);
-    pop(M.cv.width*0.30,M.laneY-88,"wrong gate",true); Audio2.sfx.bad(); FX.buzz(24);
+      PARTS[G.targetId].mean, false, "the true path");
+    pop(M.cv.width*0.30,M.laneY-88,"BARRED",true);
+    if(lost) pop(M.cv.width*0.30,M.laneY-52,`−${lost} piece${lost===1?"":"s"}`,true);
+    // slam() already spoke for this one — bad() underneath it was two refusals
+    // playing over each other
     pushDebt(G.conceptId);
   }
   updatePrepBars(); updateWordHud();
@@ -17331,8 +17566,14 @@ function draw(t){
     ctx.fillStyle="rgba(58,64,58,.32)"; ctx.fillRect(0,bTop-8,W,ceil-(bTop-8));
     ctx.strokeStyle="rgba(48,54,48,.6)"; ctx.lineWidth=2; ctx.setLineDash([10,7]);
     ctx.beginPath(); ctx.moveTo(0,ceil); ctx.lineTo(W,ceil); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle="rgba(243,236,216,.9)"; ctx.font="700 12px 'Noto Sans',sans-serif"; ctx.textAlign="left";
-    ctx.fillText("⨯ the upper ledges need climbing gear", 16, ceil-8);
+    /* The rock face is self-explanatory; the sentence explaining it was printed
+       over the road on every frame of every walk of the first six chapters. It
+       appears when the player is actually pressed up against the ceiling and
+       wondering why they have stopped climbing, and is otherwise not there. */
+    if(M.laneY < ceil+26){
+      ctx.fillStyle="rgba(243,236,216,.9)"; ctx.font="700 12px 'Noto Sans',sans-serif"; ctx.textAlign="left";
+      ctx.fillText("⨯ the upper ledges need climbing gear", 16, ceil-8);
+    }
     ctx.restore();
   }
   /* WAYSTONES ON THE FAR VERGE. A marker every 5% of the road, numbered every
@@ -17394,31 +17635,33 @@ function draw(t){
     ctx.setLineDash([]); ctx.lineDashOffset=0;
     ctx.restore();
   }
-  // pickups
+  /* IN REACH, SO SAY SO — ONCE.
+     Whether a part is takeable from where the squad is standing was information
+     the player could only get by trying, so parts inside the live radius got a
+     pulsing ring. Every one of them did, which on a road running a Surge through
+     a cluster meant five rings pulsing at once around five labels — the cue that
+     was supposed to pick something out was drawing the whole crowd. Only the
+     next one the squad will actually reach is ringed now. */
+  let ringed=null, ringedX=0, ringedY=0;
   M.pickups.forEach(pk=>{
     if(pk.got) return;
     const x=screenX(pk.p), y=objY(pk) - 26;
     if(x<-40||x>W+40) return;
     drawPickup(ctx,x,y,pk.type,t,pk.partId);
-    /* IN REACH, SO SAY SO. Whether a part is takeable from where the squad is
-       standing right now was information the player could only get by trying.
-       A part inside the live radius gets a ring, which turns a road full of
-       drifting labels into a road with a set of things you can currently have. */
-    if(pk.type==="lexeme" && !pk.hover){
+    if(pk.type==="lexeme"){
       const rr=HIT_R+(M.reachNow||0);
       if(Math.abs(objY(pk)-M.laneY)<rr && x < W*0.30+30+(M.reachNow||0) && x > W*0.30-160){
-        ctx.save();
-        ctx.globalAlpha=0.30+Math.sin(t*0.008)*0.10;
-        ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=2;
-        ctx.beginPath(); ctx.arc(x,y,24,0,6.28); ctx.stroke();
-        ctx.restore();
+        if(!ringed || x<ringedX){ ringed=pk; ringedX=x; ringedY=y; }
       }
     }
-    if(pk.hover>0){
-      ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.arc(x,y,20,-1.57,-1.57+6.28*Math.min(1,pk.hover/0.35)); ctx.stroke();
-    }
   });
+  if(ringed){
+    ctx.save();
+    ctx.globalAlpha=0.34+Math.sin(t*0.008)*0.12;
+    ctx.strokeStyle="#bd9d5f"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(ringedX,ringedY,24,0,6.28); ctx.stroke();
+    ctx.restore();
+  }
   // hazards
   const sx=W*0.30;
   // the finish gate — scrolls naturally into view over the final stretch, exactly
@@ -17542,6 +17785,69 @@ function draw(t){
     ctx.beginPath(); ctx.moveTo(sx, M.laneY-30); ctx.lineTo(far, M.laneY-50); ctx.stroke();
     ctx.restore();
   }
+  /* A NEW WORD ENTERING THE LEXICON. The tile has just been taken and its
+     meaning is already floating up as a pop; this is the ring that says the
+     road registered it — a single gold pulse off the squad, gone in a second. */
+  if(M.newWordT>0 && !FX.reduced()){
+    const k=1-clamp(M.newWordT/1.0,0,1);
+    ctx.save();
+    ctx.globalAlpha=(1-k)*0.7;
+    ctx.strokeStyle="#e8c98a"; ctx.lineWidth=3.5*(1-k)+0.8;
+    ctx.beginPath(); ctx.ellipse(sx, M.laneY, 26+k*96, (26+k*96)*0.6, 0, 0, 6.28); ctx.stroke();
+    ctx.restore();
+  }
+  /* THE ITEM MOMENT, ON THE ROAD. A shockwave off the squad that reaches as far
+     as the piece is good, and then the piece naming itself and its tier in the
+     sky above them. Both are scaled by heft, so a masterwork is visibly a
+     different event from a flawed one — which is the whole argument the bench
+     makes for taking the harder craft. */
+  if(M.itemFlare){
+    const F=M.itemFlare, look=ITEM_LOOK[F.kind]||ITEM_LOOK.strike;
+    const k=clamp(F.t/F.dur,0,1);
+    if(!FX.reduced()){
+      const sk=clamp(F.t/0.42,0,1);
+      if(sk<1){
+        ctx.save();
+        const r=(48 + W*0.52*F.heft)*sk;
+        ctx.globalAlpha=(1-sk)*0.9;
+        ctx.strokeStyle=look.ring; ctx.lineWidth=(9+F.heft*9)*(1-sk)+1;
+        ctx.beginPath(); ctx.ellipse(sx, M.laneY, r, r*0.6, 0, 0, 6.28); ctx.stroke();
+        ctx.globalAlpha=(1-sk)*0.42; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.ellipse(sx, M.laneY, r*0.62, r*0.37, 0, 0, 6.28); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    const rise = k<0.15 ? k/0.15 : 1;
+    const fade = k>0.70 ? clamp(1-(k-0.70)/0.30,0,1) : 1;
+    ctx.save();
+    ctx.globalAlpha=fade; ctx.textAlign="center"; ctx.textBaseline="middle";
+    // never up into the crest's band of sky — the two loudest things on the road
+    // can legitimately fire on the same frame
+    const ny=Math.max(bandTopPx()+14, M.laneY-104-rise*22);
+    const nameF=Math.round(24+F.heft*9);
+    ctx.font=`700 ${nameF}px 'Cormorant Garamond',Palatino,Georgia,serif`;
+    const sub=(F.tier?F.tier+" · ":"")+(F.head||"");
+    const wName=ctx.measureText(F.name).width;
+    ctx.font=`700 11px 'Noto Sans',sans-serif`;
+    const wSub=sub?ctx.measureText(sub).width:0;
+    const wBox=Math.max(wName,wSub)+34, hBox=sub?58:40;
+    ctx.fillStyle="rgba(20,15,9,.82)";
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(sx-wBox/2, ny-hBox/2, wBox, hBox, 10); else ctx.rect(sx-wBox/2, ny-hBox/2, wBox, hBox);
+    ctx.fill();
+    ctx.strokeStyle=`rgba(${look.col},${(0.5+F.heft*0.3).toFixed(2)})`;
+    ctx.lineWidth=F.heft>1.2?2.5:1.5; ctx.stroke();
+    ctx.fillStyle=`rgb(${look.col})`;
+    ctx.font=`700 ${nameF}px 'Cormorant Garamond',Palatino,Georgia,serif`;
+    ctx.fillText(F.name, sx, ny-(sub?9:0));
+    if(sub){
+      ctx.font=`700 11px 'Noto Sans',sans-serif`;
+      ctx.fillStyle="rgba(243,236,216,.82)";
+      ctx.fillText(sub, sx, ny+16);
+    }
+    ctx.restore();
+    ctx.textBaseline="alphabetic";
+  }
   // the gate corridor burning clear
   if(M.gateSweepT>0){
     M.gateSweepT=Math.max(0,M.gateSweepT-0.016);
@@ -17582,12 +17888,34 @@ function draw(t){
     ctx.restore();
   }
   if(M.weather==="mist"){ ctx.fillStyle="rgba(230,232,224,0.28)"; ctx.fillRect(0,0,W,H); }
-  // floating pops
+  // floating pops — they punch in, then drift and fade
   M.pops.forEach(pp=>{
-    ctx.save(); ctx.globalAlpha=clamp(1-pp.age/1.3,0,1);
-    ctx.fillStyle=pp.bad?"#b5322b":"#33513f";
-    ctx.font="700 17px 'Noto Sans',sans-serif"; ctx.textAlign="center";
-    ctx.fillText(pp.txt, pp.x, pp.y - pp.age*34);
+    const a=clamp(1-Math.pow(pp.age/1.3,2.2),0,1);
+    // overshoot on arrival: 1.35× for the first 90ms, settling by 220ms
+    const sc = pp.age<0.09 ? 0.5+ (pp.age/0.09)*0.85
+             : pp.age<0.22 ? 1.35-((pp.age-0.09)/0.13)*0.35 : 1;
+    const py = pp.y - pp.age*34;
+    ctx.save();
+    ctx.globalAlpha=a; ctx.textAlign="center";
+    ctx.translate(pp.x, py); ctx.scale(sc,sc);
+    /* THE ROAD SHOUTS IN CAPITALS. Everything the walk wants to say loudly —
+       ROAD CLEARED, BARRED, RAIDERS DOWN — is already written in capitals at the
+       call site, so that is the size rule: a statement is bigger than a tally,
+       and no call site had to learn a new argument to say so. */
+    const shout = pp.txt.length>3 && !/[a-z]/.test(pp.txt);
+    ctx.font=`800 ${shout?25:18}px 'Noto Sans',sans-serif`;
+    /* an ink outline under every one of them: these are drawn over tan ground,
+       green hills, a blue river and a red gate slab, and a single flat fill was
+       legible over about half of that */
+    /* A HALO, NOT AN OUTLINE. The first version drew pale gold text with a dark
+       edge, which is legible over the hills and nearly invisible over the tan
+       road these mostly happen on. Dark ink inside a cream halo is the one
+       combination that holds over sky, hill, road, river and a red gate slab. */
+    ctx.lineJoin="round"; ctx.lineWidth=5;
+    ctx.strokeStyle="rgba(247,241,222,.92)";
+    ctx.strokeText(pp.txt, 0, 0);
+    ctx.fillStyle=pp.bad?"#96170d":"#24503a";
+    ctx.fillText(pp.txt, 0, 0);
     ctx.restore();
   });
   /* THE PIECE IN FLIGHT — from where it was gathered to the word it joins.
@@ -17626,6 +17954,22 @@ function draw(t){
     ctx.fillRect(bx-4,by,8,70); ctx.fillRect(bx,by,54,34);
     ctx.fillStyle="#f3ecd8"; ctx.font="20px 'Cormorant Garamond',Palatino,Georgia,serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
     ctx.fillText("\u03a4",bx+26,by+18); ctx.globalAlpha=1; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+  }
+  /* BARRED — the couple of seconds after a wrong gate. The squad is picking
+     itself up: the frame carries a cinnabar rim and the road is visibly crawling.
+     It is drawn over everything because the point is that the player cannot do
+     anything useful until it clears. */
+  if(M.gateSlamT>0 && !FX.reduced()){
+    const k=clamp(M.gateSlamT/2.4,0,1);
+    ctx.save();
+    const rim=ctx.createLinearGradient(0,0,W*0.34,0);
+    rim.addColorStop(0,`rgba(143,32,24,${(0.5*k).toFixed(3)})`); rim.addColorStop(1,"rgba(143,32,24,0)");
+    ctx.fillStyle=rim; ctx.fillRect(0,0,W*0.34,H);
+    ctx.restore();
+    /* The word itself is not printed here. It arrives as a pop over the squad at
+       the moment it happens and stays in the Speed readout ("Barred — the gate
+       threw them back") for as long as it lasts; a third copy of it burned into
+       the sky was the road saying one thing three times. */
   }
   // the road goes dim as the party goes down
   if(M.collapsing){
@@ -17677,6 +18021,34 @@ function drawGate(ctx,W,H,t){
     ctx.fillText(label, gx, y-6+sway);
     if(locked){ ctx.fillStyle="rgba(243,236,216,.85)"; ctx.font="10px 'Noto Sans',sans-serif";
       ctx.fillText("⨯ needs climbing gear", gx, y+16+sway); }
+    /* THE RESOLUTION, ON THE ROAD ITSELF.
+       The answer used to land entirely in the HUD and the caption: the arch the
+       squad walked through simply changed colour. So the two outcomes now happen
+       where the player is looking — the right arch BLOWS OPEN in a ring of light,
+       and the wrong one comes down as a barred slab they visibly walk into. */
+    if(G.resolved && lane===G.flareLane && G.flareT>0){
+      const k=1-clamp(G.flareT/0.9,0,1);          // 0 at the instant it resolves
+      ctx.save();
+      if(G.flareOk){
+        ctx.globalAlpha=clamp(1-k,0,1)*0.9;
+        ctx.strokeStyle="#8fe6a0"; ctx.lineWidth=6*(1-k)+1;
+        ctx.beginPath(); ctx.arc(gx, y-12, 18+k*120, 0, 6.28); ctx.stroke();
+        ctx.globalAlpha=clamp(1-k,0,1)*0.55; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(gx, y-12, 10+k*70, 0, 6.28); ctx.stroke();
+      } else {
+        // a slab across the whole arch, shuddering as it lands
+        const j=(1-k)*(Math.random()*2-1)*3;
+        ctx.globalAlpha=clamp(1-k*0.8,0,1)*0.92;
+        ctx.fillStyle="#8f2018";
+        ctx.fillRect(gx-34+j, y-46+sway, 68, 74);
+        ctx.strokeStyle="#e2543f"; ctx.lineWidth=3;
+        ctx.strokeRect(gx-34+j, y-46+sway, 68, 74);
+        ctx.fillStyle="#f3ecd8"; ctx.font="800 22px 'Noto Sans',sans-serif";
+        ctx.fillText("\u2715", gx+j, y-8+sway);
+      }
+      ctx.restore();
+      ctx.globalAlpha=locked?0.4:1;
+    }
   }
   ctx.globalAlpha=1; ctx.restore();
 }
@@ -17702,9 +18074,9 @@ function drawPickup(ctx,x,y,type,t,partId){
     ctx.fillStyle=style.color; ctx.font="700 12px 'Noto Sans',sans-serif";
     ctx.fillText(part.text, 2, 0.5);
     /* REINFORCEMENT, NOT A CHEAT SHEET.
-       A part you have already sat and read carries its meaning on the tile from
-       then on — every later sighting is one more free repetition. A part you have
-       never read stays bare, so the invitation to hover and learn it is intact. */
+       A part you have already read carries its meaning on the tile from then on —
+       every later sighting is one more free repetition. A part you have never met
+       stays bare, so reaching for the unknown one is still the interesting move. */
     if(!M.boss && (S().studied||[]).includes(partId)){
       ctx.font="600 9px 'Noto Sans',sans-serif";
       ctx.fillStyle="rgba(43,36,28,.72)";
@@ -17935,6 +18307,7 @@ function arrive(){
   clearCrest();
   caption(`${M.f.chapter.dest} ahead — the waystation banner comes into view!`);
   Audio2.sfx.chime(); FX.buzz(24);
+  FX.swell(2.2, 900); FX.bloom("rgba(255,230,168,.85)", 0.5, 900);
   spawnArrivalConfetti();
 }
 function spawnArrivalConfetti(){
@@ -18128,7 +18501,13 @@ function showResult(){
     const seal=$('#grade-seal'); seal.className="grade-seal g-"+grade; seal.textContent=gInfo[grade].ch;
     requestAnimationFrame(()=>seal.classList.add("struck"));
     Audio2.sfx.stamp(); FX.buzz(40);
-    FX.shake(8,240); FX.impact(grade==="excellent"?"#d8bd84":grade==="poor"?"#b5322b":"#7d9a8a",0.26,260);
+    /* The seal coming down is the last thing a walk does. A hard road may
+       rightly land as a knock; a well-made expedition should not — arriving in
+       one piece is the reward, and it was being delivered as a jolt. */
+    if(grade==="poor"){ FX.shake(9,260); FX.impact("#b5322b",0.28,260); }
+    else { FX.swell(grade==="excellent"?2.6:1.6, grade==="excellent"?680:520);
+           FX.bloom(grade==="excellent"?"rgba(255,222,150,.92)":"rgba(180,214,196,.8)",
+                    grade==="excellent"?0.6:0.36, 620, 50, 42); }
     $('#result-title').textContent=gInfo[grade].t;
     $('#result-summary').innerHTML = summaryLine(f, grade, st);
     const rg=$('#reward-grid'); rg.innerHTML="";
@@ -18462,8 +18841,8 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _screenX:(p)=>screenX(p),
   _objY:(o)=>objY(o),
   _study:(partId)=>{ if(!M) return null;
-    const pk={p:M.progress+0.1, lane:1, u:LANES[1].u, type:"lexeme", partId, hover:0.4, got:false, read:true};
-    M.pickups.push(pk); studyPart(pk, 100, 100); return {studied:E.studiedCount(), affinity:E.affinity()}; },
+    const pk={p:M.progress+0.1, lane:1, u:LANES[1].u, type:"lexeme", partId, got:false};
+    M.pickups.push(pk); readPart(pk, 100, 100); return {studied:E.studiedCount(), affinity:E.affinity()}; },
   _useAbility:(k)=>{ useAbility(k); return M&&{abilities:Object.assign({},M.abilities), phaseT:M.phaseT, hazards:M.hazards.filter(h=>!h.hit).length}; },
   _hazardsAhead:()=>hazardsAhead(),
   /* --- final boss hooks (headless tests) --- */
@@ -18480,11 +18859,12 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
     const emptyIdx=M.chorus.placed.findIndex((v,i)=>!M.chorus.locked[i]&&v==null); if(emptyIdx<0) return null;
     M.chorus.placed[emptyIdx]=t.id; t.used=true; renderChorus(); return M.chorus.placed.slice(); },
   _chorusCheck:()=>{ checkChorus(); return M&&M.chorus; },
+  /* THE BLANK PAGE, asked directly. There is no hover card any more, so this
+     asks the seal itself the same question a gathered part asks it. */
   _peekCard:(partId)=>{ if(!M) return null;
-    const pk={p:M.progress, lane:1, u:LANES[1].u, type:"lexeme", partId, hover:0.4, got:false, read:false};
-    showStudyCard(pk);
-    const card=$('#study-card');
-    return { sealed: card ? /sc-sealed/.test(card.innerHTML) : null, sealRevealed:pk.sealRevealed }; },
+    const pk={p:M.progress, lane:1, u:LANES[1].u, type:"lexeme", partId, got:false};
+    const sealed=sealedFor(pk);
+    return { sealed, sealRevealed:!!pk.sealRevealed }; },
   /* --- band geometry / clutter / collapse / acceleration hooks (headless tests) --- */
   _band:()=>M?{top:bandTopPx(), bot:bandBotPx(), h:bandH(), inset:Object.assign({},M.inset||{})}:null,
   _laneY:(i)=>M?laneYpx(i):null,

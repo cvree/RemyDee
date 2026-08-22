@@ -1,6 +1,8 @@
-/* test8.js — THE ROAD OVERHAUL: free continuous movement, hover-to-study +
-   Lexicon Affinity, the clean gate corridor, and abilities that always do
-   something. Also covers the party ladder and the term-builder failure costs. */
+/* test8.js — THE ROAD OVERHAUL: free continuous movement, reading a part on the
+   road + Lexicon Affinity, the clean gate corridor, and abilities that always do
+   something. Also covers the party ladder and the term-builder failure costs.
+   (Reading was hover-driven when this file was written; the Vamp pass folded it
+   into gathering, and `_study` now drives that path — see VAMP_PASS.md §2.) */
 const { boot, sleep, until, assert, summary } = require('./testlib');
 
 (async () => {
@@ -110,7 +112,7 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   MI._state().keyUp = false;
   assert(MI._state().targetY < kStart, 'holding W/↑ travels upward continuously');
 
-  /* ---- HOVER TO STUDY: reading a word pays ---- */
+  /* ---- READING A WORD PAYS ---- */
   const studiedBefore = E.studiedCount();
   const partId = Object.keys(D.PARTS).find(id => !(E.S().studied || []).includes(id));
   const moBefore = MI._momentum();

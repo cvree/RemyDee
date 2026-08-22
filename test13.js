@@ -110,15 +110,15 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   const prefixId = Object.keys(partsD).find(id => partsD[id].kind === 'prefix');
   MI._state().combo = [];
   const doc3 = window.document;
-  assert(!/bank ≈/.test(doc3.getElementById('combo-build').innerHTML), 'chain risk: nothing pending with an empty chain');
+  assert(!/at stake/.test(doc3.getElementById('combo-build').innerHTML), 'chain risk: nothing pending with an empty chain');
   MI._pushCombo(rootId);
-  assert(/bank ≈/.test(doc3.getElementById('combo-build').innerHTML), 'chain risk: a partial chain shows what completing it would bank');
+  assert(/≈ \d+ ink at stake/.test(doc3.getElementById('combo-build').innerHTML), 'chain risk: a partial chain shows what completing it would bank');
 
   // a mismatched next part breaks the chain the same way a hazard hit does
   // (pushCombo's "broken" path) — the pending value must go with it
   MI._pushCombo(prefixId);
   MI._pushCombo(prefixId); // two prefixes in a row cannot extend a chain — forces the broken/reset path
-  assert(!/bank ≈/.test(doc3.getElementById('combo-build').innerHTML) || MI._state().combo.length <= 1,
+  assert(!/at stake/.test(doc3.getElementById('combo-build').innerHTML) || MI._state().combo.length <= 1,
     'chain risk: breaking the chain clears (or restarts fresh) the pending value shown for it');
 
   /* ================= THE GEAR DEBRIEF ================= */

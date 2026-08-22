@@ -231,19 +231,25 @@ The corridor covers the full read-and-decide window before the gate plane.
 
 ---
 
-## 6. Hover-to-study — vocabulary as the reward ✅
+## 6. Reading on the road — vocabulary as the reward ✅
 
-A new mechanic that directly serves the North Star: **curiosity pays.**
+A mechanic that directly serves the North Star: **curiosity pays.**
 
-Hovering the mouse over a word-part drifting down the road:
+This shipped first as *hover-to-study*: hold the cursor over a drifting part for
+a third of a second and a card gave you its meaning. It was withdrawn in the Vamp
+pass (`VAMP_PASS.md` §2) for two reasons — the card lived over the middle of the
+playfield, and the cursor it was driven by is the steering wheel, so the mode's
+two most valuable verbs were fighting for the same hand.
 
-1. **Reads it to you.** A card appears with the part, its kind, and its meaning.
-2. **Studies it.** Hold the hover briefly and the part is collected as *studied* —
-   worth more than one collected by walking through it.
-3. **Buffs you.** A studied part grants a small immediate bonus (extra stat
-   restoration + a momentum nudge) on top of the normal pickup.
-4. **Builds affinity.** Studied parts feed a persistent **Lexicon Affinity** track
-   that survives across missions.
+**Gathering a part you have never met now reads it** (`readPart`):
+
+1. **Reads it to you.** Its meaning is stamped over the squad, and rides on the
+   tile itself every time you meet that part again.
+2. **Pays for it.** A first meeting restores more, nudges momentum, and opens a
+   burst of pace — reaching for a word you do not know is never the slow option.
+   A part you already know pays the plain gather and says nothing.
+3. **Builds affinity.** Read parts feed a persistent **Lexicon Affinity** track
+   that survives across missions (distinct parts only — no farming one word).
 
 **Affinity levels** (persistent, campaign-long):
 
@@ -289,7 +295,7 @@ good. His final transformation is **Verbum Ultimum** — "the final word" — th
 that one master alone should hold the authority to define truth. The player defeats
 him by doing the opposite of everything he does: rebuilding words, recovering their
 origins, and sharing their meanings. Built on Chapter Seven's existing road — no new
-screen, so the whole bench-and-road toolkit (momentum, gates, hover-study, abilities)
+screen, so the whole bench-and-road toolkit (momentum, gates, reading, abilities)
 carries into it.
 
 ### Phase I — *The Stripping* (recognition under decay) — shipped
@@ -303,8 +309,8 @@ stats hard but is always recoverable — never a hard fail, per the "no reflex-o
 phase, no unfair wall" design rules.
 
 ### Phase II — *The Blank Page* (recall without support) — shipped
-From progress 0.34 onward, hover-to-study's definition card seals shut
-(`showStudyCard`) — a new part shows its text but not its meaning. **Lexicon
+From progress 0.34 onward, a gathered part's meaning seals shut (`sealedFor`) —
+a new part shows its text and gives up nothing else. **Lexicon
 Affinity is the mercy mechanic**: each affinity level earned across the whole
 campaign (§6) is one scaffold charge, spent the first time a new part is reached
 during this phase, permanently unsealing that one part's meaning. A player who
@@ -394,7 +400,7 @@ player has previously gotten wrong, and the party ladder starts one step higher.
 | **1** | Party ladder · blueprint unlock ladder · recommended board · bench capacity | ✅ |
 | **2** | Craft quality overhaul · ruined tier · fine/flawed road consequences | ✅ |
 | **3** | Free movement · gate corridor sweep · ability second-uses | ✅ |
-| **4** | Hover-to-study · affinity track & levels | ✅ |
+| **4** | Reading on the road (first gather) · affinity track & levels | ✅ |
 | **5** | Term-builder failure costs · naming-record chip | ✅ |
 | **6** | Progression panel · unlock cards on the result screen | ✅ |
 | **7** | Final boss encounter (3 phases) | ✅ |
@@ -440,4 +446,4 @@ Covered by `test11.js` (30 assertions).
 | Free movement makes hazards unreadable | Hazards keep generous vertical hitboxes; the approach-warning ring already exists and now tracks continuous Y |
 | Locking blueprints feels restrictive to returning players | Existing saves are migrated to unlock everything they have earned; unlock state derives from chapters completed |
 | Party ladder strands travelers | The waiting list is FIFO and drains before new roster members; the finale sweeps up anyone remaining |
-| Hover-to-study is unusable on touch | Touch keeps walk-through collection at full value; a long-press on a part opens the same definition card |
+| ~~Hover-to-study is unusable on touch~~ | Resolved by removing hover entirely: gathering reads the part, so touch and mouse get the identical mechanic |
