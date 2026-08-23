@@ -18,6 +18,9 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(typeof META.openVigil === 'function', 'the meta layer offers a Vigil');
   assert(!!doc.querySelector('#s-vigil') || true, 'the Vigil screen is built on demand');
 
+  // a chapter opened before the difficulty question has been put stops to ask
+  // it first (test40); the Vigil is a mid-campaign screen, so answer it here
+  E.S().settings.diffAsked = true;
   SC.showHub();
   await sleep(300);
   SC.openChapter(D.CHAPTERS[2]);

@@ -11,6 +11,9 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
 
   /* ================= THE CAMPAIGN MAP ================= */
   const S = E.newGame();
+  // the chooser is put in front of the first activity now; this suite is about
+  // the map, so it plays someone who has already answered it
+  S.settings.diffAsked = true;
   E.setS(S); E.applySettings();
   window.__RD_SCREENS.showHub();
   await until(() => doc.querySelectorAll('#campaign-map .map-node').length > 0, 6000, 'campaign map renders');

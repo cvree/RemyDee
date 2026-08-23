@@ -862,7 +862,11 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   border-top:1px dashed var(--papyrus-3,#d8cfb4);font-size:.8rem;}
 .path-row .pr-k{color:var(--ink-soft,#8a7a5f);min-width:104px;}
 .path-row .pr-v{font-weight:700;}
-.path-row .pr-v.pr-gold,.path-row .pr-gold{color:var(--gold);}
+/* The restrained gold is a colour for ink on dark ground; on the hub's
+   parchment panel it measured 2.18:1, which is the one place in the game where
+   the NEXT thing you unlock and your own lifetime bests are written. Bronze
+   reads as the same accent and clears AA. */
+.path-row .pr-v.pr-gold,.path-row .pr-gold{color:#7a5c1f;}
 .path-row .pr-sub{flex-basis:100%;font-size:.72rem;color:var(--ink-soft,#8a7a5f);line-height:1.35;}
 .path-grant{margin-top:8px;padding:6px 9px;border-radius:8px;font-size:.74rem;line-height:1.4;
   background:rgba(51,81,63,.1);border:1px solid rgba(51,81,63,.25);color:var(--verd-deep,#33513f);}
@@ -875,11 +879,26 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
    commission pattern is delivered inside the chest now, which is where the
    game's reward ceremony already was. Its styles went with it. */
 /* ---- commission board ---- */
-.road-report{background:rgba(189,157,95,.12);border:1px dashed var(--gold);border-radius:10px;
-  padding:8px 12px;margin-bottom:10px;font-size:.86rem;}
-.road-code .rc-code{font-family:monospace;font-weight:700;letter-spacing:.06em;background:rgba(0,0,0,.08);
-  padding:1px 6px;border-radius:5px;}
-.commission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+/* THE BOARD HANGS IN A DARK WORKSHOP. These rows inherited the page's ink
+   colour and were laid over a 12%-opaque wash, which on the lit bench behind
+   them left the scout's report and this road's shareable code as dark text on
+   a dark stage — the two pieces of intel the commission is chosen from. They
+   carry their own ground and their own light ink now. */
+.road-report{background:rgba(20,14,8,.55);border:1px dashed var(--gold);border-radius:10px;
+  padding:8px 12px;margin-bottom:10px;font-size:.86rem;color:var(--papyrus);}
+.road-report b{color:var(--gold-soft);}
+.road-report .muted{color:rgba(243,236,216,.62);}
+.road-code .rc-code{font-family:monospace;font-weight:700;letter-spacing:.06em;background:rgba(0,0,0,.34);
+  padding:1px 6px;border-radius:5px;color:var(--papyrus);}
+/* the closing note sits on the same dark stage and had the same problem */
+.comm-note{color:rgba(243,236,216,.72);}
+.comm-note b{color:var(--gold-soft);}
+/* An auto-fill grid gave a lone recommendation the full width of the bench, and
+   a slab with a 36px icon in one corner reads as a broken card rather than as
+   the one pattern the road calls for. Same fix the decode chips got: wrapping
+   flex, centred, with a width a card can actually be. */
+.commission-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;}
+.commission-grid > .comm-card{flex:1 1 190px;max-width:280px;}
 .comm-card{position:relative;text-align:left;font:inherit;color:inherit;cursor:pointer;
   background:var(--parch,#f3ecd8);border:1.5px solid var(--papyrus-3,#d8cfb4);border-radius:12px;
   padding:10px 12px;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;}
@@ -1019,8 +1038,13 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .mat-card .mc-lockmsg{font-size:.66rem;color:var(--cinnabar);font-weight:700;margin-top:6px;}
 
 /* maker's marks — a recognition check disguised as a flavor choice */
-.maker-mark{max-width:560px;margin:14px auto 0;text-align:center;}
+/* This panel is drawn onto the trial stage, which is dark; the instruction under
+   the heading inherited the page's muted ink and measured 2:1 against it — and
+   it is the line that explains that a MATCHING mark is worth something and a
+   mismatched one is only decoration, which is the whole choice. */
+.maker-mark{max-width:560px;margin:14px auto 0;text-align:center;color:var(--papyrus);}
 .maker-mark h4{margin-bottom:4px;color:var(--gold-soft);}
+.maker-mark .muted{color:rgba(243,236,216,.74);}
 .mm-opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;}
 .mm-opt{padding:8px 12px;border-radius:10px;background:var(--parch);border:2px solid transparent;
   cursor:pointer;text-align:left;min-width:96px;transition:transform .12s var(--ease),box-shadow .12s,border-color .2s;
@@ -1406,11 +1430,23 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .diff-card .dc-note{display:block;font-size:.74rem;color:var(--ink-soft);line-height:1.42;}
 .diff-card .dc-current{position:absolute;top:10px;right:10px;font-size:.56rem;letter-spacing:.1em;
   text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--verd-deep);color:var(--papyrus);}
-/* the little bar that shows where a setting sits on the one scale everything reads */
-.dc-scale{display:block;height:5px;border-radius:3px;margin-top:10px;background:rgba(43,36,28,.14);overflow:hidden;}
-.dc-scale > i{display:block;height:100%;border-radius:3px;
+/* WHO IT IS FOR, then THE THREE THINGS THAT MOVE. A single bar on a scale the
+   player has never walked says nothing before the first road; three labelled
+   meters say what will actually be different, in nouns that need no game
+   vocabulary to read. */
+.diff-card .dc-who{display:block;font-size:.76rem;color:var(--ink);font-weight:700;margin-bottom:9px;}
+.diff-card .dc-feel{display:grid;gap:5px;margin:0 0 9px;}
+.dc-frow{display:grid;grid-template-columns:104px 1fr;align-items:center;gap:9px;}
+.dc-flabel{font-size:.64rem;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-soft);}
+.dc-meter{position:relative;display:block;height:5px;border-radius:3px;background:rgba(43,36,28,.14);overflow:hidden;}
+.dc-meter > i{position:absolute;top:0;bottom:0;left:0;border-radius:3px;
   background:linear-gradient(90deg,var(--verd-soft),var(--gold),var(--cinnabar));}
-.dc-scale.adaptive > i{background:repeating-linear-gradient(90deg,var(--verd-soft) 0 8px,var(--gold) 8px 16px);}
+/* Two of the three meters run toward cinnabar because more of them is more
+   danger. Help is the odd one out — a full bar there is a kindness, and drawing
+   it in the wound colour told the player the opposite of the truth. */
+.dc-frow.good .dc-meter > i{background:linear-gradient(90deg,var(--gold),var(--verd-soft),var(--verd-deep));}
+/* an adaptive setting has no fixed value to draw — it draws the band it moves in */
+.dc-meter.adaptive > i{background:repeating-linear-gradient(90deg,var(--verd-soft) 0 7px,var(--gold) 7px 14px);}
 /* ===== where the road is running, on the results page ===== */
 .road-level{padding:14px 16px;text-align:left;margin-top:14px;}
 .road-level .rl-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
@@ -1766,7 +1802,24 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .toggle.on{background:var(--verd);}
 .toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--papyrus);transition:.2s;box-shadow:0 2px 4px var(--shadow);}
 .toggle.on::after{left:27px;}
-input[type=range]{accent-color:var(--cinnabar);width:150px;}
+/* A native range with an accent colour on it is still the browser's control,
+   drawn to the platform's taste and different on every one of them. This is the
+   same groove the switches use, with a wax bead running in it. */
+input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:18px;
+  background:transparent;cursor:pointer;}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:var(--r-md);
+  background:linear-gradient(90deg,var(--cinnabar-deep) 0 var(--fill,0%),rgba(43,36,28,.14) var(--fill,0%));
+  border:1px solid var(--ink-line);box-shadow:inset 0 1px 2px rgba(43,36,28,.22);}
+input[type=range]::-moz-range-track{height:6px;border-radius:var(--r-md);
+  background:rgba(43,36,28,.14);border:1px solid var(--ink-line);}
+input[type=range]::-moz-range-progress{height:6px;border-radius:var(--r-md);background:var(--cinnabar-deep);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;
+  margin-top:-6px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#d4574c,var(--cinnabar-deep));
+  border:1px solid #7d211c;box-shadow:0 2px 5px var(--shadow);}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle at 38% 34%,#d4574c,var(--cinnabar-deep));
+  border:1px solid #7d211c;box-shadow:0 2px 5px var(--shadow);}
+input[type=range]:focus-visible{outline:2px solid var(--cinnabar);outline-offset:3px;}
 .seg{display:flex;gap:4px;background:var(--papyrus-3);border-radius:10px;padding:3px;}
 .seg button{padding:5px 12px;border-radius:7px;font-size:.82rem;font-weight:700;color:var(--ink-soft);}
 .seg button.on{background:var(--cinnabar);color:var(--papyrus);}
@@ -1859,15 +1912,29 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
   border-bottom:1px dashed var(--papyrus-3);}
 .set-row:last-child{border-bottom:none;}
 .set-label{font-weight:700;font-size:.94rem;}
-.set-row input[type=range]{width:150px;accent-color:var(--cinnabar);}
-.switch{width:48px;height:27px;border-radius:16px;background:var(--papyrus-3);position:relative;
-  border:1px solid #c9b78d;cursor:pointer;flex:0 0 48px;transition:background .2s;padding:0;}
-.switch > i{position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;
-  background:var(--parch);box-shadow:0 2px 4px var(--shadow);transition:transform .2s var(--ease);}
-.switch.on{background:var(--verd);}
-.switch.on > i{transform:translateX(21px);}
+.set-row input[type=range]{width:150px;}
+/* THE ONE SCREEN THAT LOOKED LIKE A PHONE.
+   Settings shipped the rounded pill-and-dot toggle every mobile OS draws, in a
+   game whose every other control is inked, stamped or cut from parchment. It is
+   a counter sliding in a slot now: the track is a groove pressed into the page,
+   the counter is bone while it is off and verdant wax once it is set, and both
+   states are readable without colour because the counter MOVES and the groove
+   fills behind it. Same size, same hit area, same behaviour. */
+.switch{width:52px;height:24px;border-radius:var(--r-lg);background:rgba(43,36,28,.10);position:relative;
+  border:1px solid var(--ink-line);cursor:pointer;flex:0 0 52px;padding:0;overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(43,36,28,.24);transition:background .2s,border-color .2s;}
+.switch > i{position:absolute;top:2px;left:2px;width:22px;height:18px;border-radius:2px;z-index:2;
+  background:linear-gradient(180deg,var(--parch),var(--papyrus-3));border:1px solid #a8946a;
+  box-shadow:0 2px 4px var(--shadow);transition:transform .2s var(--ease),background .2s,border-color .2s;}
+/* the groove fills in behind the counter, so "set" reads at a glance from across the row */
+.switch::after{content:"";position:absolute;inset:0;width:0;background:rgba(79,114,97,.30);
+  transition:width .2s var(--ease);}
+.switch.on{border-color:var(--verd-deep);}
+.switch.on::after{width:100%;}
+.switch.on > i{transform:translateX(24px);border-color:var(--verd-deep);
+  background:linear-gradient(180deg,var(--verd),var(--verd-deep));}
 .switch:focus-visible{outline:2px solid var(--cinnabar);outline-offset:2px;}
-.seg{display:inline-flex;border-radius:9px;overflow:hidden;border:1px solid #c9b78d;}
+.seg{display:inline-flex;border-radius:var(--r-lg);overflow:hidden;border:1px solid #c9b78d;}
 .seg-btn{padding:6px 14px;background:var(--papyrus-2);border:none;cursor:pointer;font-weight:700;
   font-size:.82rem;color:var(--ink-soft);border-right:1px solid #c9b78d;}
 .seg-btn:last-child{border-right:none;}
@@ -2510,11 +2577,12 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
             <span class="divider"></span>
           </div>
           <p class="small muted diff-lede">
-            This changes the <b>road</b>, never the words. Every term is real and verified at
-            every setting &mdash; what moves is how dense the hazards are, how fast the squad
-            tires, how long you get to read a rune gate, how many answers a question offers,
-            and how many word-parts you have never met before the road puts in front of you.
-            You can change it whenever you like from Settings.
+            This changes the <b>journey</b>, never the words. Every term you build is real and
+            verified at every setting &mdash; what moves is how much the road throws at you, how
+            quickly your company tires, how long you get to read a question before answering it,
+            how many answers you are offered, and how many word-parts you have never met before
+            are put in front of you. Nothing here is locked, nothing is missed, and you can
+            change it whenever you like from Settings.
           </p>
           <div class="diff-grid" id="diff-grid"></div>
           <div class="build-controls" style="justify-content:space-between;margin-top:20px;">
@@ -3826,9 +3894,9 @@ const CHAPTERS = [
 
   { id:"ch1", num:1, name:"Chapter One — Garden of Roots", house:"Garden of Roots",
     dest:"Riverbend villages", risk:"Low", enemy:"blank", terrain:"lowland", season:"spring",
-    intro:"Word spreads that the School of Kalamos names things rightly again. A small company sets out to aid nearby villages — a diver with a ruined ear, a falconer fighting pollen season, a miller whose spoiled grain has sickened half the mill house, a ferrywoman who has crossed one cold river too many. The Silent Archive begins confiscating local reference scrolls, calling the words themselves dangerous in untrained hands.",
+    intro:"Word spreads that the School of Kalamos names things rightly again. A small company sets out to aid nearby villages — a diver with a ruined ear, a falconer fighting pollen season, a miller whose spoiled grain has sickened half the mill house, a ferrywoman who has crossed one cold river too many, and your own cook, who wants the right word for a traveler's inflamed liver before he writes it in the camp book. The Silent Archive begins confiscating local reference scrolls, calling the words themselves dangerous in untrained hands.",
     story:"Melia verifies each recovered root against the old records. &ldquo;Confident-sounding is not the same as true,&rdquo; she reminds you. The villagers keep their scrolls a little longer for it — proof, small as it is, that naming a thing correctly can still matter more than owning it.",
-    builders:["mei","fen","bo","cai","duan","ai"], members:["mei","fen","bo","cai","duan","ai"] },
+    builders:["mei","fen","bo","cai","duan","ai","luo"], members:["mei","fen","bo","cai","duan","ai","luo"] },
 
   { id:"ch2", num:2, name:"Chapter Two — Hall of Breath", house:"Hall of Breath",
     dest:"Windgate Pass", risk:"Moderate", enemy:"hunter", terrain:"mountain", season:"autumn",
@@ -4002,6 +4070,20 @@ const ESCORT_LADDER = [0, 1, 1, 2, 2, 3, 3, 99];   // 99 = the finale takes ever
 const BENCH_LADDER  = [1, 2, 2, 2, 3, 3, 3, 3];
 
 function ladderAt(arr, chapterNum){ return arr[clamp(chapterNum,0,arr.length-1)]; }
+
+/* HOW MANY TERMS THE CAMPAIGN ASKS FOR — the distinct terms carried by
+   travelers who are actually rostered somewhere. It is not the size of the
+   corpus: the Lexicon holds more than any single journey asks a player to
+   build, and the rest are met at the gates, in the Hall and in the Lexicon
+   itself. Derived rather than written down, so it cannot drift when a roster
+   changes; the count is small and this is called at most once a screen. */
+function campaignTermCount(){
+  const rostered=new Set();
+  CHAPTERS.forEach(c=>{ (c.builders||[]).forEach(id=>rostered.add(id)); });
+  const terms=new Set();
+  rostered.forEach(id=>{ const t=TRAVELERS[id]; if(t && t.term && TERMS[t.term]) terms.add(t.term); });
+  return terms.size;
+}
 
 /* The commission ladder: finishing a chapter opens the pattern the NEXT road
    wants. `null` means the player starts with it. */
@@ -4490,7 +4572,7 @@ function mark(k){
 /* expose */
 window.__RD_DATA = { PARTS, DIRECTIONS, TERMS, TERM_PRON, ROLES, TRAVELERS, SUPPLIES, SUPPLY_ICONS,
   WEAPON_GLYPH, ENEMIES, CHAPTERS, ROUTES, REGIONS, PAGES, INTRO, SAFETY_NOTE,
-  PARTY_LADDER, ESCORT_LADDER, BENCH_LADDER, ladderAt,
+  PARTY_LADDER, ESCORT_LADDER, BENCH_LADDER, ladderAt, campaignTermCount,
   BP_UNLOCK, BP_STARTING, blueprintsEarnedBy,
   AFFINITY_LEVELS, affinityLevel, affinityNext,
   ORIGINS, LANG_NAME, TWIN_ROOTS, PART_FACTS, FIGURES, FIGURE_ORDER, FIGURE_RANK,
@@ -5508,6 +5590,12 @@ function migrate(st){
       st.settings.difficulty = "steady";
     }
     if(!st.skill || typeof st.skill!=="object") st.skill={rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null};
+    /* The chooser moved back onto the cold path, before the first activity. A
+       save that predates the move belongs to someone already walking a curve
+       they chose or inherited, so the question counts as put — being stopped
+       mid-campaign to answer it would be the wall this was meant to avoid. */
+    const walked = (st.runCount||0)>0 || ((st.servedChapterIds||[]).length>0) || (st.chapter||0)>0;
+    if(st.settings.diffAsked!==true && walked) st.settings.diffAsked = true;
     // v7 → v8 backfill: the meta layer (achievements, dailies, records, relics, SRS)
     const m8=newGame();
     if(!st.ach   || typeof st.ach!=="object")   st.ach   = {};
@@ -5581,19 +5669,33 @@ function freshMastery(){
 
    The scale is a single number, tier ∈ [0,1]: 0 = gentlest, 1 = hardest.
    ================================================================== */
+/* Each setting carries three things beyond its tuning: `who` names the player it
+   is for in one sentence, `feel` is the same tier said three ways so the choice
+   can be SEEN rather than read, and `note` is the long form. The chooser is on
+   the cold path — it is answered by someone who has never walked a road — so
+   every word here has to mean something before the first step, which is why the
+   meters are labelled in plain nouns and not in the game's own vocabulary. */
 const DIFFS=[
   { key:"easy",     name:"Gentle",    glyph:"◔", tier:0.10,
     lede:"Learn first, survive second.",
-    note:"Hazards are soft and rare, the road stays uncluttered, the squad's strength drains slowly, and it works the word-parts you have already met rather than piling on new ones. One wrong door is always dimmed for you." },
+    who:"Pick this if medical words are new to you.",
+    feel:{danger:0.14, clock:0.20, help:0.96},
+    note:"Hazards are soft and rare, the road stays uncluttered, the squad's strength drains slowly, and it works the word-parts you have already met rather than piling on new ones. One wrong answer is always dimmed for you." },
   { key:"steady",   name:"Steady",    glyph:"◑", tier:0.42,
     lede:"The road as it was meant to be walked.",
-    note:"A fair fight. Hazards bite, stamina is a real clock, new roots arrive at the pace you can absorb them, and you get a proper look at every gate before you must choose." },
+    who:"Pick this if you have met a few roots before.",
+    feel:{danger:0.45, clock:0.45, help:0.55},
+    note:"A fair fight. Hazards bite, stamina is a real clock, new roots arrive at the pace you can absorb them, and you get a proper look at every question before you must choose." },
   { key:"hard",     name:"Demanding", glyph:"◕", tier:0.86,
     lede:"For someone who already knows their roots.",
-    note:"Dense, hard-hitting roads. Stamina burns fast, unfamiliar roots keep arriving, the wrong doors at a gate are the ones that look right, and nothing is dimmed for you." },
+    who:"Pick this if you want to be tested, not taught.",
+    feel:{danger:0.92, clock:0.88, help:0.10},
+    note:"Dense, hard-hitting roads. Stamina burns fast, unfamiliar roots keep arriving, the wrong answers at a gate are the ones that look right, and nothing is dimmed for you." },
   { key:"adaptive", name:"The road that learns", glyph:"◍", tier:null,
     lede:"It finds your level, and keeps finding it.",
-    note:"Starts at Steady and moves with you — every answer, every arrival and every collapse nudges it. Where it has settled is always shown on the results page." }
+    who:"Pick this if you would rather not guess.",
+    feel:null,
+    note:"Starts at Steady and moves with you — every answer, every arrival and every collapse nudges it. Where it has settled is always shown on the results page, and you can pin it to a fixed setting whenever you like." }
 ];
 const DIFF_BY_KEY=(()=>{ const m={}; DIFFS.forEach(d=>m[d.key]=d); return m; })();
 /* the adaptive rating in 0..1 — an exponentially-weighted read of how the
@@ -5722,12 +5824,15 @@ function newGame(){
       motion:false, contrast:false, textSize:"md",
       vol:{master:0.8,music:0.45,sfx:0.8,voice:1}, muted:false,
       timerRelax:false,
-      /* `adaptive` out of the box. The chooser is no longer on the cold path —
-         it is offered once after the first road, when the words in it describe
-         something the player has actually seen, and lives in Settings after that.
-         diffAsked records that the offer was made so it never asks twice. */
+      /* `adaptive` out of the box, but nobody plays on the default: the chooser
+         is put between the primer and the workshop, before the first activity,
+         and requireDifficulty() makes sure no route can slip past it. `diffAsked`
+         records that the question was put so it is never asked twice, and
+         `diffReviewed` records the one follow-up — after the first road, when
+         every word in the chooser describes something that just happened. */
       difficulty:"adaptive",
-      diffAsked:false
+      diffAsked:false,
+      diffReviewed:false
     },
     skill:{ rating:0.5, answers:0, runs:0, tier:0.42, lastTierName:null },
     support:{hint:3, consult:2, recall:3},
@@ -10421,32 +10526,60 @@ const S = E.S;
 
 /* ================= TITLE ================= */
 /* ==================================================================
-   THE DIFFICULTY CHOOSER — asked once, on the first launch, and
+   THE DIFFICULTY CHOOSER — asked before the first activity, and
    reachable from Settings forever after. Four cards, each of which
    says plainly what it actually changes; nothing here touches the
    vocabulary, only the road it is learned on.
+
+   It sat on the cold path once before and was pulled off it, because
+   asking a player who has seen one screen to price "hazard density"
+   and "gate read time" is a wall made of nouns they do not have yet.
+   The answer to that is not to stop asking — a player who wants a
+   gentle first hour should not have to walk a demanding one to be
+   offered it — it is to ask in words that mean something before the
+   first step. So the cards lead with WHO each setting is for, show the
+   three things that actually move as labelled meters (hazards, time
+   pressure, help), and keep the long prose underneath for whoever
+   wants it. `diffAsked` records that the question was put, and
+   requireDifficulty() below makes sure no activity in the game can
+   begin before it has been.
    ================================================================== */
+const FEEL_ROWS=[
+  ["danger","Hazards", "how much the road throws at you", false],
+  ["clock", "Time pressure", "how fast the squad tires", false],
+  ["help",  "Help offered", "hints, and wrong answers dimmed for you", true]
+];
 function showDifficulty(opts){
   opts=opts||{};
-  const from = opts.from || "title";
+  const from = opts.from || "intro";
+  const then = typeof opts.then==="function" ? opts.then : null;
   let chosen = E.S().settings.difficulty || "adaptive";
   go("s-difficulty",{onShow:()=>{
     buildBackdrop($('#diff-bg'),"title");
-    $('#diff-eyebrow').textContent = from==="settings" ? "Change it any time" : "Before you set out";
-    $('#diff-heading').textContent = from==="settings" ? "How hard should the road be?" : "How hard should the road be?";
+    $('#diff-eyebrow').textContent =
+      from==="settings" ? "Change it any time" :
+      from==="result"   ? "Now the words mean something" : "Before you set out";
+    $('#diff-heading').textContent = from==="result"
+      ? "Was that the road you wanted?" : "How hard should the road be?";
     const grid=$('#diff-grid'); grid.innerHTML="";
     const cur=E.S().settings.difficulty;
     E.DIFFS.forEach(d=>{
       const card=el("button","diff-card"+(d.key===chosen?" on":""));
       card.dataset.key=d.key;
       const isAdaptive = d.tier==null;
-      const pct = isAdaptive ? 100 : Math.round(d.tier*100);
+      /* An adaptive card cannot honestly draw a fixed meter, and a full bar
+         would read as "hardest". It draws the band it moves within instead. */
+      const meter=(v)=> isAdaptive
+        ? `<span class="dc-meter adaptive"><i style="left:10%;width:76%"></i></span>`
+        : `<span class="dc-meter"><i style="width:${Math.round(v*100)}%"></i></span>`;
       card.innerHTML=`${cur===d.key?'<span class="dc-current">current</span>':''}
         <span class="dc-glyph">${d.glyph}</span>
         <span class="dc-name">${d.name}</span>
         <span class="dc-lede">${d.lede}</span>
-        <span class="dc-note">${d.note}</span>
-        <span class="dc-scale${isAdaptive?" adaptive":""}"><i style="width:${pct}%"></i></span>`;
+        <span class="dc-who">${d.who||""}</span>
+        <span class="dc-feel">${FEEL_ROWS.map(([k,label,why,good])=>
+          `<span class="dc-frow${good?" good":""}" title="${why}"><span class="dc-flabel">${label}</span>${meter(d.feel?d.feel[k]:0)}</span>`).join("")}</span>
+        <span class="dc-note">${d.note}</span>`;
       card.onclick=()=>{ chosen=d.key;
         $$('#diff-grid .diff-card').forEach(c=>c.classList.toggle('on', c.dataset.key===d.key));
         Audio2.sfx.clink && Audio2.sfx.clink(); };
@@ -10454,19 +10587,35 @@ function showDifficulty(opts){
     });
     FX.stagger($$('#diff-grid .diff-card'),{stagger:70,y:12});
     const back=$('#diff-back');
-    back.textContent = from==="title" ? "← Back to the title" : "← Back";
+    back.style.display="";
+    back.textContent = from==="intro" ? "← Back to the tale" : "← Back";
     back.onclick=()=>{ Audio2.sfx.paper();
-      if(from==="title") showTitle(); else showHub(); };
+      if(from==="settings"||from==="result") showHub(); else startIntro(); };
     const go2=$('#diff-confirm');
     go2.textContent = from==="result" ? "Walk on →" : from==="settings" ? "Keep this setting" : "Set out →";
     go2.onclick=()=>{
-      E.S().settings.difficulty=chosen; persist();
+      const st=E.S();
+      st.settings.difficulty=chosen;
+      st.settings.diffAsked=true;      // the question has been put; never block an activity again
+      persist();
       Audio2.sfx.brush(); FX.buzz(18);
       const d=E.DIFF_BY_KEY[chosen];
       toast(`The road is set to ${d.name}.`);
-      if(from==="title") startIntro(); else showHub();
+      if(then) then(); else showHub();
     };
   }});
+}
+/* THE GATE. Every route into a graded activity passes through here, so the
+   setting is always a choice the player made rather than one they inherited
+   from a default. It asks at most once — after that `diffAsked` is true and
+   this is a straight call through, costing nothing. */
+function requireDifficulty(next){
+  const st=E.S();
+  if(st && st.settings && !st.settings.diffAsked){
+    showDifficulty({from:"intro", then:next});
+    return true;      // the caller stops here; `next` runs on the far side of the choice
+  }
+  return false;
 }
 /* The title used to be `instant:true` unconditionally, which is right exactly
    once — on the cold boot, where anything else is a stutter before the game has
@@ -10571,10 +10720,15 @@ function startIntro(){
     t.appendChild(card); nodes.push(card);
     FX.stagger(nodes,{stagger:110,y:18});
     const next=$('#intro-next');
-    next.textContent="Enter the workshop →";
-    next.onclick=()=>{ Audio2.sfx.brush(); FX.buzz(16); showHub(); };
+    /* THE CHOOSER SITS HERE, between the tale and the workshop: after the
+       primer has named prefix, root and suffix (so "how hard" has something to
+       be hard about) and before the player can start anything. Skipping the
+       tale skips the story, never the question. */
+    const onward=()=>{ if(!requireDifficulty(()=>showHub())) showHub(); };
+    next.textContent = S().settings.diffAsked ? "Enter the workshop →" : "Choose your road →";
+    next.onclick=()=>{ Audio2.sfx.brush(); FX.buzz(16); onward(); };
     $('#intro-skip').textContent="Skip the tale";
-    $('#intro-skip').onclick=()=>{ Audio2.sfx.paper(); showHub(); };
+    $('#intro-skip').onclick=()=>{ Audio2.sfx.paper(); onward(); };
   }});
 }
 
@@ -10612,7 +10766,9 @@ function showHub(){
     if(eb) eb.textContent = S().endlessBest ? `Best distance: ${(S().endlessBest).toFixed(1)} · ${S().endlessTerms||0} terms` : "No runs yet.";
     const es=$('#endless-start');
     if(es) es.onclick=()=>{ Audio2.sfx.brush(); FX.buzz(16);
-      if(window.__RD_MISSION && window.__RD_MISSION.startEndlessRoad) window.__RD_MISSION.startEndlessRoad(); };
+      const run=()=>{ if(window.__RD_MISSION && window.__RD_MISSION.startEndlessRoad)
+        window.__RD_MISSION.startEndlessRoad(); };
+      if(!requireDifficulty(run)) run(); };
   }});
 }
 /* The progression panel. It answers, without a menu: where am I, what does the
@@ -10864,6 +11020,10 @@ function renderRegions(){
 
 /* ================= CHAPTER BRIEF ================= */
 function openChapter(chapter){
+  /* No graded activity in the campaign begins on an unanswered question: if the
+     player got here without being asked (a save from before the chooser moved,
+     a route that skipped the intro), they are asked now and land back here. */
+  if(requireDifficulty(()=>openChapter(chapter))) return;
   // the party ladder decides who actually walks this chapter — the rest wait their turn
   S().emberDebt=0; persist();     // naming debt is owed per-road, not forever
   const party=E.partyFor(chapter);
@@ -11636,7 +11796,13 @@ function sliderRow(label, val, onChange){
   const row=el("div","set-row");
   row.innerHTML=`<div class="set-label">${label}</div>
     <input type="range" min="0" max="1" step="0.05" value="${val}" aria-label="${label}">`;
-  row.querySelector('input').oninput=(e)=>onChange(parseFloat(e.target.value));
+  const inp=row.querySelector('input');
+  /* WebKit has no ::-moz-range-progress, so a slider there is a bead on an
+     empty groove and the level can only be read from where the bead sits. The
+     track paints its own fill from a variable the input keeps up to date. */
+  const paint=()=>{ inp.style.setProperty("--fill", Math.round(parseFloat(inp.value)*100)+"%"); };
+  paint();
+  inp.oninput=(e)=>{ paint(); onChange(parseFloat(e.target.value)); };
   return row;
 }
 function renderSettings(){
@@ -12178,7 +12344,11 @@ function openCommission(){
   W.step="commission"; W.cur=null;
   setStepDot(0);
   $('#forge-skip').style.display = f.forged.length>=1 ? "inline-flex" : "none";
-  $('#forge-blueprint').innerHTML="";
+  /* The plate is where the pattern being worked is drawn, and it was emptied on
+     this step — a bright blank square beside the heading, which reads as a
+     drawing that failed to load. Before a pattern is chosen it holds the order
+     board itself. */
+  $('#forge-blueprint').innerHTML=D.mark("scroll");
   $('#forge-eyebrow').textContent="Choose the commission";
   $('#forge-title').textContent = benchRoomLeft(f)===W.maxItems ? "What does this road need?" : "One more piece?";
   $('#forge-sub').textContent=`Room for ${benchRoomLeft(f)} more piece${benchRoomLeft(f)>1?'s':''} · ${W.embers} ember${W.embers>1?'s':''} in the forge. A flawed craft burns two; a ruined one leaves you nothing.`;
@@ -13062,37 +13232,37 @@ function runTestAnim(type, ctx, cv, q, done){
       ctx.stroke();
       // walker crossing on it
       if(p>0.5){ const wx=150+(p-0.5)/0.5*220*reach; drawTiny(ctx,wx,150-Math.sin((p-0.5)/0.5*Math.PI*0.5)*40); }
-      if(!good && p>0.85){ ctx.fillStyle="#d5643a"; ctx.font="16px sans-serif"; ctx.textAlign="center"; ctx.fillText("...just short",W2/2,60); }
+      if(!good && p>0.85){ ctx.fillStyle="#d5643a"; ctx.font="16px 'Noto Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("...just short",W2/2,60); }
     } else if(type==="target"){ // arrow to a lantern
       ctx.fillStyle="#e6a13a"; ctx.beginPath(); ctx.arc(440,90,14,0,6.28); ctx.fill(); // lantern
       const ax=40+p*(good?400:360); const ay=180-Math.sin(p*Math.PI)*(good?90:60);
       ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(ax-14,ay+6); ctx.lineTo(ax,ay); ctx.stroke();
       ctx.fillStyle="#b5322b"; ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax-6,ay-3); ctx.lineTo(ax-6,ay+3); ctx.fill();
       if(p>=1){ if(good){ ctx.fillStyle="rgba(80,80,90,.7)"; ctx.beginPath(); ctx.arc(440,90,16,0,6.28); ctx.fill(); }
-        else { ctx.fillStyle="#e6a13a"; ctx.font="15px sans-serif"; ctx.textAlign="center"; ctx.fillText("grazed it",W2/2,60);} }
+        else { ctx.fillStyle="#e6a13a"; ctx.font="15px 'Noto Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("grazed it",W2/2,60);} }
     } else if(type==="climb"){ // scaling a wall
       ctx.fillStyle="#3a2f22"; ctx.fillRect(W2/2-30,20,60,H2-20);
       const cy=210-p*(good?170:120); drawTiny(ctx,W2/2,cy);
-      if(!good && p>0.85){ ctx.fillStyle="#d5643a"; ctx.font="15px sans-serif"; ctx.textAlign="center"; ctx.fillText("lost grip near the top",W2/2,50); }
+      if(!good && p>0.85){ ctx.fillStyle="#d5643a"; ctx.font="15px 'Noto Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("lost grip near the top",W2/2,50); }
     } else if(type==="conceal"){ // smoke hides the squad
       for(let i=0;i<3;i++) drawTiny(ctx, 200+i*60, 180);
       const alpha= good? clamp(p*1.2,0,0.95): clamp(p*0.7,0,0.5);
       ctx.fillStyle=`rgba(150,155,160,${alpha})`;
       ctx.beginPath(); ctx.ellipse(260,170,120*p,70*p,0,0,6.28); ctx.fill();
-      if(p>=1){ ctx.fillStyle= good?"rgba(125,154,138,.95)":"#d5643a"; ctx.font="15px sans-serif"; ctx.textAlign="center";
+      if(p>=1){ ctx.fillStyle= good?"rgba(125,154,138,.95)":"#d5643a"; ctx.font="15px 'Noto Sans',sans-serif"; ctx.textAlign="center";
         ctx.fillText(good?"hidden":"still half-seen",W2/2,54); }
     } else if(type==="cut"){ // slice a barricade rope
       ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=10; ctx.beginPath(); ctx.moveTo(120,120); ctx.lineTo(400,120); ctx.stroke();
       const bx=120+p*280; ctx.strokeStyle="#c9d2d8"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(bx,80); ctx.lineTo(bx+20,160); ctx.stroke();
       if(p>=1){ if(good){ ctx.strokeStyle="#8a5a2b"; ctx.lineWidth=10; ctx.beginPath(); ctx.moveTo(120,120); ctx.lineTo(250,132);
           ctx.moveTo(270,132); ctx.lineTo(400,120); ctx.stroke(); }
-        else { ctx.fillStyle="#d5643a"; ctx.font="15px sans-serif"; ctx.textAlign="center"; ctx.fillText("frayed, not cut",W2/2,54);} }
+        else { ctx.fillStyle="#d5643a"; ctx.font="15px 'Noto Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("frayed, not cut",W2/2,54);} }
     } else if(type==="protect"){ // shield a lexicon page
       ctx.fillStyle="#efe6cf"; ctx.fillRect(W2/2-30,H2/2-40,60,80); // page
       ctx.fillStyle="#b5322b"; ctx.font="20px 'Cormorant Garamond',Palatino,Georgia,serif"; ctx.textAlign="center"; ctx.fillText("Λ",W2/2,H2/2+8);
       const r= good? 70: 46; ctx.strokeStyle=good?"#7d9a8a":"#d5643a"; ctx.lineWidth=4;
       ctx.beginPath(); ctx.arc(W2/2,H2/2,r*p,0,6.28); ctx.stroke();
-      if(p>=1 && !good){ ctx.fillStyle="#d5643a"; ctx.font="15px sans-serif"; ctx.fillText("thin cover",W2/2,54); }
+      if(p>=1 && !good){ ctx.fillStyle="#d5643a"; ctx.font="15px 'Noto Sans',sans-serif"; ctx.fillText("thin cover",W2/2,54); }
     } else { drawTiny(ctx,W2/2,H2/2); }
     if(t<dur) raf=requestAnimationFrame(step); else { setTimeout(done,300); }
   };
@@ -18112,7 +18282,11 @@ function drawFinishGate(ctx,x,y,H,t,close){
   ctx.fillStyle="#b5322b";
   ctx.beginPath(); ctx.moveTo(-50,poleTop+8); ctx.quadraticCurveTo(0,poleTop+8+sway,50,poleTop+8);
   ctx.lineTo(50,poleTop+26); ctx.quadraticCurveTo(0,poleTop+26+sway,-50,poleTop+26); ctx.closePath(); ctx.fill();
-  ctx.fillStyle="#f3ecd8"; ctx.font='700 15px "Noto Serif SC",serif'; ctx.textAlign="center"; ctx.textBaseline="middle";
+  /* Omega is a Greek capital and the stack asking for it was a CJK serif left
+     over from the setting this game no longer has — the same display stack the
+     rest of the game uses carries polytonic Greek on every desktop. */
+  ctx.fillStyle="#f3ecd8"; ctx.font='700 15px "Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif';
+  ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.fillText("\u03a9", 0, poleTop+17);   // omega on the goal pole: the end of this road
   ctx.restore();
 }
@@ -18581,18 +18755,19 @@ function showResult(){
       META.recordScore("road", Math.round(overall*1000),
         {label:`${chapter.dest} · ${gInfo[grade].ch}`});
     }
-    /* THE DIFFICULTY QUESTION, ASKED WHEN IT MEANS SOMETHING.
-       It used to be the second screen in the game, where "hazard density" and
-       "gate read time" are four nouns the player has no picture of. Offered here,
-       once, after the first road, every word in it describes something that just
-       happened to them — and they can still leave it on adaptive by walking on. */
-    const firstRoad = !S().settings.diffAsked && (S().runCount||0) <= 1;
+    /* THE DIFFICULTY QUESTION, ASKED AGAIN WHEN IT MEANS SOMETHING.
+       It is answered before the first activity now, but the first answer is
+       given by someone who has never walked a road. This is the moment the
+       words in it stop being abstract — one road behind them, the meters they
+       priced blind now describe something that just happened — so the offer is
+       repeated exactly once, and walking on keeps what they already chose. */
+    const firstRoad = !S().settings.diffReviewed && (S().runCount||0) <= 1;
     $('#result-continue').textContent = isFinal ? "See how the tale ends →"
       : firstRoad ? "Set the road ahead →" : "Back to the school →";
     $('#result-continue').onclick=()=>{ Audio2.sfx.paper();
       const after=()=>{
         if(isFinal){ showEnding(); return; }
-        if(firstRoad){ S().settings.diffAsked=true; persist();
+        if(firstRoad){ S().settings.diffReviewed=true; persist();
           window.__RD_SCREENS.showDifficulty({from:"result"}); return; }
         window.__RD_SCREENS.showHub();
       };
@@ -18775,14 +18950,20 @@ function showEnding(){
     $('#end-body').innerHTML = tier==="master"
       ? `Every page has returned, and the Lexicon blazed to life only when the whole caravan offered its shared knowledge — never for one owner. ${vale?"Master Vale stands at your side. ":""}Kanon Radicida's argument falls with his last word unsealed: the answer to misused knowledge was never to slay its roots, but to teach them well. Remy scatters the pages across the realm, and the Great Archive fills with thousands of community books.`
       : tier==="keeper"
-      ? `The Lexicon is whole enough to light the realm again. ${vale?"Master Vale is free, ":""}the Silent Archive is broken, and the recovered pages are shared, not hoarded. Some fragments still ride the wind — but knowledge belongs to everyone now.`
+      ? `The Lexicon is whole enough to light the realm again. ${vale?"Master Vale is free, the Silent Archive is broken":"The Silent Archive is broken"}, and the recovered pages are shared, not hoarded. Some fragments still ride the wind — but knowledge belongs to everyone now.`
       : `A beginning more than an ending: some pages still scatter on the wind, and some terms still trip the tongue. But every company trusted you with their road, and you proved that learning is meant to be shared — that is its own recovered page.`;
     const rg=$('#end-rewards'); rg.innerHTML="";
     /* The last screen of the game showed four numbers that were simply there,
        fully formed, the moment it opened. This is the tally of everything the
        player did — it should be counted out to them. */
+    /* This read "43 / 78" on a flawless run, because 78 is every term in the
+       Lexicon and the campaign only ever asks the player to NAME the ones a
+       traveler comes and asks for. The last screen in the game was telling a
+       player who had done everything that they were a little over half done.
+       It counts against what was actually asked of them now; the rest are met
+       at the gates, in the Hall and in the Lexicon, and are not a debt. */
     [["Reputation",rep,""],["Ink",S().coin,""],["Pages",pages,"/8"],
-     ["Terms",S().completedTerms.length,"/"+Object.keys(TERMS).length]]
+     ["Terms named",S().completedTerms.length,"/"+D.campaignTermCount()]]
       .forEach(([l,v,suf],i)=>{
         const d=el("div","reward");
         d.innerHTML=`<div class="rv">0${suf}</div><div class="rl">${l}</div>`;
