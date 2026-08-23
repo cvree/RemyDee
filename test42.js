@@ -91,7 +91,34 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(errors.length === before2,
     `a pair that lands after the board is gone throws nothing (${errors.length - before2} error(s))`);
 
-  /* ---------- 3 · ending a road that is not running ---------- */
+  /* ---------- 3 · one round at a time ---------- */
+  /* Staging a mode used to leave the previous session running. Every mode's HUD
+     uses the same ids in the same #arcade-stage, so the abandoned session went
+     on writing into its replacement — and because a mode's finish() called the
+     GLOBAL A.cleanup, an abandoned forge could end the forge that replaced it.
+     That is the "ten forges end the session" flake this suite is named after:
+     done=1, over=true, a round killed by its predecessor. */
+  AR.open('hub');
+  await until(() => $$('.arcade-card').length > 0, 4000, 'the hall menu');
+  AR.startMode('forge');
+  await until(() => !!AR._game(), 4000, 'a forge session');
+  const first = AR._game();
+  assert(first && first.over === false, 'a staged round starts live');
+
+  AR.startMode('forge');
+  await until(() => AR._game() !== first, 4000, 'a second forge session');
+  const second = AR._game();
+  assert(first.over === true,
+    'staging a round ends the one it replaces, rather than leaving it running');
+  assert(second.over === false,
+    'and the round that replaced it is the one still live');
+
+  // the abandoned session must not be able to reach across and end this one
+  await sleep(600);
+  assert(second.over === false,
+    'nothing the abandoned round had queued can end its replacement');
+
+  /* ---------- 4 · ending a road that is not running ---------- */
   const before3 = errors.length;
   let threw = null;
   try { MI.endEndlessRoad(); } catch (e) { threw = e; }

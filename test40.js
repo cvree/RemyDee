@@ -145,7 +145,22 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
     'the help meter points the same way the dimmed wrong answer actually does');
   function byKeyFeel(k) { return DIFFS.find((d) => d.key === k).feel; }
 
-  /* ================= 4 · THE FOLLOW-UP STILL HAPPENS ================= */
+  /* ================= 4 · THE QUESTION IS ON THE SCREEN ================= */
+  /* `justify-content:center` on a scrolling box centres the overflow too: on a
+     short screen the chooser opened halfway down its own first card, with the
+     question it asks above the viewport and no way to scroll back to it. Four
+     other screens share the rule — the party brief, the Hall, the Trials and
+     the Vigil — so it is asserted on all five. jsdom does no layout, but it
+     does resolve the cascade, which is enough to keep the keyword from being
+     quietly dropped by a later edit. */
+  ['#s-difficulty', '#s-case', '#s-arcade', '#s-trial', '#s-vigil'].forEach((id) => {
+    const box = doc.querySelector(id + ' .content');
+    const jc = box ? window.getComputedStyle(box).justifyContent : null;
+    assert(jc === 'safe center' || jc === 'flex-start' || jc === 'start',
+      `${id} never centres its content past the top of the screen (justify-content: ${jc})`);
+  });
+
+  /* ================= 5 · THE FOLLOW-UP STILL HAPPENS ================= */
   const st = freshGame();
   assert(st.settings.diffReviewed === false,
     'the after-the-first-road offer has its own flag');

@@ -33,26 +33,32 @@ Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 `VAMP_PASS.md` — read `BENCH_PASS.md` first (it deleted a lot of what the older
 ones describe), then `HALL_PASS.md`, then `FEEL_PASS.md`, which is about what
 the road *says* rather than what it does, then `WORD_PASS.md`, which asks the
-same question of the bench, and finally `VAMP_PASS.md`, the most recent, which
+same question of the bench, and finally `VAMP_PASS.md`, which
 withdrew hover-to-study and separated reward feedback from damage feedback —
-it supersedes `WALK_PASS.md` §2 and §5 wherever they disagree.
+it supersedes `WALK_PASS.md` §2 and §5 wherever they disagree — and finally
+`FINISH_PASS.md`, the most recent, which put the difficulty chooser back in
+front of the first activity, audited the save layer and the long session, and
+named the radius scale.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39; do node test$t.js | tail -1; done
+sh runtests.sh                        # every suite, one line each; `sh runtests.sh 33 40` runs two
 ```
 
-33 jsdom suites, **1397 assertions, zero window errors**.
+37 jsdom suites, **~1470 assertions, zero window errors**. `runtests.sh` prints
+ALL GREEN or the count of red suites and exits non-zero.
 
-**One suite is intermittently red and it is not yours.** `test36`'s "ten forges
-end the session" assertion (`G().done >= 10`) fails on roughly one run in ten,
-at the same rate on `main` as on any branch — the forge session ends after a
-single successful round (`iters=2 stalls=0 done=1 over=true`), which looks like
-a session clock surviving a previous `startMode('forge')`. Re-run before you go
-hunting; if you do fix it, it is a Hall bug, not a test bug.
+**The suite is green, including the one that used to flake.** `test36`'s "ten
+forges end the session" assertion failed about one run in ten, and the guess in
+this file — a session clock surviving a previous `startMode('forge')` — was
+right. `stageMode()` never ended the round it was replacing, every mode's HUD
+uses the same ids in the same `#arcade-stage`, and a mode's `finish()` called
+the *global* `A.cleanup`, so an abandoned forge could end the forge that
+replaced it. Staging now ends what is on the stage, and a session ends itself
+rather than whatever is current (`test42` §3).
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
@@ -314,15 +320,60 @@ other and cap at six.
 before it times an arrival — the school pauses the road 620ms into a first walk
 and the test had always been racing it.
 
+**11. The road is chosen before it is walked.** See `docs/FINISH_PASS.md`. The
+difficulty chooser is back on the cold path, between the primer and the
+workshop, because the reason it came off was the wording rather than the
+question: every card leads with **who it is for** in one sentence and draws
+hazards, time pressure and help as labelled meters, and `test40` proves those
+meters agree with the tuning table underneath them. `requireDifficulty(next)`
+stands in front of `openChapter` and the Endless Road as a backstop — it returns
+`true` when it deferred, and `next` runs on the far side of the choice — so no
+route reaches a graded activity on a default nobody chose. `diffAsked` closes it
+for good and the migration marks it answered for any save with a road behind it;
+the after-the-first-road offer moved onto its own flag, `diffReviewed`.
+
+Walking the game in a browser to check it turned up five things worth naming:
+the commission board's scout report, road code and maker's-mark line were dark
+ink on the dark workshop stage (1.0:1); a lone recommendation filled the whole
+bench and the pattern plate beside it was blanked; **Lucius the Cook was written
+and rostered nowhere**, so `hepatitis` was the one authored build a full
+campaign could not reach (he joins the Garden of Roots, and the finale absorbs
+the extra as `PARTY_LADDER`'s trailing `99` always meant it to); the ending
+scored a flawless run **43 / 78** when the campaign only ever asks for 44 terms
+(`campaignTermCount()` derives the real denominator) and began a sentence in
+lower case whenever Vale was lost; and the goal pole's omega still asked for a
+CJK serif.
+
+**12. Never audited, now audited.** The save layer swallowed every refusal:
+`try{ setItem }catch(e){}` is right about not taking the game down, and was the
+whole story, so a private window or a full quota cost a player a campaign
+silently. A write reports now, says so once out loud, and a quota refusal sheds
+the luxuries — leaderboard rows, month-old day-medals, lore already read — off
+the **live** state before giving up on the campaign beside them (`test41`).
+The long session: eight full cycles through every screen with listener calls
+instrumented shows flat DOM, nothing stacked on a surviving node, and two real
+crashes — Reed Slice scoring against a HUD the Hall had already removed, and
+Seal Match writing a matched pair 240ms after the board could be gone. Both
+guarded, and the slice loop stops itself when its canvas leaves the document
+(`test42`). A few hundred random clicks at desktop and phone size: zero errors.
+
+**13. The roots got their reason where the player is already looking.** All 85
+parts carry a verified etymology and it lived in two places, neither of which a
+player passes through for the ~20 parts no traveler ever asks for. `factFor(q)`
+adds it to the teach beat of the Vigil and the Daily Trial — under the
+explanation, quieter than it, suppressed when the explanation already says it.
+Deliberately not on the road: the walk says one thing per event (`VAMP_PASS`).
+
 ### What is left — verified, not speculation
 
 **Art.**
 - Step 3 of the forge is now a card and a quality bar with the trial opening
   over it, so between trials the panel is sparse. It is only on screen for the
   ~600ms the bar takes to fill, but it could carry the piece being made.
-- Settings still ships iOS pill toggles and a native range input with Chrome's
-  default accent; the Hall of Records still opens on five KPI stat tiles over a
-  card grid under tab pills. Those two screens are the most generic in the game.
+- The Hall of Records still opens on five KPI stat tiles over a card grid under
+  tab pills — the most generic screen left in the game. (Settings was the other
+  one and is done: the pill toggle is a counter in a groove and the native range
+  is a wax bead in the same groove.)
 - The chest is still a mobile-game loot box; it wants to be a lacquered document
   case with a wax seal that cracks. (Note the fiction is Mediterranean now: a
   sealed wooden *capsa* with a wax *sphragis*.)
@@ -330,36 +381,29 @@ and the test had always been racing it.
 - `page()` still serves seven distinct meanings across twelve call sites.
   (`sfx.pour` and `sfx.bow` found homes in the Hall pass: the forge quenches
   with one, the spirit bows out with the other.)
-- Border radii are still a mix of 2/3/8/9/10/12/14/20px against a token set that
-  says 2/3/4. The decode chips and the gate prompt were brought in line; the
-  rest were not, because pills and seals legitimately want round.
+- ~~Border radii are a mix of 2/3/8/9/10/12/14/20px.~~ **Done** — the scale is
+  named (`--r-sm/--r-md/--r-lg` for inked edges, `--r-chip` 10, `--r-card` 14,
+  `--r-pill` 999) and every rule names the role it meant. One bare value
+  survives and it is a shape, not a radius.
 
 **Performance.** The road holds 59.9fps with a 16.7ms median frame. The bench's
 own per-frame offenders went with the old crafts; the trials' stages have never
 been profiled.
 
 **Learning design.**
-- The road still draws its goal-pole omega with `"Noto Serif SC"` in the font
-  stack (`drawGoal`). Harmless — it falls through to a serif — but it is the
-  same stale reference the Hall pass cleared out of the arcade.
-- Chapter 7 introduces no new vocabulary; the finale asks for nothing new.
-- Around 24 terms and 19 parts are never introduced by a traveler — they exist
-  only as quiz material. `paraplegia` and `para-` just joined that list.
-- ~~The pretest only fires on tier 3.~~ **Done** — the word pass withheld the
-  tier-2 definition and the gate moved with it (12 builds → 37). What is still
-  open is the tier-1 end of the same argument: tier 1 prints the definition as
-  its prompt, which is right for a first teaching moment but means seven builds
-  never ask for retrieval at all. A tier-1 *repeat* — the same traveler met
-  again later — could withhold it and earn the guess.
-- Around 24 terms and 19 parts are still never introduced by a traveler. The word
-  pass made the tray reach further into that pool as distractors, so more of them
-  are now at least *seen* under pressure, but seeing a part as a wrong answer is
-  not being taught it.
-
-**Never audited.** A bug-hunting pass on save corruption, quota-exceeded writes,
-private-mode localStorage and long-session listener growth was commissioned
-twice and died on a session limit both times. `test17` and `test28` cover the
-save paths that exist; nobody has tried to break them.
+- ~~Chapter 7 introduces no new vocabulary.~~ **Not true, and worth recording so
+  nobody re-fixes it.** That reading came from the chapter's static roster; in
+  play `partyFor` drains the waiting list, and the finale asks for seven or eight
+  terms nobody has built (hemiplegia, osteoarthritis, arthroscopy, gastrectomy,
+  nephrectomy, hematoma, anticoagulant). Verify against a simulated campaign,
+  not against `CHAPTERS[].builders`.
+- 34 of the 78 terms are never built by a traveler in a full campaign — they are
+  quiz material, Hall material and Lexicon material. All 44 that a traveler *does*
+  ask for are now reachable in one campaign, exactly once each.
+- Tier 1 prints the definition as its prompt, which is right for a first
+  teaching moment but means seven builds never ask for retrieval at all. A
+  tier-1 *repeat* — the same traveler met again later — could withhold it and
+  earn the guess. Still open.
 
 ### How to work
 
