@@ -374,9 +374,9 @@ Deliberately not on the road: the walk says one thing per event (`VAMP_PASS`).
   tab pills — the most generic screen left in the game. (Settings was the other
   one and is done: the pill toggle is a counter in a groove and the native range
   is a wax bead in the same groove.)
-- The chest is still a mobile-game loot box; it wants to be a lacquered document
-  case with a wax seal that cracks. (Note the fiction is Mediterranean now: a
-  sealed wooden *capsa* with a wax *sphragis*.)
+- ~~The chest is a mobile-game loot box.~~ **Done** — it is a corded wooden
+  *capsa* with a wax *sphragis* over the cord, stamped with the rank's numeral;
+  the wax cracks and falls, then the lid goes back.
 - No `writing-mode` anywhere.
 - `page()` still serves seven distinct meanings across twelve call sites.
   (`sfx.pour` and `sfx.bow` found homes in the Hall pass: the forge quenches

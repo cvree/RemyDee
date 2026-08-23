@@ -229,10 +229,9 @@ accent and clears AA.
 ## What this pass did not do
 
 - The **Hall of Records** is still five KPI tiles over a card grid under tab
-  pills, and the **chest** is still a mobile-game loot box rather than a sealed
-  *capsa* with a wax *sphragis*. Both work and both read clearly; neither was
-  worth the regression risk against `test33`/`test36` in the same pass as
-  everything above.
+  pills — the most generic screen left in the game. It works and it reads
+  clearly, and it was not worth the regression risk against `test33`/`test36` in
+  the same pass as everything above.
 - `page()` still serves seven meanings across twelve call sites.
 - No `writing-mode` anywhere.
 - The trials' stages have still never been profiled.
