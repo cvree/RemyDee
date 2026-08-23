@@ -5522,8 +5522,42 @@ const Audio2 = (function(){
 /* ================= SAVE ================= */
 const SAVE_KEY="remydee_lost_lexicon_v3";
 const OLD_KEYS=["remydee_ink_remedy_v2","remydee_ink_remedy_v1"];
+/* A REFUSED WRITE USED TO BE SWALLOWED WHOLE.
+   `try{ setItem }catch(e){}` is the right shape — a browser that will not store
+   anything must not take the running game down with it — but it was also the
+   whole story: in a private window, with site data blocked, or against a full
+   quota, a player could walk an entire campaign and lose it at the first reload
+   having been told nothing at all. A write reports whether it worked now. The
+   first refusal says so out loud, once, so the player can decide what to do
+   with the next hour; and a refusal that looks like a full quota first makes
+   room by dropping the parts of the save that are a luxury — the leaderboards
+   and the old day-medals — rather than letting the campaign die beside them.
+   The shed is applied to the live state on purpose: healing it once beats
+   rebuilding the same oversized payload on every persist for the rest of the
+   session. */
 const Save = {
-  write(state){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){} },
+  refused:false,
+  _put(state){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); return true; }catch(e){ return false; } },
+  write(state){
+    if(this._put(state)) return true;
+    try{
+      if(state && state.records){
+        Object.keys(state.records).forEach(k=>{
+          if(Array.isArray(state.records[k])) state.records[k]=state.records[k].slice(0,3); });
+      }
+      if(state && state.daily && state.daily.medals){
+        const days=Object.keys(state.daily.medals).sort();
+        days.slice(0, Math.max(0, days.length-30)).forEach(k=>{ delete state.daily.medals[k]; });
+      }
+      if(state && state.lore && Array.isArray(state.lore.seen)) state.lore.seen=state.lore.seen.slice(-40);
+      if(this._put(state)) return true;
+    }catch(e){}
+    if(!this.refused){
+      this.refused=true;
+      try{ D.toast("This browser will not save — your progress won't survive a reload."); }catch(e){}
+    }
+    return false;
+  },
   read(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s) return migrate(JSON.parse(s));
     // migrate an older-format save if present
     for(const k of OLD_KEYS){ const o=localStorage.getItem(k); if(o){ const st=migrate(JSON.parse(o)); this.write(st); return st; } }
@@ -15217,7 +15251,10 @@ function startEndlessRoad(){
   runMission();
 }
 function endEndlessRoad(){
-  if(M.done) return; M.done=true; M.paused=true;
+  // it is exported, so it can be reached when no road is running; there is
+  // nothing to end then, and a thrown TypeError is a worse answer than nothing
+  if(!M || M.done) return;
+  M.done=true; M.paused=true;
   if(M._unbind){ M._unbind(); M._unbind=null; }
   clearCrest();
   const distance=+M.progress.toFixed(2), terms=M.realTermsBuilt||0, best=+M.bestMomentum.toFixed(1);
@@ -19458,7 +19495,7 @@ function startSlice(){
     const p = PARTS[targetId];
     G.prompt = p.mean; G.target = targetId;
     G.questions++; G.roundN=(G.roundN||0)+1;
-    $('#sl-mean').textContent = p.mean;
+    setHud('#sl-mean', p.mean);
     const promptEl=$('#sl-prompt');
     if(promptEl){ promptEl.classList.remove('pulse','flash'); void promptEl.offsetWidth;
       promptEl.classList.add(G.roundN<=1?'pulse':'flash'); }
@@ -19511,7 +19548,7 @@ function startSlice(){
       G.correctSliced=true; G.hits++;
       G.level = Math.floor(G.hits/6);   // gentle ramp only after real mastery on show
       const gain = 10*G.flow + Math.max(0, 6 - Math.floor((performance.now()-G.spawnedAt)/500));
-      G.score += Math.round(gain); $('#sl-score').textContent=G.score;
+      G.score += Math.round(gain); setHud('#sl-score', G.score);
       G.flow = Math.min(8, G.flow+1); updateFlow();
       QE.record([t.id], true);
       Audio2.sfx.great(); FX.buzz(16);
@@ -19524,7 +19561,7 @@ function startSlice(){
       // wrong part sliced — teach, small penalty, no life lost
       QE.record([t.id], false);
       G.flow=1; updateFlow();
-      G.score=Math.max(0,G.score-4); $('#sl-score').textContent=G.score;
+      G.score=Math.max(0,G.score-4); setHud('#sl-score', G.score);
       Audio2.sfx.bad(); FX.buzz(20);
       burst(t.x,t.y,"#8a5a2b",8);
       banner(`That is <b>${PARTS[t.id].text}</b> (${PARTS[t.id].mean}) — you want <b>${G.prompt}</b>.`);
@@ -19532,10 +19569,11 @@ function startSlice(){
   }
   function loseLife(msg){
     if(A.relax){ banner(msg+" (relaxed: no lives lost)"); return; }
-    G.lives--; $('#sl-lives').textContent = "♥".repeat(Math.max(0,G.lives)) || "—";
+    G.lives--; setHud('#sl-lives', "♥".repeat(Math.max(0,G.lives)) || "—");
     banner(msg);
     if(G.lives<=0) finish();
   }
+  function setHud(sel, v){ const n=$(sel); if(n) n.textContent=v; }
   function banner(html){ const b=$('#sl-banner'); if(b) b.innerHTML=html; }
   function updateFlow(){ const f=$('#sl-flow'); if(f) f.textContent="Flow ×"+G.flow; }
 
@@ -19579,7 +19617,14 @@ function startSlice(){
   }
 
   let raf=null, lastT=performance.now();
+  /* A round's HUD lives in #arcade-stage, which is emptied whenever the Hall is
+     left. Cleanup cancels this loop, but only on the routes that call it — and
+     a loop that reads a HUD it can no longer see is one screen change away from
+     a crash whatever the routes do. It stops itself when its own canvas is no
+     longer in the document, and the three HUD writes below guard the way the
+     banner and flow readouts beside them always did. */
   function loop(now){
+    if(!cv.isConnected){ raf=null; G.over=true; return; }
     const dt=Math.min(2,(now-lastT)/16.67); lastT=now;
     // read-first beat: counts down alongside physics — nothing freezes, so any
     // leftover tiles from the previous round keep falling away naturally
@@ -19736,16 +19781,20 @@ function startMatch(){
     btn.classList.add("flipped"); Audio2.sfx.snap();
     if(!G.first){ G.first={t,btn}; return; }
     // second flip
-    G.flips++; $('#mt-moves').textContent=G.flips;
+    G.flips++; setHud('#mt-moves', G.flips);
     const a=G.first; G.first=null;
     if(a.t.key===t.key && a.t.side!==t.side){
       // match
       G.lock=true;
       setTimeout(()=>{
+        /* The board can be gone by the time this lands — the Hall is one tap
+           away for the whole 240ms this waits — and the readouts below used to
+           be written without asking whether they were still there. */
+        if(G.over) return;
         a.btn.classList.add("matched"); btn.classList.add("matched");
         a.btn.setAttribute("aria-label","Matched"); btn.setAttribute("aria-label","Matched");
         QE.record(t.conceptIds, true);
-        G.matched++; $('#mt-pairs').textContent=`${G.matched}/${pairs.length}`;
+        G.matched++; setHud('#mt-pairs', `${G.matched}/${pairs.length}`);
         Audio2.sfx.great(); FX.buzz(14); G.lock=false;
         if(G.matched===pairs.length) win();
       }, 240);
@@ -19754,7 +19803,7 @@ function startMatch(){
       QE.record(t.conceptIds, false); if(a.t.conceptIds) QE.record(a.t.conceptIds, false);
       G.lock=true; Audio2.sfx.bad(); FX.buzz(18);
       a.btn.classList.add("miss"); btn.classList.add("miss");
-      $('#mt-banner').innerHTML=`Not a pair — turn them back and remember where they sit.`;
+      { const bn=$('#mt-banner'); if(bn) bn.innerHTML=`Not a pair — turn them back and remember where they sit.`; }
       setTimeout(()=>{
         a.btn.classList.remove("flipped","miss"); btn.classList.remove("flipped","miss");
         G.lock=false;
@@ -19765,6 +19814,7 @@ function startMatch(){
     const el2=$('#mt-time'); if(el2) el2.textContent=s+"s"; }
   G.timer=setInterval(tick,500);
 
+  function setHud(sel, v){ const n=$(sel); if(n) n.textContent=v; }
   function win(){
     if(G.over) return; G.over=true; clearInterval(G.timer);
     const secs=Math.max(1,Math.floor((performance.now()-G.t0)/1000));
