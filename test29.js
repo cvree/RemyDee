@@ -36,10 +36,30 @@ const { boot, sleep, until, assert, summary } = require('./testlib');
   assert(opts().length === 4, 'a Vigil question offers four answers: ' + opts().length);
 
   /* The questions must be about THIS road, not a generic draw — that is the
-     whole difference between the Vigil and the Daily Trial. */
+     whole difference between the Vigil and the Daily Trial.
+
+     This used to assert the literal words "is on this road", which the eyebrow
+     produced by PRINTING THE PART — and on a `meaningPart` card the part is the
+     answer, so the line above "Which word part means deficiency?" read
+     "· -PENIA is on this road". The stake is the guarantee; naming the part was
+     only ever how it was said, and it is now said without the name wherever the
+     prompt has not already shown it. `test41` holds the no-leak half. */
   const type = doc.querySelector('#vigil-body .tq-type');
-  assert(type && /is on this road/.test(type.textContent),
-    'the question names the part it is drilling as one this road will use');
+  assert(type && /on (this|the) road/.test(type.textContent),
+    'the question still says this part is one the road ahead will ask for');
+  const asked = doc.querySelector('#vigil-body .tq-text');
+  const rightNow = Array.from(doc.querySelectorAll('#vigil-opts .trial-opt'))
+    .find(b => b.getAttribute('data-ok') === '1');
+  if (rightNow) {
+    const eyebrow = type.textContent.toLowerCase();
+    const answer = rightNow.textContent.trim().toLowerCase();
+    assert(answer.length < 3 || eyebrow.indexOf(answer) < 0,
+      'and it does not say the answer while doing so');
+    assert(!doc.querySelector('#vigil-body .tq-sub') ||
+      (asked && asked.textContent.indexOf('means') < 0) ||
+      /what does/i.test(asked.textContent),
+      'a pronunciation is only shown beside a part the question has already named');
+  }
 
   /* ---------- answer everything correctly and check the hand-off ---------- */
   let guard = 0;

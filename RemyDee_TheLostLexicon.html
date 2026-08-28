@@ -7237,12 +7237,18 @@ window.__RD_QE = (function(){
       const st=tw?null:sameTongueTwin(id);
       const ask = tw ? `Which <b>${D.LANG_NAME[p.lang]}</b> word part means <b>${p.mean}</b>?`
                      : `Which word part means <b>${p.mean}</b>?`;
+      /* NO PRONUNCIATION HERE. `partMeaning` shows the part and asks for its
+         meaning, so telling the player how to say it is a reading aid for a form
+         already on the screen. This form is the mirror: the part IS the answer,
+         so its pronunciation is the answer read out. "Which word part means
+         deficiency?" under a line saying PEE-nee-ah is not a question. It was on
+         every single one of these — the pronunciation moves into the explanation,
+         where it teaches after the answer instead of instead of it. */
       return norm({ type, conceptIds:[id], prompt:ask,
         options:opts(p.text, wrongs),
-        explanation:`<b>${p.text}</b> means <b>${p.mean}</b>.`
+        explanation:`<b>${p.text}</b> (${p.pron}) means <b>${p.mean}</b>.`
           + (tw?` So does <b>${PARTS[tw].text}</b> — ${D.LANG_NAME[p.lang]} and ${D.LANG_NAME[PARTS[tw].lang]} both gave English a word for it.`:"")
-          + (st?` <b>${PARTS[st].text}</b> means the same thing — the same ${D.LANG_NAME[p.lang]} root wore down two ways.`:""),
-        pron:p.pron });
+          + (st?` <b>${PARTS[st].text}</b> means the same thing — the same ${D.LANG_NAME[p.lang]} root wore down two ways.`:"") });
     }
     if(type==="trueFalse"){
       const id=focus||pickPart(kind); const p=PARTS[id];
@@ -22011,6 +22017,18 @@ function renderVigil(){
   const q=V.qs[V.i];
   if(!q){ finishVigil(); return; }
   const band=vigilBand(V.readiness);
+  /* THE EYEBROW NAMED THE ANSWER. It exists to say why this question is worth
+     answering — the part is on the road you are about to walk — and it did that
+     by printing the part. On `partMeaning` and `trueFalse` the part is already in
+     the prompt, so naming it is a reminder. On `meaningPart` the part IS the
+     answer, so the card read "· -PENIA is on this road" directly above "Which
+     word part means deficiency?". The stake is worth keeping and the name is not:
+     it is named only where the prompt has already shown it. */
+  const focusText = q._focus && PARTS[q._focus] ? PARTS[q._focus].text : "";
+  const focusInPrompt = !!focusText && String(q.prompt||"").indexOf(focusText) >= 0;
+  const stake = !focusText ? ""
+    : focusInPrompt ? ` · <b>${focusText}</b> is on this road`
+                    : ` · this one is on the road ahead`;
   wrap.innerHTML=`
     <div class="trial-hud">
       <div><div class="th-k">Studied</div><div class="th-v">${Math.min(V.i+1,V.qs.length)} / ${V.qs.length}</div></div>
@@ -22021,7 +22039,7 @@ function renderVigil(){
       V.qs.map((_,i)=>`<i class="${V.marks[i]===true?"ok":V.marks[i]===false?"no":(i===V.i?"now":"")}"></i>`).join("")}</div>
     <div class="trial-clock${V.clock<0.34?" hot":""}"><i style="width:${Math.round(V.clock*100)}%"></i></div>
     <div class="trial-q">
-      <div class="tq-type">${labelFor(q.type)}${q._focus?` · <b>${PARTS[q._focus].text}</b> is on this road`:""}</div>
+      <div class="tq-type">${labelFor(q.type)}${stake}</div>
       <div class="tq-text">${q.prompt}</div>
       ${q.pron?`<div class="tq-sub">${q.pron}</div>`:""}
     </div>

@@ -36,19 +36,22 @@ which is about what the road *says* rather than what it does, then
 `WORD_PASS.md`, which asks the same question of the bench, then `VAMP_PASS.md`,
 which withdrew hover-to-study and separated reward feedback from damage feedback
 — it supersedes `WALK_PASS.md` §2 and §5 wherever they disagree — and finally
-`PRESS_PASS.md`, the most recent, which is not about a system at all: it is the
-control layer, and it is the one document to read before touching any button,
-field, tab, latch or chip anywhere in the file.
+`PRESS_PASS.md`, which is not about a system at all: it is the control layer, and
+it is the one document to read before touching any button, field, tab, latch or
+chip anywhere in the file — and finally `ASK_PASS.md`, the most recent, which
+asks `WORD_PASS.md`'s question of the question engine and leaves one rule behind:
+nothing shown WITH a question may contain its answer, and everything shown after
+the player has answered should.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39 40; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39 40 41; do node test$t.js | tail -1; done
 ```
 
-34 jsdom suites, **1483 assertions, zero window errors**.
+35 jsdom suites, **1518 assertions, zero window errors**.
 
 **One suite is intermittently red and it is not yours.** `test36`'s "ten forges
 end the session" assertion (`G().done >= 10`) fails on roughly one run in ten,
@@ -384,6 +387,53 @@ selector/body pairs) plus the live DOM for the rank swaps and the latch. It
 asserts guarantees rather than values: *nothing rises*, *no control invents its
 own corner*, *no control is defined twice*, *no control opts out of the focus
 ring*, *no rule parks a control between the desktop size and the touch floor*.
+
+**12. The question stopped answering itself, again.** See `docs/ASK_PASS.md`.
+`WORD_PASS` asked whether the screen says the answer before it asks the question,
+found 33 of 44 traveler builds doing it, and fixed the bench. The same question
+put to the question engine came back with two leaks, and between them they
+covered every question of their kind.
+
+*The pronunciation was the answer read out.* The engine asks about a part in two
+directions — `partMeaning` ("What does **-penia** mean?") and `meaningPart`
+("Which word part means **deficiency**?") — and both carried `pron`, which both
+the Vigil and the Daily Trial print on the card under the question. On
+`partMeaning` that is a reading aid for a form already on screen. On
+`meaningPart` the part IS the answer, so `Which word part means deficiency?` sat
+above four suffixes with **PEE-nee-ah** underneath: the player never had to know
+what `-penia` meant, only which one sounded like the line they had just been
+given. It was on 900 of 900 draws. `meaningPart` no longer carries a
+pronunciation; it moved into the explanation — `-ectomy (EK-toh-mee) means
+surgical removal` — so it teaches one beat later instead of instead of. The fix
+is in the generator rather than the two renderers, because a question that never
+carries the leak cannot leak it on a screen added tomorrow.
+
+*The Vigil's eyebrow named the part it was asking for.* The line above the
+question exists to say why it is worth answering — this part is on the road you
+are about to walk — and it said so by printing the part, so a `meaningPart` card
+read `· -PENIA IS ON THIS ROAD` directly above `Which word part means
+deficiency?`. All 85 parts did it. The stake is kept and the name is dropped
+wherever the prompt has not already shown it: `· THIS ONE IS ON THE ROAD AHEAD`.
+
+Everything else that asks the player to know something was audited and was
+already clean: the rune gates always ask in one register and answer in the other
+(40 live gates checked), Reed Slice prompts with a meaning and labels its tiles
+with parts, and the Spirit Trial's REPAIR round shows the **broken** word over
+the definition — the first audit flagged it and the flag was reading the reveal
+frame, where `land()` has already put the finished word on the sign because the
+player has already answered.
+
+And `test29` was guarding the wrong thing: it asserted the literal string `is on
+this road`, which the eyebrow produced by printing the part. Its intent was right
+and its mechanism was the leak; it now asserts the stake in either wording plus
+the half it was missing.
+
+`test41` holds the general rule — **nothing shown with a question may contain its
+answer, and everything shown after the player has answered should** — over ~4,800
+generated questions, 255 focused Vigil cards and 40 live rune gates. It checks
+the prompt, the pronunciation, the eyebrow, the doors and the distractors, and
+the other direction too: that every explanation still names the answer, so
+withdrawing a hint never quietly removed the teaching with it.
 
 ### What is left — verified, not speculation
 
