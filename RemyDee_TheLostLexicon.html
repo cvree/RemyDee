@@ -84,6 +84,27 @@
   --ease:cubic-bezier(.22,.61,.36,1);
   --ease-back:cubic-bezier(.34,1.56,.64,1);
   --scale:1;                 /* text-size accessibility multiplier */
+
+  /* THE CONTROL LAYER. One press language for everything you can push. The
+     grammar was already written for the Trial's answer stones — "a card that
+     lifts toward the cursor is a webpage; a stone that presses in when you push
+     it is an object" — and then every other control in the file went on lifting:
+     the icon buttons rose 1px, the ability pills 3px, the arcade cards 4px, and
+     the answer stones themselves were overridden by a later block that put the
+     lift back. These four tokens are that grammar, held in one place, so a
+     control cannot drift out of it by being written in a different <style>.
+
+     `--ctl-rest` is the object sitting on the surface: a hairline of light along
+     its top edge, its own weight below it. `--ctl-press` is the same object
+     pushed in — the light goes out, the shadow comes inside, and the face sinks
+     by `--ctl-sink`. Nothing rises. */
+  --ctl-rest:inset 0 1px 0 rgba(255,255,255,.16), inset 0 -1px 0 rgba(0,0,0,.20),
+             0 1px 0 rgba(25,21,16,.34), 0 8px 18px -10px rgba(20,14,8,.55);
+  --ctl-press:inset 0 3px 7px rgba(0,0,0,.34), inset 0 -1px 0 rgba(255,255,255,.10);
+  --ctl-sink:1px;
+  --ctl-snap:.09s;           /* a press has to answer within a frame or two */
+  /* Coarse pointers get a 44px floor everywhere; @media (pointer:coarse) sets it. */
+  --ctl-min:0px;
 }
 
 /* High-contrast theme overrides */
@@ -133,8 +154,15 @@ body{
 button{font-family:inherit;cursor:pointer;color:inherit;border:none;background:none;font-size:1rem;}
 /* gold on parchment measured 2.18:1 — below the 3:1 that WCAG 1.4.11 asks of a
    focus indicator. A dark ring with a gold inner edge reads on every surface
-   this game has, light panel or black topbar. */
-:focus-visible{outline:3px solid var(--ink);outline-offset:2px;border-radius:4px;
+   this game has, light panel or black topbar.
+
+   It used to set `border-radius:4px` here, which is not the ring's radius — it
+   is the *element's*. So tabbing onto a 2px seal-edged button rounded the button
+   off, and tabbing onto a 999px HUD pill squared it: every control in the game
+   changed shape at the moment the keyboard reached it, which reads as a
+   rendering fault rather than as focus. The ring already follows whatever radius
+   the control owns, so it just has to stop overwriting it. */
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;
   box-shadow:0 0 0 5px var(--gold-soft), 0 0 0 6px rgba(25,21,16,.5);}
 /* Screen changes move focus to the new screen's heading so a screen reader
    announces it, but a heading is not something you can act on — painting a
@@ -274,32 +302,118 @@ svg.mk .mk-f{fill:currentColor;stroke:none;}
   box-shadow:0 2px 5px var(--shadow);}
 .rod.top{top:-8px;} .rod.bot{bottom:-8px;}
 
+/* A custom property is a string until it is told otherwise, and a string cannot
+   be interpolated — so a button whose face is `var(--btn-face)` inside a gradient
+   would snap to its hover colour while the hairline above it faded in over 140ms,
+   which reads as two different controls answering at two different speeds.
+   Registering the two face colours makes the gradient ease. Browsers without
+   @property ignore the block and get the snap, which is the old behaviour and
+   not a fault. */
+@property --btn-face{ syntax:'<color>'; inherits:false; initial-value:#b5322b; }
+@property --btn-face-2{ syntax:'<color>'; inherits:false; initial-value:#8a241f; }
+
+/* THE BUTTON. Three ranks, not five colours.
+
+   The old one was a red slab with a hard black hairline, a glossy white bevel
+   across its top, and a diagonal white gleam that swept across on hover — the
+   stock "shiny button" gradient, the single most generic thing in the file, on
+   the same screen as a hand-drawn brush underline. And every rank shouted at the
+   same volume: `Not today` and `Build their terms →` sat side by side at equal
+   weight, so the screen never said which one was the road forward.
+
+   What it is now: a block of pigment with an inked edge, set on papyrus. Its
+   border is a darker mix of its OWN colour rather than near-black on everything
+   — that one change is most of what separates a lacquered block from a bordered
+   rectangle. Hover deepens the pigment and lights a hairline along the top edge,
+   the way a wet edge catches the lamp; it does not sweep, gleam, or rise. The
+   press is the seal going into the wax: the face sinks, the top light goes out,
+   and the shadow moves inside. */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:.5em;
-  padding:.7em 1.3em;border-radius:var(--r-sm);position:relative;
-  background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));
+  display:inline-flex;align-items:center;justify-content:center;gap:.55em;
+  padding:.72em 1.35em;border-radius:var(--r-sm);position:relative;
+  min-height:var(--ctl-min);
+  --btn-face:var(--cinnabar);
+  --btn-face-2:var(--cinnabar-deep);
+  --btn-edge:rgba(74,16,12,.85);
+  --btn-lit:rgba(255,236,205,.55);   /* the hairline that lights on hover */
+  background:linear-gradient(180deg,var(--btn-face),var(--btn-face-2));
   color:var(--papyrus);font-weight:700;letter-spacing:.02em;
-  /* A lacquer edge and a wet lower rim, instead of an extruded ledge. */
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 -2px 0 rgba(0,0,0,.26),
-             0 2px 0 rgba(25,21,16,.42), 0 10px 20px -10px rgba(20,14,8,.6);
-  transition:transform .09s var(--ease), box-shadow .09s var(--ease), filter .09s;
-  border:1px solid rgba(25,21,16,.5);font-size:1rem;overflow:hidden;
+  box-shadow:var(--ctl-rest);
+  transition:box-shadow var(--ctl-snap) var(--ease), transform var(--ctl-snap) var(--ease),
+             --btn-face .14s var(--ease), --btn-face-2 .14s var(--ease),
+             border-color .14s var(--ease), color .14s var(--ease), opacity .14s;
+  border:1px solid var(--btn-edge);font-size:1rem;
+  /* the label never wraps mid-phrase into a two-line button on a narrow panel */
+  text-align:center;line-height:1.25;
 }
-.btn::before{content:"";position:absolute;inset:0;border-radius:inherit;
-  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 48%,transparent 62%);
-  transform:translateX(-120%);transition:transform .5s var(--ease);pointer-events:none;}
-.btn:hover::before{transform:translateX(120%);}
-.btn:hover{filter:brightness(1.06);}
-/* pressing pushes IN — stone and lacquer, not a spring */
-.btn:active{transform:translateY(1px);filter:brightness(.96);
-  box-shadow:inset 0 2px 5px rgba(0,0,0,.42), inset 0 -1px 0 rgba(255,255,255,.08),
-             0 1px 0 rgba(25,21,16,.4);}
-.btn.ghost{background:linear-gradient(180deg,var(--papyrus-2),var(--papyrus-3));color:var(--ink);}
-.btn.verd{background:linear-gradient(180deg,var(--verd),var(--verd-deep));color:var(--papyrus);}
-.btn.gold{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:var(--ink);}
-.btn.sm{padding:.45em .8em;font-size:.85rem;}
-.btn:disabled{filter:grayscale(.6) brightness(.9);cursor:not-allowed;transform:none;}
-.btn:disabled::before{display:none;}
+/* The top hairline. Off at rest, lit on hover — one pixel of lamp on a wet edge,
+   drawn inside the border so it cannot round differently from the button. */
+.btn::after{content:"";position:absolute;left:1px;right:1px;top:0;height:1px;
+  background:var(--btn-lit);opacity:0;transition:opacity .14s var(--ease);
+  pointer-events:none;border-radius:inherit;}
+.btn:hover:not(:disabled)::after,.btn:focus-visible::after{opacity:1;}
+.btn:hover:not(:disabled){--btn-face:var(--btn-face-2);}
+.btn:active:not(:disabled){transform:translateY(var(--ctl-sink));box-shadow:var(--ctl-press);}
+.btn:active:not(:disabled)::after{opacity:0;}
+
+/* GHOST — the second rank. It used to be a papyrus-3 slab with the same black
+   hairline as the primary, which made a dismissal look like a decision. It is a
+   label inked on the page now: the panel's own parchment, an ink-line edge, ink
+   text. Quiet at rest, and it still presses. */
+.btn.ghost{--btn-face:var(--parch);--btn-face-2:var(--papyrus-2);
+  --btn-edge:rgba(74,63,49,.55);--btn-lit:rgba(255,255,255,.8);color:var(--ink);}
+.btn.ghost:hover:not(:disabled){--btn-face:var(--papyrus-2);--btn-face-2:var(--papyrus-3);
+  --btn-edge:var(--ink-line);}
+
+/* QUIET — the third rank, for walking away. No fill and no edge until you reach
+   for it, so a `not now` never competes with the thing it is declining. */
+.btn.quiet{--btn-face:transparent;--btn-face-2:transparent;--btn-edge:transparent;
+  color:var(--ink-soft);box-shadow:none;font-weight:600;}
+.btn.quiet:hover:not(:disabled){--btn-face:rgba(43,36,28,.06);--btn-face-2:rgba(43,36,28,.06);
+  --btn-edge:rgba(74,63,49,.4);color:var(--ink);}
+.btn.quiet:active:not(:disabled){box-shadow:inset 0 2px 5px rgba(0,0,0,.16);}
+
+.btn.verd{--btn-face:var(--verd);--btn-face-2:var(--verd-deep);
+  --btn-edge:rgba(22,42,30,.85);color:var(--papyrus);}
+/* Gold on parchment is a plate of bronze lying on paper, and at rest it was
+   almost the value of the paper — the Hall button on the hub read as disabled.
+   A darker edge and a lamp-lit upper face give it somewhere to sit. */
+.btn.gold{--btn-face:var(--gold-soft);--btn-face-2:var(--gold);
+  --btn-edge:rgba(93,71,26,.8);--btn-lit:rgba(255,246,220,.9);color:var(--ink);}
+.btn.sm{padding:.5em .9em;font-size:.85rem;gap:.4em;}
+.btn.lg{padding:.85em 1.7em;font-size:1.06rem;letter-spacing:.03em;}
+/* A button that is doing nothing should look like paper, not like mud: the old
+   `grayscale(.6)` turned cinnabar into a brown smear that still read as loud. */
+.btn:disabled{--btn-face:var(--papyrus-2);--btn-face-2:var(--papyrus-3);
+  --btn-edge:rgba(74,63,49,.3);color:rgba(43,36,28,.5);
+  box-shadow:none;cursor:not-allowed;transform:none;}
+.btn:disabled::after{display:none;}
+/* An icon inside a label is a mark beside a word, never the same weight as it. */
+.btn svg.mk{opacity:.9;}
+
+/* THE 44px FLOOR, once, for every control in the game. `.btn.sm` was .45em/.8em
+   — about 26px tall — and `.small-btn` about 22px, and both of them are used on
+   the hub, which is the first screen a phone lands on. Each control had to be
+   measured on its own before; now the whole layer inherits the floor from a
+   token, so a control added later cannot be born too small to hit. */
+@media (pointer:coarse){
+  :root{--ctl-min:44px;}
+  .seg-btn,.rec-tab,.variant-btn,.reagent-chip{min-height:44px;}
+  .icon-btn,.icon-btn.sm{width:44px;height:44px;flex:0 0 44px;}
+  /* a two-letter label makes a 39px-wide button; the target is not the label */
+  .btn.sm,.small-btn{min-width:44px;}
+}
+/* A press lands late on touch unless the surface says it is one. */
+.btn,.icon-btn,.seg-btn,.rec-tab,.trial-opt,.diff-card,.arcade-card,.comm-card{
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+
+/* THE ONE EXCEPTION, written down so it is not tidied away by rule next time.
+   `.tile`, `.frag`, `.rack-item`, `.held-item` and `.ct-tile` still rise toward
+   the cursor, and should: they are the pieces of a word and the kit on a rack —
+   things the player PICKS UP and puts somewhere, not things the player pushes.
+   Lifting is the correct verb for a thing being taken; pressing is the correct
+   verb for a thing being chosen. Every surface in the game does one or the
+   other, and none of them does both. */
 
 /* a carved chop is square; a 5px radius on a 2.4em seal is a rounded icon */
 .seal{display:inline-flex;align-items:center;justify-content:center;
@@ -424,7 +538,13 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   color:var(--verd-deep);margin-top:.3em;letter-spacing:.02em;position:relative;z-index:4;}
 .tagline{margin-top:1.4vh;font-size:clamp(12px,1.6vw,16px);letter-spacing:.32em;
   text-transform:uppercase;color:var(--ink-soft);font-weight:600;opacity:.75;position:relative;z-index:4;}
-.title-actions{margin-top:4vh;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;position:relative;z-index:4;}
+/* `align-items` is the reason the three ranks were invisible here. A flex row
+   stretches its children to the tallest by default, so putting a large primary
+   next to two second-rank buttons inflated the second rank to match it and the
+   whole hierarchy measured out at one height. Every row that holds buttons of
+   more than one rank has to centre them instead of stretching them. */
+.title-actions{margin-top:4vh;display:flex;gap:14px;flex-wrap:wrap;
+  justify-content:center;align-items:center;position:relative;z-index:4;}
 .brush-underline{width:min(340px,60vw);height:16px;margin:1.5vh auto 0;position:relative;z-index:4;
   background:var(--cinnabar);opacity:.9;
   -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 16'><path d='M4 9 C60 3 110 13 170 8 C230 3 290 12 336 6 L336 12 C290 16 230 8 170 13 C110 17 60 8 4 13 Z' fill='black'/></svg>") no-repeat left/contain;
@@ -446,10 +566,34 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .stat{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--papyrus-2);}
 .stat .k{color:var(--gold-soft);font-weight:700;}
 .topbar .spacer{flex:1;}
-.icon-btn{width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.08);
-  display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--papyrus);
-  transition:background .15s,transform .15s;}
-.icon-btn:hover{background:rgba(255,255,255,.18);transform:translateY(-1px);}
+/* THE ICON BUTTON — the four seal-letters on the topbar, every back arrow, every
+   close. It was an 8px rounded square filled with 8% white: a dark-mode toolbar
+   chip, at a radius the token set does not contain, floating with no edge on a
+   bar that is otherwise all inked rules. These are cut into the bar now — a
+   recess with a lit top edge, holding a Greek capital or a mark — and they press
+   in like everything else rather than rising 1px toward the cursor. */
+.icon-btn{width:38px;height:38px;border-radius:var(--r-sm);
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.03));
+  border:1px solid rgba(216,189,132,.28);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  color:var(--papyrus);flex:0 0 auto;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+  transition:background .15s var(--ease),border-color .15s var(--ease),
+             box-shadow var(--ctl-snap) var(--ease),transform var(--ctl-snap) var(--ease);}
+.icon-btn:hover{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.08));
+  border-color:var(--gold-soft);color:#fff6e2;}
+.icon-btn:active{transform:translateY(var(--ctl-sink));
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.45);background:rgba(0,0,0,.18);}
+.icon-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+/* The topbar and the modal header are inked strips, so the recess above is right
+   there. On parchment it would be a hole cut in white — the pronounce buttons in
+   the Lexicon and the forge's `?` sit on paper and are inked into the paper. */
+.modal-body .icon-btn,.panel .icon-btn,.gloss-row .icon-btn{
+  background:linear-gradient(180deg,var(--parch),var(--papyrus-2));
+  border-color:rgba(74,63,49,.45);color:var(--ink-soft);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6);}
+.modal-body .icon-btn:hover,.panel .icon-btn:hover,.gloss-row .icon-btn:hover{
+  background:var(--papyrus-2);border-color:var(--ink-line);color:var(--ink);}
 
 .content{position:relative;z-index:4;flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;
   scrollbar-width:thin;scrollbar-color:var(--gold) transparent;}
@@ -522,13 +666,17 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   .topbar{padding:7px 10px;gap:7px;}
   .topbar .brand{font-size:.92rem;}
   .topbar .stat{font-size:.76rem;}
-  .icon-btn{width:40px;height:40px;}          /* 38px was under the touch minimum */
-  .icon-btn.sm{width:40px;height:40px;}
+  /* This raised 38px to 40px and stopped short of the 44px it was aiming at —
+     and being a later block than the pointer:coarse floor above, it was quietly
+     pulling every icon button back under it on a phone. */
+  .icon-btn,.icon-btn.sm{width:44px;height:44px;flex:0 0 44px;}
   .section-head h2{font-size:clamp(19px,6.2vw,26px);}
   .panel{padding:13px 12px;}
   .aside-card{padding:13px 12px;}
   .campaign-map,.traveler-grid,.reward-grid,.rs-row,.ach-grid{max-width:100%;}
-  .btn{padding:11px 15px;font-size:.94rem;}
+  /* padding in px here would have overridden `.btn.sm`'s and `.btn.lg`'s em
+     padding and flattened all three sizes into one on a phone */
+  .btn{font-size:.94rem;}
   .diff-grid,.arcade-menu,.ach-grid{grid-template-columns:1fr;}
   .ach-stats{grid-template-columns:repeat(2,1fr);}
   .trial-hud{flex-wrap:wrap;gap:8px 14px;}
@@ -625,7 +773,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .tc-status{position:absolute;top:12px;right:12px;font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:12px;
   background:var(--papyrus-3);color:var(--ink-soft);}
 .tc-status.ready{background:var(--verd);color:var(--papyrus);}
-.brief-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+.brief-actions{display:flex;gap:12px;justify-content:flex-end;align-items:center;margin-top:18px;flex-wrap:wrap;}
 
 /* ============================================================
    TERM BUILDER — signature mechanic
@@ -732,7 +880,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   background:linear-gradient(180deg,rgba(80,60,35,.06),rgba(80,60,35,.02));min-height:70px;}
 .tray-label{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--verd-deep);
   font-weight:700;text-align:center;margin:8px 0 2px;}
-.build-controls{display:flex;gap:10px;margin-top:14px;justify-content:center;flex-wrap:wrap;}
+.build-controls{display:flex;gap:10px;margin-top:14px;justify-content:center;align-items:center;flex-wrap:wrap;}
 .build-feedback{margin-top:12px;padding:12px 16px;border-radius:10px;font-size:.95rem;display:none;}
 .build-feedback.show{display:block;animation:screenIn .3s;}
 .build-feedback.good{background:#dfeadd;border:1px solid var(--verd);color:var(--verd-deep);}
@@ -744,11 +892,24 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   letter-spacing:.02em;text-align:center;}
 .build-record.show{display:block;}
 .support-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
-.support-btn{padding:6px 12px;border-radius:8px;background:var(--papyrus-2);font-size:.78rem;font-weight:700;
-  border:1px solid var(--gold-soft);display:flex;gap:6px;align-items:center;transition:.12s;}
-.support-btn:hover:not(:disabled){background:var(--gold-soft);transform:translateY(-1px);}
-.support-btn:disabled{opacity:.4;cursor:not-allowed;}
-.support-btn .cnt{background:var(--cinnabar);color:var(--papyrus);border-radius:10px;padding:0 6px;font-size:.7rem;}
+/* Spending a charge is a decision, so the charge button presses in like the rest.
+   `transition:.12s` was shorthand for "every animatable property", which on hover
+   also transitioned the count badge and the border — it names what it moves now. */
+.support-btn{padding:.42em .85em;border-radius:var(--r-sm);min-height:var(--ctl-min);
+  background:linear-gradient(180deg,var(--parch),var(--papyrus-2));
+  font-size:.78rem;font-weight:700;
+  border:1px solid rgba(93,71,26,.6);display:flex;gap:6px;align-items:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+  transition:background .12s var(--ease),box-shadow var(--ctl-snap) var(--ease),
+             transform var(--ctl-snap) var(--ease),opacity .12s;}
+.support-btn:hover:not(:disabled){background:var(--gold-soft);border-color:var(--gold);}
+.support-btn:active:not(:disabled){transform:translateY(var(--ctl-sink));
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.3);}
+.support-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+/* the count is a bead of sealing wax, and a bead is one of the things that is
+   allowed to stay round */
+.support-btn .cnt{background:var(--cinnabar);color:var(--papyrus);border-radius:999px;
+  padding:0 6px;font-size:.7rem;}
 
 /* hint brush stroke */
 .hint-brush{position:absolute;height:26px;pointer-events:none;z-index:16;opacity:0;
@@ -807,10 +968,17 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .reveal-pretest .rp-q{font-size:.9rem;color:var(--ink-soft);margin-bottom:2px;}
 .reveal-pretest .rp-why{font-size:.74rem;color:var(--verd-deep);font-style:italic;margin-bottom:12px;}
 .reveal-pretest .rp-opts{display:flex;flex-direction:column;gap:8px;}
-.reveal-pretest .rp-opt{padding:10px 14px;border-radius:var(--r-md);background:var(--papyrus);
+.reveal-pretest .rp-opt{padding:10px 14px;border-radius:var(--r-sm);background:var(--papyrus);
   border:1px solid var(--gold-soft);font-size:.88rem;text-align:left;line-height:1.35;
-  transition:background .12s,transform .12s var(--ease);}
-.reveal-pretest .rp-opt:hover:not(:disabled){background:var(--gold-soft);transform:translateY(-1px);}
+  min-height:var(--ctl-min);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+  transition:background .12s,box-shadow var(--ctl-snap) var(--ease),
+             transform var(--ctl-snap) var(--ease);}
+/* the guess before the card opens is an answer like any other: it goes in */
+.reveal-pretest .rp-opt:hover:not(:disabled){background:var(--gold-soft);transform:none;
+  border-color:var(--gold);}
+.reveal-pretest .rp-opt:active:not(:disabled){transform:translateY(var(--ctl-sink));
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.28);}
 .reveal-pretest .rp-opt.picked{border-color:var(--cinnabar);box-shadow:0 0 0 2px rgba(181,50,43,.2);}
 .reveal-guess{font-size:.82rem;margin-bottom:10px;padding:8px 12px;border-radius:var(--r-md);
   background:rgba(69,102,84,.1);border-left:3px solid var(--verd);text-align:left;}
@@ -867,10 +1035,23 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .path-grant{margin-top:8px;padding:6px 9px;border-radius:8px;font-size:.74rem;line-height:1.4;
   background:rgba(51,81,63,.1);border:1px solid rgba(51,81,63,.25);color:var(--verd-deep,#33513f);}
 .path-seed-row{margin-top:6px;padding-top:10px;border-top:1px dashed var(--papyrus-3);}
-.seed-input{font-family:var(--font-read);font-size:.8rem;padding:4px 8px;border-radius:8px;
-  border:1px solid var(--ink-line);background:var(--parch);color:var(--ink);width:110px;
-  text-transform:uppercase;letter-spacing:.04em;}
-.small-btn{padding:4px 10px !important;font-size:.72rem !important;min-width:0 !important;}
+/* The seeded-road box and its Set button are one instrument, not a field with a
+   button parked beside it: an 8px-radius input against a 2px-radius button, at
+   two different heights, with a gap down the middle. They share a baseline and a
+   height now and sit flush, and the field is a slot cut into the panel — inset,
+   the way every other recess in this pass is drawn. */
+.path-seed-row .pr-v{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap;}
+.seed-input{font-family:var(--font-read);font-size:.8rem;padding:.45em .7em;
+  border-radius:var(--r-sm);border:1px solid var(--ink-line);color:var(--ink);width:118px;
+  background:linear-gradient(180deg,var(--papyrus-2),var(--parch));
+  box-shadow:inset 0 2px 4px rgba(43,36,28,.2);
+  text-transform:uppercase;letter-spacing:.06em;min-height:var(--ctl-min);}
+.seed-input::placeholder{color:rgba(43,36,28,.42);letter-spacing:.04em;}
+.seed-input:focus{outline:none;border-color:var(--cinnabar);
+  box-shadow:inset 0 2px 4px rgba(43,36,28,.16),0 0 0 3px rgba(181,50,43,.18);}
+/* `!important` three times over, to beat a padding this file no longer sets on
+   `.btn.sm`. It only ever needed to be a smaller button. */
+.small-btn{padding:.42em .8em;font-size:.72rem;}
 /* The unlock card that used to sit on the result screen is gone: the new
    commission pattern is delivered inside the chest now, which is where the
    game's reward ceremony already was. Its styles went with it. */
@@ -880,14 +1061,19 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .road-code .rc-code{font-family:monospace;font-weight:700;letter-spacing:.06em;background:rgba(0,0,0,.08);
   padding:1px 6px;border-radius:5px;}
 .commission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+/* Surface, hover and press come from the carved-stone rule; the board owns only
+   its layout. It used to carry `outline:none` on :focus-visible as well, which
+   took the focus ring off the one screen where the player is choosing what to
+   build — the ring is the global one again. */
 .comm-card{position:relative;text-align:left;font:inherit;color:inherit;cursor:pointer;
-  background:var(--parch,#f3ecd8);border:1.5px solid var(--papyrus-3,#d8cfb4);border-radius:12px;
-  padding:10px 12px;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;}
-.comm-card:hover,.comm-card:focus-visible{transform:translateY(-2px);border-color:var(--gold);
-  box-shadow:0 6px 16px rgba(60,40,10,.18);outline:none;}
+  padding:10px 12px;}
 .comm-card .mc-ico svg{width:36px;height:36px;}
 .comm-card h4{margin:4px 0 2px;font-size:.95rem;display:flex;align-items:center;gap:6px;}
-.comm-card.suits{border-color:var(--verd-deep,#33513f);box-shadow:0 0 0 2px rgba(51,81,63,.18);}
+/* the piece that suits this road keeps its verdigris ring, laid ON the carved
+   face rather than replacing it — it was a flat card with a ring before */
+.comm-card.suits{border-color:var(--verd-deep,#33513f);
+  box-shadow:0 0 0 2px rgba(51,81,63,.22),
+             inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.10);}
 .comm-badge{position:absolute;top:-9px;right:8px;background:var(--verd-deep,#33513f);color:#f3ecd8;
   font-size:.62rem;padding:2px 8px;border-radius:999px;letter-spacing:.04em;}
 .comm-pips{color:var(--gold);font-size:.78rem;letter-spacing:.1em;}
@@ -908,7 +1094,10 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .waiting-note{padding:12px 14px;border-style:dashed;opacity:.9;align-self:start;}
 .variant-btn{display:inline-block;background:rgba(181,50,43,.1);border:1px solid var(--cinnabar,#b5322b);
   color:var(--cinnabar,#b5322b);border-radius:999px;padding:2px 10px;font-size:.72rem;cursor:pointer;}
-.variant-btn:hover,.variant-btn:focus-visible{background:var(--cinnabar,#b5322b);color:#f3ecd8;outline:none;}
+/* `outline:none` here took the focus ring off the chips that choose which
+   variant of a piece gets forged — a keyboard player could not see where they
+   were on the commission board. Filling the chip is the hover, not the focus. */
+.variant-btn:hover,.variant-btn:focus-visible{background:var(--cinnabar,#b5322b);color:#f3ecd8;}
 .comm-note{margin-top:10px;}
 /* ---- reagent slot at the material step ---- */
 .reagent-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 10px;}
@@ -916,7 +1105,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   background:rgba(125,154,138,.14);border:1px solid var(--verd-soft,#7d9a8a);color:var(--ink,#2b241c);}
 .reagent-chip i{font-style:normal;opacity:.7;}
 .reagent-chip.picked{background:var(--verd-deep,#33513f);color:#f3ecd8;box-shadow:0 0 0 2px rgba(51,81,63,.25);}
-.temper-row{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.temper-row{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:12px;flex-wrap:wrap;}
 /* ---- heirloom pick on the result screen ---- */
 .heir-pick{margin-top:14px;padding:10px 12px;border:1px dashed var(--gold);border-radius:10px;
   background:rgba(189,157,95,.08);}
@@ -991,14 +1180,29 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .decode-opts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:560px;margin:0 auto;width:100%;}
 .decode-opts .decode-opt{flex:1 1 100%;}
 @media(min-width:560px){.decode-opts.cols2 .decode-opt{flex:1 1 150px;max-width:260px;}}
-.decode-opt{padding:14px 16px;border-radius:var(--r-lg);background:var(--parch);border:2px solid transparent;
+/* An answer is a stone you put your hand on, at the forge exactly as in the
+   Trial — same face, same gold rule under the cursor, same press. */
+.decode-opt{padding:14px 16px;border-radius:var(--r-sm);border:1px solid rgba(43,36,28,.5);
+  background:linear-gradient(180deg,#efe6cf,#e4d8ba);
   font-weight:700;font-size:.98rem;color:var(--ink);cursor:pointer;text-align:center;
-  transition:transform .12s var(--ease),box-shadow .12s,background .2s,border-color .2s;
-  box-shadow:0 4px 12px var(--shadow);}
-.decode-opt:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--shadow);}
-.decode-opt:active{transform:translateY(1px);}
-.decode-opt.right{background:linear-gradient(180deg,var(--verd),var(--verd-deep));color:var(--papyrus);border-color:var(--verd-deep);}
-.decode-opt.wrong{background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));color:var(--papyrus);border-color:var(--cinnabar-deep);}
+  min-height:var(--ctl-min);
+  transition:transform var(--ctl-snap) var(--ease),box-shadow var(--ctl-snap) var(--ease),
+             background .2s,border-color .2s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.10);}
+.decode-opt:hover{transform:none;
+  box-shadow:inset 0 0 0 1px rgba(189,157,95,.75), inset 0 1px 0 rgba(255,255,255,.35);}
+.decode-opt:active{transform:translateY(var(--ctl-sink));box-shadow:var(--ctl-press);}
+/* Right and wrong here were carrying colour and nothing else — the Trial's own
+   answers were given a glyph and a weight change for exactly this reason, and
+   the forge's decode was never brought along. Same treatment: a mark, a border
+   that differs in KIND, and the colour as confirmation rather than as message. */
+.decode-opt.right,.decode-opt.wrong{border-width:2px;font-weight:800;}
+.decode-opt.right{background:linear-gradient(180deg,var(--verd),var(--verd-deep));
+  color:var(--papyrus);border-color:var(--verd-deep);border-style:solid;}
+.decode-opt.wrong{background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));
+  color:var(--papyrus);border-color:var(--cinnabar-deep);border-style:dashed;}
+.decode-opt.right::before{content:"\2713 ";font-weight:900;}
+.decode-opt.wrong::before{content:"\2715 ";font-weight:900;}
 .decode-opt.dim{opacity:.5;}
 .decode-fb{margin-top:14px;text-align:center;color:var(--papyrus);font-size:.9rem;min-height:1.4em;
   padding:0 10px;text-shadow:0 1px 4px rgba(0,0,0,.6);}
@@ -1007,11 +1211,20 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 /* step 2 — material tradeoff cards */
 .mat-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px;margin:0 auto;width:100%;}
 @media(max-width:520px){.mat-cards{grid-template-columns:1fr;}}
-.mat-card{padding:16px 14px;border-radius:14px;background:var(--parch);border:2px solid transparent;
-  cursor:pointer;transition:transform .14s var(--ease),box-shadow .14s,border-color .2s;
-  box-shadow:0 5px 14px var(--shadow);text-align:center;}
-.mat-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px var(--shadow);}
-.mat-card.locked{opacity:.4;cursor:not-allowed;filter:grayscale(.5);}
+/* Choosing the stock is the same act as choosing an answer, so it is the same
+   stone — 14px corners and a 3px hop were the last card at the bench still
+   behaving like a web card. */
+.mat-card{padding:16px 14px;border-radius:var(--r-sm);border:1px solid rgba(43,36,28,.5);
+  background:linear-gradient(180deg,#efe6cf,#e4d8ba);
+  cursor:pointer;text-align:center;
+  transition:transform var(--ctl-snap) var(--ease),box-shadow var(--ctl-snap) var(--ease),
+             border-color .2s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.10);}
+.mat-card:hover:not(.locked){transform:none;
+  box-shadow:inset 0 0 0 1px rgba(189,157,95,.75), inset 0 1px 0 rgba(255,255,255,.35);}
+.mat-card:active:not(.locked){transform:translateY(var(--ctl-sink));box-shadow:var(--ctl-press);}
+.mat-card.locked{opacity:.45;cursor:not-allowed;box-shadow:none;
+  background:var(--papyrus-2);border-color:rgba(74,63,49,.3);}
 .mat-card .mc-ico{width:46px;height:46px;margin:0 auto 8px;}
 .mat-card .mc-ico svg{width:100%;height:100%;}
 .mat-card h4{font-size:1.02rem;margin-bottom:4px;color:var(--ink);}
@@ -1022,12 +1235,17 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .maker-mark{max-width:560px;margin:14px auto 0;text-align:center;}
 .maker-mark h4{margin-bottom:4px;color:var(--gold-soft);}
 .mm-opts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0;}
-.mm-opt{padding:8px 12px;border-radius:10px;background:var(--parch);border:2px solid transparent;
-  cursor:pointer;text-align:left;min-width:96px;transition:transform .12s var(--ease),box-shadow .12s,border-color .2s;
-  box-shadow:0 3px 10px var(--shadow);}
+.mm-opt{padding:8px 12px;border-radius:var(--r-sm);border:1px solid rgba(43,36,28,.5);
+  background:linear-gradient(180deg,#efe6cf,#e4d8ba);
+  cursor:pointer;text-align:left;min-width:96px;min-height:var(--ctl-min);
+  transition:transform var(--ctl-snap) var(--ease),box-shadow var(--ctl-snap) var(--ease),
+             border-color .2s;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.10);}
 .mm-opt b{display:block;font-size:.9rem;color:var(--ink);}
 .mm-opt span{display:block;font-size:.66rem;color:var(--verd-deep);margin-top:2px;}
-.mm-opt:hover{transform:translateY(-2px);}
+.mm-opt:hover:not(:disabled){transform:none;
+  box-shadow:inset 0 0 0 1px rgba(189,157,95,.75), inset 0 1px 0 rgba(255,255,255,.35);}
+.mm-opt:active:not(:disabled){transform:translateY(var(--ctl-sink));box-shadow:var(--ctl-press);}
 .mm-opt.right{background:linear-gradient(180deg,var(--verd),var(--verd-deep));border-color:var(--verd-deep);}
 .mm-opt.right b,.mm-opt.right span{color:var(--papyrus);}
 .mm-opt.dim{opacity:.55;}
@@ -1122,7 +1340,7 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   display:flex;align-items:center;justify-content:center;padding:8px;gap:8px;flex-wrap:wrap;transition:.2s;}
 .warrior-card.holds .warrior-slot{border-style:solid;border-color:var(--gold);background:#f6ecd6;}
 .warrior-slot .ws-empty{font-size:.72rem;color:var(--verd-deep);font-style:italic;opacity:.75;}
-.held-item{display:inline-flex;align-items:center;gap:6px;padding:5px 8px 5px 6px;border-radius:9px;
+.held-item{display:inline-flex;align-items:center;gap:6px;padding:5px 8px 5px 6px;border-radius:var(--r-sm);
   background:var(--parch);border:1.5px solid var(--gold);font-size:.76rem;font-weight:700;cursor:pointer;box-shadow:0 2px 6px var(--shadow);}
 .held-item .hi-ico{width:20px;height:20px;}
 .held-item .hi-ico svg{width:100%;height:100%;}
@@ -1285,7 +1503,15 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .ability-btn .ab-charge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;border-radius:50%;
   background:var(--cinnabar);color:var(--papyrus);font-size:.72rem;font-weight:700;display:flex;
   align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.5);}
-.ability-btn:not(.spent):hover{transform:translateY(-3px);box-shadow:0 7px 16px rgba(0,0,0,.5);}
+/* The HUD pills are the only controls in the game that stay round — they are
+   charges hanging on a rail, and a charge is a bead. What they do not get to
+   keep is the 3px hop toward the cursor: on the road the pointer is also the
+   steering, so every pass of the mouse over the rail set the whole HUD twitching.
+   Reaching one lights its gold edge; pressing one puts it in, like the rest. */
+.ability-btn:not(.spent):hover{transform:none;
+  box-shadow:0 0 0 1px var(--gold-soft),0 4px 12px rgba(0,0,0,.5);}
+.ability-btn:not(.spent):active{transform:translateY(var(--ctl-sink));
+  box-shadow:inset 0 3px 7px rgba(0,0,0,.34);}
 .ability-btn.spent{opacity:.4;cursor:default;filter:grayscale(.6);}
 .ability-btn.ready{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);animation:abReady 1s ease-in-out infinite;}
 @keyframes abReady{0%,100%{box-shadow:0 0 0 2px var(--gold),0 6px 14px rgba(0,0,0,.5);}50%{box-shadow:0 0 0 4px var(--gold-soft),0 8px 18px rgba(0,0,0,.5);}}
@@ -1317,7 +1543,11 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
   color:#f0dcae;background:rgba(20,14,8,.6);border:1px solid rgba(216,189,132,.55);}
 .pace-btn .pb-hint{font-size:.62rem;color:rgba(247,241,226,.95);max-width:130px;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap;}
-.pace-btn:hover{transform:translateY(-2px);}
+/* Same as the ability pills: no hop on the hand that is also steering. The
+   surging state below owns the transform outright, so hover keeps out of its way
+   rather than flattening a button the player is currently holding down. */
+.pace-btn:hover:not(.starved):not(.active){transform:none;
+  box-shadow:0 0 0 1px var(--gold-soft),0 4px 12px rgba(0,0,0,.45);}
 .pace-btn.active{background:linear-gradient(180deg,rgba(216,189,132,.9),rgba(181,50,43,.55));
   box-shadow:0 0 0 3px rgba(216,189,132,.5),0 6px 16px rgba(0,0,0,.5);transform:translateY(-1px) scale(1.03);}
 .pace-btn.starved{opacity:.45;cursor:not-allowed;}
@@ -1395,11 +1625,17 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
    cards want a square. */
 .diff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
 @media (max-width:620px){.diff-grid{grid-template-columns:1fr;}}
-.diff-card{position:relative;text-align:left;padding:16px 16px 14px;border-radius:14px;cursor:pointer;
-  background:var(--parch);border:2px solid var(--ink-line);box-shadow:0 6px 16px rgba(0,0,0,.22);
-  transition:transform .14s var(--ease-back),box-shadow .18s,border-color .18s;font-family:var(--font-read);}
-.diff-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(0,0,0,.3);}
-.diff-card.on{border-color:var(--gold);box-shadow:0 0 0 3px rgba(216,189,132,.42),0 12px 26px rgba(0,0,0,.3);}
+/* The difficulty cards were named by the carved-stone rule and then re-declared
+   here, later in the file, at a 14px radius with a 3px hop on hover — so the one
+   rule that forbade the hop was overridden by both of the surfaces it named.
+   Layout and type only; the face comes from the shared rule. */
+.diff-card{position:relative;text-align:left;padding:16px 16px 14px;cursor:pointer;
+  font-family:var(--font-read);
+  filter:drop-shadow(0 5px 12px rgba(20,14,8,.22));}
+/* the road you are already walking keeps its gold ring, over the carved face */
+.diff-card.on{border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(216,189,132,.42),
+             inset 0 3px 7px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.18);}
 .diff-card .dc-glyph{font-size:1.5rem;line-height:1;color:var(--verd-deep);}
 .diff-card .dc-name{display:block;font-family:var(--font-cal);font-weight:900;font-size:1.12rem;margin-top:4px;color:var(--ink);}
 .diff-card .dc-lede{display:block;font-size:.78rem;color:var(--cinnabar-deep);font-style:italic;margin:2px 0 7px;}
@@ -1644,14 +1880,14 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .chorus-offered .co-chip b{font-family:var(--font-cal);color:var(--verd-deep,#33513f);}
 .chorus-offered .co-chip span{font-size:.66rem;color:var(--ink-soft,#8a7a5f);}
 .chorus-slots{display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
-.chorus-slots .cs-slot{min-width:78px;min-height:44px;border-radius:10px;border:2px dashed var(--papyrus-3,#d8cfb4);
+.chorus-slots .cs-slot{min-width:78px;min-height:44px;border-radius:var(--r-sm);border:2px dashed var(--papyrus-3,#d8cfb4);
   display:flex;align-items:center;justify-content:center;font-family:var(--font-cal);font-weight:700;
   padding:6px 10px;cursor:pointer;transition:border-color .15s,background .15s;}
 .chorus-slots .cs-slot.locked{border-style:solid;border-color:var(--verd-deep,#33513f);background:rgba(51,81,63,.12);cursor:default;}
 .chorus-slots .cs-slot.filled{border-style:solid;border-color:var(--gold);background:rgba(189,157,95,.14);}
 .chorus-slots .cs-slot:empty::before{content:"?";opacity:.35;}
 .chorus-tray{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;}
-.chorus-tray .ct-tile{padding:7px 14px;border-radius:9px;background:var(--papyrus,#f3ecd8);
+.chorus-tray .ct-tile{padding:7px 14px;border-radius:var(--r-sm);background:var(--papyrus,#f3ecd8);
   border:1.5px solid var(--ink-line);font-family:var(--font-cal);font-weight:700;cursor:pointer;
   transition:transform .12s,border-color .12s;}
 .chorus-tray .ct-tile:hover{transform:translateY(-2px);border-color:var(--gold);}
@@ -1749,8 +1985,9 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .modal-body{padding:18px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--gold) transparent;}
 .modal-body::-webkit-scrollbar{width:8px;}
 .modal-body::-webkit-scrollbar-thumb{background:var(--gold);border-radius:6px;}
-.gloss-search{width:100%;padding:9px 12px;border-radius:9px;border:1px solid #c9b78d;background:var(--papyrus);
-  font-family:inherit;font-size:.9rem;margin-bottom:10px;color:var(--ink);}
+/* `.gloss-search` was declared here at 9px and again in the supplementary block
+   at 10px, the same two-authors-one-name split as `.seg`. The later one stands;
+   this one is gone rather than silently losing. */
 .gloss-item{padding:12px;border-radius:10px;background:var(--papyrus-2);margin-bottom:10px;}
 .gloss-item.locked{opacity:.55;}
 .gloss-term{font-family:var(--font-cal);font-weight:700;font-size:1.15rem;display:flex;align-items:center;gap:8px;}
@@ -1759,17 +1996,20 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .gloss-mastery{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
 .mchip{font-size:.62rem;padding:2px 7px;border-radius:10px;background:var(--papyrus-3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
 .mchip.on{background:var(--verd);color:var(--papyrus);}
-.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px dashed var(--papyrus-3);}
-.setting-row .lab{font-weight:600;}
-.setting-row .hint{font-size:.76rem;color:var(--verd-deep);}
-.toggle{width:52px;height:28px;border-radius:16px;background:var(--papyrus-3);position:relative;transition:.2s;flex:0 0 52px;}
-.toggle.on{background:var(--verd);}
-.toggle::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--papyrus);transition:.2s;box-shadow:0 2px 4px var(--shadow);}
-.toggle.on::after{left:27px;}
-input[type=range]{accent-color:var(--cinnabar);width:150px;}
-.seg{display:flex;gap:4px;background:var(--papyrus-3);border-radius:10px;padding:3px;}
-.seg button{padding:5px 12px;border-radius:7px;font-size:.82rem;font-weight:700;color:var(--ink-soft);}
-.seg button.on{background:var(--cinnabar);color:var(--papyrus);}
+/* `.setting-row` went the same way as `.toggle` below it: an earlier draft of the
+   settings screen that `.set-row` replaced, still styled here, styling nothing.
+   The three of them together are why the screen had two of every control. */
+/* `.toggle` was written, styled and never used — grep the whole file and these
+   four rules were the only hits. It was also the third iOS pill in a game that
+   should not have had one. Deleted; `.switch` is the real control, and it is
+   rebuilt as a latch further down. */
+/* One `.seg`, not two. There were two class definitions under the same name in
+   two different <style> blocks — a 10px flex-with-gap version here whose child
+   selector was `.seg button`, and a 9px overflow-hidden version in the settings
+   block whose child selector was `.seg-btn` — so the segmented control got
+   whichever the cascade landed on last, and half of each definition was styling
+   nothing. The one call site builds `.seg-btn`, so that pair survives, in the
+   settings block where the control is used. */
 .eyebrow.mt{display:block;margin-top:14px;}
 </style>
 <style>
@@ -1797,39 +2037,72 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
    sized like buttons now, and the selected one says so to a screen reader
    through aria-pressed rather than only through a class. */
 /* CARVED STONE, NOT A WEB CHIP. These are the surfaces the player chooses with —
-   Trial answers, difficulty cards, arcade cards. A card that lifts toward the
-   cursor is a webpage; a stone that presses in when you push it is an object. */
-.trial-opt,.diff-card{
-  border-radius:2px;
+   Trial answers, difficulty cards, arcade cards, commission cards. A card that
+   lifts toward the cursor is a webpage; a stone that presses in when you push it
+   is an object. The rule named only two of the four, so the arcade and the
+   commission board went on rising 4px and 2px at their own radii of 12px; and
+   the two it did name were overridden further down the file anyway. All four
+   share it now, and the selectors below are the only place their surface is set. */
+.trial-opt,.diff-card,.arcade-card,.comm-card{
+  border-radius:var(--r-sm);
   background:linear-gradient(180deg,#efe6cf,#e4d8ba);
   border:1px solid rgba(43,36,28,.5);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.10);
-  transition:box-shadow .1s var(--ease), transform .1s var(--ease), background .12s;
+  transition:box-shadow var(--ctl-snap) var(--ease), transform var(--ctl-snap) var(--ease),
+             background .12s;
 }
-.trial-opt:hover:not(:disabled),.diff-card:hover{ transform:none;
+/* Hover is a gold rule drawn inside the stone's own edge — the cursor finding it,
+   not the stone coming to meet the cursor. */
+.trial-opt:hover:not(:disabled),.diff-card:hover,
+.arcade-card:hover,.comm-card:hover,.comm-card:focus-visible{ transform:none;
   box-shadow:inset 0 0 0 1px rgba(189,157,95,.75), inset 0 1px 0 rgba(255,255,255,.35); }
-.trial-opt:active:not(:disabled),.diff-card.on{
+.trial-opt:active:not(:disabled),.diff-card.on,
+.arcade-card:active,.comm-card:active{
+  transform:translateY(var(--ctl-sink));
   box-shadow:inset 0 3px 7px rgba(0,0,0,.28), inset 0 -1px 0 rgba(255,255,255,.18);
   background:linear-gradient(180deg,#e0d4b4,#eae0c4); }
 
 .tag.filter{min-height:32px;padding:.42em .95em;line-height:1.2;cursor:pointer;
   border:1px solid transparent;}
 .tag.filter[aria-pressed="true"],.tag.filter.on{border-color:var(--gold);}
-@media (pointer:coarse){ .tag.filter{min-height:40px;padding:.55em 1.05em;} }
+/* 40px was four short of the floor, and this block is later than the one that
+   sets it — the Lexicon's own filters were the last thing under a thumb. */
+@media (pointer:coarse){ .tag.filter{min-height:44px;min-width:44px;padding:.55em 1.05em;} }
 .tag.tier{background:var(--papyrus-3);color:var(--ink-soft);}
 .tag.tier.t2{background:var(--gold-soft);color:var(--ink);}
 .tag.tier.t3{background:var(--cinnabar);color:var(--papyrus);}
 
 /* icon button small variant */
+/* The pronounce buttons beside every Lexicon entry. 30px is right on a desk —
+   they are a mark next to a word, not an action — but this rule sits in a later
+   <style> block than BOTH touch floors above it, so on a phone the Lexicon was
+   a list of eighty-odd 30px targets. It keeps its desk size and hands the phone
+   back to the floor. */
 .icon-btn.sm{width:30px;height:30px;font-size:.9rem;flex:0 0 30px;}
+@media (pointer:coarse){ .icon-btn.sm{width:44px;height:44px;flex:0 0 44px;} }
 
 /* ---------- glossary ---------- */
-.gloss-search{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--ink-line);
-  background:var(--parch);font-family:var(--font-body);font-size:.92rem;color:var(--ink);margin-bottom:12px;}
-.gloss-search:focus{outline:none;border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(181,50,43,.14);}
+/* A field is a slot cut into the page, same recess as the latch and the slider —
+   `--font-body` in the old rule was never a token this file defines, so the one
+   search box in the game was falling through to the browser default. */
+.gloss-search{width:100%;padding:.6em .85em;border-radius:var(--r-sm);
+  border:1px solid var(--ink-line);color:var(--ink);
+  background:linear-gradient(180deg,var(--papyrus-2),var(--parch));
+  box-shadow:inset 0 2px 5px rgba(43,36,28,.18);
+  font-family:var(--font-read);font-size:.92rem;margin-bottom:12px;min-height:var(--ctl-min);}
+.gloss-search::placeholder{color:rgba(43,36,28,.45);}
+.gloss-search:focus{outline:none;border-color:var(--cinnabar);
+  box-shadow:inset 0 2px 5px rgba(43,36,28,.14),0 0 0 3px rgba(181,50,43,.18);}
 .gloss-filter .filter{cursor:pointer;text-transform:capitalize;background:var(--papyrus-2);color:var(--ink-soft);
-  border:1px solid transparent;transition:.15s;}
-.gloss-filter .filter.on{background:var(--verd);color:var(--papyrus);}
+  border:1px solid transparent;
+  transition:background .15s var(--ease),color .15s var(--ease),
+             border-color .15s var(--ease),box-shadow var(--ctl-snap) var(--ease);}
+.gloss-filter .filter:hover{background:var(--papyrus-3);color:var(--ink);}
+.gloss-filter .filter.on{background:var(--verd);color:var(--papyrus);border-color:var(--verd-deep);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.28);}
+/* a chip stays a chip, but pressing one still puts it in */
+.tag.filter:active,.variant-btn:active,.reagent-chip:active{
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.26);}
 .gloss-sec-title{font-family:var(--font-cal);font-weight:700;color:var(--verd-deep);margin:16px 0 6px;
   font-size:.96rem;border-bottom:1px solid var(--papyrus-3);padding-bottom:4px;}
 /* The fact is the reason the entry is worth reading twice — set apart from the
@@ -1859,26 +2132,116 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
   border-bottom:1px dashed var(--papyrus-3);}
 .set-row:last-child{border-bottom:none;}
 .set-label{font-weight:700;font-size:.94rem;}
-.set-row input[type=range]{width:150px;accent-color:var(--cinnabar);}
-.switch{width:48px;height:27px;border-radius:16px;background:var(--papyrus-3);position:relative;
-  border:1px solid #c9b78d;cursor:pointer;flex:0 0 48px;transition:background .2s;padding:0;}
-.switch > i{position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;
-  background:var(--parch);box-shadow:0 2px 4px var(--shadow);transition:transform .2s var(--ease);}
-.switch.on{background:var(--verd);}
-.switch.on > i{transform:translateX(21px);}
-.switch:focus-visible{outline:2px solid var(--cinnabar);outline-offset:2px;}
-.seg{display:inline-flex;border-radius:9px;overflow:hidden;border:1px solid #c9b78d;}
-.seg-btn{padding:6px 14px;background:var(--papyrus-2);border:none;cursor:pointer;font-weight:700;
-  font-size:.82rem;color:var(--ink-soft);border-right:1px solid #c9b78d;}
+/* THE LATCH. This was an iOS pill: a 16px capsule with a white circle sliding
+   inside it, in a game whose every other surface is cut, stamped or inked. It is
+   also the control the settings screen is mostly made of, so it set the tone for
+   the screen the handoff called the most generic in the game.
+
+   It is a sliding bolt in a channel now — a recess cut into the parchment with a
+   bronze bolt that throws to one side. Both ends of the channel are marked, so
+   the state is legible as a POSITION and not only as a colour: a red-green
+   colourblind player reading the old pill had nothing but its hue to go on. */
+.switch{position:relative;width:58px;height:30px;flex:0 0 58px;padding:0;cursor:pointer;
+  border-radius:var(--r-sm);border:1px solid var(--ink-line);
+  background:linear-gradient(180deg,#c4b391,#d6c8a8);
+  box-shadow:inset 0 2px 5px rgba(43,36,28,.4);
+  transition:background .2s var(--ease),border-color .2s var(--ease);}
+/* The channel the bolt runs in: one scored line the length of the track, half of
+   it covered at any moment. Which half is showing IS the state, so the control
+   still reads with the colour taken away. */
+.switch::before{content:"";position:absolute;left:5px;right:5px;top:50%;height:2px;
+  transform:translateY(-50%);border-radius:1px;background:rgba(43,36,28,.3);
+  box-shadow:inset 0 1px 0 rgba(0,0,0,.25);transition:background .2s;}
+.switch > i{position:absolute;top:2px;left:2px;width:26px;height:24px;border-radius:1px;
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  border:1px solid rgba(93,71,26,.8);
+  box-shadow:inset 0 1px 0 rgba(255,246,220,.8),0 1px 3px rgba(20,14,8,.5);
+  transition:transform .2s var(--ease),background .2s var(--ease);}
+/* a knurl on the bolt, so it reads as something a thumb pushes */
+.switch > i::after{content:"";position:absolute;inset:0;margin:auto;width:9px;height:11px;
+  background:repeating-linear-gradient(90deg,rgba(60,44,14,.55) 0 1px,transparent 1px 4px);}
+.switch.on{background:linear-gradient(180deg,var(--verd-deep),var(--verd));
+  border-color:#1c3325;}
+.switch.on::before{background:rgba(236,226,203,.5);}
+.switch.on > i{transform:translateX(26px);}
+.switch:hover{border-color:var(--ink);}
+.switch:active > i{box-shadow:inset 0 2px 5px rgba(60,44,14,.55);}
+/* A latch is a wide, short thing, and 34px of it is still 10px short of a thumb.
+   The whole control grows rather than the bolt alone, so the channel stays in
+   proportion and the target clears 44 in both directions. */
+@media (pointer:coarse){ .switch{width:68px;height:44px;flex:0 0 68px;}
+  .switch > i{width:32px;height:38px;} .switch.on > i{transform:translateX(32px);} }
+
+/* THE SLIDER. `accent-color` handed the music and effects volumes to Chrome's
+   default range widget — a flat blue-turned-red bar with a plain round thumb,
+   the one piece of unstyled browser chrome left on screen. It is the same
+   channel as the latch above, with the same bronze bolt riding in it. */
+.set-row input[type=range],input[type=range]{
+  -webkit-appearance:none;appearance:none;width:160px;height:22px;background:transparent;
+  cursor:pointer;padding:0;}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:var(--r-sm);
+  border:1px solid var(--ink-line);
+  background:linear-gradient(180deg,var(--papyrus-3),var(--papyrus-2));
+  box-shadow:inset 0 2px 4px rgba(43,36,28,.3);}
+input[type=range]::-moz-range-track{height:8px;border-radius:var(--r-sm);
+  border:1px solid var(--ink-line);
+  background:linear-gradient(180deg,var(--papyrus-3),var(--papyrus-2));
+  box-shadow:inset 0 2px 4px rgba(43,36,28,.3);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:15px;height:22px;margin-top:-8px;border-radius:1px;
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  border:1px solid rgba(93,71,26,.8);
+  box-shadow:inset 0 1px 0 rgba(255,246,220,.8),0 1px 3px rgba(20,14,8,.5);}
+input[type=range]::-moz-range-thumb{width:15px;height:22px;border-radius:1px;
+  background:linear-gradient(180deg,var(--gold-soft),var(--gold));
+  border:1px solid rgba(93,71,26,.8);
+  box-shadow:inset 0 1px 0 rgba(255,246,220,.8),0 1px 3px rgba(20,14,8,.5);}
+input[type=range]:hover::-webkit-slider-thumb{background:var(--gold-soft);}
+input[type=range]:hover::-moz-range-thumb{background:var(--gold-soft);}
+
+/* THE SEGMENTED CONTROL — one row of stone, scored where it divides. The chosen
+   segment is pressed IN, which is the same sentence every other control in the
+   game speaks; it used to be the only one where the selected state POPPED OUT. */
+.seg{display:inline-flex;border-radius:var(--r-sm);overflow:hidden;
+  border:1px solid var(--ink-line);
+  background:linear-gradient(180deg,var(--parch),var(--papyrus-2));
+  box-shadow:0 1px 0 rgba(25,21,16,.2);}
+.seg-btn{padding:.5em 1em;background:transparent;border:none;cursor:pointer;font-weight:700;
+  font-size:.82rem;color:var(--ink-soft);border-right:1px solid rgba(74,63,49,.4);
+  transition:background .14s var(--ease),color .14s var(--ease),box-shadow var(--ctl-snap);}
 .seg-btn:last-child{border-right:none;}
-.seg-btn.on{background:var(--verd);color:var(--papyrus);}
+.seg-btn:hover:not(.on){background:rgba(43,36,28,.07);color:var(--ink);}
+.seg-btn.on{background:linear-gradient(180deg,var(--verd-deep),var(--verd));color:var(--papyrus);
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.35);}
+/* On a phone the settings card is about 340px of usable width and the label and
+   the control were fighting over it: Text size's fourth segment, `Huge`, was cut
+   off by the edge of the card, and the four-segment row is exactly the control a
+   player with poor eyesight has come here to reach. Under 560px each row becomes
+   label over control, which is what a settings row on a phone is. */
+@media (max-width:560px){
+  .set-row{flex-direction:column;align-items:stretch;gap:8px;}
+  .set-row .seg{align-self:flex-start;max-width:100%;}
+  .set-row .seg-btn{flex:1 1 auto;padding-left:.7em;padding-right:.7em;}
+  /* `flex:0 0 58px` is a WIDTH only while the row is a row. Turning the row into
+     a column made it the latch's HEIGHT, and the bolt sat in the top corner of a
+     58px-tall box. Stacking a row means giving its control its axis back. */
+  .set-row .switch{flex:0 0 auto;align-self:flex-start;}
+  .set-row .btn{align-self:flex-start;}
+  .set-row input[type=range]{width:100%;}
+}
 
 /* ---------- prep pack selection ---------- */
 .pack{cursor:pointer;border:2px solid transparent;}
 .pack.selected{border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(181,50,43,.14),0 12px 26px var(--shadow);}
 
-/* mission wrong-answer button */
-.btn.cinnabar-btn{background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));color:var(--papyrus);}
+/* THE ANSWER THAT WAS WRONG, on the road. It set `background` outright, which
+   beat the face variables and so froze the button: no hover, no press, no
+   disabled state. It sets the face instead, and carries a struck-through label
+   and a dashed edge as well, because the road's wrong answer had been marked in
+   colour alone — the same defect the Trial's options were fixed for. */
+.btn.cinnabar-btn{--btn-face:var(--cinnabar);--btn-face-2:var(--cinnabar-deep);
+  --btn-edge:rgba(74,16,12,.85);color:var(--papyrus);
+  border-style:dashed;text-decoration:line-through;text-decoration-thickness:2px;}
 
 /* loader fade uses .hide (already defined) — add graceful removal */
 #loader{transition:opacity .5s var(--ease);}
@@ -1898,11 +2261,14 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
    the hall teaches by being played, not by being read. Two columns, so the set
    reads as a square of four rather than a row of three and an orphan. */
 .arcade-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;max-width:660px;margin:0 auto;}
-.arcade-card{position:relative;text-align:left;cursor:pointer;border:1px solid var(--ink-line);
-  border-radius:var(--r-lg);padding:22px 22px 18px;background:linear-gradient(160deg,var(--parch),var(--papyrus-2));
-  box-shadow:0 6px 18px var(--shadow);transition:transform .18s var(--ease-back),box-shadow .18s var(--ease);overflow:hidden;}
-.arcade-card:hover{transform:translateY(-4px);box-shadow:0 12px 26px var(--shadow);}
-.arcade-card:focus-visible{outline:3px solid var(--gold);}
+/* Face and press come from the carved-stone rule. The card keeps its own weight
+   under it, because four of these float on a wash with nothing else around them
+   and a stone with no shadow reads as a printed rectangle. It also kept a local
+   `outline:3px solid gold` for focus, which is the 2.18:1 gold-on-parchment the
+   global ring was rewritten to avoid — it uses the global ring now. */
+.arcade-card{position:relative;text-align:left;cursor:pointer;
+  padding:22px 22px 18px;overflow:hidden;
+  filter:drop-shadow(0 6px 14px rgba(20,14,8,.24));}
 .arcade-card .ac-glyph{position:absolute;right:-8px;top:-14px;font-size:96px;line-height:1;
   font-family:var(--font-cal);color:var(--cinnabar);opacity:.12;pointer-events:none;}
 .arcade-card h3{font-family:var(--font-cal);font-size:1.32rem;margin:6px 0 4px;color:var(--ink);}
@@ -2005,13 +2371,22 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
 .fg-anvil{position:relative;z-index:1;display:block;width:min(210px,58%);margin:0 auto;
   color:#4a3b2c;filter:drop-shadow(0 -8px 18px rgba(255,170,80,.28));}
 .fg-hearth.heat2 .fg-anvil{color:#5b4632;} .fg-hearth.heat3 .fg-anvil{color:#6d5236;}
-.fg-strike{display:block;margin:12px auto 0;padding:11px 30px;cursor:pointer;
+/* STRIKE is the hammer coming down, and it was the one button in the game that
+   rose 2px to meet the cursor and then dropped 2px below its own resting line —
+   a bouncing web button on the anvil. It sinks now, hard and short, and it is
+   the only control here that is allowed a wide letterspaced display face,
+   because it is the moment the piece is made. */
+.fg-strike{display:block;margin:12px auto 0;padding:.62em 1.7em;cursor:pointer;
+  min-height:var(--ctl-min);
   font-family:var(--font-cal);font-size:1.12rem;letter-spacing:.2em;text-transform:uppercase;
   color:var(--papyrus);background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-deep));
-  border:1px solid var(--ink-line);border-radius:var(--r-md);box-shadow:0 4px 14px var(--shadow);
-  transition:transform .12s var(--ease-back);}
-.fg-strike:hover{transform:translateY(-2px);} .fg-strike:active{transform:translateY(2px);}
-.fg-strike:focus-visible{outline:3px solid var(--gold);}
+  border:1px solid rgba(74,16,12,.85);border-radius:var(--r-sm);
+  box-shadow:var(--ctl-rest),0 0 22px -6px rgba(181,50,43,.5);
+  transition:box-shadow var(--ctl-snap) var(--ease),transform var(--ctl-snap) var(--ease),
+             background .14s var(--ease);}
+.fg-strike:hover{background:var(--cinnabar-deep);
+  box-shadow:var(--ctl-rest),0 0 30px -4px rgba(181,50,43,.7);}
+.fg-strike:active{transform:translateY(2px);box-shadow:var(--ctl-press);}
 .fg-strike[hidden]{display:none;}
 
 /* a piece of a word, as a thing you can pick up */
@@ -2084,8 +2459,12 @@ input[type=range]{accent-color:var(--cinnabar);width:150px;}
   transition:transform .14s var(--ease-back),box-shadow .14s var(--ease);}
 .sp-seal.word{font-family:var(--font-cal);font-size:clamp(1rem,2.8vw,1.4rem);letter-spacing:.06em;
   color:var(--cinnabar-deep);}
-.sp-seal:hover{transform:translateY(-3px);box-shadow:0 8px 18px var(--shadow);}
-.sp-seal:focus-visible{outline:3px solid var(--gold);}
+/* The Spirit Trial's answers are seals you press, and they were the last surface
+   in the Hall still hopping 3px toward the pointer. The `outline:3px solid gold`
+   here was the same 2.18:1 opt-out the arcade cards carried. */
+.sp-seal:hover{transform:none;
+  box-shadow:inset 0 0 0 1px rgba(189,157,95,.8),0 3px 10px var(--shadow);}
+.sp-seal:active{transform:translateY(var(--ctl-sink));box-shadow:var(--ctl-press);}
 .sp-seal.slashed{animation:spSlash .34s forwards;pointer-events:none;}
 .sp-seal.burn{animation:spBurn .38s forwards;pointer-events:none;}
 @keyframes spSlash{0%{box-shadow:inset 0 0 0 2px var(--verd);}100%{transform:scale(1.06);box-shadow:0 0 22px rgba(189,157,95,.8);}}
@@ -2382,10 +2761,13 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
 
 .trial-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 @media (max-width:560px){.trial-opts{grid-template-columns:1fr;}}
-.trial-opt{padding:14px 13px;text-align:center;background:var(--papyrus);
-  border:1px solid var(--ink-line);border-radius:var(--r-sm);font-size:.94rem;
-  transition:transform .16s var(--ease),background .16s var(--ease),border-color .16s var(--ease);}
-.trial-opt:hover:not(:disabled){transform:translateY(-2px);background:var(--papyrus-2);border-color:var(--gold);}
+/* The answer stones get their surface from the carved-stone rule in the shared
+   block — face, edge, hover and press all live there. This rule used to restate
+   all four here and, being the later block, won: it put back the `translateY(-2px)`
+   lift that rule was written to remove, so the one control in the game that had
+   been deliberately made to press in was the one that visibly rose. Only the
+   things the Trial actually owns are set here — its size and its type. */
+.trial-opt{padding:14px 13px;text-align:center;font-size:.94rem;}
 /* Right and wrong used to differ only in hue, at effectively identical
    luminance — indistinguishable in greyscale and to a red-green colourblind
    player. Each state now carries a glyph, a weight change and a distinct
@@ -2418,10 +2800,25 @@ html[data-motion="reduced"] .loot-row{animation:none;opacity:1;transform:none;}
 .trial-pips i.now{background:var(--gold);box-shadow:0 0 8px rgba(189,157,95,.7);}
 
 /* ---------- the Hall of Records ---------- */
-.rec-tabs{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
-.rec-tab{padding:7px 15px;border:1px solid var(--ink-line);border-radius:100px;
-  background:var(--papyrus);font-size:.82rem;transition:all .18s var(--ease);}
-.rec-tab.on{background:var(--ink);color:var(--papyrus);border-color:var(--ink);}
+/* THE HALL'S SECTIONS. Four 100px capsules with a solid-black selected pill —
+   the stock tab-pill row, on top of five KPI tiles, on the screen the handoff
+   named as one of the two most generic in the game. They are index tabs on a
+   ledger now: they sit ON the rule that runs under them, the chosen one joins
+   the page below by breaking that rule, and the row reads left to right as a
+   place in a book rather than as four buttons of equal claim. */
+.rec-tabs{display:flex;gap:.4em;flex-wrap:wrap;justify-content:center;margin-bottom:18px;
+  border-bottom:1px solid rgba(74,63,49,.45);padding:0 4px;}
+.rec-tab{padding:.5em 1.05em .55em;border:none;border-radius:var(--r-sm) var(--r-sm) 0 0;
+  background:transparent;color:var(--ink-soft);font-size:.82rem;font-weight:700;
+  letter-spacing:.03em;position:relative;
+  transition:background .16s var(--ease),color .16s var(--ease);}
+/* the section you are reading is marked in cinnabar, sitting on the rule itself */
+.rec-tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:var(--cinnabar);transform:scaleX(0);transform-origin:50% 50%;
+  transition:transform .2s var(--ease);}
+.rec-tab:hover:not(.on){background:rgba(43,36,28,.06);color:var(--ink);}
+.rec-tab.on{color:var(--ink);}
+.rec-tab.on::after{transform:scaleX(1);}
 .rec-list{display:flex;flex-direction:column;gap:6px;max-width:620px;margin:0 auto;}
 .rec-row{display:grid;grid-template-columns:34px 1fr auto;gap:11px;align-items:center;
   padding:10px 13px;background:var(--parch);border:1px solid var(--ink-line);
@@ -2483,12 +2880,17 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
         <div class="game-sub">the reed-pen school of words</div>
         <div class="tagline">Build the word &middot; Prepare the company &middot; Recover the knowledge</div>
         <div class="title-actions">
-          <button class="btn" id="btn-begin">Begin the journey</button>
+          <!-- Three buttons at one weight is three buttons with no answer: the
+               title screen offered `Begin the journey`, `Lexicon` and `Training
+               Hall` as equals and never said which one was the way in. The road
+               forward is the large cinnabar block; the other two are the second
+               rank, and Continue outranks Begin whenever there is a save. -->
+          <button class="btn lg" id="btn-begin">Begin the journey</button>
           <div class="btn-continue-wrap" id="continue-wrap" style="display:none">
-            <button class="btn ghost" id="btn-continue">Continue</button>
+            <button class="btn lg" id="btn-continue">Continue</button>
             <span class="continue-note" id="continue-note"></span>
           </div>
-          <button class="btn verd" id="btn-glossary-title">Lexicon</button>
+          <button class="btn ghost" id="btn-glossary-title">Lexicon</button>
           <button class="btn ghost" id="btn-arcade-title">Training Hall</button>
         </div>
         <div class="small muted" style="margin-top:3vh;max-width:540px;position:relative;z-index:4;">
@@ -2627,8 +3029,9 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <div class="brief-intro" id="case-intro"></div>
           <div class="traveler-grid" id="traveler-grid"></div>
           <div class="brief-actions">
-            <button class="btn ghost" id="case-decline">Not today</button>
-            <button class="btn" id="case-accept">Build their terms &rarr;</button>
+            <!-- declining is the third rank: it should be findable, not persuasive -->
+            <button class="btn quiet" id="case-decline">Not today</button>
+            <button class="btn lg" id="case-accept">Build their terms &rarr;</button>
           </div>
         </div>
       </div>
@@ -2674,8 +3077,8 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
 
           <div class="build-controls">
             <button class="btn ghost" id="build-clear">Clear</button>
-            <button class="btn verd" id="build-pron" aria-label="Hear pronunciation"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Pronounce
-            <button class="btn" id="build-check">Stamp the seal</button>
+            <button class="btn verd" id="build-pron" aria-label="Hear pronunciation"><svg class="mk" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.6 6.2 H5 L8.4 3.2 V12.8 L5 9.8 H2.6 Z"/><path d="M10.6 6 A3 3 0 0 1 10.6 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.6 4.2 A5.6 5.6 0 0 1 12.6 11.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Pronounce</button>
+            <button class="btn lg" id="build-check">Stamp the seal</button>
           </div>
 
           <div class="build-feedback" id="build-feedback"></div>
@@ -2880,8 +3283,11 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <div class="pause-quit-confirm" id="pause-quit-confirm">
             <p class="small">Turning back now loses this road's progress — the bench you forged stays as it is, but nothing found or built on this walk is kept. Turn back?</p>
             <div class="pause-actions">
-              <button class="btn cinnabar-btn" id="pause-quit-yes">Yes, turn back</button>
-              <button class="btn ghost" id="pause-quit-no">Stay on the road</button>
+              <!-- The destructive option was the loudest button in the dialog and
+                   the one that keeps the player's road was the quiet one, which is
+                   backwards: a confirm should make the safe answer the easy one. -->
+              <button class="btn lg" id="pause-quit-no">Stay on the road</button>
+              <button class="btn quiet" id="pause-quit-yes">Yes, turn back</button>
             </div>
           </div>
         </div>
@@ -10483,6 +10889,10 @@ function showTitle(opts){
     const seal=$('#title-seal'); if(seal){ seal.classList.add("breathe"); }
     const cont=$('#continue-wrap'); const has=Save.has();
     cont.style.display = has?"flex":"none";
+    /* When there is a road already walked, Continue is the way in and Begin is a
+       thing you do instead — so they trade ranks rather than both shouting. */
+    $('#btn-begin').classList.toggle("ghost", has);
+    $('#btn-begin').classList.toggle("lg", !has);
     if(has){ const s=Save.read(); const ch=CHAPTERS[Math.min(s.chapter||0,CHAPTERS.length-1)];
       $('#continue-note').textContent = s? `${ch?(ch.num===0?'Prologue':'Chapter '+ch.num):'—'} · ${s.pages}/8 pages`:""; }
     $('#btn-begin').onclick=()=>{ Audio2.resume(); E.setS(E.newGame()); applySettings();

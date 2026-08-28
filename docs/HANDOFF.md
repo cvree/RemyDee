@@ -30,22 +30,25 @@ editing across blocks.
 Design constitution: `docs/NORTH_STAR.md`. Also `docs/GAME_PLAN.md`,
 `DEPTH_PLAN.md`, `WALK_PASS.md`, `MAKERS_PASS.md`, `TRIALS_PASS.md`,
 `BENCH_PASS.md`, `HALL_PASS.md`, `FEEL_PASS.md`, `WORD_PASS.md`,
-`VAMP_PASS.md` — read `BENCH_PASS.md` first (it deleted a lot of what the older
-ones describe), then `HALL_PASS.md`, then `FEEL_PASS.md`, which is about what
-the road *says* rather than what it does, then `WORD_PASS.md`, which asks the
-same question of the bench, and finally `VAMP_PASS.md`, the most recent, which
-withdrew hover-to-study and separated reward feedback from damage feedback —
-it supersedes `WALK_PASS.md` §2 and §5 wherever they disagree.
+`VAMP_PASS.md`, `PRESS_PASS.md` — read `BENCH_PASS.md` first (it deleted a lot
+of what the older ones describe), then `HALL_PASS.md`, then `FEEL_PASS.md`,
+which is about what the road *says* rather than what it does, then
+`WORD_PASS.md`, which asks the same question of the bench, then `VAMP_PASS.md`,
+which withdrew hover-to-study and separated reward feedback from damage feedback
+— it supersedes `WALK_PASS.md` §2 and §5 wherever they disagree — and finally
+`PRESS_PASS.md`, the most recent, which is not about a system at all: it is the
+control layer, and it is the one document to read before touching any button,
+field, tab, latch or chip anywhere in the file.
 
 ### How to verify anything
 
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39 40; do node test$t.js | tail -1; done
 ```
 
-33 jsdom suites, **1397 assertions, zero window errors**.
+34 jsdom suites, **1483 assertions, zero window errors**.
 
 **One suite is intermittently red and it is not yours.** `test36`'s "ten forges
 end the session" assertion (`G().done >= 10`) fails on roughly one run in ten,
@@ -79,6 +82,16 @@ Nearly every defect fixed in the last pass was found by taking a screenshot and
 looking at it: the road HUD's labels were invisible, three panels were stacked
 on top of each other on a phone, the road had one word-part on screen at a time.
 jsdom cannot see any of that.
+
+`node browsercheck.js` is the standing version of that instruction — it boots the
+game in real Chromium, drives it to the hub, the settings card and the Lexicon on
+an iPhone touch context, and reports every control under 44x44, every control
+deformed by its container, anything running past the edge of the card it lives
+in, and whether the button ranks are actually three different sizes. Add
+`--shots` to write PNGs to `./shots` (gitignored). It found four faults that the
+jsdom suites cannot see, including a whole screen of 30px targets in the Lexicon
+and a flex row that was stretching every button to one height and erasing the
+hierarchy the CSS had just been given.
 
 ### What has been done
 
@@ -314,15 +327,76 @@ other and cap at six.
 before it times an arrival — the school pauses the road 620ms into a first walk
 and the test had always been racing it.
 
+**11. Every button in the game became the same object.** See `docs/PRESS_PASS.md`.
+Not a system this time — the control layer. The right sentence had already been
+written once, above the Trial's answer stones (*"a card that lifts toward the
+cursor is a webpage; a stone that presses in when you push it is an object"*),
+it named two selectors out of six, and **a later `<style>` block overrode both of
+them**. So nothing in the file obeyed it: icon buttons rose 1px, ability pills
+3px, arcade cards 4px, material cards 3px, and STRIKE rose 2px to meet the cursor
+and then dropped 2px below its own resting line. Four tokens (`--ctl-rest`,
+`--ctl-press`, `--ctl-sink`, `--ctl-snap`) hold that grammar in one place now,
+and the one exception is written into the CSS: `.tile`, `.frag`, `.rack-item`,
+`.held-item` and `.ct-tile` still lift, because they are things the player *picks
+up* rather than presses.
+
+Three ranks replaced five colours — `.btn` / `.ghost` / `.quiet`, with `.lg` and
+`.sm` as size — because `Not today` and `Build their terms →` had been sitting
+side by side at identical weight and the screen never said which was the road
+forward. Continue and Begin trade ranks depending on whether there is a save.
+The radii came onto the token set (8/9/10/12/14/16/20/100 → `var(--r-*)`, with
+seals, beads and badges left round on purpose). The settings screen stopped being
+an iOS form: the pill toggle is a sliding bolt in a channel whose **position** is
+the state rather than its hue, and the volume sliders are drawn by this game on
+both engines instead of by `accent-color`. The Hall's four capsule pills are
+index tabs on a rule. And the 44px touch floor is one token instead of a
+measurement per control — verified in a real touch context, where **every control
+in the game now clears 44×44**.
+
+Six defects fell out of it. `:focus-visible` set `border-radius:4px`, which is
+the *element's* radius and not the ring's, so every control in the game changed
+shape at the moment the keyboard reached it. Four controls had talked their way
+out of the focus ring entirely — `outline:none` on `.comm-card` and
+`.variant-btn`, and the 2.18:1 `outline:3px solid var(--gold)` on `.arcade-card`
+and `.sp-seal`. `#build-pron` has no closing `</button>`, so `Stamp the seal` was
+written inside it and the parser was recovering. `.toggle`, `.setting-row` and
+half of `.seg` were styled and never used; `.seg` and `.gloss-search` were each
+declared **twice in different blocks with different values**, and
+`.gloss-search` asked for `var(--font-body)`, a token this file does not define.
+Disabled was `grayscale(.6)` mud. Turning the settings rows into columns on a
+phone made the latch's `flex:0 0 58px` a *height*, so the bolt sat in the corner
+of a 58px box. The forge's decode answers and the road's wrong-answer marker both
+differed by hue alone, at effectively identical luminance — the Trial's answers
+were given a glyph and a border that differs in kind for exactly that reason and
+neither of the other two was ever brought along; `.cinnabar-btn` also set
+`background` outright, which beats the face variables, so the button it marked
+lost hover, press and disabled all at once. The pause menu's quit confirm made
+the destructive option the loudest button in the dialog and the option that keeps
+the player's road the quiet one, which is backwards.
+And four rows that hold buttons were flex rows with no `align-items`, so they
+stretched every child to the tallest: the moment the title screen got a large
+primary, both second-rank buttons inflated to match it and the hierarchy that had
+just been written into the CSS measured out, on screen, at exactly one height.
+
+`test40` guards all of it — 86 assertions, over the CSS as the browser sees it
+(every `<style>` block concatenated, comments stripped, rules parsed to
+selector/body pairs) plus the live DOM for the rank swaps and the latch. It
+asserts guarantees rather than values: *nothing rises*, *no control invents its
+own corner*, *no control is defined twice*, *no control opts out of the focus
+ring*, *no rule parks a control between the desktop size and the touch floor*.
+
 ### What is left — verified, not speculation
 
 **Art.**
 - Step 3 of the forge is now a card and a quality bar with the trial opening
   over it, so between trials the panel is sparse. It is only on screen for the
   ~600ms the bar takes to fill, but it could carry the piece being made.
-- Settings still ships iOS pill toggles and a native range input with Chrome's
-  default accent; the Hall of Records still opens on five KPI stat tiles over a
-  card grid under tab pills. Those two screens are the most generic in the game.
+- ~~Settings still ships iOS pill toggles and a native range input.~~ **Done** —
+  the press pass. The toggle is a sliding bolt in a channel and the sliders are
+  drawn by this game on both engines. ~~The Hall of Records still opens on five
+  KPI stat tiles over a card grid under tab pills.~~ **Half done** — the tab
+  pills are index tabs on a rule now; the five KPI tiles above them are still
+  five KPI tiles, and that is the part of that screen still worth an argument.
 - The chest is still a mobile-game loot box; it wants to be a lacquered document
   case with a wax seal that cracks. (Note the fiction is Mediterranean now: a
   sealed wooden *capsa* with a wax *sphragis*.)
@@ -330,9 +404,13 @@ and the test had always been racing it.
 - `page()` still serves seven distinct meanings across twelve call sites.
   (`sfx.pour` and `sfx.bow` found homes in the Hall pass: the forge quenches
   with one, the spirit bows out with the other.)
-- Border radii are still a mix of 2/3/8/9/10/12/14/20px against a token set that
-  says 2/3/4. The decode chips and the gate prompt were brought in line; the
-  rest were not, because pills and seals legitimately want round.
+- ~~Border radii are still a mix of 2/3/8/9/10/12/14/20px.~~ **Done for the
+  controls** — `test40` §2 fails if a button, field, tab or latch invents its own
+  corner, and seals, beads and badges stay round on purpose. What is still mixed
+  is the *surfaces*: `.modal-card` is 14px, `.panel` and `.gloss-item` have their
+  own, and the loot rows are 9–10px. Squaring those is a real argument about
+  whether a panel is a card or a sheet of papyrus, and it should be made
+  deliberately rather than as a side effect of a control pass.
 
 **Performance.** The road holds 59.9fps with a 16.7ms median frame. The bench's
 own per-frame offenders went with the old crafts; the trials' stages have never
