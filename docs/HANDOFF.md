@@ -41,7 +41,13 @@ it is the one document to read before touching any button, field, tab, latch or
 chip anywhere in the file — and finally `ASK_PASS.md`, the most recent, which
 asks `WORD_PASS.md`'s question of the question engine and leaves one rule behind:
 nothing shown WITH a question may contain its answer, and everything shown after
-the player has answered should.
+the player has answered should — and `FRAME_PASS.md`, the newest, which is about
+what the player is looking *into* rather than what they are doing: the grade over
+the whole frame, the entrance choreography, and the one shell width every screen
+lays out against. Read it before adding any rule to the **last `<style>` block in
+the file** — that block is the end of the cascade, and an unguarded rule in it
+outranks every media query above it, which is how a 390px phone quietly went back
+to two columns.
 
 ### How to verify anything
 
@@ -62,6 +68,12 @@ hunting; if you do fix it, it is a Hall bug, not a test bug.
 `testlib.js` is the shared harness (mocks AudioContext, canvas 2d, strips CDN
 scripts, counts window errors). Always run the full suite — several passes here
 broke a distant test.
+
+**And the suites cannot see composition at all.** Every defect the frame pass
+fixed was found by screenshotting in real Chromium and looking at it, or by
+measuring `getBoundingClientRect().left` on two screens at two viewport widths
+and noticing they disagreed — a heading and the panels under it starting 62px
+apart is invisible to 1518 assertions and obvious in one PNG.
 
 **The Trials need a headless escape hatch.** `__RD_MG` runs the forge's build
 and proof steps, and it is a hand-skill challenge that jsdom cannot play.

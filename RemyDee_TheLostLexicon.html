@@ -105,6 +105,29 @@
   --ctl-snap:.09s;           /* a press has to answer within a frame or two */
   /* Coarse pointers get a 44px floor everywhere; @media (pointer:coarse) sets it. */
   --ctl-min:0px;
+
+  /* THE GRADE. One lens over the whole frame — see THE FRAME PASS at the end of
+     the head. Held as numbers rather than baked into the gradients so the
+     high-contrast theme can pull the light off the interface without having to
+     restate the geometry, and so the one setting that governs it has one place
+     to write to. */
+  --grade-key:.30;          /* the warm bloom where the lamp is */
+  --grade-fall:.58;         /* how far the edges fall away from it */
+  --grade-grain:.055;       /* the tooth of the paper, carried over the UI */
+
+  /* THE GUTTER. The margin the composition is framed by. A screen that runs its
+     content to the edge of the frame has no frame; this is the air that makes
+     the letterbox read as one. */
+  --gutter:clamp(20px, 4.2vw, 68px);
+  --gutter-y:clamp(16px, 2.6vh, 34px);
+  /* The measure a line of prose is allowed. Everything readable in this game was
+     as wide as whatever box it landed in, which on a 1440px frame is a 130-character
+     line — about twice what an eye tracks without losing its place. */
+  --measure:62ch;
+  /* The width a screen's content is allowed, and that width's left edge
+     expressed as a margin — see THE FRAME PASS §3b. */
+  --shell:1280px;
+  --shell-inset:max(0px, calc((100% - var(--shell)) / 2));
 }
 
 /* High-contrast theme overrides */
@@ -112,6 +135,10 @@ html[data-contrast="high"]{
   --papyrus:#f7f1e2; --papyrus-2:#eee3c8; --parch:#fbf7ec; --ink:#0d0a06; --ink-soft:#1c160f;
   --cinnabar:#c21a12; --verd:#3d5c4b; --verd-deep:#1f3d2b; --gold:#8a6a1f;
   --ink-line:#2a2015;
+  /* A player who has asked for high contrast has asked for the opposite of a
+     grade. The lens comes off almost entirely — a trace of falloff so the frame
+     still has an edge, and no film on the text at all. */
+  --grade-key:.06; --grade-fall:.16; --grade-grain:0;
 }
 
 /* When the display faces never arrive, the fallback serif is set rather than left
@@ -2853,6 +2880,403 @@ html[data-motion="reduced"] .mg-veil{animation:none;}
 html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
 
 </style>
+<style>
+/* ==================================================================
+   THE FRAME PASS — the game as a lit scene, not a lit document
+
+   Everything below is one complaint answered: the interface read as a
+   webpage laid over a painting rather than as something standing inside
+   one. Three causes, and not one of them was a colour.
+
+   ONE — THE GRADE NEVER REACHED THE INTERFACE. `.vignette` is real and it
+   works, and it is inside `.backdrop` at z-index 3 while `.content` is at
+   z-index 4. So the corners of the *scenery* fell away into shadow while
+   every panel, heading and button above it stayed lit at exactly the
+   brightness of the middle of the frame. A scene has one light. When only
+   the wallpaper obeys it, the furniture is a decal stuck to the glass. The
+   grade is lifted out of the backdrop and thrown over the whole frame here.
+
+   TWO — NOTHING ARRIVED. `screenIn` fades a screen in as a single block,
+   so a heading, the rule under it and eight panels all resolve on the same
+   frame: the visual signature of a page load, which is the one thing a cut
+   never looks like. A cut still has an order. `.staged` gives it one.
+
+   THREE — EVERYTHING WAS CENTRED, AT FULL WIDTH. The title was a stack down
+   the middle of the frame with its three buttons in a row and the legal
+   note directly under the call to action, competing with it. The difficulty
+   screen put three cards into a two-column grid, orphaning the third, ran
+   its explanation across a 130-character line, and flung its two buttons to
+   opposite edges of a 1440px frame with a quarter of the screen of nothing
+   between them. Composition is the loudest thing on a screen and it was the
+   only thing here that had not been designed.
+   ================================================================== */
+
+/* ---------- 1. THE GRADE ----------
+   One lens over everything: a key light high and a little left of centre, a
+   falloff into the corners away from it, and the tooth of the paper it is
+   all printed on carried over the UI so a panel and the sky behind it share
+   a surface instead of one being printed and the other rendered.
+
+   It sits ABOVE the screens and above the modals, because a light that stops
+   at the edge of a dialog is not a light. It sits BELOW the transition wipe
+   (z 400) so a cut still covers it, and below the skip link so the first
+   thing a keyboard reaches is never behind glass. It can never be clicked. */
+#frame::before,
+#frame::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:300;}
+#frame::before{
+  background:
+    /* the key: warm, high, a little left of centre. It is the only thing in the
+       grade that ADDS light, and it stays modest, because a scene is not made
+       cinematic by brightening one part of it — it is made cinematic by taking
+       the light off everywhere else. */
+    radial-gradient(80% 60% at 34% 2%,
+      rgba(255,243,214,var(--grade-key)), rgba(255,243,214,0) 66%),
+    /* the bowl: a wide, soft falloff that leaves the middle of the frame
+       untouched. The stops are deliberately far apart — a vignette you can find
+       the edge of is a black ring, not a lens. */
+    radial-gradient(148% 128% at 50% 42%,
+      rgba(24,16,8,0) 40%,
+      rgba(24,16,8,calc(var(--grade-fall) * .34)) 72%,
+      rgba(16,10,5,calc(var(--grade-fall) * .82)) 100%);
+}
+#frame::after{
+  /* The 3px tile is the same trick `.paper-grain` already plays on the
+     backdrop; this is that grain finally reaching the things standing on it.
+     Plus the long horizontal shading top and bottom that a lens gives you and
+     a flat fill never does. No blend mode: this layer is over a canvas running
+     at 60fps on the road and a compositing pass there is not worth a nicety. */
+  background-image:
+    radial-gradient(rgba(88,66,36,var(--grade-grain)) .6px, transparent .7px),
+    /* THE EDGES. Four short linear falloffs rather than one deeper bowl, because
+       a bowl big enough to frame the picture also reaches the middle of it, and
+       the middle of this picture is where the reading is. These darken a band a
+       tenth of the frame deep and are mathematically zero everywhere else, so
+       the composition gets its frame and no panel loses a point of contrast for
+       it. The floor is weighted heaviest: light falls from above here. */
+    linear-gradient(180deg, rgba(18,12,6,calc(var(--grade-fall) * .60)) 0%, rgba(18,12,6,0) 11%),
+    linear-gradient(0deg,   rgba(18,12,6,calc(var(--grade-fall) * .80)) 0%, rgba(18,12,6,0) 16%),
+    /* The two side bands are deliberately the lightest of the four. The road
+       spawns its word-parts at the right edge and slides them left, so this is
+       the one gradient in the grade that sits on top of something the player has
+       to read the instant it appears — a chip entering under a quarter-alpha of
+       near-black is a chip that has to be read twice. */
+    linear-gradient(90deg,  rgba(18,12,6,calc(var(--grade-fall) * .28)) 0%, rgba(18,12,6,0) 7%),
+    linear-gradient(270deg, rgba(18,12,6,calc(var(--grade-fall) * .28)) 0%, rgba(18,12,6,0) 7%);
+  background-size:3px 3px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+}
+/* The one screen the grade must not touch is the one that IS a lens: the
+   trials draw their own object edge to edge and a second vignette over it
+   reads as a smear on the monitor. */
+html.mg-open #frame::before,
+html.mg-open #frame::after{opacity:0;transition:opacity .3s var(--ease);}
+
+/* ---------- 2. THE STAGE ----------
+   Four beats, 70ms apart: the label, the name, the rule drawn under it, then
+   the body, then the thing you press. Fast enough that a player on their
+   fortieth road never waits on it, ordered enough that the eye is walked down
+   the screen once before it is asked to choose.
+
+   `.staged` is added by `swap()` and taken off again a beat later, because a
+   screen that keeps the class replays every entrance each time a panel
+   re-renders — and the hub re-renders on nearly every action. */
+@keyframes stageIn{
+  from{opacity:0;transform:translateY(15px);}
+  to{opacity:1;transform:none;}
+}
+/* The rule under a heading is the one element that should not fade in. It is a
+   line; a line is drawn. */
+@keyframes stageRule{
+  from{opacity:0;transform:scaleX(0);}
+  to{opacity:1;transform:scaleX(1);}
+}
+.staged .section-head>.eyebrow{animation:stageIn .5s var(--ease) both;animation-delay:.04s;}
+.staged .section-head>h1,
+.staged .section-head>h2{animation:stageIn .55s var(--ease) both;animation-delay:.11s;}
+.staged .section-head>.divider{animation:stageRule .72s var(--ease) both;animation-delay:.2s;
+  transform-origin:left center;}
+
+/* The body of a screen, one block at a time. These are the five wrappers the
+   content screens actually hang their blocks off; staging `.content>*` instead
+   would reach into the road's HUD, which is not a page and must never wait. */
+.staged .hub-grid>div>*,
+.staged .hub-grid>aside>*,
+.staged .diff-grid>*,
+.staged .diff-wrap>.diff-lede,
+.staged .diff-wrap>.build-controls,
+.staged .brief-wrap>*,
+.staged .result-wrap>*,
+.staged .arcade-grid>*{animation:stageIn .5s var(--ease) both;}
+.staged .hub-grid>div>*:nth-child(1),.staged .hub-grid>aside>*:nth-child(1),
+.staged .diff-grid>*:nth-child(1),.staged .brief-wrap>*:nth-child(1),
+.staged .result-wrap>*:nth-child(1),.staged .arcade-grid>*:nth-child(1){animation-delay:.20s;}
+.staged .hub-grid>div>*:nth-child(2),.staged .hub-grid>aside>*:nth-child(2),
+.staged .diff-grid>*:nth-child(2),.staged .brief-wrap>*:nth-child(2),
+.staged .result-wrap>*:nth-child(2),.staged .arcade-grid>*:nth-child(2){animation-delay:.27s;}
+.staged .hub-grid>div>*:nth-child(3),.staged .hub-grid>aside>*:nth-child(3),
+.staged .diff-grid>*:nth-child(3),.staged .brief-wrap>*:nth-child(3),
+.staged .result-wrap>*:nth-child(3),.staged .arcade-grid>*:nth-child(3){animation-delay:.34s;}
+.staged .hub-grid>div>*:nth-child(n+4),.staged .hub-grid>aside>*:nth-child(n+4),
+.staged .diff-grid>*:nth-child(n+4),.staged .brief-wrap>*:nth-child(n+4),
+.staged .result-wrap>*:nth-child(n+4),.staged .arcade-grid>*:nth-child(n+4){animation-delay:.41s;}
+.staged .diff-wrap>.diff-lede{animation-delay:.22s;}
+.staged .diff-wrap>.build-controls{animation-delay:.40s;}
+/* A player who has asked for less motion has asked for the screen to be there
+   when they look at it. The global reduced-motion rule crushes the duration to
+   a millisecond, which would strobe eight panels; this removes the entrance
+   outright rather than playing it faster. */
+html[data-motion="reduced"] .staged *{animation-name:none !important;}
+@media (prefers-reduced-motion: reduce){
+  html:not([data-motion="full"]) .staged *{animation-name:none !important;}
+}
+
+/* ---------- 3. THE GUTTER ----------
+   A screen that runs to the edge of the frame has no frame. */
+.content{padding:var(--gutter-y) var(--gutter);}
+/* Prose gets a measure. `.small.muted` explanations, ledes and briefs were all
+   as wide as whatever box they landed in. */
+.diff-lede,.brief-intro{max-width:var(--measure);}
+
+/* The heading of a screen is the one place the game gets to be loud. It was
+   set at 30px maximum on a frame that can be 1440px wide — the same size as a
+   blog post's subhead. */
+.section-head{gap:clamp(12px,1.6vw,22px);margin-bottom:clamp(14px,2vh,26px);}
+.section-head h2{font-size:clamp(22px,3.4vw,40px);letter-spacing:-.012em;}
+.section-head>.eyebrow{align-self:center;}
+/* The divider was a 2px slab. A rule in a book is a hairline with a weighted
+   end, and it should start at the ink and go to nothing. */
+.divider{height:1px;background:linear-gradient(90deg,var(--ink-line) 0%,rgba(74,63,49,.35) 45%,transparent 100%);}
+
+/* ---------- 3b. THE SHELL ----------
+   A screen's heading and the blocks under it have to start at the same x, and
+   on two screens they did not. The heading is a direct child of `.content` and
+   takes the gutter; the grid beneath it carried its own `max-width` with
+   `margin:0 auto`, so on a 1440px frame the panels began 62px further in than
+   the title over them — a left edge that moved halfway down the screen.
+
+   One shell width, applied to the heading AND to what it heads, and the two
+   agree at every frame size. `--shell-inset` is the same offset expressed as a
+   margin, for the blocks that want the shell's left edge but not its width: the
+   percentage resolves against the containing block at the point of use, which
+   is exactly the arithmetic `margin:0 auto` was doing invisibly. */
+.content>.section-head,
+.content>.hub-grid,
+.content>.arcade-menu,
+.content>.arcade-stage{max-width:var(--shell);margin-left:auto;margin-right:auto;}
+/* Prose that belongs to the shell but must not be as wide as it: it starts
+   where the shell starts and stops at a readable measure. */
+.screen-lede{max-width:var(--measure);text-align:left;
+  margin:0 auto clamp(18px,2.6vh,28px) var(--shell-inset);}
+/* The aside was the narrower column and carried five of the hub's seven panels,
+   so it ran off the bottom of the frame while the column beside it ended in a
+   third of a screen of nothing. */
+/* Guarded by the same breakpoint the original rule uses. Restating a grid
+   template in the last stylesheet in the file also beats `@media (max-width:860px)
+   {.hub-grid{grid-template-columns:1fr}}` further up it — which put a 390px phone
+   back into two columns and wrapped "The School of Kalamos" one word per line. */
+@media (min-width:861px){
+  .hub-grid{grid-template-columns:1fr .9fr;gap:clamp(14px,1.6vw,22px);}
+}
+
+/* THE FLEX-COLUMN TRAP. Five screens centre their content vertically with
+   `display:flex;flex-direction:column;justify-content:center`, and every block
+   inside them carries `max-width:N;margin:0 auto` from the days when `.content`
+   was an ordinary block. In a column flex container an auto inline margin
+   overrides the default `stretch`, so those blocks stopped filling their
+   max-width and became shrink-to-fit — measured in the browser, the Training
+   Hall was laying its heading out at 845px, its intro at 441px and its card
+   menu at 1014px, each one centred on its own width, which is FOUR different
+   left edges on one screen. `width:100%` gives the max-width back its meaning
+   and the screen back its left margin. */
+#s-difficulty .content>*,#s-case .content>*,#s-arcade .content>*,
+#s-trial .content>*,#s-vigil .content>*{width:100%;}
+/* And `justify-content:center` in a scroll container clips the TOP of anything
+   taller than the container — there is no scrolling back to what it pushed out.
+   `safe` falls back to flex-start exactly when that would happen. Browsers that
+   do not know the keyword drop this line and keep the plain `center` above it,
+   which is the behaviour that is already shipping. */
+#s-difficulty .content,#s-case .content,#s-arcade .content,
+#s-trial .content,#s-vigil .content,#s-build .content{justify-content:safe center;}
+/* The workbench had 170px of dead frame under it and sat hard against the top
+   rail, which is the same complaint the five screens above were fixed for. */
+#s-build .content{display:flex;flex-direction:column;justify-content:center;
+  min-height:100%;padding-block:clamp(14px,4vh,48px);}
+
+/* The party brief and the Training Hall join the shell, so the game has ONE
+   left edge from the top bar down. The workbench does not: it is a symmetric
+   composition — a tray, a rack and a row of tools, all centred on their own
+   axis — and dragging it to a left margin would only make it lopsided. */
+/* `.arcade-stage` is deliberately not here. It is the surface a round is played
+   on, sized at 860px by the pass that built it, and a page shell has no business
+   stretching a playfield. */
+.brief-wrap,.arcade-menu{max-width:var(--shell);margin-inline:auto;}
+/* A single traveler in a 1280px shell became a single 1280px card. Cards cap,
+   and pack from the left rather than stretching to fill a row they do not have
+   the members for. */
+/* The cap goes on the CARD, not on the track. `minmax(250px,460px)` would hand
+   a 368px phone a 460px column and push it off the side of the screen; a 1fr
+   track that the card declines to fill does the same job at every width. */
+.traveler-grid>*{max-width:460px;}
+/* Same footer as the difficulty screen: the two answers belong together under a
+   rule, not thrown to opposite ends of the widest box on the screen. */
+/* The two answers stay together at the right, where `.brief-actions` already
+   put them — a decline and an accept are two ways of answering the same
+   question, and a shell-wide bar with one at each end reads as a broken row
+   rather than as a choice. (The difficulty screen's pair IS a back and a
+   forward, which is why that one is split.) */
+.brief-actions{margin-top:clamp(18px,2.6vh,30px);padding-top:16px;
+  border-top:1px solid rgba(74,63,49,.22);}
+
+/* ---------- 4. THE TITLE ----------
+   The main menu of a story game is not a centred stack. It is a plate of type
+   held against one side of the frame with the scene visible in the rest of it,
+   and its options are a list you read down, not a toolbar you scan across.
+
+   Everything here is scoped to `#s-title`, because `.title-wrap` and
+   `.title-actions` are also what the day-end and the ending are built from,
+   and a curtain line IS centred. */
+#s-title .title-wrap{
+  align-items:flex-start;text-align:left;justify-content:center;
+  padding:4vh var(--gutter);
+}
+#s-title .title-plate{max-width:min(680px,54vw);display:flex;flex-direction:column;align-items:flex-start;}
+#s-title .title-seal{margin-bottom:2.2vh;}
+#s-title .game-title{font-size:clamp(40px,6.4vw,92px);letter-spacing:-.018em;line-height:1.02;}
+#s-title .brush-underline{margin:1.6vh 0 0;}
+#s-title .game-sub{margin-top:.5em;}
+#s-title .tagline{font-size:clamp(11px,1.05vw,13.5px);letter-spacing:.2em;line-height:1.9;}
+.tagline>span{white-space:nowrap;}
+.tagline>.tsep{font-style:normal;padding:0 .7em;opacity:.55;}
+/* THE MENU. A vertical list, each option on its own line, the way in at the
+   top of it. `align-items:stretch` is deliberate and is not the mistake the
+   note on `.title-actions` warns about — that one was a ROW stretching ranks
+   to a common HEIGHT and erasing them. In a column, stretch equalises WIDTH,
+   which is what makes a menu read as a menu; the ranks stay distinct because
+   they differ in weight and in height, which a column never touches. */
+#s-title .title-actions{
+  margin-top:3.4vh;flex-direction:column;align-items:stretch;
+  gap:10px;width:min(300px,64vw);
+}
+#s-title .title-actions .btn{width:100%;justify-content:flex-start;text-align:left;}
+#s-title .btn-continue-wrap{align-items:stretch;width:100%;}
+#s-title .continue-note{text-align:left;}
+/* The legal note was directly under the primary button at body size, so the
+   last thing the composition said before "Begin" was a disclaimer. It belongs
+   at the foot of the frame, which is where a film puts one. */
+#s-title .title-legal{
+  position:absolute;left:var(--gutter);right:var(--gutter);bottom:2.4vh;
+  max-width:none;z-index:4;font-size:.7rem;line-height:1.5;opacity:.8;
+  padding-top:10px;border-top:1px solid rgba(74,63,49,.22);
+}
+@media (max-aspect-ratio:11/10){
+  /* On a phone the frame is portrait and there is no "rest of the scene" to
+     hold the plate against — a left-anchored plate there is just a wide left
+     margin. It goes back to centre, which is the right composition for the
+     shape. */
+  #s-title .title-wrap{align-items:center;text-align:center;}
+  #s-title .title-plate{align-items:center;max-width:100%;}
+  #s-title .brush-underline{margin:1.6vh auto 0;}
+  /* Three tracked phrases will not fit one line on a phone at any size worth
+     reading, and wrapping them leaves a separator hanging at the end of a line.
+     They stack instead, which is what the line was always a list of. */
+  #s-title .tagline{display:flex;flex-direction:column;align-items:center;gap:.35em;}
+  #s-title .tagline>.tsep{display:none;}
+  #s-title .title-actions{width:min(320px,86vw);}
+  #s-title .title-actions .btn{justify-content:center;text-align:center;}
+  #s-title .continue-note{text-align:center;}
+  #s-title .title-legal{position:static;margin-top:3vh;text-align:center;}
+}
+
+/* ---------- 5. THE DIFFICULTY SCREEN ----------
+   Three choices in a two-column grid is two choices and an afterthought. */
+.diff-wrap{max-width:var(--shell);padding:2vh 0 24px;}
+/* The four card titles sat at four different heights — on the one screen in the
+   game whose whole job is showing four options as parallel. Two causes, both
+   invisible until measured.
+
+   The glyphs are four different characters, and an inline span sizes its line
+   box from the glyph in it; a fixed box makes them one height.
+
+   And these cards are `<button>` elements, which the user-agent stylesheet
+   centres the contents of. Every card in the row is stretched to the tallest,
+   so the three with less to say had their whole stack pushed down by half of
+   what they were short — Gentle's title sat 9px above Steady's for no reason
+   the markup could show. A column that starts at the start.
+
+   Only the difficulty cards: `.arcade-card` has the same button-centring but
+   four cards of identical length, so it never showed — and stretching ITS
+   children turns the "MEANING RECALL" pill into a full-width bar. */
+.diff-card{display:flex;flex-direction:column;align-items:stretch;
+  justify-content:flex-start;}
+.diff-card .dc-glyph{display:flex;align-items:center;height:1.6rem;flex:0 0 auto;}
+.diff-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr));
+  gap:clamp(12px,1.4vw,20px);}
+.diff-lede{margin:0 0 clamp(18px,2.6vh,30px);text-align:left;}
+/* The two buttons were pinned to opposite ends of the widest box on the screen.
+   They are a footer now: a rule, then the way back and the way on, together. */
+.diff-wrap>.build-controls{
+  margin-top:clamp(20px,3vh,34px);padding-top:16px;
+  border-top:1px solid rgba(74,63,49,.22);
+  justify-content:flex-end;gap:14px;
+}
+.diff-wrap>.build-controls #diff-back{margin-right:auto;}
+
+/* ---------- 6. DEPTH ----------
+   A panel was a hairline box with a 14px shadow, which on parchment is a box
+   drawn on the paper rather than an object resting on it. The gloss stays
+   exactly where the press pass left it — the fix is not a brighter top edge,
+   it is a longer shadow: the distance between a thing and its ground is what
+   the eye reads as height. */
+.panel{
+  box-shadow:
+    0 1px 0 rgba(43,36,28,.24),
+    0 2px 5px -3px rgba(20,14,8,.34),
+    0 22px 44px -20px rgba(20,14,8,.60);
+}
+/* ---------- 7. THE HORIZON ----------
+   Three hard horizontal lines ran the full width of the picture, and they were
+   the loudest thing in it. Each ink-wash ridge is a div 60% of the frame tall
+   whose bottom is pinned at 20%, 33% and 46%, and the mountain path fills from
+   its own crest all the way down to that pin — so every ridge ended in a
+   guillotined straight edge across the entire frame, one of them directly
+   through the game's own subtitle on the title screen.
+
+   A ridge in a wash does not end. It goes into the haze. Feathering the bottom
+   third of each one is also, for free, the thing that was missing from the
+   scene as a scene: distance reading as distance. The temple and the cypresses
+   are `.layer` too and are deliberately not `.ridge` — those two stand on the
+   ground and have to keep their feet. */
+.layer.ridge{
+  -webkit-mask-image:linear-gradient(180deg,#000 0 58%,rgba(0,0,0,.42) 82%,transparent 100%);
+          mask-image:linear-gradient(180deg,#000 0 58%,rgba(0,0,0,.42) 82%,transparent 100%);
+}
+
+/* ---------- 8. THE PHONE ----------
+   This is the LAST stylesheet in the file, so an unguarded rule here outranks
+   every media query above it. Three of the phone's deliberate tightenings were
+   being silently undone by §3 and §5 — restated at the same breakpoint so the
+   cascade ends where it is supposed to. (The hub's single column was a fourth
+   and is guarded at its own rule.) */
+@media (max-width:700px){
+  .content{padding:12px 11px;}
+  .topbar{padding:7px 10px;gap:7px;}
+  .section-head h2{font-size:clamp(19px,6.2vw,26px);}
+}
+
+/* The topbar is the one strip of night in a game made of daylight, so it is
+   also the only place a real edge of light can sit without reading as gloss. */
+/* The topbar had its own 16px inset while the content under it had 20px, and
+   once the content took the gutter the two were 38px apart: the brand and the
+   screen heading directly beneath it started at two different left margins, on
+   every screen in the game. One margin, or the screen has no left edge. */
+.topbar{
+  /* The bar spans the whole frame, so it cannot use `--shell-inset` — that
+     percentage would resolve against the frame rather than against the content
+     box under it. Same arithmetic, stated against the width the bar actually
+     has, so the brand and the heading below it land on one line. */
+  padding:10px calc(var(--gutter) + max(0px, (100% - 2 * var(--gutter) - var(--shell)) / 2));
+  box-shadow:0 1px 0 rgba(216,189,132,.16) inset, 0 10px 30px -12px rgba(0,0,0,.75);
+}
+</style>
 </head>
 <body>
 <div id="loader">
@@ -2874,11 +3298,22 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
       <div class="backdrop" id="title-bg"></div>
       <div class="title-parallax" id="title-parallax"></div>
       <div class="title-wrap">
+        <!-- THE PLATE. The type is one block held against one side of the frame
+             rather than a stack down the middle of it, so the scene behind has
+             somewhere to be seen — see THE FRAME PASS §4. On a portrait phone
+             there is no "rest of the scene" to hold it against and the media
+             query puts it back in the centre, which is the right composition
+             for that shape. -->
+        <div class="title-plate">
         <div class="title-seal" id="title-seal"><span>&#929;&#916;</span></div>
         <h1 class="game-title" id="game-title">Remy Dee<br><span style="font-size:.62em">The Lost <span class="amp">Lexicon</span></span></h1>
         <div class="brush-underline" id="title-brush"></div>
         <div class="game-sub">the reed-pen school of words</div>
-        <div class="tagline">Build the word &middot; Prepare the company &middot; Recover the knowledge</div>
+        <!-- The three phrases are held together individually so that when the line
+             does have to wrap it can only break BETWEEN them. Tracked at .3em this
+             string is 800px wide and it wrapped mid-phrase — "PREPARE THE /
+             COMPANY" — at every width narrower than that, which is most of them. -->
+        <div class="tagline"><span>Build the word</span><i class="tsep">&middot;</i><span>Prepare the company</span><i class="tsep">&middot;</i><span>Recover the knowledge</span></div>
         <div class="title-actions">
           <!-- Three buttons at one weight is three buttons with no answer: the
                title screen offered `Begin the journey`, `Lexicon` and `Training
@@ -2893,7 +3328,12 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <button class="btn ghost" id="btn-glossary-title">Lexicon</button>
           <button class="btn ghost" id="btn-arcade-title">Training Hall</button>
         </div>
-        <div class="small muted" style="margin-top:3vh;max-width:540px;position:relative;z-index:4;">
+        </div>
+        <!-- The disclaimer used to sit directly under the primary button at body
+             size, so the last thing the composition said before "Begin" was a
+             legal note. It is a footer rule now, which is where a film puts one
+             and where this one is still perfectly readable. -->
+        <div class="small muted title-legal">
           A learning game. Every medical term here is real and verified. Clues are vocabulary
           puzzles &mdash; naming a term is not diagnosing a person. The school, remedies, missions and
           equipment are fictional and are not medical advice.
@@ -3419,7 +3859,7 @@ html[data-motion="reduced"] .mg-veil.out{animation:none;opacity:0;}
           <h2 id="arcade-heading">The Training Hall</h2>
           <span class="divider"></span>
         </div>
-        <p class="small muted" id="arcade-intro" style="max-width:640px;margin:-6px auto 20px;text-align:center;">
+        <p class="small muted screen-lede" id="arcade-intro">
           No story stakes here — only reps. Weak word-parts surface more often, and every
           round you play feeds the same adaptive mastery your missions use.
         </p>
@@ -6246,13 +6686,22 @@ const TRANSITION={ "s-build":"ink", "s-forge":"wash", "s-assign":"scroll", "s-mi
   "s-result":"seal", "s-hub":"ink", "s-case":"wash", "s-end":"mist", "s-intro":"wash",
   "s-difficulty":"wash", "s-title":"seal", "s-trial":"seal", "s-hall":"scroll", "s-vigil":"scroll",
   "s-arcade":"scroll" };
+let stageTimer=0;
 function swap(id, onShow){
   const cur=$('#'+current); if(cur) cur.classList.remove('active');
   const nx=$('#'+id); if(nx){ nx.classList.add('active'); nx.scrollTop=0;
     const c=$('.content',nx); if(c)c.scrollTop=0;
     // the entrance the stylesheet has been carrying, unused, since it was written
     nx.classList.remove('plainshow');
-    if(!FX.reduced()){ void nx.offsetWidth; nx.classList.add('plainshow'); } }
+    nx.classList.remove('staged');
+    if(!FX.reduced()){ void nx.offsetWidth; nx.classList.add('plainshow'); nx.classList.add('staged');
+      /* `.staged` has to come OFF again. It is a screen-entrance class, and the
+         hub re-renders its panels on nearly every action — a screen that keeps
+         it replays the whole cascade every time the ledger updates, which reads
+         as the interface flickering rather than as an entrance. One beat past
+         the longest delay in the stylesheet and it is gone. */
+      clearTimeout(stageTimer);
+      stageTimer=setTimeout(()=>{ nx.classList.remove('staged'); }, 1100); } }
   current=id;
   /* Focus used to fall to <body> on every screen change, so a keyboard player
      started each screen tabbing in from the very top and a screen-reader user
@@ -6610,7 +7059,10 @@ function buildBackdrop(host, variant){
 
   S0.ridges.forEach((L,i)=>{
     const [color,h,op]=L;
-    const div=el("div","layer");
+    /* `ridge` exists so the stylesheet can feather the BOTTOM of these and not
+       the temple's or the grove's — those two stand on the ground and must keep
+       their feet. See THE FRAME PASS §7. */
+    const div=el("div","layer ridge");
     div.style.bottom=(20+i*13)+"%"; div.style.height="60%"; div.style.opacity=op;
     div.dataset.depth=(i+1);
     div.innerHTML=`<svg viewBox="0 0 400 200" preserveAspectRatio="none" style="width:100%;height:100%"${
@@ -7800,6 +8252,12 @@ function Stage(opts){
   live.className="mg-live"; live.setAttribute("aria-live","polite");
   veil.appendChild(live);
   host.appendChild(veil);
+  /* The frame's grade is a lens over everything (THE FRAME PASS §1) and a trial
+     is the one screen that is already a lens — it draws its own object edge to
+     edge with its own light on it, and a second vignette over that reads as a
+     smear on the monitor rather than as depth. The lens comes off while a trial
+     is up and goes back on when it leaves. */
+  try{ document.documentElement.classList.add("mg-open"); }catch(e){}
 
   let ctx=null; try{ ctx = cv.getContext("2d"); }catch(e){ ctx=null; }
 
@@ -8039,6 +8497,7 @@ function Stage(opts){
     listeners.length=0;
     window.removeEventListener("resize", onResize);
     veil.classList.add("out");
+    try{ document.documentElement.classList.remove("mg-open"); }catch(e){}
     setTimeout(()=>{ try{ if(veil.parentNode) veil.parentNode.removeChild(veil); }catch(e){} }, 420);
   };
   return S;
