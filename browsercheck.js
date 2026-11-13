@@ -59,7 +59,11 @@ const measure = (page) => page.evaluate((sel) => {
 }, CONTROLS);
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: CHROME });
+  /* The pinned build is the one this was written against; a container that has
+     since moved on ships a different revision under a different directory, and
+     the check then died on launch without measuring anything. Use the pin when
+     it is there and Playwright's own browser when it is not. */
+  const browser = await chromium.launch(fs.existsSync(CHROME) ? { executablePath: CHROME } : {});
   if (WANT_SHOTS && !fs.existsSync(SHOT_DIR)) fs.mkdirSync(SHOT_DIR);
 
   /* ---- 1. the 44px floor, on a real coarse-pointer device ---- */

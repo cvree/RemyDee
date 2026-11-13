@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#191510" />
 <title>Remy Dee: The Lost Lexicon</title>
+<meta name="description" content="Learn real medical terminology by building it. An adventure game where every word you assemble from Greek and Latin roots makes the road ahead survivable." />
+<meta property="og:title" content="Remy Dee: The Lost Lexicon" />
+<meta property="og:description" content="Learn real medical terminology by building it — prefix, root, suffix — and walk the road your words made survivable." />
+<meta property="og:type" content="website" />
+<!-- The tab icon is the game's own seal, drawn inline: the file ships with no assets, and that includes this one. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='10' fill='%23b5322b'/%3E%3Crect x='7' y='7' width='50' height='50' rx='8' fill='none' stroke='%23f3ecd8' stroke-opacity='.35' stroke-width='1.5'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Palatino,Georgia,serif' font-weight='700' font-size='30' fill='%23f3ecd8'%3E%CE%A1%CE%94%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- THE FONT LINK USED TO HOLD THE WHOLE GAME HOSTAGE.
@@ -409,6 +415,19 @@ svg.mk .mk-f{fill:currentColor;stroke:none;}
   --btn-edge:rgba(93,71,26,.8);--btn-lit:rgba(255,246,220,.9);color:var(--ink);}
 .btn.sm{padding:.5em .9em;font-size:.85rem;gap:.4em;}
 .btn.lg{padding:.85em 1.7em;font-size:1.06rem;letter-spacing:.03em;}
+/* The one large primary on a screen is the road forward, and it catches the
+   lamp every few seconds — light moving across a lacquered face, not the face
+   moving. It is drawn in ::before, under the label's own stacking and clipped
+   to the button, so it costs one composited layer and no layout. A ghost or a
+   quiet button never does this: if three things on a screen glint, none do. */
+.btn.lg:not(.ghost):not(.quiet):not(:disabled){overflow:hidden;}
+.btn.lg:not(.ghost):not(.quiet):not(:disabled)::before{content:"";position:absolute;top:0;bottom:0;left:0;width:34%;
+  background:linear-gradient(100deg,transparent,rgba(255,240,214,.34) 50%,transparent);
+  transform:translateX(-140%) skewX(-18deg);pointer-events:none;
+  animation:ctaGlint 5.2s cubic-bezier(.3,.1,.2,1) 1.4s infinite;}
+@keyframes ctaGlint{0%{transform:translateX(-140%) skewX(-18deg);}22%,100%{transform:translateX(440%) skewX(-18deg);}}
+html[data-motion="reduced"] .btn.lg::before{animation:none;display:none;}
+@media (prefers-reduced-motion: reduce){ .btn.lg::before{animation:none;display:none;} }
 /* A button that is doing nothing should look like paper, not like mud: the old
    `grayscale(.6)` turned cinnabar into a brown smear that still read as loud. */
 .btn:disabled{--btn-face:var(--papyrus-2);--btn-face-2:var(--papyrus-3);
@@ -484,9 +503,6 @@ h1,h2,h3{font-family:var(--font-cal);font-weight:700;line-height:1.12;color:var(
 .split-piece.rb-in{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease);}
 .blur-in{opacity:0;filter:blur(8px);transform:translateY(8px);}
 .blur-in.rb-in{opacity:1;filter:blur(0);transform:none;transition:opacity .6s var(--ease),filter .6s,transform .6s var(--ease);}
-/* ClickSpark ink motes */
-.spark{position:fixed;width:7px;height:7px;border-radius:60% 40% 55% 45%;background:var(--ink);
-  pointer-events:none;z-index:400;opacity:.9;}
 /* AnimatedList stagger */
 .al-item{opacity:0;transform:translateY(16px);}
 .al-item.al-in{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease);}
@@ -2445,8 +2461,6 @@ input[type=range]:hover::-moz-range-thumb{background:var(--gold-soft);}
 .fg-word.stamped{animation:fgStamp .42s var(--ease-back);}
 @keyframes fgStamp{0%{transform:scale(1.7);opacity:0;letter-spacing:.5em;}
   60%{transform:scale(.96);opacity:1;}100%{transform:scale(1);letter-spacing:.12em;}}
-.fg-spark{position:absolute;left:50%;top:44%;width:4px;height:4px;border-radius:50%;
-  background:#ffdca4;pointer-events:none;z-index:3;box-shadow:0 0 8px rgba(255,190,110,.9);}
 .fg-cry{text-align:center;font-family:var(--font-cal);font-size:1.05rem;letter-spacing:.28em;
   text-transform:uppercase;color:var(--gold);min-height:1.5em;margin-top:8px;}
 .fg-cry.lit{animation:fgCry .7s var(--ease-back);}
@@ -2556,6 +2570,22 @@ input[type=range]:hover::-moz-range-thumb{background:var(--gold-soft);}
   100%{opacity:0;transform:translate(-50%,-52px) scale(.95);}
 }
 html[data-motion="reduced"] .fx-pop{display:none;}
+
+/* ---------- the mote layer: everything that flies ----------
+   Above the modals (140) because the reveal card, the chest and the Trial are
+   all modals and they are where most of the good news happens; below the
+   toast (160), which is the one thing allowed to speak over a celebration. */
+#fx-motes{position:absolute;inset:0;width:100%;height:100%;z-index:150;pointer-events:none;}
+.fx-punch{animation:fxPunch .44s cubic-bezier(.2,1.5,.4,1);}
+@keyframes fxPunch{0%{transform:scale(1);}28%{transform:scale(1.24);}100%{transform:scale(1);}}
+.fx-sheen{position:absolute;z-index:149;pointer-events:none;overflow:hidden;}
+.fx-sheen i{position:absolute;top:-20%;bottom:-20%;left:0;width:38%;
+  background:linear-gradient(100deg,transparent 0%,rgba(255,246,214,.0) 20%,rgba(255,246,214,.78) 50%,rgba(255,246,214,.0) 80%,transparent 100%);
+  transform:translateX(-120%) skewX(-18deg);animation:fxSheen .85s cubic-bezier(.3,.1,.2,1) forwards;}
+@keyframes fxSheen{to{transform:translateX(380%) skewX(-18deg);}}
+html[data-motion="reduced"] #fx-motes,html[data-motion="reduced"] .fx-sheen{display:none;}
+html[data-motion="reduced"] .fx-punch{animation:none;}
+@media (prefers-reduced-motion: reduce){ #fx-motes,.fx-sheen{display:none;} .fx-punch{animation:none;} }
 
 /* ---------- lantern light: the one warm thing in an ink palette ---------- */
 .lanterns{position:absolute;inset:0;pointer-events:none;z-index:2;}
@@ -5538,7 +5568,11 @@ function countUp(node, to, opts){
     const p=clamp((t-start)/dur,0,1);
     const eased=1-Math.pow(1-p,3);
     node.textContent=prefix+Math.round(from+(to-from)*eased)+suffix;
-    if(p>=1){ node.textContent=prefix+Math.round(to)+suffix; h.kill(); }
+    if(p>=1){ node.textContent=prefix+Math.round(to)+suffix; h.kill();
+      /* a tally that has finished counting says so — otherwise the number just
+         stops, and the eye cannot tell "done" from "paused" */
+      if(opts.punch && to>from) punch(node);
+      if(opts.done){ try{ opts.done(); }catch(e){} } }
   });
 }
 
@@ -5615,26 +5649,11 @@ function bindClickSpark(){
   }, {passive:true});
 }
 function clickSpark(x,y){
-  const n = quality==="high"?7:5;
-  const frame=$('#frame'); const host = frame||document.body;
-  const fr = frame ? frame.getBoundingClientRect() : {left:0,top:0};
-  for(let i=0;i<n;i++){
-    const s=document.createElement("div"); s.className="spark";
-    const ang=(Math.PI*2*i/n)+Math.random()*0.5;
-    const dist=16+Math.random()*22;
-    s.style.left=(x-fr.left)+"px"; s.style.top=(y-fr.top)+"px";
-    if(frame) s.style.position="absolute";
-    host.appendChild(s);
-    const dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
-    if(has("gsap")){
-      window.gsap.to(s,{x:dx,y:dy,opacity:0,scale:0.3,duration:0.5+Math.random()*0.2,ease:"power2.out",
-        onComplete:()=>s.remove()});
-    } else {
-      s.style.transition="transform .5s cubic-bezier(.22,.61,.36,1),opacity .5s";
-      requestAnimationFrame(()=>{ s.style.transform=`translate(${dx}px,${dy}px) scale(.3)`; s.style.opacity="0"; });
-      setTimeout(()=>s.remove(),700);
-    }
-  }
+  /* Seven DOM nodes per press, each with its own transition and its own
+     timeout to remove it. It is the commonest effect in the game — every
+     button — so it is the one that most wanted to be seven dots on a canvas
+     that is already there. */
+  burst({x,y},{n:quality==="high"?7:5, pal:"ink", speed:120, life:0.42, size:2.6, g:120, tight:true});
 }
 
 /* ================= ink bloom ================= */
@@ -5809,10 +5828,33 @@ function camStep(t){
       y  -= CAM.swM*2.6*k;
     } else CAM.swT=0;
   }
-  if(!live){ f.style.transform=""; if(camH&&camH.kill) camH.kill(); camH=null; return; }
+  if(!live){ f.style.transform=""; f.style.willChange=""; camH=null; return; }
   f.style.transform=`translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) scale(${sc.toFixed(4)}) rotate(${rot.toFixed(3)}deg)`;
+  camH=requestAnimationFrame(camStep);
 }
-function camRun(){ if(camH) return; camH=raf(camStep); }
+/* THE CAMERA WAS THE MOST EXPENSIVE EFFECT IN THE GAME. A swell changes the
+   frame's scale on every frame, and a scale change invalidates the raster of
+   everything inside it — every glyph on the screen re-drawn at 1.0003x, then
+   1.0011x, then 1.0024x — so the one moment the game most wanted to feel good
+   was the moment it dropped frames (measured: p95 frame time doubled for the
+   length of every swell, with nothing else on screen moving). Promoting the
+   frame for the duration lets the compositor scale the picture it already has.
+   It is taken back off afterwards: a permanently promoted frame holds a
+   full-screen texture in memory for the sake of half a second. */
+/* AND IT COULD BE KILLED MID-MOVE, FOR GOOD. The loop ran on FX.raf, which
+   registers with the per-screen disposables — so any screen change during a
+   swell or a shake cancelled the loop where it stood. The frame stayed at
+   whatever it had reached (4% zoomed and five pixels high, measured), `camH`
+   stayed set, and camRun() returned early for the rest of the session: one
+   badly-timed tap and the game had no camera until it was reloaded. The road
+   arriving at its destination is a 900ms swell followed by a screen change.
+   The camera belongs to the frame, not to a screen, so it keeps its own loop
+   and always runs to rest. */
+function camRun(){
+  if(camH) return;
+  const f=document.getElementById("frame"); if(f) f.style.willChange="transform";
+  camH=requestAnimationFrame(camStep);
+}
 function shake(mag, ms){
   if(reduced() || quality==="low") return;
   if(!document.getElementById("frame")) return;
@@ -5876,12 +5918,334 @@ function pop(host, text, cls){
   setTimeout(()=>{ if(n.parentNode) n.parentNode.removeChild(n); }, 900);
 }
 
+/* ==================================================================
+   THE MOTE LAYER — one canvas for everything that flies.
+
+   The game could lean the camera in (swell), light the squad (bloom) and
+   hit the frame (shake), and that was the whole vocabulary: three verbs
+   that all act on the ENTIRE picture. Nothing could come OUT of the thing
+   that earned it. A sealed word, a masterwork, an opened chest and a
+   correct answer on the Daily Trial all said "well done" by tinting the
+   whole frame for a fifth of a second, and the eye was never told where
+   to look. The only particles in the file were clickSpark's seven DOM
+   nodes per press and three hand-rolled canvas bursts that each lived
+   inside one arcade mode.
+
+   So: one canvas over the frame, one pool, one loop that sleeps when the
+   pool is empty. Everything is addressed by the thing it comes from — an
+   element, or a point — never by a percentage of the screen.
+
+     burst(from, o)      motes / sparks / stars / leaves thrown from a point
+     ring(from, o)       one expanding stroke: "it landed HERE"
+     confetti(o)         laurel and gold leaf, falling — the big occasions
+     fly(from, to, o)    reward motes that travel to the counter they feed
+     celebrate(n, from)  the four sizes of good news, composed from the above
+     punch(el)/sheen(el) the counter that just changed; the word that just landed
+
+   Three rules keep it from becoming the noise the walk pass removed:
+     - COLOUR IS MEANING. Gold and jade are reward, cinnabar is the seal,
+       and damage does not get particles at all — it has shake.
+     - IT IS CAPPED. A pool with a ceiling per quality tier; a burst that
+       would overflow it is trimmed rather than queued.
+     - REDUCED MOTION MEANS NONE OF IT. Every entry point returns first.
+   ================================================================== */
+const PAL={
+  gold:  ["#c9a04a","#e2bd6b","#a67c2e","#f1dfae"],
+  seal:  ["#b5322b","#d0483c","#c9a04a","#8e231e"],
+  jade:  ["#4f7261","#7d9a8a","#a8c2b2","#c9a04a"],
+  ink:   ["#2a2420","#4a4038","#6b5d50"],
+  laurel:["#4f7261","#6f8f5e","#c9a04a","#e2bd6b","#b5322b","#f3ecd8"],
+  ember: ["#ffd27a","#ffb347","#fff1c9","#e98a3c"],
+  relic: ["#8a7ad8","#b9aef0","#e2bd6b","#fff1c9"]
+};
+const MOTE_CAP={ high:560, med:340, low:150 };
+const GLYPHS="ΑΒΓΔΘΛΞΠΣΦΨΩ";
+let moteCv=null, moteCtx=null, motes=[], moteRAF=0, moteLast=0, moteW=0, moteH=0, moteDpr=1;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function palOf(p){ return Array.isArray(p)?p : (PAL[p]||PAL.gold); }
+function moteScale(){ return quality==="high"?1 : quality==="med"?0.72 : 0.45; }
+function moteLayer(){
+  const f=document.getElementById("frame"); if(!f) return null;
+  if(!moteCv || moteCv.parentNode!==f){
+    moteCv=document.createElement("canvas"); moteCv.id="fx-motes";
+    moteCv.setAttribute("aria-hidden","true");
+    f.appendChild(moteCv);
+    try{ moteCtx=moteCv.getContext("2d"); }catch(e){ moteCtx=null; }
+  }
+  if(!moteCtx) return null;
+  /* Sized when something is thrown rather than on every frame or every resize:
+     a burst is rare, a layout read is not free, and the canvas is empty the
+     rest of the time. DPR is capped — a 3x phone would otherwise fill nine
+     times the pixels to draw dots four pixels wide. */
+  const w=f.clientWidth||1280, h=f.clientHeight||720;
+  const dpr=Math.min(quality==="low"?1.5:2, window.devicePixelRatio||1);
+  if(w!==moteW || h!==moteH || dpr!==moteDpr){
+    moteW=w; moteH=h; moteDpr=dpr;
+    moteCv.width=Math.round(w*dpr); moteCv.height=Math.round(h*dpr);
+  }
+  return f;
+}
+/* anything → a point in the layer's own coordinates. An element resolves to
+   its centre; {x,y} is client coordinates (what a pointer event carries);
+   nothing at all is the middle of the frame. The frame can be scaled by the
+   camera, so the rect is divided back out rather than trusted. */
+function motePt(from, f){
+  f=f||document.getElementById("frame"); if(!f) return null;
+  const fr=f.getBoundingClientRect();
+  const kx=fr.width? (f.clientWidth||fr.width)/fr.width : 1;
+  const ky=fr.height? (f.clientHeight||fr.height)/fr.height : 1;
+  if(from && from.getBoundingClientRect){
+    const r=from.getBoundingClientRect();
+    return { x:(r.left+r.width/2-fr.left)*kx, y:(r.top+r.height/2-fr.top)*ky, w:r.width*kx, h:r.height*ky };
+  }
+  if(from && typeof from.x==="number") return { x:(from.x-fr.left)*kx, y:(from.y-fr.top)*ky, w:0, h:0 };
+  return { x:(f.clientWidth||fr.width)/2, y:(f.clientHeight||fr.height)/2, w:0, h:0 };
+}
+function moteRoom(n){
+  const cap=MOTE_CAP[quality]||MOTE_CAP.med;
+  return Math.max(0, Math.min(n, cap-motes.length));
+}
+function moteRun(){
+  if(moteRAF) return;
+  moteLast=0;
+  moteRAF=requestAnimationFrame(moteStep);
+}
+function moteStep(t){
+  moteRAF=0;
+  const g=moteCtx; if(!g || !moteCv){ motes.length=0; return; }
+  const dt=Math.min(0.05, moteLast? (t-moteLast)/1000 : 0.016); moteLast=t;
+  g.setTransform(moteDpr,0,0,moteDpr,0,0);
+  g.clearRect(0,0,moteW,moteH);
+  let live=0;
+  for(let i=0;i<motes.length;i++){
+    const p=motes[i];
+    if(p.wait>0){ p.wait-=dt; motes[live++]=p; continue; }
+    p.age+=dt;
+    if(p.age>=p.life) continue;
+    const k=p.age/p.life;
+    if(p.k===3){                                   // ring
+      const e=1-Math.pow(1-k,3);
+      g.globalAlpha=(1-k)*p.a;
+      g.strokeStyle=p.c; g.lineWidth=Math.max(0.5,p.s*(1-k));
+      g.beginPath(); g.arc(p.x,p.y,p.r0+(p.r1-p.r0)*e,0,6.2832); g.stroke();
+    } else if(p.k===5){                            // homing: a mote that is GOING somewhere
+      const e=k*k*(3-2*k), u=1-e;
+      const x=u*u*p.x0+2*u*e*p.cx+e*e*p.x1, y=u*u*p.y0+2*u*e*p.cy+e*e*p.y1;
+      g.globalAlpha=k<0.85?1:(1-k)/0.15;
+      g.strokeStyle=p.c; g.lineWidth=p.s; g.lineCap="round";
+      g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(x,y); g.stroke();
+      g.fillStyle=p.c; g.beginPath(); g.arc(x,y,p.s*0.9,0,6.2832); g.fill();
+      p.x+=(x-p.x)*0.45; p.y+=(y-p.y)*0.45;        // the tail trails the head
+    } else {
+      const drag=Math.pow(p.d, dt*60);
+      p.vx*=drag; p.vy=p.vy*drag+p.g*dt;
+      p.x+=p.vx*dt; p.y+=p.vy*dt;
+      const fade=k<p.f?1:(1-k)/(1-p.f);
+      g.globalAlpha=fade*p.a;
+      if(p.k===0){                                 // mote
+        g.fillStyle=p.c; g.beginPath(); g.arc(p.x,p.y,p.s*(1-k*0.45),0,6.2832); g.fill();
+      } else if(p.k===1){                          // spark: a streak along its own velocity
+        g.strokeStyle=p.c; g.lineWidth=p.s; g.lineCap="round";
+        g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x-p.vx*0.045,p.y-p.vy*0.045); g.stroke();
+      } else if(p.k===2){                          // leaf: tumbles, so its width breathes
+        p.rot+=p.vr*dt; p.fl+=p.vf*dt; p.x+=Math.sin(p.fl*0.7)*18*dt;
+        const c=Math.cos(p.rot), s=Math.sin(p.rot), wv=Math.cos(p.fl);
+        g.setTransform(moteDpr*c,moteDpr*s,-moteDpr*s*wv,moteDpr*c*wv,p.x*moteDpr,p.y*moteDpr);
+        g.fillStyle=p.c;
+        g.beginPath(); g.moveTo(-p.s,0); g.quadraticCurveTo(0,-p.s*0.62,p.s,0);
+        g.quadraticCurveTo(0,p.s*0.62,-p.s,0); g.fill();
+        g.setTransform(moteDpr,0,0,moteDpr,0,0);
+      } else if(p.k===4){                          // star: four points, and it twinkles
+        const r=p.s*(0.55+0.45*Math.sin(p.age*14+p.fl))*(1-k*0.3), q=r*0.24;
+        g.fillStyle=p.c; g.beginPath();
+        g.moveTo(p.x,p.y-r); g.lineTo(p.x+q,p.y-q); g.lineTo(p.x+r,p.y); g.lineTo(p.x+q,p.y+q);
+        g.lineTo(p.x,p.y+r); g.lineTo(p.x-q,p.y+q); g.lineTo(p.x-r,p.y); g.lineTo(p.x-q,p.y-q);
+        g.closePath(); g.fill();
+      } else if(p.k===6){                          // glyph: the alphabet the words are made of
+        g.fillStyle=p.c; g.font="600 "+Math.round(p.s)+"px Palatino,'Palatino Linotype','Book Antiqua',serif";
+        g.textAlign="center"; g.textBaseline="middle"; g.fillText(p.ch,p.x,p.y);
+      }
+    }
+    motes[live++]=p;
+  }
+  motes.length=live;
+  g.globalAlpha=1;
+  if(live) moteRAF=requestAnimationFrame(moteStep);
+  else g.clearRect(0,0,moteW,moteH);
+}
+const KIND={ mote:0, spark:1, leaf:2, star:4, glyph:6 };
+function burst(from, o){
+  if(reduced()) return 0;
+  const f=moteLayer(); if(!f) return 0;
+  const at=motePt(from,f); if(!at) return 0;
+  o=o||{};
+  const pal=palOf(o.pal), n=moteRoom(Math.max(1,Math.round((o.n||12)*moteScale())));
+  const kinds=o.kinds||[o.kind||"mote"];
+  const sp=o.speed||260, dir=o.dir==null?-Math.PI/2:o.dir, spread=o.spread==null?Math.PI*2:o.spread;
+  const size=o.size||3.2, life=o.life||0.75, grav=o.g==null?520:o.g;
+  for(let i=0;i<n;i++){
+    const kn=kinds[i%kinds.length], k=KIND[kn]||0;
+    const a=dir+(Math.random()-0.5)*spread, v=sp*(0.35+Math.random()*0.75);
+    /* thrown from somewhere ON the thing, not from one pixel in the middle of
+       it — a word that sheds light from its whole width reads as glowing, and
+       the same particles from a single point read as a leak */
+    const ox=o.tight?0:(Math.random()-0.5)*at.w*0.7, oy=o.tight?0:(Math.random()-0.5)*at.h*0.5;
+    motes.push({ k, x:at.x+ox, y:at.y+oy, vx:Math.cos(a)*v, vy:Math.sin(a)*v,
+      g: k===2?grav*0.28 : k===6?-40 : k===4?grav*0.35 : grav,
+      d: k===1?0.94 : k===2?0.955 : 0.965,
+      s: k===1? size*0.62 : k===2? size*1.9 : k===4? size*2.2 : k===6? size*4.6 : size*(0.7+Math.random()*0.8),
+      life: life*(0.7+Math.random()*0.6)*(k===2?1.7:k===6?1.5:1), age:0, wait:(o.delay||0)+(o.stagger?Math.random()*o.stagger:0),
+      c:pal[(Math.random()*pal.length)|0], a:o.alpha||1, f:0.55,
+      rot:Math.random()*6.28, vr:rnd(-5,5), fl:Math.random()*6.28, vf:rnd(4,9),
+      ch: k===6?GLYPHS[(Math.random()*GLYPHS.length)|0]:"" });
+  }
+  moteRun();
+  return n;
+}
+function ring(from, o){
+  if(reduced()) return;
+  const f=moteLayer(); if(!f) return;
+  const at=motePt(from,f); if(!at || !moteRoom(1)) return;
+  o=o||{};
+  const r0=o.r0!=null?o.r0:Math.max(6,Math.min(at.w,at.h)*0.4);
+  motes.push({ k:3, x:at.x, y:at.y, r0, r1:r0+(o.r||90), s:o.w||5, c:o.color||"#c9a04a",
+    a:o.alpha||0.85, life:(o.ms||520)/1000, age:0, wait:(o.delay||0) });
+  moteRun();
+}
+/* LAUREL AND GOLD LEAF. Not paper squares — the fiction is a Mediterranean
+   school, and what falls on a victor there is a wreath coming apart. Two
+   shapes of throw: from above (an occasion) and from the two lower corners
+   (a salute), and the grand occasions use both. */
+function confetti(o){
+  if(reduced()) return 0;
+  const f=moteLayer(); if(!f) return 0;
+  o=o||{};
+  const pal=palOf(o.pal||"laurel");
+  const n=moteRoom(Math.round((o.n||60)*moteScale()));
+  const salute=o.from==="sides";
+  for(let i=0;i<n;i++){
+    const left=i%2===0;
+    const star=(i%7===3);
+    const p={ k:star?4:2, age:0, a:1, f:0.7, c:pal[(Math.random()*pal.length)|0],
+      d:0.972, rot:Math.random()*6.28, vr:rnd(-6,6), fl:Math.random()*6.28, vf:rnd(4,9),
+      s:star?rnd(6,10):rnd(7,12), wait:(o.delay||0)+Math.random()*(o.over||0.5), ch:"" };
+    if(salute){
+      const a=left? rnd(-1.25,-0.75) : rnd(-2.39,-1.89), v=rnd(520,980)*(moteH/720);
+      p.x=left?-8:moteW+8; p.y=moteH*rnd(0.78,0.98);
+      p.vx=Math.cos(a)*v; p.vy=Math.sin(a)*v; p.g=640; p.life=rnd(1.5,2.3);
+    } else {
+      p.x=rnd(0.04,0.96)*moteW; p.y=-12-Math.random()*40;
+      p.vx=rnd(-40,40); p.vy=rnd(90,230); p.g=150; p.life=rnd(2.0,3.1);
+    }
+    motes.push(p);
+  }
+  moteRun();
+  return n;
+}
+/* A REWARD THAT GOES WHERE IT IS KEPT. The score used to rewrite itself on
+   the next render; now the points leave the answer that earned them and land
+   on the number they change, and the number answers. */
+function fly(from, to, o){
+  o=o||{};
+  /* `to` may be a selector: the counters on the Trial and the Vigil are
+     re-rendered between the answer and the landing, and a punch delivered to
+     a node that has since left the document is a punch nobody sees. */
+  const dest=()=> typeof to==="string" ? document.querySelector(to) : to;
+  const land=()=>{ const d=dest(); if(d && d.getBoundingClientRect) punch(d); if(o.onArrive){ try{ o.onArrive(); }catch(e){} } };
+  if(reduced()){ land(); return; }
+  const f=moteLayer(); const d0=dest(); const a=f&&motePt(from,f), b=f&&d0&&motePt(d0,f);
+  const ms=o.ms||520;
+  if(!a || !b){ setTimeout(land, 0); return; }
+  const n=moteRoom(Math.max(1,Math.round((o.n||6)*moteScale())));
+  const pal=palOf(o.pal);
+  for(let i=0;i<n;i++){
+    const x0=a.x+(Math.random()-0.5)*a.w*0.5, y0=a.y+(Math.random()-0.5)*a.h*0.4;
+    // the control point is thrown sideways off the straight line, so the motes
+    // fan out and then converge instead of travelling as one dotted line
+    const mx=(x0+b.x)/2, my=(y0+b.y)/2, nx=-(b.y-y0), ny=(b.x-x0), bend=(Math.random()-0.5)*0.9;
+    motes.push({ k:5, x:x0, y:y0, x0, y0, x1:b.x, y1:b.y, cx:mx+nx*bend, cy:my+ny*bend-40,
+      s:o.size||2.6, c:pal[(Math.random()*pal.length)|0], life:(ms/1000)*(0.8+Math.random()*0.35),
+      age:0, wait:i*0.028 });
+  }
+  moteRun();
+  setTimeout(land, ms*0.92);
+}
+/* the counter that just changed says so. Re-triggerable: the class is removed
+   and a layout is forced, so two answers in a row punch twice. */
+function retrigger(el, cls, ms){
+  if(!el || !el.classList || reduced()) return;
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+  clearTimeout(el["_"+cls]);
+  el["_"+cls]=setTimeout(()=>{ el.classList.remove(cls); }, ms);
+}
+function punch(el){ retrigger(el, "fx-punch", 460); }
+/* one pass of light across a thing that has just become true. It is laid over
+   the element from outside (a sibling in the frame, clipped to the element's
+   own box) so it never has to touch the target's position or overflow — the
+   last effect that did that turned a wisp into an absolutely-positioned one. */
+function sheen(el, o){
+  if(!el || reduced()) return;
+  const f=document.getElementById("frame"); if(!f || !el.getBoundingClientRect) return;
+  const r=el.getBoundingClientRect(), fr=f.getBoundingClientRect();
+  if(!r.width || !fr.width) return;
+  const kx=(f.clientWidth||fr.width)/fr.width, ky=(f.clientHeight||fr.height)/fr.height;
+  const s=document.createElement("div"); s.className="fx-sheen";
+  s.style.left=((r.left-fr.left)*kx)+"px"; s.style.top=((r.top-fr.top)*ky)+"px";
+  s.style.width=(r.width*kx)+"px"; s.style.height=(r.height*ky)+"px";
+  try{ s.style.borderRadius=getComputedStyle(el).borderRadius; }catch(e){}
+  if(o&&o.delay) s.style.animationDelay=o.delay+"ms";
+  s.appendChild(document.createElement("i"));
+  if(o&&o.delay) s.firstChild.style.animationDelay=o.delay+"ms";
+  f.appendChild(s);
+  setTimeout(()=>{ if(s.parentNode) s.parentNode.removeChild(s); }, 1100+((o&&o.delay)||0));
+}
+/* THE FOUR SIZES OF GOOD NEWS. Every reward in the game is one of these, so a
+   correct answer in the Vigil and a correct answer on the Daily Trial cannot
+   drift apart, and nothing small can accidentally be as loud as the ending.
+     1  a right answer            — a puff from the thing you pressed
+     2  a word, a clean piece     — ring + burst, the camera leans in
+     3  a masterwork, a best      — stars, a second ring, leaf from the corners
+     4  a road well made, the end — the wreath comes down                     */
+function celebrate(level, from, o){
+  o=o||{};
+  const pal=o.pal||"gold";
+  const ringC=o.ring||palOf(pal)[0];
+  if(level<=1){
+    burst(from,{n:10,pal,speed:210,life:0.55,size:2.8,kinds:["mote","mote","spark"]});
+    return;
+  }
+  if(level===2){
+    ring(from,{color:ringC,r:110,ms:520,w:5});
+    burst(from,{n:26,pal,speed:330,life:0.8,size:3.2,kinds:["mote","spark","mote","star"]});
+    if(!o.still) swell(1.4,460);
+    return;
+  }
+  if(level===3){
+    ring(from,{color:ringC,r:150,ms:600,w:6});
+    ring(from,{color:"#f1dfae",r:230,ms:820,w:3,delay:0.09});
+    burst(from,{n:44,pal,speed:430,life:0.95,size:3.4,kinds:["mote","spark","star","mote","spark"]});
+    confetti({n:34,from:"sides",pal:o.leaf||"laurel",over:0.18});
+    if(!o.still) swell(2.2,620);
+    return;
+  }
+  ring(from,{color:ringC,r:190,ms:700,w:7});
+  ring(from,{color:"#f1dfae",r:300,ms:980,w:3,delay:0.1});
+  burst(from,{n:60,pal,speed:520,life:1.1,size:3.6,kinds:["mote","spark","star","glyph","spark","mote"]});
+  confetti({n:64,from:"sides",pal:o.leaf||"laurel",over:0.22});
+  confetti({n:90,pal:o.leaf||"laurel",delay:0.35,over:1.6});
+  if(!o.still) swell(2.8,760);
+}
+
 window.FX = {
   has, reduced, setReduced, isTouch, canHover, quality, qScale, setQuality:(q)=>{quality=q;},
   track, cleanup, raf, vanta, killVanta, lenis, killLenis,
   revealText, splitText, stagger, countUp, magnetize, tilt, spotlight, spotlightAll,
   bindClickSpark, clickSpark, inkBloom, transition, to, timeline, buzz, paintBrush,
-  animate, shake, swell, impact, bloom, pop
+  animate, shake, swell, impact, bloom, pop,
+  burst, ring, confetti, fly, punch, sheen, celebrate,
+  _motes:()=>motes.length
 };
 })();
 </script>
@@ -11719,8 +12083,16 @@ function renderChapters(){
   FX.stagger(cards,{stagger:90,y:20});
 }
 function renderLedger(){
-  FX.countUp($('#hub-rep'),S().rep);
-  FX.countUp($('#hub-coin'),S().coin);
+  /* Both figures counted up from zero on every visit, so coming home with
+     fourteen more ink looked exactly like coming home with none: the same
+     sweep from 0 to a number. They count from what the player last saw here,
+     and a figure that grew says so when it lands — the walk back from a road
+     is the one time these two numbers are news. */
+  { const was=window.__RD_HUBSEEN||null, now={rep:S().rep, coin:S().coin};
+    const from=(k)=> (was && was[k]<=now[k]) ? was[k] : 0;
+    FX.countUp($('#hub-rep'),now.rep,{from:from("rep"), punch:!!was && now.rep>was.rep});
+    FX.countUp($('#hub-coin'),now.coin,{from:from("coin"), punch:!!was && now.coin>was.coin});
+    window.__RD_HUBSEEN=now; }
   const total=CHAPTERS.length, done=S().servedChapterIds.length;
   $('#day-progress-txt').textContent=`${done} / ${total}`;
   $('#day-progress-bar').style.width=(total?done/total*100:0)+"%";
@@ -11922,6 +12294,15 @@ function placePart(id){
   builderState.placed.push(id);
   const step=builderState.placed.length-1;
   if(Audio2.sfx.chain) Audio2.sfx.chain(step); else Audio2.sfx.snap();
+  /* The piece lands in the assembly and the assembly answers, in the colour of
+     the kind of piece it was. It waits a frame because the slot it is landing
+     in does not exist until the caller has re-rendered. */
+  requestAnimationFrame(()=>{
+    const slots=$$('#slotted .tile'); const at=slots[slots.length-1];
+    const kd=PARTS[id]&&PARTS[id].kind;
+    if(at) FX.burst(at,{n:7+step*2, pal:kd==="suffix"?"seal":kd==="prefix"?"gold":"jade",
+      speed:150+step*30, life:0.5, size:2.6, g:260, dir:-Math.PI/2, spread:Math.PI*1.3});
+  });
   /* a vowel leaving the word gets its own sound, a beat behind the rung that
      placed the piece. The rule is the game's one signature piece of
      knowledge and it used to happen in complete silence. */
@@ -12174,9 +12555,20 @@ function onBuildSuccess(){
   Audio2.sfx.stamp(); FX.buzz(40+(clean?14:0));
   if(Audio2.sfx.chainResolve)
     setTimeout(()=>Audio2.sfx.chainResolve(builderState.needed.length-1, true), 110);
-  FX.shake(clean?10:7, clean?260:200);
-  FX.impact("#b5322b", clean?0.30:0.22, clean?300:240);
-  FX.inkBloom($('#assembly'));
+  /* IT SHOOK, IN THE COLOUR OF A WOUND. The walk pass took shake away from
+     every reward on the road and nobody carried the rule back to the bench, so
+     the signature beat of the game — the word is right, the seal comes down —
+     was still being delivered as a hit washed in cinnabar. It leans in now,
+     and the light comes out of the word itself rather than over the frame. */
+  const asm=$('#assembly');
+  FX.swell(clean?2.2:1.5, clean?560:440);
+  /* (inkBloom is gone from here: a 260px disc of 60% ink expanding over the
+     word the player had just got right, for most of a second.) */
+  FX.ring(asm,{color:"#b5322b", r:clean?170:120, ms:560, w:6});
+  FX.burst(asm,{n:clean?64:34, pal:"seal", speed:clean?460:340, life:0.95, size:4,
+    kinds:["mote","spark","mote","star"]});
+  if(clean) FX.ring(asm,{color:"#e2bd6b", r:250, ms:800, w:3, delay:0.1});
+  $$('#slotted .tile').forEach((tl,i)=>FX.sheen(tl,{delay:90+i*110}));
   let acc=1-(bAttempts-1)*0.22-bSupportUsed*0.12;
   const accuracy=clamp(acc,0.35,1);
   const seal=sealFor(accuracy);
@@ -12285,6 +12677,22 @@ function showReveal(term){
   const stamp=$('#reveal-stamp');
   if(stamp){ stamp.textContent = grade ? grade.mark : "Σ";
     stamp.classList.remove("hit"); requestAnimationFrame(()=>stamp.classList.add("hit")); }
+  /* THE WAX LANDS, AND THE GRADE DECIDES HOW HARD. stampIn reaches the page at
+     60% of its half second, so everything below is timed to that frame: the
+     ring is the press, the flecks are the wax, and the light then crosses the
+     word that was just made. An Unbroken seal brings the wreath down; a
+     Smudged or Overwritten one gets the press and nothing else — the four
+     grades were four words on a card and one identical moment. */
+  if(stamp) setTimeout(()=>{
+    if(!rev.classList.contains('show')) return;
+    const gid=grade?grade.id:"true";
+    const big = gid==="unbroken", mid = gid==="true";
+    FX.ring(stamp,{color:"#b5322b", r:big?120:80, ms:480, w:5});
+    FX.burst(stamp,{n:big?34:mid?20:10, pal:"seal", speed:big?340:240, life:0.8, size:3,
+      kinds:big?["mote","spark","star"]:["mote","spark"]});
+    if(big||mid) FX.sheen($('#reveal-cal-text'),{delay:120});
+    if(big){ FX.swell(1.6,520); FX.confetti({n:46, over:0.9}); FX.punch($('#reveal-seal')); }
+  }, 300);
   const last = f.idx>=f.builders.length-1;
   $('#reveal-continue').textContent = last ? "Prepare the company →" : "Next term →";
   $('#reveal-continue').onclick=()=>{ rev.classList.remove('show');
@@ -12330,6 +12738,9 @@ function showReveal(term){
       /* a beat before the card opens, so the guess is a decision the player
          watches land rather than a flicker on the way to the answer */
       Audio2.sfx[o.ok?"good":"page"] && Audio2.sfx[o.ok?"good":"page"]();
+      // reading a word you were never taught is the whole skill — it is worth
+      // more than a tinted button
+      if(o.ok) FX.celebrate(2, b, {pal:"jade"});
       setTimeout(()=>{
         pre.hidden=true;
         body.parentNode.insertBefore(g, body);
@@ -13546,10 +13957,18 @@ function stepTestResolve(){
        asks of it ("trying hard and trying lazily must produce visibly different
        results"). A masterwork now lands like one. */
     (bad?Audio2.sfx.bad():Audio2.sfx.great()); FX.buzz(qtier==="ruined"?36:bad?24:18);
-    FX.shake(bad?9:5, bad?280:180);
-    FX.impact(bad?"#b5322b":"#d8bd84", bad?0.34:0.20, 200);
-    if(qtier==="masterwork"){ Audio2.sfx.great(); FX.buzz(34); spawnShards();
-      FX.shake(12,340); FX.impact("#d8bd84",0.42,420); }
+    /* ...and it landed like one by shaking harder, which is how a ruined piece
+       lands. A bad piece keeps the knock. A good one leans in, and the better
+       it is the more comes off it: serviceable gets a puff, fine gets the ring,
+       and a masterwork gets everything the bench has. */
+    const gradeEl=$('.tv-grade',verdict)||verdict;
+    if(bad){ FX.shake(9,280); FX.impact("#b5322b",0.34,200); }
+    else if(qtier==="masterwork"){ Audio2.sfx.great(); FX.buzz(34); spawnShards();
+      FX.bloom("rgba(255,222,150,.9)",0.5,620,50,50);
+      FX.celebrate(3, gradeEl, {pal:"gold"}); FX.sheen(gradeEl,{delay:160}); }
+    else if(qtier==="fine"){ FX.bloom("rgba(226,189,132,.8)",0.34,460,50,50);
+      FX.celebrate(2, gradeEl, {pal:"gold"}); }
+    else { FX.swell(0.9,360); FX.celebrate(1, gradeEl, {pal:"jade"}); }
     // Tempering technique: one bad build per visit may be re-worked before it ships
     const canTemper = bad && hasTech("tempering") && !W.temperUsed;
     if(canTemper){
@@ -15584,6 +16003,8 @@ function itemMoment(kind, item, head){
     tier:(item&&item.qtier)||null, head:head||"" };
   FX.swell(1.8+heft*0.9, 560+heft*120);
   FX.bloom(look.glow, 0.42+heft*0.16, 560+heft*120);
+  roadBurst(M.cv.width*0.30, M.laneY-34, {n:14+heft*10, pal:heft>=3?"ember":"gold", speed:300+heft*70, life:0.8,
+    kinds:heft>=2?["spark","mote","star"]:["spark","mote"]});
   // the road genuinely stops for a moment — the one beat that has earned it
   hitstop(90+heft*70, 0.26);
   FX.buzz(Math.round(22+heft*16));
@@ -16520,6 +16941,8 @@ function enterFlow(){
      a shake — the same jolt as walking into a rockslide. It leans in now, with
      the light coming off the squad rather than slapped across the frame. */
   FX.buzz(34); FX.swell(2.6, 620); FX.bloom("rgba(240,198,138,.85)", 0.62, 620); hitstop(90);
+  roadRing(M.cv.width*0.30, M.laneY-34, {color:"#f1dfae", r0:20, r:260, ms:760, w:7});
+  roadBurst(M.cv.width*0.30, M.laneY-34, {n:44, pal:"ember", speed:480, life:1.0, kinds:["spark","star","mote"]});
 }
 function exitFlow(reason){
   if(!M || !M.flow) return;
@@ -16619,6 +17042,7 @@ function checkMomentumTier(){
     // the higher the gear, and never once rattles
     FX.swell(0.7+T.at*0.42, 320+T.at*45);
     FX.bloom("rgba(226,189,132,.8)", 0.24+T.at*0.07, 340+T.at*45);
+    roadRing(M.cv.width*0.30, M.laneY-34, {color:"#e2bd6b", r0:18, r:70+T.at*34, ms:420+T.at*40, w:3+T.at});
     hitstop(30+T.at*10);
   });
 }
@@ -16641,6 +17065,11 @@ function shoutMark(key, value, kicker, word, fmt){
      colour this game uses for damage everywhere else. The best thing a player
      had ever done was rendered in the language of a wound. Gold, and a lean. */
   FX.buzz(46); FX.swell(2.2, 560); FX.bloom("rgba(255,222,150,.9)",0.58,560); hitstop(90);
+  /* a lifetime best is the one thing on the road that salutes — leaf from
+     both corners, because the player has just beaten the only opponent the
+     game keeps a record of */
+  roadBurst(M.cv.width*0.30, M.laneY-34, {n:36, pal:"gold", speed:420, life:1.0, kinds:["star","mote","spark"]});
+  FX.confetti({n:36, from:"sides", over:0.2});
   M.marksBroken=(M.marksBroken||0)+1;
   return true;
 }
@@ -16687,6 +17116,18 @@ function comboAnchor(){
   return { x:(r.left+r.width/2-rc.left)*(M.cv.width/rc.width),
            y:(r.top +r.height/2-rc.top )*(M.cv.height/rc.height) };
 }
+/* THE ROAD THROWS MOTES TOO. The road draws in its own 1280-wide canvas space
+   and the mote layer lives in the frame's, so a point on the road is converted
+   on the way out. Returning null when there is no canvas makes every caller a
+   no-op in a headless run, which is the only place that happens. */
+function roadPt(x, y){
+  if(!M || !M.cv || !M.cv.getBoundingClientRect) return null;
+  const rc=M.cv.getBoundingClientRect(); if(!rc.width) return null;
+  return { x:rc.left + x*(rc.width/M.cv.width), y:rc.top + y*(rc.height/M.cv.height) };
+}
+function roadBurst(x, y, o){ const at=roadPt(x,y); if(at) FX.burst(at, Object.assign({tight:true}, o)); }
+function roadRing(x, y, o){ const at=roadPt(x,y); if(at) FX.ring(at, o); }
+const KIND_PAL={ prefix:"gold", root:"jade", suffix:"seal" };
 function flyToWord(txt, x0, y0, kind){
   if(!M || FX.reduced()) return;
   const a=M._anchor || comboAnchor();
@@ -17362,6 +17803,9 @@ function tick(t){
             bumpMomentum(0.05*M.forge.gainMult);
             if(Audio2.sfx.graze) Audio2.sfx.graze();
             FX.buzz(7);
+            // it scraped past: sparks off the shoulder it nearly took, thrown back down the road
+            roadBurst(sx, (objY(h)+M.laneY)/2, {n:gapPx<HIT_R*1.4?9:5, pal:"ember", speed:320, life:0.4,
+              size:2.4, g:200, dir:Math.PI, spread:0.9, kind:"spark"});
             // the pop rides the gap: the tighter the thread, the louder it reads
             pop(sx, M.laneY - (objY(h)>M.laneY? -34 : 34), gapPx<HIT_R*1.4?"threaded it!":"close", false);
             /* the mark is the run's tally, not this single dodge — one lucky
@@ -17496,6 +17940,7 @@ function readPart(pk, px, py){
     pop(px, py-20, `${part.text} — ${part.mean}`, false);
     M.newWordT=1.0;
     FX.swell(1.2, 420); FX.bloom("rgba(226,189,132,.75)", 0.34, 420);
+    roadBurst(px, py, {n:12, pal:"gold", speed:230, life:0.8, kinds:["glyph","star","mote"]});
   }
   Audio2.sfx.page && Audio2.sfx.page();
   if(res && res.name){    // a new affinity level opened
@@ -17530,6 +17975,13 @@ function collectPickup(pk,px,py){
     /* the piece itself goes up to the builder — the pop stays for the numbers,
        which are a different kind of information and belong where they land */
     flyToWord(part.text, px, py, part.kind);
+    /* and where it WAS answers. The flight says where the piece went; without
+       this the place the hand just reached to simply emptied, and a reach that
+       connected looked exactly like one that had not. Coloured by the kind of
+       piece, the same three colours the tiles wear at the bench. */
+    roadBurst(px, py, {n:9, pal:KIND_PAL[part.kind]||"gold", speed:190, life:0.5, size:2.8, g:300,
+      kinds:["mote","mote","spark"]});
+    roadRing(px, py, {color:part.kind==="suffix"?"#b5322b":part.kind==="prefix"?"#c9a04a":"#4f7261", r0:10, r:34, ms:320, w:3});
     // the heart of it: the gathered part tries to extend the term you're forging
     pushCombo(pk.partId);
   } else if(pk.type==="reagent"){
@@ -17684,6 +18136,18 @@ function completeTerm(){
   // the road holds for a breath on a real word, and longer on a longer one —
   // this is the beat the whole mode exists to produce
   if(realId) hitstop(42+n*16);
+  /* The lean and the bloom act on the whole picture; this is the part that
+     comes out of the squad. A real word throws gold and stars and its ring
+     grows with its length — a coined one gets a puff of jade, enough to say
+     "the hands did that" and no more. */
+  { const bx=M.cv.width*0.30, by=M.laneY-34;
+    if(realId){
+      roadRing(bx, by, {color:"#e2bd6b", r0:18, r:90+n*36, ms:520+n*60, w:6});
+      if(n>=3) roadRing(bx, by, {color:"#f1dfae", r0:18, r:170+n*40, ms:760, w:3, delay:0.09});
+      roadBurst(bx, by, {n:20+n*10, pal:"gold", speed:300+n*50, life:0.95, size:3.3,
+        kinds:["mote","spark","star","mote","glyph"]});
+    } else roadBurst(bx, by, {n:10, pal:"jade", speed:200, life:0.55, size:2.6});
+  }
   /* MASTERY IS ONLY EVER PAID FOR A REAL WORD.
      This used to record every completed chain as a correct answer for every part
      in it. Only 55 of the 1,290 two-part chains the road can produce are real
@@ -17993,6 +18457,9 @@ function resolveGate(){
        lean the walk has short of a real term, and the light comes off the gate
        itself (see drawGate's flare). */
     FX.swell(G.completion?2.4:1.8, 520); FX.bloom("rgba(150,236,168,.85)", 0.5, 520);
+    roadRing(M.cv.width*0.30, M.laneY-34, {color:"#8fd8a4", r0:20, r:G.completion?200:140, ms:560, w:6});
+    roadBurst(M.cv.width*0.30, M.laneY-34, {n:G.completion?40:26, pal:["#8fd8a4","#c9efd2","#4f7261","#e2bd6b"],
+      speed:G.completion?440:340, life:0.9, kinds:["mote","spark","star"]});
     Audio2.sfx.open2 && Audio2.sfx.open2();
     hitstop(G.completion?90:60);
     G.burst=1;
@@ -19184,6 +19651,7 @@ function arrive(){
   Audio2.sfx.chime(); FX.buzz(24);
   FX.swell(2.2, 900); FX.bloom("rgba(255,230,168,.85)", 0.5, 900);
   spawnArrivalConfetti();
+  FX.confetti({n:44, from:"sides", over:0.25});
 }
 function spawnArrivalConfetti(){
   const colors=["#bd9d5f","#b5322b","#7d9a8a","#f3ecd8"];
@@ -19382,7 +19850,15 @@ function showResult(){
     if(grade==="poor"){ FX.shake(9,260); FX.impact("#b5322b",0.28,260); }
     else { FX.swell(grade==="excellent"?2.6:1.6, grade==="excellent"?680:520);
            FX.bloom(grade==="excellent"?"rgba(255,222,150,.92)":"rgba(180,214,196,.8)",
-                    grade==="excellent"?0.6:0.36, 620, 50, 42); }
+                    grade==="excellent"?0.6:0.36, 620, 50, 42);
+           /* gradeStrike puts the seal on the page about 300ms in. The four
+              grades differed by a letter and a tint; now Alpha brings the
+              wreath down, Beta is saluted and Gamma gets the press alone. */
+           setTimeout(()=>{
+             if(grade==="excellent") FX.celebrate(4, seal, {pal:"gold", still:true});
+             else if(grade==="good"){ FX.celebrate(2, seal, {pal:"jade", still:true}); FX.confetti({n:30, from:"sides", over:0.2}); }
+             else FX.celebrate(1, seal, {pal:"jade"});
+           }, 300); }
     $('#result-title').textContent=gInfo[grade].t;
     $('#result-summary').innerHTML = summaryLine(f, grade, st);
     const rg=$('#reward-grid'); rg.innerHTML="";
@@ -19392,8 +19868,12 @@ function showResult(){
     const chEl = M?mk(termsBuilt,"Terms forged"):null;
     // best momentum reached — a badge for how hard they ran the Word Road
     if(M){ const moD=el("div","reward"); moD.innerHTML=`<div class="rv">×${M.bestMomentum.toFixed(1)}</div><div class="rl">Top momentum</div>`; rg.appendChild(moD); }
-    setTimeout(()=>{ FX.countUp(repEl,repGain,{prefix:"+"}); FX.countUp(coinEl,coinGain,{prefix:"+"});
-      if(chEl) FX.countUp(chEl, termsBuilt,{}); }, 300);
+    /* counted out one after another rather than all at once, and each tally
+       answers when it lands — three numbers finishing on the same frame read
+       as one event, and the player earned three */
+    const tally=(node,to,o,i)=>{ if(!node) return; setTimeout(()=>FX.countUp(node,to,Object.assign({punch:true,
+      done:()=>{ if(to>0){ FX.burst(node,{n:8,pal:"gold",speed:170,life:0.5,size:2.6}); Audio2.sfx.tick&&Audio2.sfx.tick(); } }},o)), 300+i*260); };
+    tally(repEl,repGain,{prefix:"+"},0); tally(coinEl,coinGain,{prefix:"+"},1); tally(chEl,termsBuilt,{},2);
     /* THE ROAD THAT LEARNS reports itself. An arrival is worth the run's overall
        quality; the panel below always says what level the road is running at, and
        flags it when the road has just moved — a difficulty the player cannot see
@@ -19433,6 +19913,8 @@ function showResult(){
       if(!FX.reduced()){ pr.style.transform="scaleY(0)"; pr.style.opacity="0";
         setTimeout(()=>FX.to(pr,{scaleY:1,opacity:1,duration:0.6}),700); }
       setTimeout(()=>Audio2.sfx.page(),700);
+      // a page of the Lexicon coming back is what the whole road was for
+      setTimeout(()=>{ if(pr.offsetParent!==null){ FX.sheen(pr); FX.burst($('#page-title'),{n:22,pal:"gold",speed:260,life:0.9,kinds:["star","mote","glyph"]}); } },1350);
     } else { pr.style.display=chapter.story?"block":"none";
       if(chapter.story){ $('#page-title').textContent="What the road revealed"; $('#page-body').innerHTML=chapter.story; } }
     if(grade==="excellent"||grade==="good"){ const sup=S().support; sup.hint=Math.min(3,sup.hint+1); }
@@ -19662,12 +20144,21 @@ function showEnding(){
         const d=el("div","reward");
         d.innerHTML=`<div class="rv">0${suf}</div><div class="rl">${l}</div>`;
         rg.appendChild(d);
-        setTimeout(()=>FX.countUp(d.querySelector('.rv'), v, {dur:1300, suffix:suf}), 420+i*240);
+        setTimeout(()=>FX.countUp(d.querySelector('.rv'), v, {dur:1300, suffix:suf, punch:true}), 420+i*240);
       });
     $('#end-continue').textContent="Return to the title";
     $('#end-continue').onclick=()=>{ Audio2.sfx.chime(); window.__RD_SCREENS.showTitle(); };
     Audio2.sfx.chime();
     FX.revealText($('#end-title'),{mode:"char",stagger:50});
+    /* THE LAST SCREEN OF THE GAME WAS A PARAGRAPH. Eight chapters, and the
+       ending arrived with a chime and a title that typed itself. The size of
+       it follows the ending earned — an apprentice is saluted, a master is
+       crowned, and the wreath keeps falling for as long as they stay to read. */
+    const lv = tier==="apprentice"?3:4;
+    setTimeout(()=>{ FX.bloom("rgba(255,226,160,.9)", tier==="master"?0.62:0.44, 900, 50, 34);
+      FX.celebrate(lv, $('#end-title'), {pal:"gold"}); }, 520);
+    if(tier!=="apprentice") [2200,4200].concat(tier==="master"?[6400,8600]:[]).forEach(ms=>
+      setTimeout(()=>{ if($('#s-end').classList.contains('active')) FX.confetti({n:tier==="master"?70:44, over:1.4}); }, ms));
   }});
 }
 
@@ -19758,6 +20249,7 @@ window.__RD_MISSION = { runMission, showResult, endDay, showEnding, reviewChalle
   _stopT:()=>M&&(M.stopT||0),
   _crestNode:()=>{ const n=$('#road-crest'); return n?{cls:n.className, txt:n.textContent, queued:crestQ.length}:null; },
   _clearCrest:()=>{ clearCrest(); return crestQ.length; },
+  _roadPt:(x,y)=>roadPt(x,y),
   _flights:()=>M&&(M.flights||[]).map(f=>({txt:f.txt, t:f.t, dur:f.dur, kind:f.kind})),
   _stepFlights:(dt)=>{ stepFlights(dt||0.05); return M&&M.flights.length; },
   _flyToWord:(txt,kind)=>{ flyToWord(txt, 100, 300, kind); return M&&M.flights.length; },
@@ -20118,6 +20610,15 @@ function endCard(stage, mode, score, breakdownHTML){
       <button class="btn ghost" id="ar-menu">Training Hall</button>
     </div>`;
   stage.innerHTML=""; stage.appendChild(card);
+  /* the score was printed, whole, the instant the card appeared — and a new
+     best was a line of small caps under it. It is counted out, and a best is
+     the one time the Hall brings the wreath down. */
+  { const sc=$('.ar-score',card);
+    if(sc && score>0 && !FX.reduced()){ sc.textContent="0";
+      FX.countUp(sc, score, {dur:Math.min(1400, 500+score*0.9), punch:true,
+        done:()=>{ if(!sc.isConnected) return;
+          if(nb){ FX.celebrate(3, sc, {pal:"gold"}); FX.sheen($('.ar-newbest',card)||sc); }
+          else FX.celebrate(1, sc, {pal:"gold"}); }}); } }
   $('#ar-again').onclick=()=>{ Audio2.sfx.stamp(); startMode(mode); };
   $('#ar-menu').onclick=()=>{ Audio2.sfx.paper();
     $('#arcade-stage').style.display="none"; $('#arcade-menu').style.display="grid"; renderMenu(); };
@@ -20210,6 +20711,9 @@ function startSlice(){
       QE.record([t.id], true);
       Audio2.sfx.great(); FX.buzz(16);
       burst(t.x,t.y,t.color,14);
+      FX.fly({x:rectOf().left+t.x*rectOf().width/cv.width, y:rectOf().top+t.y*rectOf().height/cv.height},
+        "#sl-score", {n:3+Math.min(5,G.flow), pal:"gold"});
+      if(G.flow===4 || G.flow===8) FX.swell(G.flow/4, 360);
       banner(`<b style="color:var(--verd-deep)">${PARTS[t.id].text}</b> — ${PARTS[t.id].mean}. ✓`);
       // brief beat, then next — tiles keep falling underneath, nothing freezes
       G.waveActive=false;
@@ -20441,6 +20945,9 @@ function startMatch(){
         QE.record(t.conceptIds, true);
         G.matched++; $('#mt-pairs').textContent=`${G.matched}/${pairs.length}`;
         Audio2.sfx.great(); FX.buzz(14); G.lock=false;
+        // the two halves of one fact, lit together — the pairing is the lesson
+        FX.celebrate(1, a.btn, {pal:"jade"}); FX.celebrate(1, btn, {pal:"jade"});
+        FX.punch($('#mt-pairs'));
         if(G.matched===pairs.length) win();
       }, 240);
     } else {
@@ -20577,20 +21084,14 @@ function startForge(){
     h.classList.toggle("heat2", G.streak>=5 && G.streak<10);
     h.classList.toggle("heat3", G.streak>=10);
   }
+  /* Up to forty-two DOM nodes per strike, each with its own Web Animation and
+     its own removal — on the one beat in the mode that happens every round and
+     is meant to get bigger as the streak runs. They come off the hearth on the
+     shared canvas now, which is what lets a long streak afford real sparks. */
   function sparks(n){
-    const host=$('#fg-hearth'); if(!host || FX.reduced()) return;
-    for(let i=0;i<n;i++){
-      const s=el("i","fg-spark");
-      const a=-Math.PI/2 + (Math.random()-0.5)*2.4, d=40+Math.random()*140;
-      s.style.left=(38+Math.random()*24)+"%";
-      host.appendChild(s);
-      const kill=()=>{ if(s.parentNode) s.parentNode.removeChild(s); };
-      const anim=s.animate?s.animate(
-        [{transform:"translate(0,0) scale(1)", opacity:1},
-         {transform:`translate(${(Math.cos(a)*d).toFixed(1)}px,${(Math.sin(a)*d).toFixed(1)}px) scale(.2)`, opacity:0}],
-        {duration:380+Math.random()*420, easing:"cubic-bezier(.15,.7,.4,1)"}):null;
-      if(anim) anim.onfinish=kill; else later(kill, 700);
-    }
+    const host=$('#fg-hearth'); if(!host) return;
+    FX.burst(host,{n, pal:"ember", speed:340+Math.min(260,n*6), life:0.7, size:2.6, g:620,
+      dir:-Math.PI/2, spread:2.4, kinds:["spark","mote","spark"]});
   }
   function fragEl(id, cls, onTap){
     const b=el("button","frag"+(cls?" "+cls:"")); b.type="button";
@@ -20790,11 +21291,18 @@ function startForge(){
     QE.record(ids, true, secs<7);
     const mult = G.streak>=10?2 : G.streak>=5?1.5 : G.streak>=3?1.25 : 1;
     G.score += Math.round((60 + Math.max(0, 40-secs*4)) * mult);
-    /* CLANG. The hammer, then the seal, a shove of the frame and a wash of
-       gold — the strike is the payout, so it is the loudest thing in the mode
-       and it gets louder the longer the streak runs. */
+    /* CLANG. The hammer, then the seal, a lean of the frame and light off the
+       anvil — the strike is the payout, so it is the loudest thing in the mode
+       and it gets louder the longer the streak runs. It used to be a shake,
+       which is what a cracked blade is; the two now feel like opposites. */
     Audio2.sfx.hammer(); later(()=>Audio2.sfx.stamp(), 90);
-    FX.buzz(34); FX.shake(5+Math.min(7,G.streak), 220); FX.impact("#d8bd84", 0.16, 220);
+    FX.buzz(34); FX.swell(0.9+Math.min(1.5,G.streak*0.16), 320);
+    FX.bloom("rgba(255,210,122,.85)", 0.22+Math.min(0.3,G.streak*0.03), 320, 50, 56);
+    { const an=$('#fg-billet')||$('#fg-hearth');
+      if(an) FX.ring(an,{color:"#ffd27a", r:70+Math.min(120,G.streak*12), ms:420, w:4});
+      if(G.streak===3) FX.celebrate(1, an, {pal:"ember"});
+      else if(G.streak===5) FX.celebrate(2, an, {pal:"ember", still:true});
+      else if(G.streak===10) FX.celebrate(3, an, {pal:"ember", still:true}); }
     sparks(16+Math.min(26, G.streak*3));
     const billet=$('#fg-billet');
     if(billet){ billet.classList.remove("empty");
@@ -21118,9 +21626,12 @@ function startTrial(){
     const mult = G.streak>=10?2 : G.streak>=5?1.5 : G.streak>=3?1.25 : 1;
     G.score += Math.round((50 + (G.limit?Math.max(0, 50*(1-secs/G.limit)):20)) * mult);
     Audio2.sfx.great(); FX.buzz(22); FX.impact("#bd9d5f", 0.13, 200);
-    if(G.streak>=5) FX.shake(4,150);
+    FX.swell(0.6+Math.min(1.4,G.streak*0.14), 320);
     const sign=$('#sp-sign');
     if(sign && T){ sign.style.display=""; sign.innerHTML=cap(T.spell); }
+    { const at=sign||$('#arcade-stage');
+      FX.celebrate(G.streak===10?3 : (G.streak===5||G.streak===3)?2 : 1, at, {pal:"jade", still:true});
+      if(sign && T) FX.sheen(sign,{delay:80}); }
     say(revealHTML||"");
     Audio2.sfx.bow();      // the spirit bows out
     wisp("leave");
@@ -21240,12 +21751,17 @@ function masteryRush(host, onDone){
     Audio2.sfx.clink();
     if(hits===3){ box.dataset.i="1"; Audio2.sfx.chime(); }
     if(hits===5) box.dataset.i="2";
-    if(hits>=5) FX.shake(4+Math.min(6,hits-5), 150);
+    /* the Rush is "the spectacle escalates and the difficulty does not", and
+       its spectacle was a shake that grew with every right answer */
+    FX.burst(box,{n:6+hits*2, pal:hits>=8?"ember":"gold", speed:200+hits*22, life:0.6,
+      kinds:hits>=5?["spark","mote","star"]:["mote","spark"]});
+    if(hits>=5) FX.swell(0.6+Math.min(1.6,(hits-5)*0.3), 260);
     if(hits===8){ box.dataset.i="3"; try{ Audio2.setMood("urgent"); }catch(e){} }
     if(hits===10){
       Audio2.sfx.trophy();
       const seal=el("div","rush-seal","Ι");   // iota: the Greek numeral for ten
       box.appendChild(seal);
+      FX.celebrate(3, seal, {pal:"gold", still:true});
       setTimeout(()=>{ if(seal.parentNode) seal.parentNode.removeChild(seal); }, 900);
     }
   }
@@ -21593,6 +22109,14 @@ function announce(a){
   setTimeout(()=>{ if(pop.parentNode) pop.parentNode.removeChild(pop); }, 5400);
   Audio2.sfx.trophy ? Audio2.sfx.trophy() : Audio2.sfx.great();
   FX && FX.buzz && FX.buzz(30);
+  /* a trophy slid in from the rail like any other notice. It is the rarest
+     thing the game hands out; the glyph throws stars and light crosses it. */
+  if(FX && FX.burst) requestAnimationFrame(()=>{
+    const gl=pop.querySelector('.apg')||pop;
+    FX.ring(gl,{color:"#c9a04a", r:70, ms:520, w:4});
+    FX.burst(gl,{n:18, pal:"gold", speed:240, life:0.85, kinds:["star","mote","spark"]});
+    FX.sheen(pop,{delay:260});
+  });
 }
 /* Called after anything that could plausibly move a counter. Cheap: 37 small
    predicates. Never awards twice, and never announces on the very first
@@ -21856,19 +22380,30 @@ function grantChest(quality, reason, onDone, opts){
       const heft = RARITY_RANK[rank.id];
       Audio2.sfx.chestOpen ? Audio2.sfx.chestOpen() : Audio2.sfx.chime();
       FX && FX.buzz && FX.buzz((heft>=2?60:34) * (wellWalked?1.1:0.85));
-      FX && FX.shake && FX.shake(8+heft*3,300);
-      FX && FX.impact && FX.impact(heft>=3?"#f2d78e":"#d8bd84",0.24+heft*0.06,420);
+      /* The lid came off as a hit — shake(8..17) — and a reliquary hit harder
+         than a travelling case, so the best chest in the game was the most
+         like taking damage. The light comes out of the box now, and the rank
+         decides how much of it there is. */
+      FX.swell(1.4+heft*0.5, 520+heft*80);
+      FX.bloom(heft>=3?"rgba(255,226,150,.95)":"rgba(226,189,132,.85)", 0.4+heft*0.08, 620, 50, 40);
+      FX.celebrate(Math.min(4,2+Math.max(0,heft-1)), box, {pal:heft>=2?"ember":"gold", still:true});
       loot.forEach((it,i)=>{
         const row=el("div","loot-row"+(it.rare?" rare":""));
         row.style.animationDelay=(i*0.14)+"s";
         row.innerHTML=`<div class="lg">${it.glyph}</div>
           <div><div class="ln">${it.name}</div><div class="ll">${it.note}</div></div>`;
         lootBox.appendChild(row);
-        setTimeout(()=>{ if(it.kind==="relic"){ (Audio2.sfx.relic&&Audio2.sfx.relic());
-                           FX && FX.shake && FX.shake(6,260);
-                           FX && FX.impact && FX.impact("#8a7ad8",0.30,520); }
-                         else if(it.rare) (Audio2.sfx.great&&Audio2.sfx.great());
-                         else (Audio2.sfx.coin&&Audio2.sfx.coin()); }, 340+i*140);
+        setTimeout(()=>{ if(dismissed) return;
+                         const gl=row.querySelector('.lg')||row;
+                         if(it.kind==="relic"){ (Audio2.sfx.relic&&Audio2.sfx.relic());
+                           FX.swell(1.6,520); FX.bloom("rgba(138,122,216,.9)",0.42,620,50,56);
+                           FX.ring(gl,{color:"#8a7ad8",r:120,ms:620,w:5});
+                           FX.burst(gl,{n:30,pal:"relic",speed:320,life:1,kinds:["star","mote","spark"]});
+                           FX.sheen(row); }
+                         else if(it.rare){ (Audio2.sfx.great&&Audio2.sfx.great());
+                           FX.burst(gl,{n:16,pal:"gold",speed:240,life:0.7,kinds:["mote","star"]}); FX.sheen(row); }
+                         else { (Audio2.sfx.coin&&Audio2.sfx.coin());
+                           FX.burst(gl,{n:6,pal:"gold",speed:150,life:0.45,size:2.4}); } }, 340+i*140);
       });
       applyLoot(loot);
       setTimeout(()=>btn.focus(), 900);
@@ -22089,8 +22624,16 @@ function answer(idx){
   const timedOut = idx<0;
   const hit=$$('#trial-opts .trial-opt')[idx>=0?idx:0];
   if(ok){
-    FX.shake(fast?5:3,150); FX.impact("#d8bd84",0.24,160);
-    if(gained) FX.pop(hit, "+"+gained, fast?"big":"");
+    /* right answers shook too. They lean now, the points leave the answer that
+       earned them and land on the score, and a streak is something the player
+       can see building rather than a multiplier they have to trust. */
+    FX.swell(fast?1.0:0.6, 300);
+    FX.celebrate(1, hit, {pal:"gold"});
+    if(gained){ FX.pop(hit, "+"+gained, fast?"big":"");
+      FX.fly(hit, "#trial-score", {n:fast?8:5, pal:"gold"}); }
+    if(T.streak===3 || T.streak===6 || T.streak===9 || T.streak===12){
+      FX.ring(hit,{color:"#c9a04a", r:90+T.streak*8, ms:560, w:5});
+      FX.burst(hit,{n:10+T.streak*3, pal:"gold", speed:300, life:0.8, kinds:["star","spark","mote"]}); }
   } else {
     FX.shake(7,240); FX.impact("#b5322b",0.30,190);
     FX.pop(hit, timedOut?"time":"✕", "miss");
@@ -22550,6 +23093,8 @@ function vigilAnswer(idx){
     if(q._focus && V.studied.indexOf(q._focus)<0) V.studied.push(q._focus);
     Audio2.sfx.good && Audio2.sfx.good(); FX.buzz(fast?22:14);
     FX.impact("#d8bd84",0.16,180);
+    { const picked=$$('#vigil-opts .trial-opt')[idx>=0?idx:0];
+      if(picked){ FX.celebrate(1, picked, {pal:"jade"}); FX.fly(picked, "#vigil-ready", {n:fast?6:4, pal:"jade"}); } }
   } else {
     if(q._focus && V.shaky.indexOf(q._focus)<0) V.shaky.push(q._focus);
     Audio2.sfx.bad && Audio2.sfx.bad(); FX.buzz(26);

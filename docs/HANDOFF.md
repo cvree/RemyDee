@@ -13,7 +13,7 @@ every push to `main` redeploys it via `.github/workflows/pages.yml`.
 
 ### What this project is
 
-One self-contained file: `RemyDee_TheLostLexicon.html` (~940KB, ~15,900 lines).
+One self-contained file: `RemyDee_TheLostLexicon.html` (~1.3MB, ~23,000 lines).
 CSS in `<style>` blocks, markup in the middle, **9 inline `<script>` blocks**.
 This must stay a single file — no image, font or audio assets can be added.
 Everything visual is CSS, inline SVG and canvas; all sound is procedural
@@ -44,7 +44,10 @@ nothing shown WITH a question may contain its answer, and everything shown after
 the player has answered should — and `FRAME_PASS.md`, the newest, which is about
 what the player is looking *into* rather than what they are doing: the grade over
 the whole frame, the entrance choreography, and the one shell width every screen
-lays out against. Read it before adding any rule to the **last `<style>` block in
+lays out against — and `MOTE_PASS.md`, the newest, which is the particle layer and
+the four sizes of celebration: read it before adding any effect, because the rule
+it leaves behind is that a reward comes OUT of the thing that earned it and never
+shakes the frame. Read `FRAME_PASS.md` before adding any rule to the **last `<style>` block in
 the file** — that block is the end of the cascade, and an unguarded rule in it
 outranks every media query above it, which is how a 390px phone quietly went back
 to two columns.
@@ -54,10 +57,10 @@ to two columns.
 ```
 npm install jsdom playwright          # node_modules is gitignored
 node syntaxcheck.js                   # parses all 10 script blocks
-for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39 40 41; do node test$t.js | tail -1; done
+for t in 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42; do node test$t.js | tail -1; done
 ```
 
-35 jsdom suites, **1518 assertions, zero window errors**.
+36 jsdom suites, **1572 assertions, zero window errors**.
 
 **One suite is intermittently red and it is not yours.** `test36`'s "ten forges
 end the session" assertion (`G().done >= 10`) fails on roughly one run in ten,
@@ -91,7 +94,7 @@ it of their *kit* — that is what the walk is for.
 **Look at it in a real browser. This is not optional.** Playwright with the
 preinstalled Chromium:
 ```js
-chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
+chromium.launch()   // the preinstalled build; the revision directory changes between containers
 ```
 Nearly every defect fixed in the last pass was found by taking a screenshot and
 looking at it: the road HUD's labels were invisible, three panels were stacked
@@ -447,6 +450,20 @@ the prompt, the pronunciation, the eyebrow, the doors and the distractors, and
 the other direction too: that every explanation still names the answer, so
 withdrawing a hint never quietly removed the teaching with it.
 
+**13. Nothing could come out of the thing that earned it.** See
+`docs/MOTE_PASS.md`. The game's three big-moment verbs — swell, bloom, shake —
+all act on the whole picture, and off the road most rewards were still a shake.
+One canvas now carries everything that flies (`FX.burst` / `ring` / `confetti`
+/ `fly`), `FX.celebrate(1..4)` is the four sizes of good news, and every reward
+in the file is one of them: the seal, the forge verdict, a gathered part, a real
+term, the result, the chest, the Trial, the Vigil, the Hall, a trophy, the
+ending. Three things fell out of measuring it: a swell re-rastered the whole
+frame every frame and doubled p95 frame time for its duration (the frame is
+promoted while the camera runs); **any screen change mid-swell killed the camera
+for the rest of the session and left the frame zoomed** (it ran on the
+per-screen raf registry; it keeps its own loop now); and `clickSpark` and the
+Rune Forge's sparks were DOM nodes by the dozen. `test42` guards all of it.
+
 ### What is left — verified, not speculation
 
 **Art.**
@@ -474,7 +491,8 @@ withdrawing a hint never quietly removed the teaching with it.
   whether a panel is a card or a sheet of papyrus, and it should be made
   deliberately rather than as a side effect of a control pass.
 
-**Performance.** The road holds 59.9fps with a 16.7ms median frame. The bench's
+**Performance.** The camera no longer re-rasters the frame (the mote pass).
+The road holds 59.9fps with a 16.7ms median frame. The bench's
 own per-frame offenders went with the old crafts; the trials' stages have never
 been profiled.
 
